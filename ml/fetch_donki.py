@@ -179,7 +179,12 @@ def build_tables(flr: list, cme: list, sep: list):
     for f in flr:
         fid = f.get("flrID")
         letter, flux = parse_class(f.get("classType"))
-        lat, lon = parse_location(f.get("sourceLocation"))
+        loc = f.get("sourceLocation")
+        lat, lon = parse_location(loc)
+        # DONKI typed N07W634. AR 11875 is N07W65 four hours later.
+        if fid == "2013-10-28T01:41:00-FLR-001" and str(loc or "").upper().replace(" ", "") == "N07W634":
+            loc, lat, lon = "N07W65", 7, 65
+            print("  location override: 2013-10-28 X1.0 N07W634 -> N07W65", flush=True)
         links = set(linked_ids(f)) | rev.get(fid, set())
         cme_ids = sorted(i for i in links if "CME" in i)
         sep_ids = sorted(i for i in links if "SEP" in i)
@@ -194,7 +199,7 @@ def build_tables(flr: list, cme: list, sep: list):
             "flare_class": f.get("classType"),
             "class_letter": letter,
             "class_flux": flux,
-            "source_location": f.get("sourceLocation"),
+            "source_location": loc,
             "latitude_deg": lat,
             "longitude_deg": lon,
             "active_region": f.get("activeRegionNum"),
