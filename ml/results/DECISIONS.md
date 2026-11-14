@@ -11,7 +11,7 @@ In progress. This run uses split A and does not open the test years (2024 onward
 - [x] Charts — four PNGs in ml/results/
 - [x] Models — logistic regression, C=10, validation Brier skill 0.418
 - [x] Thresholds — watch 0.0308 (3.25 false alarms/month), warning 0.159 (0.63/month)
-- [ ] v1 saved
+- [x] v1 saved — ml/models/v1.pkl and ml/results/scorecard_v1.md
 - [ ] Synthetic crew
 - [ ] Pitch outline
 
@@ -149,3 +149,7 @@ The watch bar is set by one storm, the 28 Mar 2022 flare, whose probability is 0
 Warning lands on 12/15 exactly. The three misses are the three lowest probabilities (0.031, 0.143, 0.148).
 
 Calibration, validation probabilities in five equal-count bins: the bottom four bins, 432 flares, contain no storms (mean probabilities 0.3%, 0.7%, 1.2%, 2.0%). The top bin, 108 flares, has mean probability 12.8% and an observed storm rate of 13.9% (15 storms). The ranking is doing the work. The probabilities in that top bin are close to the rate.
+
+## v1 saved
+
+`ml/models/v1.pkl` is the logistic model fit on train only, plus the climatology rate and the two thresholds. `ml/results/scorecard_v1.md` holds the validation metrics above. The pickle records `test_scored: false`. Validation was used for the grid, the family choice, and the thresholds, so this scorecard is a little optimistic relative to a set that was never used for any of those choices.

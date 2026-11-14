@@ -349,8 +349,8 @@ A false alarm is a non-storm flare at or above the threshold. The month count is
 
 | Cut | Rule | Threshold | Hit rate | Storms caught | False alarms / month | Precision | Median lead time (h) |
 |---|---|---:|---:|---:|---:|---:|---:|
-| Watch | highest threshold with hit rate ≥ 95% | {a["threshold"]:.4f} | {a["hit_rate"]:.3f} | {a["storms_caught"]}/{a["storms_caught"] + a["storms_missed"]} | {a["false_alarms_per_month"]:.2f} | {a["precision"]:.3f} | {a["lead_time"]["median_lead_time_h"]} |
-| Warning | highest threshold with hit rate ≥ 80% | {w["threshold"]:.4f} | {w["hit_rate"]:.3f} | {w["storms_caught"]}/{w["storms_caught"] + w["storms_missed"]} | {w["false_alarms_per_month"]:.2f} | {w["precision"]:.3f} | {w["lead_time"]["median_lead_time_h"]} |
+| Watch | highest threshold with hit rate ≥ 95% | {a["threshold"]:.4f} | {a["hit_rate"]:.3f} | {a["storms_caught"]}/{a["storms_caught"] + a["storms_missed"]} | {a["false_alarms_per_month"]:.3f} | {a["precision"]:.3f} | {a["lead_time"]["median_lead_time_h"]} |
+| Warning | highest threshold with hit rate ≥ 80% | {w["threshold"]:.4f} | {w["hit_rate"]:.3f} | {w["storms_caught"]}/{w["storms_caught"] + w["storms_missed"]} | {w["false_alarms_per_month"]:.3f} | {w["precision"]:.3f} | {w["lead_time"]["median_lead_time_h"]} |
 
 Watch lead times: {a["lead_time"]["hits_with_onset"]} of {a["lead_time"]["hits"]} hits have an onset, {a["lead_time"]["negative_lead_times"]} of those are negative.
 Warning lead times: {w["lead_time"]["hits_with_onset"]} of {w["lead_time"]["hits"]} hits have an onset, {w["lead_time"]["negative_lead_times"]} of those are negative.
