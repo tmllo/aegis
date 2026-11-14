@@ -1,0 +1,35 @@
+---
+description: Follow AEGIS workstream docs and stop at modelling decisions D1–D6
+alwaysApply: true
+---
+
+# AEGIS
+
+Always follow these docs before changing code or data:
+
+1. `CLAUDE.md` (repo root)
+2. `ml/CLAUDE.md` (Tomas's data + ML workstream)
+3. `contracts/DATA_CONTRACT.md` (the only interface with `/web`)
+
+Read `PROJECT_CONTEXT.md` before changing product behavior.
+
+## Workstream
+
+- Stay in `/ml` and `/contracts`. Do not edit `/web`.
+- Do not change the shape of `storm_forecast.json` or `crew_data.json`. Propose any shape change in `contracts/CHANGELOG.md` and tell Tomas before editing.
+- No real astronaut health data. Crew data stays simulated.
+- Never report training-set performance as a result.
+- Do not commit `NASA_API_KEY` or `.env`.
+
+## Decisions — stop and ask
+
+At each of D1–D6, stop. Give 2–3 options, the trade-off in plain language, and one recommendation. Wait for Tomas. Do not pick silently.
+
+- **D1 Label:** `sep_linked` vs `sep_within_72h` vs a combination, and whether to drop flares with `sep_in_prior_48h`.
+- **D2 Split:** time-based train / validation / test only. Never a random split.
+- **D3 Metrics:** which test-set numbers to report (hit rate, false alarms per month, precision, median lead time, Brier skill vs climatology, calibration).
+- **D4 Thresholds:** `watch` and `warning` cutoffs, chosen on the validation set.
+- **D5 Baseline alerts:** baseline window, rolling window, amber/red z cutoffs, robust stats vs mean/sd, and which metrics are low-side-only.
+- **D6 Synthetic crew:** correlation matrix and AR(1) coefficients. Tomas approves the values.
+
+Example: at D1, state the miss-vs-noise trade-off, recommend `sep_linked` as the main label with the 72h window as a robustness check, then wait.
