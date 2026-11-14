@@ -1,6 +1,6 @@
 # Pitch outline
 
-Validation numbers below are real. Anything marked [TEST RESULT] is not filled in. The 2024–2026 flares were not scored.
+Validation numbers and the one test scoring (15 Nov 2026) are both real. Thresholds were not moved after the test was opened.
 
 ## Problem
 
@@ -24,7 +24,7 @@ The model was built only on peaks through 2023.
 |---|---|---:|---:|---:|
 | Train | 2010–2021 | 484 | 27 | 5.6% |
 | Validation | 2022–2023 | 540 | 15 | 2.8% |
-| Test | 2024–now | [TEST RESULT] | [TEST RESULT] | [TEST RESULT] |
+| Test | 2024–15 Nov 2026 | 1,528 | 17 storms (29 flares) | 1.9% |
 
 Train is 438 M and 46 X. Validation is 521 M and 19 X. 2018 and 2019 contributed no M or X flares.
 
@@ -66,21 +66,23 @@ X-class flares storm 21.5% of the time (14/65) against 2.9% for M-class (28/959)
 
 The bottom four fifths of validation probabilities contained no storms. The top fifth had a mean probability of 12.8% and an observed rate of 13.9%.
 
-Test, to be filled once and not before the model is frozen:
+Test, scored once after the model was frozen. 1,528 flares, 17 distinct GOES >10 MeV storms, 35 months (January 2024 through November 2026). Hits and lead times below are per storm. Lead time is from issue time, the later of flare peak and the latest linked CME start. False alarms are still counted per flare.
 
-- Hit rate at warning: [TEST RESULT]
-- False alarms per month at warning: [TEST RESULT]
-- Hit rate at watch: [TEST RESULT]
-- False alarms per month at watch: [TEST RESULT]
-- Brier skill vs climatology: [TEST RESULT]
-- Median lead time on warning hits: [TEST RESULT]
-- May 2024, flare by flare (probability, alert, actual storm, lead time): [TEST RESULT]
+- Hit rate at warning: 16/17 storms (94%). The miss is the 5 Sep 2026 M1.0 at S12W68, probability 0.14, which watch does catch.
+- False alarms per month at warning: 1.0 (35 flares, precision 42%).
+- Hit rate at watch: 17/17 storms.
+- False alarms per month at watch: 6.1 (213 flares, precision 12%).
+- Brier skill vs climatology: 0.413. The flare-time ablation (size and longitude only, refit on train, no CME features) scores 0.055. It is a floor, not a second model.
+- Median lead time on warning hits: 3.8 hours from issue time. Without 1–20 May 2024 it is 2.5 hours (14/15 storms). No hit has a negative lead.
+- May 2024: 112 M/X flares. Both storms were warned. The 10 May onset was first warned from the 8 May 21:40 X1.0, about 39 hours ahead. The 13 May onset was warned about 4.5 hours ahead. Ten May flares reached warning and sixteen reached watch; 86 stayed at none, including several large eastern or early flares. Full rows: `ml/results/may2024_flares.csv`.
+
+Dropping 1–20 May leaves v1 skill at 0.385 and the flare-time ablation at −0.012, slightly worse than guessing the climatology rate.
 
 ## Limitations
 
 Fifteen validation storms is a small set to tune two thresholds. The 95% watch rule cannot miss even one of them, so a single low-scoring storm on 28 Mar 2022 pulls the watch threshold down to 0.031 and produces 3.25 false alarms per month. Fourteen of fifteen would have been 93%, which fails that rule. Warning, at 0.63 false alarms per month, is the cut that is usable in a demo.
 
-Validation was used three times: the grid, the choice of logistic over boosting, and the thresholds. The 0.418 skill is a bit optimistic. The honest number is the test skill, and it is still [TEST RESULT].
+Validation was used three times: the grid, the choice of logistic over boosting, and the thresholds. Test skill is 0.413, close to the 0.418 validation figure, and almost all of it disappears when the CME link and speed are removed (0.055, and −0.012 without May 2024). Those CME numbers are analyst products and the speed is measured after the first coronagraph frame, so a 3.8 hour lead is a little early as well as short.
 
 DONKI is an analyst list, not every GOES flare. The model learns flares someone chose to write down. The label is a curated link to a GOES >10 MeV event, so some real proton events with no link are counted as negatives, and a link is not proof the particles were caused by that flare.
 

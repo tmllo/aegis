@@ -2,17 +2,19 @@
 
 ## Summary
 
-**Final model: v1 (logistic regression, C=10).** The pre-declared v2 (GOES flux harmonisation + Parker connectivity) gained +0.016 Brier skill on validation, under the +0.02 bar, so v1 stays. Lead time now runs from issue time (later of flare peak and linked CME start): validation per-event median 6.0 h at warning, 4.2 h at watch. About two thirds of v1's skill rests on the curated CME link and speed (flare-only model: 0.141). See "Audit and v2" at the end.
+**Final model: v1 (logistic regression, C=10).** The pre-declared v2 (GOES flux harmonisation + Parker connectivity) gained +0.016 Brier skill on validation, under the +0.02 bar, so v1 stays. The test set was scored once, after that choice, on 15 Nov 2026. Primary counts are per distinct GOES >10 MeV storm. Lead time runs from issue time (later of flare peak and the latest linked CME start) to onset.
 
-Split A is in force. Nothing from 2024 onward was loaded, scored, or plotted. v1 is a logistic regression (C=10, no class weights) fit on flares through 2021. Climatology is the train+validation storm rate, 4.10%. On 540 validation flares and 15 storms, Brier skill against that climatology is 0.418. Warning, the highest threshold that still catches at least 80%, is probability 0.159: 12/15 storms, 0.625 false alarms per month, precision 44%, median lead time 8.6 h. Watch, the highest threshold that still catches at least 95%, is 0.031: 15/15 storms, 3.25 false alarms per month, precision 16%, median lead time 7.9 h. Fourteen of fifteen would be 93%, so the 95% rule allows no miss.
+Test, January 2024 through 15 Nov 2026 (1,528 M/X flares, 29 linked flares, 17 storms, 35 months). Warning catches 16/17 storms, median lead 3.8 h, 1.0 false alarm per month, precision 42%. Watch catches 17/17, median lead 2.9 h, 6.1 false alarms per month. Brier skill vs the 4.10% climatology is 0.413. The same logistic regression refit on train with only flare size and longitude scores 0.055. Dropping 1–20 May 2024 leaves warning at 14/15 storms, median lead 2.5 h, skill 0.385, and the flare-only skill at −0.012. The one warning miss is the 5 Sep 2026 M1.0 (S12W68, probability 0.14), which watch does catch. Full table: `ml/results/score_report.json`.
+
+Split A is in force. v1 is a logistic regression (C=10, no class weights) fit on flares through 2021. Climatology is the train+validation storm rate, 4.10%. On 540 validation flares and 15 storms, Brier skill against that climatology is 0.418. Warning, the highest threshold that still catches at least 80% of validation flares, is probability 0.159: 12/15 flares (10/13 storms), 0.625 false alarms per month, precision 44%, median issue-time lead 6.0 h per storm. Watch, the highest threshold that still catches at least 95%, is 0.031: 15/15 flares (13/13 storms), 3.25 false alarms per month. Fourteen of fifteen flares would be 93%, so the 95% rule allows no miss.
 
 The best gradient booster scored 0.424. That is 0.006 ahead of the logistic model, inside the 0.02 band, so the simpler model was kept. C=10 is the top of the grid that was set beforehand; C=1 scored 0.409 and would have won on the same rule.
 
-Concerns. The watch bar is one storm. The 28 Mar 2022 flare has probability 0.031, and catching it is what creates 78 false alarms instead of 17. Warning is the cut that is usable. Validation was used for the grid, the family choice, and both thresholds, so 0.418 is a bit optimistic. The test score is still empty on purpose. DONKI is an analyst list, not every flare, and the label is a curated GOES >10 MeV link. The synthetic crew matrix is positive definite (minimum eigenvalue 0.46), the demo cards are Ana heart amber, Kenji brain red, Léa green, and a 75-day draw only approximates the approved correlations (sleep lag-1 came out at 0.37 against 0.50). The storm-forecast file is still the fake sample, because writing it would mean scoring the test set.
+Concerns. The watch bar is one validation storm. The 28 Mar 2022 flare has probability 0.031, and catching it is what creates 78 false alarms instead of 17. On test, watch costs 6.1 false alarms per month. Warning is the cut that is usable, and its test lead is short: 3.8 h median, 2.5 h without 1–20 May. Validation was used for the grid, the family choice, and both thresholds. Test skill (0.413) happens to match validation (0.418), but almost all of it is the CME link and speed. Those are analyst products, and the speed is known after the first coronagraph frame, so the issue-time lead is still a little early. DONKI is an analyst list, not every flare, and the label is a curated GOES >10 MeV link. The synthetic crew matrix is positive definite (minimum eigenvalue 0.46), the demo cards are Ana heart amber, Kenji brain red, Léa green, and a 75-day draw only approximates the approved correlations (sleep lag-1 came out at 0.37 against 0.50). `web/public/data/storm_forecast.json` is the scored test export. `python ml/validate_contracts.py` passed.
 
 ## Checklist
 
-- [x] Split — A: train through 2021, validation 2022–2023, test 2024–now held out and not opened
+- [x] Split — A: train through 2021, validation 2022–2023, test 2024–now scored once after the model was frozen
 - [x] EDA — development set only, 1,024 flares, 42 storms
 - [x] Charts — four PNGs in ml/results/
 - [x] Models — logistic regression, C=10, validation Brier skill 0.418
@@ -20,7 +22,8 @@ Concerns. The watch bar is one storm. The 28 Mar 2022 flare has probability 0.03
 - [x] v1 saved — ml/models/v1.pkl and ml/results/scorecard_v1.md
 - [x] Synthetic crew — correlations positive definite, demo cards unchanged, contract valid
 - [x] Audit, issue-time lead time, v2 evaluated and rejected — v1 final
-- [x] Pitch outline — ml/results/pitch_outline.md, test numbers left as placeholders
+- [x] Pitch outline — ml/results/pitch_outline.md, test numbers filled from the one scoring run
+- [x] Test — scored once on 15 Nov 2026; per-storm warning 16/17, skill 0.413, flare-time ablation 0.055
 
 ## Rules for this run
 
@@ -36,7 +39,7 @@ Sensitivity label `sep_within_72h_goes10`: a GOES >10 MeV onset in the 72 hours 
 
 Rows in the modelling table are M-class and X-class only. The 28 Oct 2013 X1.0 location is stored as N07W65. Longitudes from 90° to 120° stay. A flare is removed when a GOES >10 MeV onset falls in the 48 hours before peak.
 
-Development set only (test not opened):
+Development set only (this table was written before the test was scored):
 
 | Split | Flares | Linked positives | Rate | Within 72h | Distinct GOES >10 events | Dates |
 |---|---:|---:|---:|---:|---:|---|
@@ -165,7 +168,7 @@ AR(1) coefficients: heart rate, systolic and diastolic BP, glucose and temperatu
 
 On the continuous draws (3 astronauts × 75 days), pooled correlations landed at sleep↔mood +0.50, sleep↔heart rate −0.19, heart rate↔systolic BP +0.44. Mean lag-1 was 0.56, 0.54, 0.51, 0.60 and 0.52 for the five vitals, 0.56 for mood, 0.37 for sleep and 0.45 for exercise. Means sit close to the stated values. Full table: `ml/results/synthetic_crew.md`. Seventy-five days is a short sample, so pairs that were set to 0 still wander by about 0.1–0.2.
 
-Planted days are applied after the draw, measured from each astronaut's own first 14 days, because that is what the flags use. Today: Ana heart amber (BP 2.6σ for 4 days), Kenji brain red (sleep 3.3σ), Léa overall green, with the 10 Nov storm dose still in her history. `python ml/validate_contracts.py` passed. The storm file is still the fake sample; this step did not touch it.
+Planted days are applied after the draw, measured from each astronaut's own first 14 days, because that is what the flags use. Today: Ana heart amber (BP 2.6σ for 4 days), Kenji brain red (sleep 3.3σ), Léa overall green, with the 10 Nov storm dose still in her history. The crew file was validated before the storm file was replaced. The storm file is now the scored test export.
 
 ## v1 saved
 
@@ -173,7 +176,7 @@ Planted days are applied after the draw, measured from each astronaut's own firs
 
 ## Audit and v2 (14 Nov)
 
-Test still sealed: everything below uses 2010–2023 only. `issue_time.py` reads only CMEs linked to development flares.
+This audit was written before the test was scored. Everything in this section uses 2010–2023 only. `issue_time.py` reads only CMEs linked to the flares it is given.
 
 ### Audit findings, by severity
 
@@ -212,3 +215,18 @@ Two changes together, nothing tuned: (1) divide pre-2018 GOES fluxes by 0.7; (2)
 | v2 | 0.434 | 0.164 | 12/15 (10/13 events) | 0.458 | 0.52 | 8.6 h |
 
 Gain +0.016, under 0.02. **v2 rejected; v1 stays final.** No v2.pkl saved. Ablations (information only, not candidates): connectivity alone 0.454, harmonisation alone 0.404. Connectivity alone would have passed, but choosing it after seeing those numbers would be selecting on validation again, so it is not adopted. Full output: `ml/results/v2_evaluation.json`.
+
+## Test (scored once, 15 Nov 2026)
+
+`python ml/run_test_and_export.py` ran once, after v1 was frozen. Thresholds were not moved. Primary hit rate and median lead are per distinct GOES >10 MeV storm, from issue time. Each event's `lead_time_h` in `storm_forecast.json` stays peak to onset, as the contract defines it. False alarms stay per flare. The month count is 35 (January 2024 through November 2026) and is not reduced when 1–20 May is dropped.
+
+| Cut | Storms caught | Median lead from issue | False alarms / month | Precision | Flares caught |
+|---|---:|---:|---:|---:|---:|
+| Watch 0.0308 | 17/17 | 2.9 h | 6.09 (213 flares) | 12% | 29/29 |
+| Warning 0.159 | 16/17 | 3.8 h | 1.00 (35 flares) | 42% | 25/29 |
+
+Brier skill vs the stored 4.10% climatology: v1 0.413. Flare-time ablation (train-only logistic regression, C=10, log flare size and longitude, no CME link and no CME speed): 0.055. That ablation is a floor, not a candidate.
+
+Without 1–20 May 2024 (same 35 months): warning 14/15 storms, median lead 2.5 h, 0.97 false alarms per month; watch 15/15, median lead 2.1 h, 5.69 per month. v1 skill 0.385. Flare-time ablation −0.012.
+
+The warning miss is one flare, the 5 Sep 2026 M1.0 at S12W68, probability 0.139, onset the same afternoon. Watch catches it. No hit has a negative lead. May 2024 has two storms, both warned: the 10 May onset (first warning flare 8 May 21:40, about 39 h) and the 13 May onset (about 4.5 h). The flare-by-flare May table is `ml/results/may2024_flares.csv` (112 flares; 86 stayed at none). Reliability plot: `ml/results/reliability.png`.
