@@ -169,7 +169,7 @@ AR(1) coefficients: heart rate, systolic and diastolic BP, glucose and temperatu
 
 On the continuous draws (3 astronauts × 75 days), pooled correlations landed at sleep↔mood +0.50, sleep↔heart rate −0.19, heart rate↔systolic BP +0.44. Mean lag-1 was 0.56, 0.54, 0.51, 0.60 and 0.52 for the five vitals, 0.56 for mood, 0.37 for sleep and 0.45 for exercise. Means sit close to the stated values. Full table: `ml/results/synthetic_crew.md`. Seventy-five days is a short sample, so pairs that were set to 0 still wander by about 0.1–0.2.
 
-Planted days are applied after the draw, measured from each astronaut's own first 14 days, because that is what the flags use. Today: Ana heart amber (BP 2.6σ for 4 days), Kenji brain red (sleep 3.3σ), Léa overall green, with the 10 Nov storm dose still in her history. The crew file was validated before the storm file was replaced. The storm file is now the scored test export.
+Planted days are applied after the draw, measured from each astronaut's own first 14 days, because that is what the flags use. Flags score the 3-day mean. Today: Ana heart amber (BP 3-day average 2.5σ for 3 days), Kenji brain red (sleep 3-day average 3.1σ for 4 days), Léa overall green. The storm dose is on 5 Sep 2026, inside the series, and it is outside the last-7-day flag window so it does not colour today. The crew file was validated before the storm file was replaced. The storm file is now the scored test export.
 
 ## v1 saved
 

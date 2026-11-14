@@ -110,4 +110,15 @@ The UI should show `events` sorted by `peak_time`. The replay window is 2024-05-
 
 Metric keys: `hr`, `bp_sys`, `bp_dia`, `glucose`, `temp`, `sleep_h`, `mood` (1–5 self-report), `exercise_min`, `bone_loss_pct` (estimated cumulative), `dose_mSv_day`, `dose_mSv_cum`.
 
-**Client-side scoring for live check-ins (web):** for a new value `x` of metric `m`: `z = (x - baseline[m].mean) / baseline[m].sd`. Amber if |z| ≥ 2, red if |z| ≥ 3 **or** outside `absolute_red`. For `sleep_h`, `mood` and `exercise_min` only the low side counts. This mirrors the ml logic so live check-ins behave consistently.
+**Client-side scoring for live check-ins (web).** This is the rule `ml/crew_flags.py` uses. A new check-in must implement it exactly.
+
+For a new value `x` of metric `m` on day `t`:
+
+- `dose_mSv_day`, `dose_mSv_cum` and `bone_loss_pct` have no personal z-score and are not averaged. Red when `x` is outside `absolute_red`. Daily dose is also amber when it is above 3× that environment's `dose_mSv_day` and still inside the hard limit. Cumulative dose is amber above half of `career_limit_mSv`. Bone loss is amber above 3%.
+- Every other metric has a baseline: the mean and sample standard deviation of that astronaut's first 14 mission days. The stored `baseline[m].sd` already includes the sd floor. Do not recompute it.
+- Let `w` be the mean of the non-null values of `m` on days `t`, `t−1` and `t−2`. That is the new check-in averaged with the previous 2 days. Leave a missing day out of the mean. If the new value is the only one present, `w = x`. If the new value is missing, there is no check-in.
+- `z = (w − baseline[m].mean) / baseline[m].sd`.
+- `sleep_h`, `mood` and `exercise_min` count on the low side only: the score is `−z`. A high value is not an alert. Heart rate, both blood pressures, glucose and temperature count on both sides: the score is `|z|`.
+- Amber when the score is ≥ 2. Red when the score is ≥ 3, or when the raw check-in `x` (not the 3-day mean) is outside `absolute_red`.
+
+The `z` stored on a flag is this 3-day-mean z.

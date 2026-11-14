@@ -2,16 +2,19 @@
 
 Mirrors the live check-in rule in contracts/DATA_CONTRACT.md:
 
-    z = (x - baseline.mean) / baseline.sd    on that day's value
+    w = mean of the non-null values on this day and the previous 2 days
+    z = (w - baseline.mean) / baseline.sd
 
-Amber when the relevant side reaches 2, red at 3, and red immediately when the
-raw value sits outside absolute_red. Sleep, mood and exercise count on the low
-side only. Heart rate, blood pressure, glucose and temperature count on both
-sides. Daily dose, cumulative dose and bone loss stay on absolute limits, so a
-past storm does not repaint today's status.
+Amber when the relevant side of that 3-day mean reaches 2, red at 3, and red
+immediately when the raw check-in sits outside absolute_red. Sleep, mood and
+exercise count on the low side only. Heart rate, blood pressure, glucose and
+temperature count on both sides. Daily dose, cumulative dose and bone loss stay
+on absolute limits and are not averaged, so a past storm does not repaint
+today's status.
 
-The z stored on a flag is the same number a live check-in of that value would
-compute. The message adds how many days in a row the drift has lasted.
+The z stored on a flag is the same number a live check-in would compute from
+the new value and the previous two days. The message adds how many days in a
+row that 3-day mean has stayed over the line.
 
     python ml/crew_flags.py
 """
@@ -19,6 +22,7 @@ import math
 
 BASELINE_DAYS = 14
 REPORT_LAST_DAYS = 7
+ROLLING_DAYS = 3
 AMBER_Z = 2
 RED_Z = 3
 
@@ -52,24 +56,41 @@ def _outside(value, limits):
     return value is not None and (value < limits["min"] or value > limits["max"])
 
 
+def window_mean(series, i, metric, window=ROLLING_DAYS):
+    """Mean of this day's value and the previous days in the window.
+
+    A missing day is left out. A missing value today is not a check-in.
+    """
+    if series[i].get(metric) is None:
+        return None
+    vals = []
+    for j in range(max(0, i - window + 1), i + 1):
+        value = series[j].get(metric)
+        if value is not None:
+            vals.append(float(value))
+    if not vals:
+        return None
+    return sum(vals) / len(vals)
+
+
+def _z(series, i, metric, base):
+    mean_value = window_mean(series, i, metric)
+    if mean_value is None:
+        return None
+    return (mean_value - base[metric]["mean"]) / base[metric]["sd"]
+
+
 def _streak(series, i, metric, base, low_only, baseline_days):
-    """Days in a row, ending at i, on the same side of the amber line."""
-    mean, sd = base[metric]["mean"], base[metric]["sd"]
-    end = series[i].get(metric)
-    if end is None:
-        return 0
-    end_z = (end - mean) / sd
-    if _score(end_z, low_only) < AMBER_Z:
+    """Days in a row, ending at i, whose 3-day mean stays on the same side of the amber line."""
+    end_z = _z(series, i, metric, base)
+    if end_z is None or _score(end_z, low_only) < AMBER_Z:
         return 0
     sign = 1 if end_z > 0 else -1
     n = 0
     j = i
     while j >= baseline_days:
-        value = series[j].get(metric)
-        if value is None:
-            break
-        z = (value - mean) / sd
-        if _score(z, low_only) < AMBER_Z or (1 if z > 0 else -1) != sign:
+        z = _z(series, j, metric, base)
+        if z is None or _score(z, low_only) < AMBER_Z or (1 if z > 0 else -1) != sign:
             break
         n += 1
         j -= 1
@@ -80,7 +101,7 @@ def _message(meta, z, streak, value, limits, metric):
     if z is not None and _score(z, meta["low_only"]) >= AMBER_Z:
         direction = "above" if z > 0 else "below"
         unit = "day" if streak == 1 else "days"
-        msg = f"{meta['label']} {abs(z):.1f}σ {direction} your own baseline for {streak} {unit}"
+        msg = f"{meta['label']} 3-day average {abs(z):.1f}σ {direction} your own baseline for {streak} {unit}"
         if _outside(value, limits):
             msg += ", and outside the hard safety limit"
         return msg
@@ -103,7 +124,7 @@ def flag_series(series, base, metrics, *, today, env_dose_per_day, career_limit_
             z = None
             severity = None
             if metric in base:
-                z = (value - base[metric]["mean"]) / base[metric]["sd"]
+                z = _z(series, i, metric, base)
                 score = _score(z, meta["low_only"])
                 if score >= RED_Z:
                     severity = "red"

@@ -169,7 +169,8 @@ CREW = [
          base=dict(hr=(66, 3), bp_sys=(110, 4), bp_dia=(68, 3), glucose=(90, 5), temp=(36.9, 0.15),
                    sleep_h=(6.3, 0.4), mood=(4.3, 0.4), exercise_min=(115, 12))),
 ]
-STORM_DAY = 70  # a solar storm hits the base on this mission day (adds dose for everyone)
+# 5 Sep 2026, the GOES >10 MeV storm inside the mission window. Day 0 is 1 Sep.
+STORM_DAY = (date(2026, 9, 5) - START).days
 
 
 def _rounded_series(member, latent):
