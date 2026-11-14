@@ -9,16 +9,17 @@ Writes:
   web/public/data/*.json               same files, so the app loads them immediately
 
 Crew scenarios planted for the demo:
-  c1 Commander: systolic BP drifting up in the last days  -> heart amber
-  c2 Engineer:  sleep and mood falling                    -> brain amber
-  c3 Scientist: steady, but a solar storm adds dose        -> whole body watch
-Tomas: replace `flag_series` with your own baseline logic (ml/CLAUDE.md, task T6).
+  c1 Commander: systolic BP drifting up over the last days -> heart amber
+  c2 Engineer:  sleep falling                              -> brain red
+  c3 Scientist: steady today, storm dose kept in history   -> overall green
+Baseline flags live in ml/crew_flags.py (task T6). This file still draws the crew.
 """
 import json
-import math
 import random
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
+
+from crew_flags import baseline as personal_baseline, flag_series as personal_flags, status_from as status_today
 
 ROOT = Path(__file__).resolve().parents[1]
 random.seed(7)
@@ -124,6 +125,9 @@ def simulate(member):
         for m, (mu, sd) in member["base"].items():
             v = random.gauss(mu, sd)
             # planted scenarios
+            if member["id"] == "c3" and d == DAYS - 1:
+                # Steady today. One draw past 2σ would light her up; the storm dose is an earlier day.
+                v = min(mu + 1.25 * sd, max(mu - 1.25 * sd, v))
             if member["id"] == "c1" and m == "bp_sys" and d >= DAYS - 5:
                 v = mu + sd * (1.9 + 0.2 * (d - (DAYS - 5))) + random.gauss(0, 1)
             if member["id"] == "c2" and m == "sleep_h" and d >= DAYS - 6:
@@ -146,85 +150,15 @@ def simulate(member):
     return rows
 
 
-SD_FLOOR = dict(hr=3, bp_sys=4, bp_dia=3, glucose=7, temp=0.15, sleep_h=0.4, mood=0.6, exercise_min=12)
-NO_Z = {"dose_mSv_day", "dose_mSv_cum", "bone_loss_pct"}  # judged by absolute rules, not personal baseline
-
-
-def baseline(series, days=14):
-    out = {}
-    for m in METRICS:
-        vals = [r[m] for r in series[:days] if r.get(m) is not None]
-        if m in NO_Z or len(vals) < 3:
-            continue
-        mu = sum(vals) / len(vals)
-        sd = max(SD_FLOOR.get(m, 1e-6), math.sqrt(sum((v - mu) ** 2 for v in vals) / (len(vals) - 1)))
-        out[m] = {"mean": round(mu, 2), "sd": round(sd, 2)}
-    return out
-
-
-def flag_series(series, base):
-    """PLACEHOLDER logic (Tomas replaces in T6): 3-day rolling mean z-score vs personal baseline,
-    plus absolute limits. Only the last 7 days are reported."""
-    flags = []
-    for i in range(max(3, len(series) - 7), len(series)):
-        win = series[i - 2:i + 1]
-        for m, meta in METRICS.items():
-            vals = [r[m] for r in win if r.get(m) is not None]
-            if not vals:
-                continue
-            x = sum(vals) / len(vals)
-            today = series[i].get(m)
-            sev, z = None, None
-            if m in base:
-                z = (x - base[m]["mean"]) / base[m]["sd"]
-                zz = -z if meta["low_only"] else abs(z)
-                if zz >= 3: sev = "red"
-                elif zz >= 2: sev = "amber"
-            lim = meta["absolute_red"]
-            if today is not None and (today < lim["min"] or today > lim["max"]):
-                sev = "red"
-            if m == "dose_mSv_day" and today is not None and today > 3 * ENVIRONMENTS[ENV]["dose_mSv_day"]:
-                sev = "red" if today > lim["max"] else "amber"
-            if m == "dose_mSv_cum" and today is not None and today > 0.5 * 600:
-                sev = sev or "amber"
-            if m == "bone_loss_pct" and today is not None and today > 3:
-                sev = sev or "amber"
-            if sev:
-                direction = "above" if (z or 0) > 0 else "below"
-                if z is not None:
-                    msg = f"{meta['label']} {abs(z):.1f}σ {direction} your own baseline (3-day avg)"
-                elif m == "dose_mSv_day":
-                    msg = f"Radiation dose {today} mSv today: solar storm exposure, over 3x the normal rate"
-                else:
-                    msg = f"{meta['label']} outside safe limits"
-                flags.append({"date": series[i]["date"], "metric": m, "severity": sev,
-                              "z": round(z, 2) if z is not None else None,
-                              "message": msg, "action": meta["actions"][sev]})
-    return flags
-
-
-def status_from(flags):
-    order = {"green": 0, "amber": 1, "red": 2}
-    regions = {r: "green" for r in ("brain", "heart", "blood", "bones", "whole_body")}
-    last = str(TODAY)  # status = today's flags only; older flags stay in the history
-    for f in flags:
-        if f["date"] != last:
-            continue
-        reg = METRICS[f["metric"]]["body_region"]
-        if order[f["severity"]] > order[regions[reg]]:
-            regions[reg] = f["severity"]
-    regions["overall"] = max(regions.values(), key=lambda s: order[s])
-    return regions
-
-
 def crew_file():
     crew = []
+    dose_per_day = ENVIRONMENTS[ENV]["dose_mSv_day"]
     for m in CREW:
         s = simulate(m)
-        b = baseline(s)
-        fl = flag_series(s, b)
+        b = personal_baseline(s, METRICS)
+        fl = personal_flags(s, b, METRICS, today=TODAY, env_dose_per_day=dose_per_day)
         crew.append({k: m[k] for k in ("id", "name", "role", "age")} |
-                    {"baseline": b, "series": s, "flags": fl, "status": status_from(fl)})
+                    {"baseline": b, "series": s, "flags": fl, "status": status_today(fl, METRICS, TODAY)})
     metrics_out = {k: {kk: vv for kk, vv in v.items() if kk != "low_only"} | {"low_side_only": v["low_only"]}
                    for k, v in METRICS.items()}
     return {
@@ -293,14 +227,27 @@ def fake_storm_file():
     }
 
 
+def write_crew(path=None):
+    """Rewrite crew_data.json only. Leaves the storm forecast file alone."""
+    crew = crew_file()
+    path = Path(path) if path else ROOT / "web" / "public" / "data" / "crew_data.json"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(crew, ensure_ascii=False), encoding="utf-8")
+    for c in crew["crew"]:
+        print(c["id"], c["name"], c["status"], f"{len(c['flags'])} flags")
+        for f in c["flags"]:
+            print(f"  {f['date']} {f['metric']:16} {f['severity']:5} z={f['z']}  {f['message']}")
+    return crew
+
+
 def main():
     crew, storm = crew_file(), fake_storm_file()
     for folder in (ROOT / "contracts", ROOT / "web" / "public" / "data"):
         folder.mkdir(parents=True, exist_ok=True)
-    (ROOT / "contracts" / "crew_data.sample.json").write_text(json.dumps(crew, indent=1, ensure_ascii=False))
-    (ROOT / "contracts" / "storm_forecast.sample.json").write_text(json.dumps(storm, indent=1, ensure_ascii=False))
-    (ROOT / "web" / "public" / "data" / "crew_data.json").write_text(json.dumps(crew, ensure_ascii=False))
-    (ROOT / "web" / "public" / "data" / "storm_forecast.json").write_text(json.dumps(storm, ensure_ascii=False))
+    (ROOT / "contracts" / "crew_data.sample.json").write_text(json.dumps(crew, indent=1, ensure_ascii=False), encoding="utf-8")
+    (ROOT / "contracts" / "storm_forecast.sample.json").write_text(json.dumps(storm, indent=1, ensure_ascii=False), encoding="utf-8")
+    (ROOT / "web" / "public" / "data" / "crew_data.json").write_text(json.dumps(crew, ensure_ascii=False), encoding="utf-8")
+    (ROOT / "web" / "public" / "data" / "storm_forecast.json").write_text(json.dumps(storm, ensure_ascii=False), encoding="utf-8")
     for c in crew["crew"]:
         print(c["name"], c["status"], f"{len(c['flags'])} flags")
     print("storm events:", len(storm["events"]))

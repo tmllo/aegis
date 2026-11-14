@@ -98,7 +98,7 @@ def main():
     for name, fn in (("storm_forecast.json", check_storm), ("crew_data.json", check_crew)):
         p = folder / name
         if not p.exists(): err(f"{p} not found"); continue
-        d = json.loads(p.read_text())
+        d = json.loads(p.read_text(encoding="utf-8"))
         no_nan(d, name)
         fn(d)
     for w in warnings: print("WARN ", w)
