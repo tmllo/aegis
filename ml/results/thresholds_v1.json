@@ -1,0 +1,4601 @@
+{
+  "validation_months": 24,
+  "month_window": [
+    "2022-01",
+    "2023-12"
+  ],
+  "false_alarm_definition": "a non-storm flare with probability at or above the threshold, divided by 24 calendar months",
+  "watch": {
+    "threshold": 0.030784668546445,
+    "hit_rate": 1.0,
+    "storms_caught": 15,
+    "storms_missed": 0,
+    "false_alarms": 78,
+    "false_alarms_per_month": 3.25,
+    "precision": 0.16129032258064516,
+    "target": 0.95,
+    "lead_time": {
+      "hits": 15,
+      "hits_with_onset": 15,
+      "median_lead_time_h": 7.87,
+      "negative_lead_times": 0
+    }
+  },
+  "warning": {
+    "threshold": 0.1588648007726645,
+    "hit_rate": 0.8,
+    "storms_caught": 12,
+    "storms_missed": 3,
+    "false_alarms": 15,
+    "false_alarms_per_month": 0.625,
+    "precision": 0.4444444444444444,
+    "target": 0.8,
+    "lead_time": {
+      "hits": 12,
+      "hits_with_onset": 12,
+      "median_lead_time_h": 8.56,
+      "negative_lead_times": 0
+    }
+  },
+  "reliability": [
+    {
+      "bin": "(-0.00067, 0.00464]",
+      "n": 108,
+      "mean_p": 0.0032,
+      "observed_rate": 0.0
+    },
+    {
+      "bin": "(0.00464, 0.00888]",
+      "n": 108,
+      "mean_p": 0.0065,
+      "observed_rate": 0.0
+    },
+    {
+      "bin": "(0.00888, 0.0158]",
+      "n": 109,
+      "mean_p": 0.0122,
+      "observed_rate": 0.0
+    },
+    {
+      "bin": "(0.0158, 0.0263]",
+      "n": 107,
+      "mean_p": 0.0203,
+      "observed_rate": 0.0
+    },
+    {
+      "bin": "(0.0263, 0.772]",
+      "n": 108,
+      "mean_p": 0.1281,
+      "observed_rate": 0.1389
+    }
+  ],
+  "curve": [
+    {
+      "threshold": 0.0003299742999317,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 525,
+      "false_alarms_per_month": 21.875,
+      "precision": 0.027777777777777776
+    },
+    {
+      "threshold": 0.0004696143508462,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 524,
+      "false_alarms_per_month": 21.833333333333332,
+      "precision": 0.027829313543599257
+    },
+    {
+      "threshold": 0.0005734286930638,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 523,
+      "false_alarms_per_month": 21.791666666666668,
+      "precision": 0.027881040892193308
+    },
+    {
+      "threshold": 0.000618249616786,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 522,
+      "false_alarms_per_month": 21.75,
+      "precision": 0.027932960893854747
+    },
+    {
+      "threshold": 0.0006399644701977,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 521,
+      "false_alarms_per_month": 21.708333333333332,
+      "precision": 0.027985074626865673
+    },
+    {
+      "threshold": 0.0007294405890157,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 520,
+      "false_alarms_per_month": 21.666666666666668,
+      "precision": 0.028037383177570093
+    },
+    {
+      "threshold": 0.000780014644704,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 519,
+      "false_alarms_per_month": 21.625,
+      "precision": 0.028089887640449437
+    },
+    {
+      "threshold": 0.0010723920397839,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 518,
+      "false_alarms_per_month": 21.583333333333332,
+      "precision": 0.028142589118198873
+    },
+    {
+      "threshold": 0.0010930175162968,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 517,
+      "false_alarms_per_month": 21.541666666666668,
+      "precision": 0.02819548872180451
+    },
+    {
+      "threshold": 0.0011329842095968,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 516,
+      "false_alarms_per_month": 21.5,
+      "precision": 0.02824858757062147
+    },
+    {
+      "threshold": 0.0011923347893744,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 515,
+      "false_alarms_per_month": 21.458333333333332,
+      "precision": 0.02830188679245283
+    },
+    {
+      "threshold": 0.001468018468026,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 514,
+      "false_alarms_per_month": 21.416666666666668,
+      "precision": 0.02835538752362949
+    },
+    {
+      "threshold": 0.0016150305503703,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 513,
+      "false_alarms_per_month": 21.375,
+      "precision": 0.028409090909090908
+    },
+    {
+      "threshold": 0.0019165458206075,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 512,
+      "false_alarms_per_month": 21.333333333333332,
+      "precision": 0.028462998102466792
+    },
+    {
+      "threshold": 0.0020128208593246,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 511,
+      "false_alarms_per_month": 21.291666666666668,
+      "precision": 0.028517110266159697
+    },
+    {
+      "threshold": 0.0023847186611349,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 510,
+      "false_alarms_per_month": 21.25,
+      "precision": 0.02857142857142857
+    },
+    {
+      "threshold": 0.002400717308364,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 509,
+      "false_alarms_per_month": 21.208333333333332,
+      "precision": 0.02862595419847328
+    },
+    {
+      "threshold": 0.0026042137881105,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 508,
+      "false_alarms_per_month": 21.166666666666668,
+      "precision": 0.028680688336520075
+    },
+    {
+      "threshold": 0.0026347803170492,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 504,
+      "false_alarms_per_month": 21.0,
+      "precision": 0.028901734104046242
+    },
+    {
+      "threshold": 0.0026546622436267,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 501,
+      "false_alarms_per_month": 20.875,
+      "precision": 0.029069767441860465
+    },
+    {
+      "threshold": 0.0026583312558098,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 500,
+      "false_alarms_per_month": 20.833333333333332,
+      "precision": 0.02912621359223301
+    },
+    {
+      "threshold": 0.0026657046566987,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 499,
+      "false_alarms_per_month": 20.791666666666668,
+      "precision": 0.029182879377431907
+    },
+    {
+      "threshold": 0.0026874070065397,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 497,
+      "false_alarms_per_month": 20.708333333333332,
+      "precision": 0.029296875
+    },
+    {
+      "threshold": 0.0026969909729392,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 496,
+      "false_alarms_per_month": 20.666666666666668,
+      "precision": 0.029354207436399216
+    },
+    {
+      "threshold": 0.002728039112115,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 495,
+      "false_alarms_per_month": 20.625,
+      "precision": 0.029411764705882353
+    },
+    {
+      "threshold": 0.0027508568211234,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 493,
+      "false_alarms_per_month": 20.541666666666668,
+      "precision": 0.02952755905511811
+    },
+    {
+      "threshold": 0.0027831397455832,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 492,
+      "false_alarms_per_month": 20.5,
+      "precision": 0.029585798816568046
+    },
+    {
+      "threshold": 0.0028488433584875,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 491,
+      "false_alarms_per_month": 20.458333333333332,
+      "precision": 0.029644268774703556
+    },
+    {
+      "threshold": 0.0028919092146219,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 490,
+      "false_alarms_per_month": 20.416666666666668,
+      "precision": 0.0297029702970297
+    },
+    {
+      "threshold": 0.0029258426153656,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 487,
+      "false_alarms_per_month": 20.291666666666668,
+      "precision": 0.029880478087649404
+    },
+    {
+      "threshold": 0.0029264906754982,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 486,
+      "false_alarms_per_month": 20.25,
+      "precision": 0.029940119760479042
+    },
+    {
+      "threshold": 0.0030553792488551,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 485,
+      "false_alarms_per_month": 20.208333333333332,
+      "precision": 0.03
+    },
+    {
+      "threshold": 0.0030875000127608,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 484,
+      "false_alarms_per_month": 20.166666666666668,
+      "precision": 0.03006012024048096
+    },
+    {
+      "threshold": 0.0030912248455645,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 483,
+      "false_alarms_per_month": 20.125,
+      "precision": 0.030120481927710843
+    },
+    {
+      "threshold": 0.0030994905410475,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 481,
+      "false_alarms_per_month": 20.041666666666668,
+      "precision": 0.03024193548387097
+    },
+    {
+      "threshold": 0.003135852021996,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 479,
+      "false_alarms_per_month": 19.958333333333332,
+      "precision": 0.030364372469635626
+    },
+    {
+      "threshold": 0.0031597331128392,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 478,
+      "false_alarms_per_month": 19.916666666666668,
+      "precision": 0.030425963488843813
+    },
+    {
+      "threshold": 0.0031754574100211,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 477,
+      "false_alarms_per_month": 19.875,
+      "precision": 0.03048780487804878
+    },
+    {
+      "threshold": 0.0031967990594758,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 476,
+      "false_alarms_per_month": 19.833333333333332,
+      "precision": 0.03054989816700611
+    },
+    {
+      "threshold": 0.003211995982001,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 475,
+      "false_alarms_per_month": 19.791666666666668,
+      "precision": 0.030612244897959183
+    },
+    {
+      "threshold": 0.0032734353746688,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 474,
+      "false_alarms_per_month": 19.75,
+      "precision": 0.03067484662576687
+    },
+    {
+      "threshold": 0.00331489053194,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 473,
+      "false_alarms_per_month": 19.708333333333332,
+      "precision": 0.030737704918032786
+    },
+    {
+      "threshold": 0.0033270901529973,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 472,
+      "false_alarms_per_month": 19.666666666666668,
+      "precision": 0.030800821355236138
+    },
+    {
+      "threshold": 0.0033598719813114,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 471,
+      "false_alarms_per_month": 19.625,
+      "precision": 0.030864197530864196
+    },
+    {
+      "threshold": 0.0034055913457629,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 470,
+      "false_alarms_per_month": 19.583333333333332,
+      "precision": 0.030927835051546393
+    },
+    {
+      "threshold": 0.003485938260585,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 469,
+      "false_alarms_per_month": 19.541666666666668,
+      "precision": 0.030991735537190084
+    },
+    {
+      "threshold": 0.0034921214935041,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 468,
+      "false_alarms_per_month": 19.5,
+      "precision": 0.031055900621118012
+    },
+    {
+      "threshold": 0.0035522863363178,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 467,
+      "false_alarms_per_month": 19.458333333333332,
+      "precision": 0.03112033195020747
+    },
+    {
+      "threshold": 0.003567384334851,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 466,
+      "false_alarms_per_month": 19.416666666666668,
+      "precision": 0.031185031185031187
+    },
+    {
+      "threshold": 0.0036100138858064,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 465,
+      "false_alarms_per_month": 19.375,
+      "precision": 0.03125
+    },
+    {
+      "threshold": 0.0036515343885761,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 464,
+      "false_alarms_per_month": 19.333333333333332,
+      "precision": 0.031315240083507306
+    },
+    {
+      "threshold": 0.0036523425971721,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 463,
+      "false_alarms_per_month": 19.291666666666668,
+      "precision": 0.03138075313807531
+    },
+    {
+      "threshold": 0.0036820478252116,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 462,
+      "false_alarms_per_month": 19.25,
+      "precision": 0.031446540880503145
+    },
+    {
+      "threshold": 0.0036939244799827,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 461,
+      "false_alarms_per_month": 19.208333333333332,
+      "precision": 0.031512605042016806
+    },
+    {
+      "threshold": 0.0036939982119696,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 460,
+      "false_alarms_per_month": 19.166666666666668,
+      "precision": 0.031578947368421054
+    },
+    {
+      "threshold": 0.0036951657872776,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 459,
+      "false_alarms_per_month": 19.125,
+      "precision": 0.03164556962025317
+    },
+    {
+      "threshold": 0.003778963271366,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 457,
+      "false_alarms_per_month": 19.041666666666668,
+      "precision": 0.03177966101694915
+    },
+    {
+      "threshold": 0.00378231860126,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 455,
+      "false_alarms_per_month": 18.958333333333332,
+      "precision": 0.031914893617021274
+    },
+    {
+      "threshold": 0.0038096257058912,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 454,
+      "false_alarms_per_month": 18.916666666666668,
+      "precision": 0.031982942430703626
+    },
+    {
+      "threshold": 0.0038642516231023,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 453,
+      "false_alarms_per_month": 18.875,
+      "precision": 0.03205128205128205
+    },
+    {
+      "threshold": 0.0038706624610333,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 452,
+      "false_alarms_per_month": 18.833333333333332,
+      "precision": 0.032119914346895075
+    },
+    {
+      "threshold": 0.0038780161925334,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 451,
+      "false_alarms_per_month": 18.791666666666668,
+      "precision": 0.032188841201716736
+    },
+    {
+      "threshold": 0.0039029998317682,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 450,
+      "false_alarms_per_month": 18.75,
+      "precision": 0.03225806451612903
+    },
+    {
+      "threshold": 0.0039156645179283,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 449,
+      "false_alarms_per_month": 18.708333333333332,
+      "precision": 0.032327586206896554
+    },
+    {
+      "threshold": 0.0039619380145984,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 448,
+      "false_alarms_per_month": 18.666666666666668,
+      "precision": 0.032397408207343416
+    },
+    {
+      "threshold": 0.0039881666216839,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 447,
+      "false_alarms_per_month": 18.625,
+      "precision": 0.032467532467532464
+    },
+    {
+      "threshold": 0.0039894268035521,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 446,
+      "false_alarms_per_month": 18.583333333333332,
+      "precision": 0.03253796095444685
+    },
+    {
+      "threshold": 0.003990481433012,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 445,
+      "false_alarms_per_month": 18.541666666666668,
+      "precision": 0.03260869565217391
+    },
+    {
+      "threshold": 0.0040079970121401,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 444,
+      "false_alarms_per_month": 18.5,
+      "precision": 0.032679738562091505
+    },
+    {
+      "threshold": 0.004036186246805,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 443,
+      "false_alarms_per_month": 18.458333333333332,
+      "precision": 0.03275109170305677
+    },
+    {
+      "threshold": 0.0040369037418385,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 442,
+      "false_alarms_per_month": 18.416666666666668,
+      "precision": 0.03282275711159737
+    },
+    {
+      "threshold": 0.0040418597947689,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 441,
+      "false_alarms_per_month": 18.375,
+      "precision": 0.03289473684210526
+    },
+    {
+      "threshold": 0.0040526570808853,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 440,
+      "false_alarms_per_month": 18.333333333333332,
+      "precision": 0.03296703296703297
+    },
+    {
+      "threshold": 0.0040634451476281,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 439,
+      "false_alarms_per_month": 18.291666666666668,
+      "precision": 0.03303964757709251
+    },
+    {
+      "threshold": 0.0040960923485286,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 438,
+      "false_alarms_per_month": 18.25,
+      "precision": 0.033112582781456956
+    },
+    {
+      "threshold": 0.0041150387875719,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 437,
+      "false_alarms_per_month": 18.208333333333332,
+      "precision": 0.033185840707964605
+    },
+    {
+      "threshold": 0.0041371556504458,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 436,
+      "false_alarms_per_month": 18.166666666666668,
+      "precision": 0.03325942350332594
+    },
+    {
+      "threshold": 0.0041440968000915,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 435,
+      "false_alarms_per_month": 18.125,
+      "precision": 0.03333333333333333
+    },
+    {
+      "threshold": 0.0042488273665339,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 434,
+      "false_alarms_per_month": 18.083333333333332,
+      "precision": 0.0334075723830735
+    },
+    {
+      "threshold": 0.0042582096735786,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 433,
+      "false_alarms_per_month": 18.041666666666668,
+      "precision": 0.033482142857142856
+    },
+    {
+      "threshold": 0.0042843105199512,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 432,
+      "false_alarms_per_month": 18.0,
+      "precision": 0.03355704697986577
+    },
+    {
+      "threshold": 0.0042995648923746,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 431,
+      "false_alarms_per_month": 17.958333333333332,
+      "precision": 0.033632286995515695
+    },
+    {
+      "threshold": 0.0043058249478248,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 430,
+      "false_alarms_per_month": 17.916666666666668,
+      "precision": 0.033707865168539325
+    },
+    {
+      "threshold": 0.0043345112074866,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 429,
+      "false_alarms_per_month": 17.875,
+      "precision": 0.033783783783783786
+    },
+    {
+      "threshold": 0.0043852975225199,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 428,
+      "false_alarms_per_month": 17.833333333333332,
+      "precision": 0.033860045146726865
+    },
+    {
+      "threshold": 0.0043985474668723,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 427,
+      "false_alarms_per_month": 17.791666666666668,
+      "precision": 0.033936651583710405
+    },
+    {
+      "threshold": 0.0044078743280379,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 426,
+      "false_alarms_per_month": 17.75,
+      "precision": 0.034013605442176874
+    },
+    {
+      "threshold": 0.0044514862095919,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 425,
+      "false_alarms_per_month": 17.708333333333332,
+      "precision": 0.03409090909090909
+    },
+    {
+      "threshold": 0.0044524706834707,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 424,
+      "false_alarms_per_month": 17.666666666666668,
+      "precision": 0.03416856492027335
+    },
+    {
+      "threshold": 0.0044603606435234,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 423,
+      "false_alarms_per_month": 17.625,
+      "precision": 0.03424657534246575
+    },
+    {
+      "threshold": 0.0045348669922122,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 422,
+      "false_alarms_per_month": 17.583333333333332,
+      "precision": 0.034324942791762014
+    },
+    {
+      "threshold": 0.0045412383247704,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 421,
+      "false_alarms_per_month": 17.541666666666668,
+      "precision": 0.034403669724770644
+    },
+    {
+      "threshold": 0.004557403306694,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 420,
+      "false_alarms_per_month": 17.5,
+      "precision": 0.034482758620689655
+    },
+    {
+      "threshold": 0.004621490721576,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 418,
+      "false_alarms_per_month": 17.416666666666668,
+      "precision": 0.03464203233256351
+    },
+    {
+      "threshold": 0.0046458809135702,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 417,
+      "false_alarms_per_month": 17.375,
+      "precision": 0.034722222222222224
+    },
+    {
+      "threshold": 0.0048134994676292,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 416,
+      "false_alarms_per_month": 17.333333333333332,
+      "precision": 0.03480278422273782
+    },
+    {
+      "threshold": 0.0048564605484085,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 414,
+      "false_alarms_per_month": 17.25,
+      "precision": 0.03496503496503497
+    },
+    {
+      "threshold": 0.004865467485322,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 413,
+      "false_alarms_per_month": 17.208333333333332,
+      "precision": 0.035046728971962614
+    },
+    {
+      "threshold": 0.0048845773840793,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 412,
+      "false_alarms_per_month": 17.166666666666668,
+      "precision": 0.0351288056206089
+    },
+    {
+      "threshold": 0.0048861194245146,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 411,
+      "false_alarms_per_month": 17.125,
+      "precision": 0.035211267605633804
+    },
+    {
+      "threshold": 0.0048958560773118,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 410,
+      "false_alarms_per_month": 17.083333333333332,
+      "precision": 0.03529411764705882
+    },
+    {
+      "threshold": 0.0049268984494575,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 409,
+      "false_alarms_per_month": 17.041666666666668,
+      "precision": 0.03537735849056604
+    },
+    {
+      "threshold": 0.0049444294076575,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 408,
+      "false_alarms_per_month": 17.0,
+      "precision": 0.03546099290780142
+    },
+    {
+      "threshold": 0.0049511552779529,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 406,
+      "false_alarms_per_month": 16.916666666666668,
+      "precision": 0.035629453681710214
+    },
+    {
+      "threshold": 0.0049702149606161,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 405,
+      "false_alarms_per_month": 16.875,
+      "precision": 0.03571428571428571
+    },
+    {
+      "threshold": 0.0049859447708755,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 404,
+      "false_alarms_per_month": 16.833333333333332,
+      "precision": 0.03579952267303103
+    },
+    {
+      "threshold": 0.005000747538034,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 403,
+      "false_alarms_per_month": 16.791666666666668,
+      "precision": 0.03588516746411483
+    },
+    {
+      "threshold": 0.0050088720548855,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 402,
+      "false_alarms_per_month": 16.75,
+      "precision": 0.03597122302158273
+    },
+    {
+      "threshold": 0.0050597789030365,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 401,
+      "false_alarms_per_month": 16.708333333333332,
+      "precision": 0.036057692307692304
+    },
+    {
+      "threshold": 0.0051275992953148,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 400,
+      "false_alarms_per_month": 16.666666666666668,
+      "precision": 0.03614457831325301
+    },
+    {
+      "threshold": 0.0052490223075381,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 399,
+      "false_alarms_per_month": 16.625,
+      "precision": 0.036231884057971016
+    },
+    {
+      "threshold": 0.0052500152625906,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 398,
+      "false_alarms_per_month": 16.583333333333332,
+      "precision": 0.03631961259079903
+    },
+    {
+      "threshold": 0.0053004109781668,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 397,
+      "false_alarms_per_month": 16.541666666666668,
+      "precision": 0.03640776699029126
+    },
+    {
+      "threshold": 0.0053038387509162,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 396,
+      "false_alarms_per_month": 16.5,
+      "precision": 0.0364963503649635
+    },
+    {
+      "threshold": 0.0053109687906656,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 395,
+      "false_alarms_per_month": 16.458333333333332,
+      "precision": 0.036585365853658534
+    },
+    {
+      "threshold": 0.005335957591417,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 394,
+      "false_alarms_per_month": 16.416666666666668,
+      "precision": 0.03667481662591687
+    },
+    {
+      "threshold": 0.0053736423877397,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 393,
+      "false_alarms_per_month": 16.375,
+      "precision": 0.03676470588235294
+    },
+    {
+      "threshold": 0.0054365374472355,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 392,
+      "false_alarms_per_month": 16.333333333333332,
+      "precision": 0.036855036855036855
+    },
+    {
+      "threshold": 0.0054855831694114,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 391,
+      "false_alarms_per_month": 16.291666666666668,
+      "precision": 0.03694581280788178
+    },
+    {
+      "threshold": 0.0054904454506315,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 390,
+      "false_alarms_per_month": 16.25,
+      "precision": 0.037037037037037035
+    },
+    {
+      "threshold": 0.0055076985704557,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 389,
+      "false_alarms_per_month": 16.208333333333332,
+      "precision": 0.03712871287128713
+    },
+    {
+      "threshold": 0.0055179470120761,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 388,
+      "false_alarms_per_month": 16.166666666666668,
+      "precision": 0.03722084367245657
+    },
+    {
+      "threshold": 0.0055645322188472,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 387,
+      "false_alarms_per_month": 16.125,
+      "precision": 0.03731343283582089
+    },
+    {
+      "threshold": 0.0056059652733077,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 386,
+      "false_alarms_per_month": 16.083333333333332,
+      "precision": 0.03740648379052369
+    },
+    {
+      "threshold": 0.0056197022304735,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 385,
+      "false_alarms_per_month": 16.041666666666668,
+      "precision": 0.0375
+    },
+    {
+      "threshold": 0.0056555938928568,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 384,
+      "false_alarms_per_month": 16.0,
+      "precision": 0.03759398496240601
+    },
+    {
+      "threshold": 0.0056573779561424,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 383,
+      "false_alarms_per_month": 15.958333333333334,
+      "precision": 0.03768844221105527
+    },
+    {
+      "threshold": 0.0056824127857522,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 382,
+      "false_alarms_per_month": 15.916666666666666,
+      "precision": 0.037783375314861464
+    },
+    {
+      "threshold": 0.0058418732388884,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 381,
+      "false_alarms_per_month": 15.875,
+      "precision": 0.03787878787878788
+    },
+    {
+      "threshold": 0.0058582876617852,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 380,
+      "false_alarms_per_month": 15.833333333333334,
+      "precision": 0.0379746835443038
+    },
+    {
+      "threshold": 0.0058773972063862,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 379,
+      "false_alarms_per_month": 15.791666666666666,
+      "precision": 0.03807106598984772
+    },
+    {
+      "threshold": 0.0058977794869239,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 378,
+      "false_alarms_per_month": 15.75,
+      "precision": 0.03816793893129771
+    },
+    {
+      "threshold": 0.0059376956400776,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 377,
+      "false_alarms_per_month": 15.708333333333334,
+      "precision": 0.03826530612244898
+    },
+    {
+      "threshold": 0.0060045640226847,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 376,
+      "false_alarms_per_month": 15.666666666666666,
+      "precision": 0.03836317135549872
+    },
+    {
+      "threshold": 0.00601716791132,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 375,
+      "false_alarms_per_month": 15.625,
+      "precision": 0.038461538461538464
+    },
+    {
+      "threshold": 0.0060245760575856,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 374,
+      "false_alarms_per_month": 15.583333333333334,
+      "precision": 0.038560411311053984
+    },
+    {
+      "threshold": 0.0060365675702348,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 373,
+      "false_alarms_per_month": 15.541666666666666,
+      "precision": 0.03865979381443299
+    },
+    {
+      "threshold": 0.0061624429174011,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 372,
+      "false_alarms_per_month": 15.5,
+      "precision": 0.03875968992248062
+    },
+    {
+      "threshold": 0.0061676908151031,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 371,
+      "false_alarms_per_month": 15.458333333333334,
+      "precision": 0.038860103626943004
+    },
+    {
+      "threshold": 0.0061725501701043,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 370,
+      "false_alarms_per_month": 15.416666666666666,
+      "precision": 0.03896103896103896
+    },
+    {
+      "threshold": 0.006234512513854,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 369,
+      "false_alarms_per_month": 15.375,
+      "precision": 0.0390625
+    },
+    {
+      "threshold": 0.0062378548147204,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 368,
+      "false_alarms_per_month": 15.333333333333334,
+      "precision": 0.0391644908616188
+    },
+    {
+      "threshold": 0.0062498646523317,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 367,
+      "false_alarms_per_month": 15.291666666666666,
+      "precision": 0.03926701570680628
+    },
+    {
+      "threshold": 0.0062904382432317,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 366,
+      "false_alarms_per_month": 15.25,
+      "precision": 0.03937007874015748
+    },
+    {
+      "threshold": 0.0062952804753693,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 365,
+      "false_alarms_per_month": 15.208333333333334,
+      "precision": 0.039473684210526314
+    },
+    {
+      "threshold": 0.0063148777939231,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 364,
+      "false_alarms_per_month": 15.166666666666666,
+      "precision": 0.0395778364116095
+    },
+    {
+      "threshold": 0.0063530801518731,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 363,
+      "false_alarms_per_month": 15.125,
+      "precision": 0.03968253968253968
+    },
+    {
+      "threshold": 0.0063550828317467,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 362,
+      "false_alarms_per_month": 15.083333333333334,
+      "precision": 0.03978779840848806
+    },
+    {
+      "threshold": 0.0063809559717796,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 361,
+      "false_alarms_per_month": 15.041666666666666,
+      "precision": 0.0398936170212766
+    },
+    {
+      "threshold": 0.0063966934312031,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 360,
+      "false_alarms_per_month": 15.0,
+      "precision": 0.04
+    },
+    {
+      "threshold": 0.0063979020943139,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 359,
+      "false_alarms_per_month": 14.958333333333334,
+      "precision": 0.040106951871657755
+    },
+    {
+      "threshold": 0.0064716783139738,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 358,
+      "false_alarms_per_month": 14.916666666666666,
+      "precision": 0.040214477211796246
+    },
+    {
+      "threshold": 0.0064742360092456,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 357,
+      "false_alarms_per_month": 14.875,
+      "precision": 0.04032258064516129
+    },
+    {
+      "threshold": 0.0064768485979088,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 356,
+      "false_alarms_per_month": 14.833333333333334,
+      "precision": 0.04043126684636118
+    },
+    {
+      "threshold": 0.0065133960983105,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 355,
+      "false_alarms_per_month": 14.791666666666666,
+      "precision": 0.04054054054054054
+    },
+    {
+      "threshold": 0.0067447957194878,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 354,
+      "false_alarms_per_month": 14.75,
+      "precision": 0.04065040650406504
+    },
+    {
+      "threshold": 0.0067572336873696,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 353,
+      "false_alarms_per_month": 14.708333333333334,
+      "precision": 0.04076086956521739
+    },
+    {
+      "threshold": 0.0067672580055402,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 352,
+      "false_alarms_per_month": 14.666666666666666,
+      "precision": 0.04087193460490463
+    },
+    {
+      "threshold": 0.0068039856113863,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 351,
+      "false_alarms_per_month": 14.625,
+      "precision": 0.040983606557377046
+    },
+    {
+      "threshold": 0.0069333464424436,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 350,
+      "false_alarms_per_month": 14.583333333333334,
+      "precision": 0.0410958904109589
+    },
+    {
+      "threshold": 0.0069351126006195,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 349,
+      "false_alarms_per_month": 14.541666666666666,
+      "precision": 0.04120879120879121
+    },
+    {
+      "threshold": 0.0070088506979718,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 348,
+      "false_alarms_per_month": 14.5,
+      "precision": 0.04132231404958678
+    },
+    {
+      "threshold": 0.0070210678882871,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 347,
+      "false_alarms_per_month": 14.458333333333334,
+      "precision": 0.04143646408839779
+    },
+    {
+      "threshold": 0.0070844789879039,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 346,
+      "false_alarms_per_month": 14.416666666666666,
+      "precision": 0.04155124653739612
+    },
+    {
+      "threshold": 0.0070897842681019,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 345,
+      "false_alarms_per_month": 14.375,
+      "precision": 0.041666666666666664
+    },
+    {
+      "threshold": 0.0071482182161708,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 344,
+      "false_alarms_per_month": 14.333333333333334,
+      "precision": 0.04178272980501393
+    },
+    {
+      "threshold": 0.0071640555568549,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 343,
+      "false_alarms_per_month": 14.291666666666666,
+      "precision": 0.04189944134078212
+    },
+    {
+      "threshold": 0.0072438278758254,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 342,
+      "false_alarms_per_month": 14.25,
+      "precision": 0.04201680672268908
+    },
+    {
+      "threshold": 0.0072535201776658,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 341,
+      "false_alarms_per_month": 14.208333333333334,
+      "precision": 0.042134831460674156
+    },
+    {
+      "threshold": 0.0072690738900779,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 340,
+      "false_alarms_per_month": 14.166666666666666,
+      "precision": 0.04225352112676056
+    },
+    {
+      "threshold": 0.0072964218348739,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 339,
+      "false_alarms_per_month": 14.125,
+      "precision": 0.0423728813559322
+    },
+    {
+      "threshold": 0.0073073648751017,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 338,
+      "false_alarms_per_month": 14.083333333333334,
+      "precision": 0.042492917847025496
+    },
+    {
+      "threshold": 0.0073284509830337,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 337,
+      "false_alarms_per_month": 14.041666666666666,
+      "precision": 0.04261363636363636
+    },
+    {
+      "threshold": 0.0074256106017703,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 336,
+      "false_alarms_per_month": 14.0,
+      "precision": 0.042735042735042736
+    },
+    {
+      "threshold": 0.0074279488477524,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 335,
+      "false_alarms_per_month": 13.958333333333334,
+      "precision": 0.04285714285714286
+    },
+    {
+      "threshold": 0.0074881310450048,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 334,
+      "false_alarms_per_month": 13.916666666666666,
+      "precision": 0.04297994269340974
+    },
+    {
+      "threshold": 0.0075294233829738,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 333,
+      "false_alarms_per_month": 13.875,
+      "precision": 0.04310344827586207
+    },
+    {
+      "threshold": 0.0075957515160101,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 332,
+      "false_alarms_per_month": 13.833333333333334,
+      "precision": 0.043227665706051875
+    },
+    {
+      "threshold": 0.0077187594139575,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 331,
+      "false_alarms_per_month": 13.791666666666666,
+      "precision": 0.04335260115606936
+    },
+    {
+      "threshold": 0.0077535490725513,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 330,
+      "false_alarms_per_month": 13.75,
+      "precision": 0.043478260869565216
+    },
+    {
+      "threshold": 0.0077665103398176,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 329,
+      "false_alarms_per_month": 13.708333333333334,
+      "precision": 0.0436046511627907
+    },
+    {
+      "threshold": 0.00777861067947,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 328,
+      "false_alarms_per_month": 13.666666666666666,
+      "precision": 0.043731778425655975
+    },
+    {
+      "threshold": 0.0077810592100489,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 327,
+      "false_alarms_per_month": 13.625,
+      "precision": 0.043859649122807015
+    },
+    {
+      "threshold": 0.0078676976314783,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 326,
+      "false_alarms_per_month": 13.583333333333334,
+      "precision": 0.04398826979472141
+    },
+    {
+      "threshold": 0.0078719085418595,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 325,
+      "false_alarms_per_month": 13.541666666666666,
+      "precision": 0.04411764705882353
+    },
+    {
+      "threshold": 0.0079037021382466,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 324,
+      "false_alarms_per_month": 13.5,
+      "precision": 0.04424778761061947
+    },
+    {
+      "threshold": 0.0080496592394574,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 323,
+      "false_alarms_per_month": 13.458333333333334,
+      "precision": 0.04437869822485207
+    },
+    {
+      "threshold": 0.0081220111849742,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 322,
+      "false_alarms_per_month": 13.416666666666666,
+      "precision": 0.04451038575667656
+    },
+    {
+      "threshold": 0.0081727620670811,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 321,
+      "false_alarms_per_month": 13.375,
+      "precision": 0.044642857142857144
+    },
+    {
+      "threshold": 0.0082415392257051,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 320,
+      "false_alarms_per_month": 13.333333333333334,
+      "precision": 0.04477611940298507
+    },
+    {
+      "threshold": 0.0082524317198219,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 319,
+      "false_alarms_per_month": 13.291666666666666,
+      "precision": 0.04491017964071856
+    },
+    {
+      "threshold": 0.0082598534372841,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 318,
+      "false_alarms_per_month": 13.25,
+      "precision": 0.04504504504504504
+    },
+    {
+      "threshold": 0.0085078331207483,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 317,
+      "false_alarms_per_month": 13.208333333333334,
+      "precision": 0.045180722891566265
+    },
+    {
+      "threshold": 0.0085379964827163,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 316,
+      "false_alarms_per_month": 13.166666666666666,
+      "precision": 0.045317220543806644
+    },
+    {
+      "threshold": 0.0085528561824477,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 315,
+      "false_alarms_per_month": 13.125,
+      "precision": 0.045454545454545456
+    },
+    {
+      "threshold": 0.008711247441219,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 314,
+      "false_alarms_per_month": 13.083333333333334,
+      "precision": 0.04559270516717325
+    },
+    {
+      "threshold": 0.0087364449006668,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 313,
+      "false_alarms_per_month": 13.041666666666666,
+      "precision": 0.04573170731707317
+    },
+    {
+      "threshold": 0.0087383687019265,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 312,
+      "false_alarms_per_month": 13.0,
+      "precision": 0.045871559633027525
+    },
+    {
+      "threshold": 0.0088197163460963,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 311,
+      "false_alarms_per_month": 12.958333333333334,
+      "precision": 0.046012269938650305
+    },
+    {
+      "threshold": 0.0088402957093151,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 310,
+      "false_alarms_per_month": 12.916666666666666,
+      "precision": 0.046153846153846156
+    },
+    {
+      "threshold": 0.0089012471757191,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 309,
+      "false_alarms_per_month": 12.875,
+      "precision": 0.046296296296296294
+    },
+    {
+      "threshold": 0.0089414323648146,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 308,
+      "false_alarms_per_month": 12.833333333333334,
+      "precision": 0.04643962848297214
+    },
+    {
+      "threshold": 0.0089434008979058,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 307,
+      "false_alarms_per_month": 12.791666666666666,
+      "precision": 0.046583850931677016
+    },
+    {
+      "threshold": 0.0090457063544198,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 306,
+      "false_alarms_per_month": 12.75,
+      "precision": 0.04672897196261682
+    },
+    {
+      "threshold": 0.0091208826521997,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 305,
+      "false_alarms_per_month": 12.708333333333334,
+      "precision": 0.046875
+    },
+    {
+      "threshold": 0.0091503231012187,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 304,
+      "false_alarms_per_month": 12.666666666666666,
+      "precision": 0.047021943573667714
+    },
+    {
+      "threshold": 0.0092599199515689,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 302,
+      "false_alarms_per_month": 12.583333333333334,
+      "precision": 0.0473186119873817
+    },
+    {
+      "threshold": 0.009288812936538,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 301,
+      "false_alarms_per_month": 12.541666666666666,
+      "precision": 0.04746835443037975
+    },
+    {
+      "threshold": 0.0094615321886725,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 300,
+      "false_alarms_per_month": 12.5,
+      "precision": 0.047619047619047616
+    },
+    {
+      "threshold": 0.0095225002869126,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 299,
+      "false_alarms_per_month": 12.458333333333334,
+      "precision": 0.04777070063694268
+    },
+    {
+      "threshold": 0.0095848801971938,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 298,
+      "false_alarms_per_month": 12.416666666666666,
+      "precision": 0.04792332268370607
+    },
+    {
+      "threshold": 0.0095875326735432,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 297,
+      "false_alarms_per_month": 12.375,
+      "precision": 0.04807692307692308
+    },
+    {
+      "threshold": 0.0096563452763433,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 296,
+      "false_alarms_per_month": 12.333333333333334,
+      "precision": 0.04823151125401929
+    },
+    {
+      "threshold": 0.0096992676721717,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 295,
+      "false_alarms_per_month": 12.291666666666666,
+      "precision": 0.04838709677419355
+    },
+    {
+      "threshold": 0.0098655245404284,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 294,
+      "false_alarms_per_month": 12.25,
+      "precision": 0.04854368932038835
+    },
+    {
+      "threshold": 0.0099928801700888,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 293,
+      "false_alarms_per_month": 12.208333333333334,
+      "precision": 0.048701298701298704
+    },
+    {
+      "threshold": 0.0100068427386715,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 292,
+      "false_alarms_per_month": 12.166666666666666,
+      "precision": 0.048859934853420196
+    },
+    {
+      "threshold": 0.0100369066545749,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 291,
+      "false_alarms_per_month": 12.125,
+      "precision": 0.049019607843137254
+    },
+    {
+      "threshold": 0.0100422668068648,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 290,
+      "false_alarms_per_month": 12.083333333333334,
+      "precision": 0.04918032786885246
+    },
+    {
+      "threshold": 0.0101277608246594,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 289,
+      "false_alarms_per_month": 12.041666666666666,
+      "precision": 0.049342105263157895
+    },
+    {
+      "threshold": 0.0101538250550034,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 288,
+      "false_alarms_per_month": 12.0,
+      "precision": 0.04950495049504951
+    },
+    {
+      "threshold": 0.0101560577714541,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 287,
+      "false_alarms_per_month": 11.958333333333334,
+      "precision": 0.04966887417218543
+    },
+    {
+      "threshold": 0.0101592470061222,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 286,
+      "false_alarms_per_month": 11.916666666666666,
+      "precision": 0.04983388704318937
+    },
+    {
+      "threshold": 0.0102408816486706,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 285,
+      "false_alarms_per_month": 11.875,
+      "precision": 0.05
+    },
+    {
+      "threshold": 0.0103972682089186,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 284,
+      "false_alarms_per_month": 11.833333333333334,
+      "precision": 0.05016722408026756
+    },
+    {
+      "threshold": 0.0104718310785212,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 283,
+      "false_alarms_per_month": 11.791666666666666,
+      "precision": 0.050335570469798654
+    },
+    {
+      "threshold": 0.0105210422653655,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 282,
+      "false_alarms_per_month": 11.75,
+      "precision": 0.050505050505050504
+    },
+    {
+      "threshold": 0.0106585419891428,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 281,
+      "false_alarms_per_month": 11.708333333333334,
+      "precision": 0.05067567567567568
+    },
+    {
+      "threshold": 0.010796510312961,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 280,
+      "false_alarms_per_month": 11.666666666666666,
+      "precision": 0.05084745762711865
+    },
+    {
+      "threshold": 0.0108726223501364,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 278,
+      "false_alarms_per_month": 11.583333333333334,
+      "precision": 0.051194539249146756
+    },
+    {
+      "threshold": 0.010884177944394,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 276,
+      "false_alarms_per_month": 11.5,
+      "precision": 0.05154639175257732
+    },
+    {
+      "threshold": 0.0108899855995818,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 274,
+      "false_alarms_per_month": 11.416666666666666,
+      "precision": 0.05190311418685121
+    },
+    {
+      "threshold": 0.0109049181663958,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 273,
+      "false_alarms_per_month": 11.375,
+      "precision": 0.052083333333333336
+    },
+    {
+      "threshold": 0.0109074313336646,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 272,
+      "false_alarms_per_month": 11.333333333333334,
+      "precision": 0.05226480836236934
+    },
+    {
+      "threshold": 0.0109088937086363,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 271,
+      "false_alarms_per_month": 11.291666666666666,
+      "precision": 0.05244755244755245
+    },
+    {
+      "threshold": 0.0109678869582243,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 270,
+      "false_alarms_per_month": 11.25,
+      "precision": 0.05263157894736842
+    },
+    {
+      "threshold": 0.0111071027770139,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 269,
+      "false_alarms_per_month": 11.208333333333334,
+      "precision": 0.0528169014084507
+    },
+    {
+      "threshold": 0.011135120756347,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 268,
+      "false_alarms_per_month": 11.166666666666666,
+      "precision": 0.053003533568904596
+    },
+    {
+      "threshold": 0.0111414393434725,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 267,
+      "false_alarms_per_month": 11.125,
+      "precision": 0.05319148936170213
+    },
+    {
+      "threshold": 0.011162784078871,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 266,
+      "false_alarms_per_month": 11.083333333333334,
+      "precision": 0.05338078291814947
+    },
+    {
+      "threshold": 0.011163501240827,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 264,
+      "false_alarms_per_month": 11.0,
+      "precision": 0.053763440860215055
+    },
+    {
+      "threshold": 0.0112017794913264,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 263,
+      "false_alarms_per_month": 10.958333333333334,
+      "precision": 0.0539568345323741
+    },
+    {
+      "threshold": 0.0112277945859059,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 262,
+      "false_alarms_per_month": 10.916666666666666,
+      "precision": 0.05415162454873646
+    },
+    {
+      "threshold": 0.0112933934585737,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 261,
+      "false_alarms_per_month": 10.875,
+      "precision": 0.05434782608695652
+    },
+    {
+      "threshold": 0.0114032790249203,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 260,
+      "false_alarms_per_month": 10.833333333333334,
+      "precision": 0.05454545454545454
+    },
+    {
+      "threshold": 0.0114258534173698,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 259,
+      "false_alarms_per_month": 10.791666666666666,
+      "precision": 0.05474452554744526
+    },
+    {
+      "threshold": 0.0115587625349796,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 258,
+      "false_alarms_per_month": 10.75,
+      "precision": 0.054945054945054944
+    },
+    {
+      "threshold": 0.0116315575238432,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 257,
+      "false_alarms_per_month": 10.708333333333334,
+      "precision": 0.05514705882352941
+    },
+    {
+      "threshold": 0.0116344242147029,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 256,
+      "false_alarms_per_month": 10.666666666666666,
+      "precision": 0.055350553505535055
+    },
+    {
+      "threshold": 0.0117668309749933,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 255,
+      "false_alarms_per_month": 10.625,
+      "precision": 0.05555555555555555
+    },
+    {
+      "threshold": 0.0118047102871131,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 254,
+      "false_alarms_per_month": 10.583333333333334,
+      "precision": 0.055762081784386616
+    },
+    {
+      "threshold": 0.0118084110603056,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 253,
+      "false_alarms_per_month": 10.541666666666666,
+      "precision": 0.055970149253731345
+    },
+    {
+      "threshold": 0.0119618516156959,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 251,
+      "false_alarms_per_month": 10.458333333333334,
+      "precision": 0.05639097744360902
+    },
+    {
+      "threshold": 0.0120017066629669,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 250,
+      "false_alarms_per_month": 10.416666666666666,
+      "precision": 0.05660377358490566
+    },
+    {
+      "threshold": 0.012449511408529,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 249,
+      "false_alarms_per_month": 10.375,
+      "precision": 0.056818181818181816
+    },
+    {
+      "threshold": 0.0124668632843817,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 248,
+      "false_alarms_per_month": 10.333333333333334,
+      "precision": 0.057034220532319393
+    },
+    {
+      "threshold": 0.0125042245786303,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 247,
+      "false_alarms_per_month": 10.291666666666666,
+      "precision": 0.05725190839694656
+    },
+    {
+      "threshold": 0.0126079489337631,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 246,
+      "false_alarms_per_month": 10.25,
+      "precision": 0.05747126436781609
+    },
+    {
+      "threshold": 0.0126624286529094,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 245,
+      "false_alarms_per_month": 10.208333333333334,
+      "precision": 0.057692307692307696
+    },
+    {
+      "threshold": 0.0127582528185738,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 244,
+      "false_alarms_per_month": 10.166666666666666,
+      "precision": 0.05791505791505792
+    },
+    {
+      "threshold": 0.0129882079819717,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 242,
+      "false_alarms_per_month": 10.083333333333334,
+      "precision": 0.058365758754863814
+    },
+    {
+      "threshold": 0.0130563629909719,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 241,
+      "false_alarms_per_month": 10.041666666666666,
+      "precision": 0.05859375
+    },
+    {
+      "threshold": 0.013095467499183,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 240,
+      "false_alarms_per_month": 10.0,
+      "precision": 0.058823529411764705
+    },
+    {
+      "threshold": 0.0130995675602929,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 239,
+      "false_alarms_per_month": 9.958333333333334,
+      "precision": 0.05905511811023622
+    },
+    {
+      "threshold": 0.0132429430792635,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 238,
+      "false_alarms_per_month": 9.916666666666666,
+      "precision": 0.05928853754940711
+    },
+    {
+      "threshold": 0.0132545896464697,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 237,
+      "false_alarms_per_month": 9.875,
+      "precision": 0.05952380952380952
+    },
+    {
+      "threshold": 0.0134084826708451,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 236,
+      "false_alarms_per_month": 9.833333333333334,
+      "precision": 0.05976095617529881
+    },
+    {
+      "threshold": 0.0134320289249121,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 235,
+      "false_alarms_per_month": 9.791666666666666,
+      "precision": 0.06
+    },
+    {
+      "threshold": 0.013552682431261,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 234,
+      "false_alarms_per_month": 9.75,
+      "precision": 0.060240963855421686
+    },
+    {
+      "threshold": 0.013899525856733,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 233,
+      "false_alarms_per_month": 9.708333333333334,
+      "precision": 0.06048387096774194
+    },
+    {
+      "threshold": 0.0139906429727372,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 232,
+      "false_alarms_per_month": 9.666666666666666,
+      "precision": 0.06072874493927125
+    },
+    {
+      "threshold": 0.0140390656533778,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 231,
+      "false_alarms_per_month": 9.625,
+      "precision": 0.06097560975609756
+    },
+    {
+      "threshold": 0.0140810714164864,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 230,
+      "false_alarms_per_month": 9.583333333333334,
+      "precision": 0.061224489795918366
+    },
+    {
+      "threshold": 0.0141923068224637,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 229,
+      "false_alarms_per_month": 9.541666666666666,
+      "precision": 0.06147540983606557
+    },
+    {
+      "threshold": 0.0142782659617246,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 228,
+      "false_alarms_per_month": 9.5,
+      "precision": 0.06172839506172839
+    },
+    {
+      "threshold": 0.0143467101822552,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 227,
+      "false_alarms_per_month": 9.458333333333334,
+      "precision": 0.06198347107438017
+    },
+    {
+      "threshold": 0.0145234322516365,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 226,
+      "false_alarms_per_month": 9.416666666666666,
+      "precision": 0.06224066390041494
+    },
+    {
+      "threshold": 0.0145361883615752,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 225,
+      "false_alarms_per_month": 9.375,
+      "precision": 0.0625
+    },
+    {
+      "threshold": 0.0145604609793439,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 223,
+      "false_alarms_per_month": 9.291666666666666,
+      "precision": 0.06302521008403361
+    },
+    {
+      "threshold": 0.0145616857185641,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 222,
+      "false_alarms_per_month": 9.25,
+      "precision": 0.06329113924050633
+    },
+    {
+      "threshold": 0.0146327625186644,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 221,
+      "false_alarms_per_month": 9.208333333333334,
+      "precision": 0.0635593220338983
+    },
+    {
+      "threshold": 0.0147526528097139,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 220,
+      "false_alarms_per_month": 9.166666666666666,
+      "precision": 0.06382978723404255
+    },
+    {
+      "threshold": 0.0148705684892336,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 219,
+      "false_alarms_per_month": 9.125,
+      "precision": 0.0641025641025641
+    },
+    {
+      "threshold": 0.0150716431700883,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 218,
+      "false_alarms_per_month": 9.083333333333334,
+      "precision": 0.06437768240343347
+    },
+    {
+      "threshold": 0.0151253119890171,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 217,
+      "false_alarms_per_month": 9.041666666666666,
+      "precision": 0.06465517241379311
+    },
+    {
+      "threshold": 0.0151686128249012,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 216,
+      "false_alarms_per_month": 9.0,
+      "precision": 0.06493506493506493
+    },
+    {
+      "threshold": 0.015208679847076,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 215,
+      "false_alarms_per_month": 8.958333333333334,
+      "precision": 0.06521739130434782
+    },
+    {
+      "threshold": 0.0152172743904793,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 214,
+      "false_alarms_per_month": 8.916666666666666,
+      "precision": 0.06550218340611354
+    },
+    {
+      "threshold": 0.015218699221147,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 213,
+      "false_alarms_per_month": 8.875,
+      "precision": 0.06578947368421052
+    },
+    {
+      "threshold": 0.015222028521872,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 212,
+      "false_alarms_per_month": 8.833333333333334,
+      "precision": 0.06607929515418502
+    },
+    {
+      "threshold": 0.0153443831271959,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 211,
+      "false_alarms_per_month": 8.791666666666666,
+      "precision": 0.06637168141592921
+    },
+    {
+      "threshold": 0.0153849071835254,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 210,
+      "false_alarms_per_month": 8.75,
+      "precision": 0.06666666666666667
+    },
+    {
+      "threshold": 0.0153950408400318,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 208,
+      "false_alarms_per_month": 8.666666666666666,
+      "precision": 0.06726457399103139
+    },
+    {
+      "threshold": 0.0154253941842371,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 207,
+      "false_alarms_per_month": 8.625,
+      "precision": 0.06756756756756757
+    },
+    {
+      "threshold": 0.0155006205035881,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 206,
+      "false_alarms_per_month": 8.583333333333334,
+      "precision": 0.06787330316742081
+    },
+    {
+      "threshold": 0.0155339956170316,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 205,
+      "false_alarms_per_month": 8.541666666666666,
+      "precision": 0.06818181818181818
+    },
+    {
+      "threshold": 0.0155479023319048,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 204,
+      "false_alarms_per_month": 8.5,
+      "precision": 0.0684931506849315
+    },
+    {
+      "threshold": 0.015576799113579,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 203,
+      "false_alarms_per_month": 8.458333333333334,
+      "precision": 0.06880733944954129
+    },
+    {
+      "threshold": 0.0157572237030817,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 202,
+      "false_alarms_per_month": 8.416666666666666,
+      "precision": 0.06912442396313365
+    },
+    {
+      "threshold": 0.0157600012366463,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 200,
+      "false_alarms_per_month": 8.333333333333334,
+      "precision": 0.06976744186046512
+    },
+    {
+      "threshold": 0.0159397042949814,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 199,
+      "false_alarms_per_month": 8.291666666666666,
+      "precision": 0.07009345794392523
+    },
+    {
+      "threshold": 0.0161101366004166,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 198,
+      "false_alarms_per_month": 8.25,
+      "precision": 0.07042253521126761
+    },
+    {
+      "threshold": 0.0163073607643377,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 197,
+      "false_alarms_per_month": 8.208333333333334,
+      "precision": 0.07075471698113207
+    },
+    {
+      "threshold": 0.0163109242801789,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 196,
+      "false_alarms_per_month": 8.166666666666666,
+      "precision": 0.07109004739336493
+    },
+    {
+      "threshold": 0.0166869979115582,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 195,
+      "false_alarms_per_month": 8.125,
+      "precision": 0.07142857142857142
+    },
+    {
+      "threshold": 0.0168246006217659,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 194,
+      "false_alarms_per_month": 8.083333333333334,
+      "precision": 0.07177033492822966
+    },
+    {
+      "threshold": 0.0170737239992311,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 193,
+      "false_alarms_per_month": 8.041666666666666,
+      "precision": 0.07211538461538461
+    },
+    {
+      "threshold": 0.0170754228198092,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 192,
+      "false_alarms_per_month": 8.0,
+      "precision": 0.07246376811594203
+    },
+    {
+      "threshold": 0.0171345629454019,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 191,
+      "false_alarms_per_month": 7.958333333333333,
+      "precision": 0.07281553398058252
+    },
+    {
+      "threshold": 0.017192221496548,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 190,
+      "false_alarms_per_month": 7.916666666666667,
+      "precision": 0.07317073170731707
+    },
+    {
+      "threshold": 0.0172160684273728,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 189,
+      "false_alarms_per_month": 7.875,
+      "precision": 0.07352941176470588
+    },
+    {
+      "threshold": 0.0172727968990544,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 188,
+      "false_alarms_per_month": 7.833333333333333,
+      "precision": 0.07389162561576355
+    },
+    {
+      "threshold": 0.0173067874100877,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 187,
+      "false_alarms_per_month": 7.791666666666667,
+      "precision": 0.07425742574257425
+    },
+    {
+      "threshold": 0.0174151446157861,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 186,
+      "false_alarms_per_month": 7.75,
+      "precision": 0.07462686567164178
+    },
+    {
+      "threshold": 0.0174708853009566,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 185,
+      "false_alarms_per_month": 7.708333333333333,
+      "precision": 0.075
+    },
+    {
+      "threshold": 0.0174845132465975,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 184,
+      "false_alarms_per_month": 7.666666666666667,
+      "precision": 0.07537688442211055
+    },
+    {
+      "threshold": 0.017501452506319,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 183,
+      "false_alarms_per_month": 7.625,
+      "precision": 0.07575757575757576
+    },
+    {
+      "threshold": 0.0176745056773836,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 182,
+      "false_alarms_per_month": 7.583333333333333,
+      "precision": 0.07614213197969544
+    },
+    {
+      "threshold": 0.0178670476255522,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 181,
+      "false_alarms_per_month": 7.541666666666667,
+      "precision": 0.07653061224489796
+    },
+    {
+      "threshold": 0.0178787865191634,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 179,
+      "false_alarms_per_month": 7.458333333333333,
+      "precision": 0.07731958762886598
+    },
+    {
+      "threshold": 0.0179083682168354,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 178,
+      "false_alarms_per_month": 7.416666666666667,
+      "precision": 0.07772020725388601
+    },
+    {
+      "threshold": 0.0179139477972608,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 177,
+      "false_alarms_per_month": 7.375,
+      "precision": 0.078125
+    },
+    {
+      "threshold": 0.0180260366822475,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 176,
+      "false_alarms_per_month": 7.333333333333333,
+      "precision": 0.07853403141361257
+    },
+    {
+      "threshold": 0.0180836966653279,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 175,
+      "false_alarms_per_month": 7.291666666666667,
+      "precision": 0.07894736842105263
+    },
+    {
+      "threshold": 0.0180853849571889,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 174,
+      "false_alarms_per_month": 7.25,
+      "precision": 0.07936507936507936
+    },
+    {
+      "threshold": 0.018103410858158,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 173,
+      "false_alarms_per_month": 7.208333333333333,
+      "precision": 0.0797872340425532
+    },
+    {
+      "threshold": 0.0181824143872482,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 172,
+      "false_alarms_per_month": 7.166666666666667,
+      "precision": 0.08021390374331551
+    },
+    {
+      "threshold": 0.018292618841423,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 171,
+      "false_alarms_per_month": 7.125,
+      "precision": 0.08064516129032258
+    },
+    {
+      "threshold": 0.018294326274833,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 170,
+      "false_alarms_per_month": 7.083333333333333,
+      "precision": 0.08108108108108109
+    },
+    {
+      "threshold": 0.0183232187426068,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 169,
+      "false_alarms_per_month": 7.041666666666667,
+      "precision": 0.08152173913043478
+    },
+    {
+      "threshold": 0.0183302895207374,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 168,
+      "false_alarms_per_month": 7.0,
+      "precision": 0.08196721311475409
+    },
+    {
+      "threshold": 0.018419417360189,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 167,
+      "false_alarms_per_month": 6.958333333333333,
+      "precision": 0.08241758241758242
+    },
+    {
+      "threshold": 0.0184934932860549,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 166,
+      "false_alarms_per_month": 6.916666666666667,
+      "precision": 0.08287292817679558
+    },
+    {
+      "threshold": 0.0185385467356012,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 165,
+      "false_alarms_per_month": 6.875,
+      "precision": 0.08333333333333333
+    },
+    {
+      "threshold": 0.0187193399462076,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 164,
+      "false_alarms_per_month": 6.833333333333333,
+      "precision": 0.08379888268156424
+    },
+    {
+      "threshold": 0.0187656868832904,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 163,
+      "false_alarms_per_month": 6.791666666666667,
+      "precision": 0.08426966292134831
+    },
+    {
+      "threshold": 0.0188296261259296,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 162,
+      "false_alarms_per_month": 6.75,
+      "precision": 0.0847457627118644
+    },
+    {
+      "threshold": 0.0188733798942228,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 161,
+      "false_alarms_per_month": 6.708333333333333,
+      "precision": 0.08522727272727272
+    },
+    {
+      "threshold": 0.0188877240747308,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 160,
+      "false_alarms_per_month": 6.666666666666667,
+      "precision": 0.08571428571428572
+    },
+    {
+      "threshold": 0.0189543209650367,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 159,
+      "false_alarms_per_month": 6.625,
+      "precision": 0.08620689655172414
+    },
+    {
+      "threshold": 0.0190022475659259,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 158,
+      "false_alarms_per_month": 6.583333333333333,
+      "precision": 0.08670520231213873
+    },
+    {
+      "threshold": 0.019064853992947,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 157,
+      "false_alarms_per_month": 6.541666666666667,
+      "precision": 0.0872093023255814
+    },
+    {
+      "threshold": 0.0190742333230902,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 156,
+      "false_alarms_per_month": 6.5,
+      "precision": 0.08771929824561403
+    },
+    {
+      "threshold": 0.0190912479520874,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 155,
+      "false_alarms_per_month": 6.458333333333333,
+      "precision": 0.08823529411764706
+    },
+    {
+      "threshold": 0.0195074128517756,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 154,
+      "false_alarms_per_month": 6.416666666666667,
+      "precision": 0.08875739644970414
+    },
+    {
+      "threshold": 0.0195666737636356,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 153,
+      "false_alarms_per_month": 6.375,
+      "precision": 0.08928571428571429
+    },
+    {
+      "threshold": 0.0195986225662142,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 152,
+      "false_alarms_per_month": 6.333333333333333,
+      "precision": 0.08982035928143713
+    },
+    {
+      "threshold": 0.0197597523604235,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 151,
+      "false_alarms_per_month": 6.291666666666667,
+      "precision": 0.09036144578313253
+    },
+    {
+      "threshold": 0.0198228460409453,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 150,
+      "false_alarms_per_month": 6.25,
+      "precision": 0.09090909090909091
+    },
+    {
+      "threshold": 0.0198290100580609,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 149,
+      "false_alarms_per_month": 6.208333333333333,
+      "precision": 0.09146341463414634
+    },
+    {
+      "threshold": 0.0202889406358941,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 148,
+      "false_alarms_per_month": 6.166666666666667,
+      "precision": 0.09202453987730061
+    },
+    {
+      "threshold": 0.0204439376451645,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 147,
+      "false_alarms_per_month": 6.125,
+      "precision": 0.09259259259259259
+    },
+    {
+      "threshold": 0.0204510743926687,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 146,
+      "false_alarms_per_month": 6.083333333333333,
+      "precision": 0.09316770186335403
+    },
+    {
+      "threshold": 0.0204849263762862,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 145,
+      "false_alarms_per_month": 6.041666666666667,
+      "precision": 0.09375
+    },
+    {
+      "threshold": 0.0205164324738195,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 144,
+      "false_alarms_per_month": 6.0,
+      "precision": 0.09433962264150944
+    },
+    {
+      "threshold": 0.0205585868322524,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 143,
+      "false_alarms_per_month": 5.958333333333333,
+      "precision": 0.0949367088607595
+    },
+    {
+      "threshold": 0.0205886747993287,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 142,
+      "false_alarms_per_month": 5.916666666666667,
+      "precision": 0.09554140127388536
+    },
+    {
+      "threshold": 0.0207922373042194,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 141,
+      "false_alarms_per_month": 5.875,
+      "precision": 0.09615384615384616
+    },
+    {
+      "threshold": 0.0209984859919389,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 140,
+      "false_alarms_per_month": 5.833333333333333,
+      "precision": 0.0967741935483871
+    },
+    {
+      "threshold": 0.021031781188265,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 138,
+      "false_alarms_per_month": 5.75,
+      "precision": 0.09803921568627451
+    },
+    {
+      "threshold": 0.0210350766561262,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 137,
+      "false_alarms_per_month": 5.708333333333333,
+      "precision": 0.09868421052631579
+    },
+    {
+      "threshold": 0.0212753776498211,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 136,
+      "false_alarms_per_month": 5.666666666666667,
+      "precision": 0.09933774834437085
+    },
+    {
+      "threshold": 0.021380502808725,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 135,
+      "false_alarms_per_month": 5.625,
+      "precision": 0.1
+    },
+    {
+      "threshold": 0.0214377010550206,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 134,
+      "false_alarms_per_month": 5.583333333333333,
+      "precision": 0.10067114093959731
+    },
+    {
+      "threshold": 0.021595276965382,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 133,
+      "false_alarms_per_month": 5.541666666666667,
+      "precision": 0.10135135135135136
+    },
+    {
+      "threshold": 0.0216153714487458,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 132,
+      "false_alarms_per_month": 5.5,
+      "precision": 0.10204081632653061
+    },
+    {
+      "threshold": 0.0216266743182524,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 131,
+      "false_alarms_per_month": 5.458333333333333,
+      "precision": 0.10273972602739725
+    },
+    {
+      "threshold": 0.0216662248011363,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 130,
+      "false_alarms_per_month": 5.416666666666667,
+      "precision": 0.10344827586206896
+    },
+    {
+      "threshold": 0.0216730470315092,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 129,
+      "false_alarms_per_month": 5.375,
+      "precision": 0.10416666666666667
+    },
+    {
+      "threshold": 0.0217133632952804,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 128,
+      "false_alarms_per_month": 5.333333333333333,
+      "precision": 0.1048951048951049
+    },
+    {
+      "threshold": 0.0217255525928161,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 127,
+      "false_alarms_per_month": 5.291666666666667,
+      "precision": 0.1056338028169014
+    },
+    {
+      "threshold": 0.021739370346362,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 125,
+      "false_alarms_per_month": 5.208333333333333,
+      "precision": 0.10714285714285714
+    },
+    {
+      "threshold": 0.0218756168467066,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 123,
+      "false_alarms_per_month": 5.125,
+      "precision": 0.10869565217391304
+    },
+    {
+      "threshold": 0.0218863481340865,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 122,
+      "false_alarms_per_month": 5.083333333333333,
+      "precision": 0.10948905109489052
+    },
+    {
+      "threshold": 0.0219376646204823,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 121,
+      "false_alarms_per_month": 5.041666666666667,
+      "precision": 0.11029411764705882
+    },
+    {
+      "threshold": 0.0219632812911329,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 120,
+      "false_alarms_per_month": 5.0,
+      "precision": 0.1111111111111111
+    },
+    {
+      "threshold": 0.0219776512419785,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 119,
+      "false_alarms_per_month": 4.958333333333333,
+      "precision": 0.11194029850746269
+    },
+    {
+      "threshold": 0.0221578981330176,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 118,
+      "false_alarms_per_month": 4.916666666666667,
+      "precision": 0.11278195488721804
+    },
+    {
+      "threshold": 0.0222236484059357,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 115,
+      "false_alarms_per_month": 4.791666666666667,
+      "precision": 0.11538461538461539
+    },
+    {
+      "threshold": 0.0222305420333713,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 114,
+      "false_alarms_per_month": 4.75,
+      "precision": 0.11627906976744186
+    },
+    {
+      "threshold": 0.0222353706368264,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 113,
+      "false_alarms_per_month": 4.708333333333333,
+      "precision": 0.1171875
+    },
+    {
+      "threshold": 0.022639369226198,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 112,
+      "false_alarms_per_month": 4.666666666666667,
+      "precision": 0.11811023622047244
+    },
+    {
+      "threshold": 0.023225257867117,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 111,
+      "false_alarms_per_month": 4.625,
+      "precision": 0.11904761904761904
+    },
+    {
+      "threshold": 0.0232708411987312,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 110,
+      "false_alarms_per_month": 4.583333333333333,
+      "precision": 0.12
+    },
+    {
+      "threshold": 0.0237931272907333,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 108,
+      "false_alarms_per_month": 4.5,
+      "precision": 0.12195121951219512
+    },
+    {
+      "threshold": 0.0243427213848909,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 106,
+      "false_alarms_per_month": 4.416666666666667,
+      "precision": 0.12396694214876033
+    },
+    {
+      "threshold": 0.0243915817425297,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 102,
+      "false_alarms_per_month": 4.25,
+      "precision": 0.1282051282051282
+    },
+    {
+      "threshold": 0.0244463104137807,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 101,
+      "false_alarms_per_month": 4.208333333333333,
+      "precision": 0.12931034482758622
+    },
+    {
+      "threshold": 0.0248440287238632,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 100,
+      "false_alarms_per_month": 4.166666666666667,
+      "precision": 0.13043478260869565
+    },
+    {
+      "threshold": 0.0251353210326848,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 99,
+      "false_alarms_per_month": 4.125,
+      "precision": 0.13157894736842105
+    },
+    {
+      "threshold": 0.0252174706633831,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 98,
+      "false_alarms_per_month": 4.083333333333333,
+      "precision": 0.13274336283185842
+    },
+    {
+      "threshold": 0.0252536792989656,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 97,
+      "false_alarms_per_month": 4.041666666666667,
+      "precision": 0.13392857142857142
+    },
+    {
+      "threshold": 0.0258021470795539,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 96,
+      "false_alarms_per_month": 4.0,
+      "precision": 0.13513513513513514
+    },
+    {
+      "threshold": 0.0260415321079982,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 95,
+      "false_alarms_per_month": 3.9583333333333335,
+      "precision": 0.13636363636363635
+    },
+    {
+      "threshold": 0.0262607001090491,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 94,
+      "false_alarms_per_month": 3.9166666666666665,
+      "precision": 0.13761467889908258
+    },
+    {
+      "threshold": 0.0263801941173846,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 93,
+      "false_alarms_per_month": 3.875,
+      "precision": 0.1388888888888889
+    },
+    {
+      "threshold": 0.0264177500317362,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 92,
+      "false_alarms_per_month": 3.8333333333333335,
+      "precision": 0.14018691588785046
+    },
+    {
+      "threshold": 0.0266992459986741,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 91,
+      "false_alarms_per_month": 3.7916666666666665,
+      "precision": 0.14150943396226415
+    },
+    {
+      "threshold": 0.0267343652052819,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 90,
+      "false_alarms_per_month": 3.75,
+      "precision": 0.14285714285714285
+    },
+    {
+      "threshold": 0.0274623301568039,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 89,
+      "false_alarms_per_month": 3.7083333333333335,
+      "precision": 0.14423076923076922
+    },
+    {
+      "threshold": 0.0275618103721601,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 88,
+      "false_alarms_per_month": 3.6666666666666665,
+      "precision": 0.14563106796116504
+    },
+    {
+      "threshold": 0.0276569815784594,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 87,
+      "false_alarms_per_month": 3.625,
+      "precision": 0.14705882352941177
+    },
+    {
+      "threshold": 0.0283005841595909,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 86,
+      "false_alarms_per_month": 3.5833333333333335,
+      "precision": 0.1485148514851485
+    },
+    {
+      "threshold": 0.0284520271753317,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 85,
+      "false_alarms_per_month": 3.5416666666666665,
+      "precision": 0.15
+    },
+    {
+      "threshold": 0.0292238520067238,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 84,
+      "false_alarms_per_month": 3.5,
+      "precision": 0.15151515151515152
+    },
+    {
+      "threshold": 0.0301144465737349,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 83,
+      "false_alarms_per_month": 3.4583333333333335,
+      "precision": 0.15306122448979592
+    },
+    {
+      "threshold": 0.0302470118730208,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 82,
+      "false_alarms_per_month": 3.4166666666666665,
+      "precision": 0.15463917525773196
+    },
+    {
+      "threshold": 0.0302949400398257,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 81,
+      "false_alarms_per_month": 3.375,
+      "precision": 0.15625
+    },
+    {
+      "threshold": 0.0302977331952149,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 80,
+      "false_alarms_per_month": 3.3333333333333335,
+      "precision": 0.15789473684210525
+    },
+    {
+      "threshold": 0.0306259962454129,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 79,
+      "false_alarms_per_month": 3.2916666666666665,
+      "precision": 0.1595744680851064
+    },
+    {
+      "threshold": 0.030784668546445,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 78,
+      "false_alarms_per_month": 3.25,
+      "precision": 0.16129032258064516
+    },
+    {
+      "threshold": 0.0309405410927953,
+      "hit_rate": 0.9333333333333333,
+      "storms_caught": 14,
+      "storms_missed": 1,
+      "false_alarms": 78,
+      "false_alarms_per_month": 3.25,
+      "precision": 0.15217391304347827
+    },
+    {
+      "threshold": 0.0309899509442355,
+      "hit_rate": 0.9333333333333333,
+      "storms_caught": 14,
+      "storms_missed": 1,
+      "false_alarms": 77,
+      "false_alarms_per_month": 3.2083333333333335,
+      "precision": 0.15384615384615385
+    },
+    {
+      "threshold": 0.0313138487701612,
+      "hit_rate": 0.9333333333333333,
+      "storms_caught": 14,
+      "storms_missed": 1,
+      "false_alarms": 76,
+      "false_alarms_per_month": 3.1666666666666665,
+      "precision": 0.15555555555555556
+    },
+    {
+      "threshold": 0.0315449762390348,
+      "hit_rate": 0.9333333333333333,
+      "storms_caught": 14,
+      "storms_missed": 1,
+      "false_alarms": 75,
+      "false_alarms_per_month": 3.125,
+      "precision": 0.15730337078651685
+    },
+    {
+      "threshold": 0.0316171107103503,
+      "hit_rate": 0.9333333333333333,
+      "storms_caught": 14,
+      "storms_missed": 1,
+      "false_alarms": 74,
+      "false_alarms_per_month": 3.0833333333333335,
+      "precision": 0.1590909090909091
+    },
+    {
+      "threshold": 0.0328604667520701,
+      "hit_rate": 0.9333333333333333,
+      "storms_caught": 14,
+      "storms_missed": 1,
+      "false_alarms": 73,
+      "false_alarms_per_month": 3.0416666666666665,
+      "precision": 0.16091954022988506
+    },
+    {
+      "threshold": 0.0337260537291012,
+      "hit_rate": 0.9333333333333333,
+      "storms_caught": 14,
+      "storms_missed": 1,
+      "false_alarms": 72,
+      "false_alarms_per_month": 3.0,
+      "precision": 0.16279069767441862
+    },
+    {
+      "threshold": 0.0338982490596263,
+      "hit_rate": 0.9333333333333333,
+      "storms_caught": 14,
+      "storms_missed": 1,
+      "false_alarms": 71,
+      "false_alarms_per_month": 2.9583333333333335,
+      "precision": 0.16470588235294117
+    },
+    {
+      "threshold": 0.034284636243182,
+      "hit_rate": 0.9333333333333333,
+      "storms_caught": 14,
+      "storms_missed": 1,
+      "false_alarms": 70,
+      "false_alarms_per_month": 2.9166666666666665,
+      "precision": 0.16666666666666666
+    },
+    {
+      "threshold": 0.0348612343319407,
+      "hit_rate": 0.9333333333333333,
+      "storms_caught": 14,
+      "storms_missed": 1,
+      "false_alarms": 69,
+      "false_alarms_per_month": 2.875,
+      "precision": 0.1686746987951807
+    },
+    {
+      "threshold": 0.0352197141222627,
+      "hit_rate": 0.9333333333333333,
+      "storms_caught": 14,
+      "storms_missed": 1,
+      "false_alarms": 68,
+      "false_alarms_per_month": 2.8333333333333335,
+      "precision": 0.17073170731707318
+    },
+    {
+      "threshold": 0.0355529063420207,
+      "hit_rate": 0.9333333333333333,
+      "storms_caught": 14,
+      "storms_missed": 1,
+      "false_alarms": 67,
+      "false_alarms_per_month": 2.7916666666666665,
+      "precision": 0.1728395061728395
+    },
+    {
+      "threshold": 0.0357041558375919,
+      "hit_rate": 0.9333333333333333,
+      "storms_caught": 14,
+      "storms_missed": 1,
+      "false_alarms": 66,
+      "false_alarms_per_month": 2.75,
+      "precision": 0.175
+    },
+    {
+      "threshold": 0.0361636250112199,
+      "hit_rate": 0.9333333333333333,
+      "storms_caught": 14,
+      "storms_missed": 1,
+      "false_alarms": 65,
+      "false_alarms_per_month": 2.7083333333333335,
+      "precision": 0.17721518987341772
+    },
+    {
+      "threshold": 0.0366851464528732,
+      "hit_rate": 0.9333333333333333,
+      "storms_caught": 14,
+      "storms_missed": 1,
+      "false_alarms": 64,
+      "false_alarms_per_month": 2.6666666666666665,
+      "precision": 0.1794871794871795
+    },
+    {
+      "threshold": 0.0371292922864363,
+      "hit_rate": 0.9333333333333333,
+      "storms_caught": 14,
+      "storms_missed": 1,
+      "false_alarms": 63,
+      "false_alarms_per_month": 2.625,
+      "precision": 0.18181818181818182
+    },
+    {
+      "threshold": 0.0371895191886197,
+      "hit_rate": 0.9333333333333333,
+      "storms_caught": 14,
+      "storms_missed": 1,
+      "false_alarms": 62,
+      "false_alarms_per_month": 2.5833333333333335,
+      "precision": 0.18421052631578946
+    },
+    {
+      "threshold": 0.0377968989930457,
+      "hit_rate": 0.9333333333333333,
+      "storms_caught": 14,
+      "storms_missed": 1,
+      "false_alarms": 61,
+      "false_alarms_per_month": 2.5416666666666665,
+      "precision": 0.18666666666666668
+    },
+    {
+      "threshold": 0.038141656919718,
+      "hit_rate": 0.9333333333333333,
+      "storms_caught": 14,
+      "storms_missed": 1,
+      "false_alarms": 60,
+      "false_alarms_per_month": 2.5,
+      "precision": 0.1891891891891892
+    },
+    {
+      "threshold": 0.0381535715061991,
+      "hit_rate": 0.9333333333333333,
+      "storms_caught": 14,
+      "storms_missed": 1,
+      "false_alarms": 59,
+      "false_alarms_per_month": 2.4583333333333335,
+      "precision": 0.1917808219178082
+    },
+    {
+      "threshold": 0.0396917514346314,
+      "hit_rate": 0.9333333333333333,
+      "storms_caught": 14,
+      "storms_missed": 1,
+      "false_alarms": 58,
+      "false_alarms_per_month": 2.4166666666666665,
+      "precision": 0.19444444444444445
+    },
+    {
+      "threshold": 0.0401017767385549,
+      "hit_rate": 0.9333333333333333,
+      "storms_caught": 14,
+      "storms_missed": 1,
+      "false_alarms": 57,
+      "false_alarms_per_month": 2.375,
+      "precision": 0.19718309859154928
+    },
+    {
+      "threshold": 0.0404415124986472,
+      "hit_rate": 0.9333333333333333,
+      "storms_caught": 14,
+      "storms_missed": 1,
+      "false_alarms": 56,
+      "false_alarms_per_month": 2.3333333333333335,
+      "precision": 0.2
+    },
+    {
+      "threshold": 0.0410422583348092,
+      "hit_rate": 0.9333333333333333,
+      "storms_caught": 14,
+      "storms_missed": 1,
+      "false_alarms": 55,
+      "false_alarms_per_month": 2.2916666666666665,
+      "precision": 0.2028985507246377
+    },
+    {
+      "threshold": 0.0410996158671301,
+      "hit_rate": 0.9333333333333333,
+      "storms_caught": 14,
+      "storms_missed": 1,
+      "false_alarms": 54,
+      "false_alarms_per_month": 2.25,
+      "precision": 0.20588235294117646
+    },
+    {
+      "threshold": 0.0415018513546125,
+      "hit_rate": 0.9333333333333333,
+      "storms_caught": 14,
+      "storms_missed": 1,
+      "false_alarms": 53,
+      "false_alarms_per_month": 2.2083333333333335,
+      "precision": 0.208955223880597
+    },
+    {
+      "threshold": 0.0430106595674648,
+      "hit_rate": 0.9333333333333333,
+      "storms_caught": 14,
+      "storms_missed": 1,
+      "false_alarms": 52,
+      "false_alarms_per_month": 2.1666666666666665,
+      "precision": 0.21212121212121213
+    },
+    {
+      "threshold": 0.0463496622336904,
+      "hit_rate": 0.9333333333333333,
+      "storms_caught": 14,
+      "storms_missed": 1,
+      "false_alarms": 51,
+      "false_alarms_per_month": 2.125,
+      "precision": 0.2153846153846154
+    },
+    {
+      "threshold": 0.0469642756740068,
+      "hit_rate": 0.9333333333333333,
+      "storms_caught": 14,
+      "storms_missed": 1,
+      "false_alarms": 50,
+      "false_alarms_per_month": 2.0833333333333335,
+      "precision": 0.21875
+    },
+    {
+      "threshold": 0.0480463108518538,
+      "hit_rate": 0.9333333333333333,
+      "storms_caught": 14,
+      "storms_missed": 1,
+      "false_alarms": 49,
+      "false_alarms_per_month": 2.0416666666666665,
+      "precision": 0.2222222222222222
+    },
+    {
+      "threshold": 0.0488981656379288,
+      "hit_rate": 0.9333333333333333,
+      "storms_caught": 14,
+      "storms_missed": 1,
+      "false_alarms": 48,
+      "false_alarms_per_month": 2.0,
+      "precision": 0.22580645161290322
+    },
+    {
+      "threshold": 0.0505965559950368,
+      "hit_rate": 0.9333333333333333,
+      "storms_caught": 14,
+      "storms_missed": 1,
+      "false_alarms": 47,
+      "false_alarms_per_month": 1.9583333333333333,
+      "precision": 0.22950819672131148
+    },
+    {
+      "threshold": 0.0508017722149421,
+      "hit_rate": 0.9333333333333333,
+      "storms_caught": 14,
+      "storms_missed": 1,
+      "false_alarms": 46,
+      "false_alarms_per_month": 1.9166666666666667,
+      "precision": 0.23333333333333334
+    },
+    {
+      "threshold": 0.0515216467266207,
+      "hit_rate": 0.9333333333333333,
+      "storms_caught": 14,
+      "storms_missed": 1,
+      "false_alarms": 45,
+      "false_alarms_per_month": 1.875,
+      "precision": 0.23728813559322035
+    },
+    {
+      "threshold": 0.0522687347236027,
+      "hit_rate": 0.9333333333333333,
+      "storms_caught": 14,
+      "storms_missed": 1,
+      "false_alarms": 44,
+      "false_alarms_per_month": 1.8333333333333333,
+      "precision": 0.2413793103448276
+    },
+    {
+      "threshold": 0.0543410078703713,
+      "hit_rate": 0.9333333333333333,
+      "storms_caught": 14,
+      "storms_missed": 1,
+      "false_alarms": 43,
+      "false_alarms_per_month": 1.7916666666666667,
+      "precision": 0.24561403508771928
+    },
+    {
+      "threshold": 0.0543663369335364,
+      "hit_rate": 0.9333333333333333,
+      "storms_caught": 14,
+      "storms_missed": 1,
+      "false_alarms": 42,
+      "false_alarms_per_month": 1.75,
+      "precision": 0.25
+    },
+    {
+      "threshold": 0.0547295869985718,
+      "hit_rate": 0.9333333333333333,
+      "storms_caught": 14,
+      "storms_missed": 1,
+      "false_alarms": 41,
+      "false_alarms_per_month": 1.7083333333333333,
+      "precision": 0.2545454545454545
+    },
+    {
+      "threshold": 0.0591396680996179,
+      "hit_rate": 0.9333333333333333,
+      "storms_caught": 14,
+      "storms_missed": 1,
+      "false_alarms": 40,
+      "false_alarms_per_month": 1.6666666666666667,
+      "precision": 0.25925925925925924
+    },
+    {
+      "threshold": 0.059469314936469,
+      "hit_rate": 0.9333333333333333,
+      "storms_caught": 14,
+      "storms_missed": 1,
+      "false_alarms": 39,
+      "false_alarms_per_month": 1.625,
+      "precision": 0.2641509433962264
+    },
+    {
+      "threshold": 0.0594968775289564,
+      "hit_rate": 0.9333333333333333,
+      "storms_caught": 14,
+      "storms_missed": 1,
+      "false_alarms": 38,
+      "false_alarms_per_month": 1.5833333333333333,
+      "precision": 0.2692307692307692
+    },
+    {
+      "threshold": 0.0610644457144751,
+      "hit_rate": 0.9333333333333333,
+      "storms_caught": 14,
+      "storms_missed": 1,
+      "false_alarms": 37,
+      "false_alarms_per_month": 1.5416666666666667,
+      "precision": 0.27450980392156865
+    },
+    {
+      "threshold": 0.0727341971618334,
+      "hit_rate": 0.9333333333333333,
+      "storms_caught": 14,
+      "storms_missed": 1,
+      "false_alarms": 36,
+      "false_alarms_per_month": 1.5,
+      "precision": 0.28
+    },
+    {
+      "threshold": 0.0731408622887886,
+      "hit_rate": 0.9333333333333333,
+      "storms_caught": 14,
+      "storms_missed": 1,
+      "false_alarms": 35,
+      "false_alarms_per_month": 1.4583333333333333,
+      "precision": 0.2857142857142857
+    },
+    {
+      "threshold": 0.0741433122599898,
+      "hit_rate": 0.9333333333333333,
+      "storms_caught": 14,
+      "storms_missed": 1,
+      "false_alarms": 34,
+      "false_alarms_per_month": 1.4166666666666667,
+      "precision": 0.2916666666666667
+    },
+    {
+      "threshold": 0.0742950804504248,
+      "hit_rate": 0.9333333333333333,
+      "storms_caught": 14,
+      "storms_missed": 1,
+      "false_alarms": 33,
+      "false_alarms_per_month": 1.375,
+      "precision": 0.2978723404255319
+    },
+    {
+      "threshold": 0.0747152471269816,
+      "hit_rate": 0.9333333333333333,
+      "storms_caught": 14,
+      "storms_missed": 1,
+      "false_alarms": 32,
+      "false_alarms_per_month": 1.3333333333333333,
+      "precision": 0.30434782608695654
+    },
+    {
+      "threshold": 0.0754969825428774,
+      "hit_rate": 0.9333333333333333,
+      "storms_caught": 14,
+      "storms_missed": 1,
+      "false_alarms": 31,
+      "false_alarms_per_month": 1.2916666666666667,
+      "precision": 0.3111111111111111
+    },
+    {
+      "threshold": 0.075681369391141,
+      "hit_rate": 0.9333333333333333,
+      "storms_caught": 14,
+      "storms_missed": 1,
+      "false_alarms": 30,
+      "false_alarms_per_month": 1.25,
+      "precision": 0.3181818181818182
+    },
+    {
+      "threshold": 0.0762751088726165,
+      "hit_rate": 0.9333333333333333,
+      "storms_caught": 14,
+      "storms_missed": 1,
+      "false_alarms": 29,
+      "false_alarms_per_month": 1.2083333333333333,
+      "precision": 0.32558139534883723
+    },
+    {
+      "threshold": 0.0789160859002303,
+      "hit_rate": 0.9333333333333333,
+      "storms_caught": 14,
+      "storms_missed": 1,
+      "false_alarms": 28,
+      "false_alarms_per_month": 1.1666666666666667,
+      "precision": 0.3333333333333333
+    },
+    {
+      "threshold": 0.079909178131482,
+      "hit_rate": 0.9333333333333333,
+      "storms_caught": 14,
+      "storms_missed": 1,
+      "false_alarms": 27,
+      "false_alarms_per_month": 1.125,
+      "precision": 0.34146341463414637
+    },
+    {
+      "threshold": 0.0875103242283453,
+      "hit_rate": 0.9333333333333333,
+      "storms_caught": 14,
+      "storms_missed": 1,
+      "false_alarms": 26,
+      "false_alarms_per_month": 1.0833333333333333,
+      "precision": 0.35
+    },
+    {
+      "threshold": 0.0969531388906824,
+      "hit_rate": 0.9333333333333333,
+      "storms_caught": 14,
+      "storms_missed": 1,
+      "false_alarms": 25,
+      "false_alarms_per_month": 1.0416666666666667,
+      "precision": 0.358974358974359
+    },
+    {
+      "threshold": 0.0976317039419121,
+      "hit_rate": 0.9333333333333333,
+      "storms_caught": 14,
+      "storms_missed": 1,
+      "false_alarms": 24,
+      "false_alarms_per_month": 1.0,
+      "precision": 0.3684210526315789
+    },
+    {
+      "threshold": 0.0983742258709081,
+      "hit_rate": 0.9333333333333333,
+      "storms_caught": 14,
+      "storms_missed": 1,
+      "false_alarms": 23,
+      "false_alarms_per_month": 0.9583333333333334,
+      "precision": 0.3783783783783784
+    },
+    {
+      "threshold": 0.1016518854043618,
+      "hit_rate": 0.9333333333333333,
+      "storms_caught": 14,
+      "storms_missed": 1,
+      "false_alarms": 22,
+      "false_alarms_per_month": 0.9166666666666666,
+      "precision": 0.3888888888888889
+    },
+    {
+      "threshold": 0.1152615527981774,
+      "hit_rate": 0.9333333333333333,
+      "storms_caught": 14,
+      "storms_missed": 1,
+      "false_alarms": 21,
+      "false_alarms_per_month": 0.875,
+      "precision": 0.4
+    },
+    {
+      "threshold": 0.1277049094517873,
+      "hit_rate": 0.9333333333333333,
+      "storms_caught": 14,
+      "storms_missed": 1,
+      "false_alarms": 20,
+      "false_alarms_per_month": 0.8333333333333334,
+      "precision": 0.4117647058823529
+    },
+    {
+      "threshold": 0.1297772962585916,
+      "hit_rate": 0.9333333333333333,
+      "storms_caught": 14,
+      "storms_missed": 1,
+      "false_alarms": 19,
+      "false_alarms_per_month": 0.7916666666666666,
+      "precision": 0.42424242424242425
+    },
+    {
+      "threshold": 0.1400892764747339,
+      "hit_rate": 0.9333333333333333,
+      "storms_caught": 14,
+      "storms_missed": 1,
+      "false_alarms": 18,
+      "false_alarms_per_month": 0.75,
+      "precision": 0.4375
+    },
+    {
+      "threshold": 0.1433898674380346,
+      "hit_rate": 0.9333333333333333,
+      "storms_caught": 14,
+      "storms_missed": 1,
+      "false_alarms": 17,
+      "false_alarms_per_month": 0.7083333333333334,
+      "precision": 0.45161290322580644
+    },
+    {
+      "threshold": 0.147601833098196,
+      "hit_rate": 0.8666666666666667,
+      "storms_caught": 13,
+      "storms_missed": 2,
+      "false_alarms": 17,
+      "false_alarms_per_month": 0.7083333333333334,
+      "precision": 0.43333333333333335
+    },
+    {
+      "threshold": 0.1477828872264411,
+      "hit_rate": 0.8,
+      "storms_caught": 12,
+      "storms_missed": 3,
+      "false_alarms": 17,
+      "false_alarms_per_month": 0.7083333333333334,
+      "precision": 0.41379310344827586
+    },
+    {
+      "threshold": 0.1543570517954361,
+      "hit_rate": 0.8,
+      "storms_caught": 12,
+      "storms_missed": 3,
+      "false_alarms": 16,
+      "false_alarms_per_month": 0.6666666666666666,
+      "precision": 0.42857142857142855
+    },
+    {
+      "threshold": 0.1588648007726645,
+      "hit_rate": 0.8,
+      "storms_caught": 12,
+      "storms_missed": 3,
+      "false_alarms": 15,
+      "false_alarms_per_month": 0.625,
+      "precision": 0.4444444444444444
+    },
+    {
+      "threshold": 0.1664726849969867,
+      "hit_rate": 0.7333333333333333,
+      "storms_caught": 11,
+      "storms_missed": 4,
+      "false_alarms": 15,
+      "false_alarms_per_month": 0.625,
+      "precision": 0.4230769230769231
+    },
+    {
+      "threshold": 0.1697208211602517,
+      "hit_rate": 0.6666666666666666,
+      "storms_caught": 10,
+      "storms_missed": 5,
+      "false_alarms": 15,
+      "false_alarms_per_month": 0.625,
+      "precision": 0.4
+    },
+    {
+      "threshold": 0.1774100592063394,
+      "hit_rate": 0.6666666666666666,
+      "storms_caught": 10,
+      "storms_missed": 5,
+      "false_alarms": 14,
+      "false_alarms_per_month": 0.5833333333333334,
+      "precision": 0.4166666666666667
+    },
+    {
+      "threshold": 0.177597357911504,
+      "hit_rate": 0.6666666666666666,
+      "storms_caught": 10,
+      "storms_missed": 5,
+      "false_alarms": 13,
+      "false_alarms_per_month": 0.5416666666666666,
+      "precision": 0.43478260869565216
+    },
+    {
+      "threshold": 0.1854942537521013,
+      "hit_rate": 0.6666666666666666,
+      "storms_caught": 10,
+      "storms_missed": 5,
+      "false_alarms": 12,
+      "false_alarms_per_month": 0.5,
+      "precision": 0.45454545454545453
+    },
+    {
+      "threshold": 0.1899646256380712,
+      "hit_rate": 0.6666666666666666,
+      "storms_caught": 10,
+      "storms_missed": 5,
+      "false_alarms": 11,
+      "false_alarms_per_month": 0.4583333333333333,
+      "precision": 0.47619047619047616
+    },
+    {
+      "threshold": 0.2015542290334177,
+      "hit_rate": 0.6666666666666666,
+      "storms_caught": 10,
+      "storms_missed": 5,
+      "false_alarms": 10,
+      "false_alarms_per_month": 0.4166666666666667,
+      "precision": 0.5
+    },
+    {
+      "threshold": 0.2081956601900883,
+      "hit_rate": 0.6666666666666666,
+      "storms_caught": 10,
+      "storms_missed": 5,
+      "false_alarms": 9,
+      "false_alarms_per_month": 0.375,
+      "precision": 0.5263157894736842
+    },
+    {
+      "threshold": 0.2088236555173375,
+      "hit_rate": 0.6666666666666666,
+      "storms_caught": 10,
+      "storms_missed": 5,
+      "false_alarms": 8,
+      "false_alarms_per_month": 0.3333333333333333,
+      "precision": 0.5555555555555556
+    },
+    {
+      "threshold": 0.2179218399569956,
+      "hit_rate": 0.6,
+      "storms_caught": 9,
+      "storms_missed": 6,
+      "false_alarms": 8,
+      "false_alarms_per_month": 0.3333333333333333,
+      "precision": 0.5294117647058824
+    },
+    {
+      "threshold": 0.2244745003455426,
+      "hit_rate": 0.6,
+      "storms_caught": 9,
+      "storms_missed": 6,
+      "false_alarms": 7,
+      "false_alarms_per_month": 0.2916666666666667,
+      "precision": 0.5625
+    },
+    {
+      "threshold": 0.242808876468006,
+      "hit_rate": 0.6,
+      "storms_caught": 9,
+      "storms_missed": 6,
+      "false_alarms": 6,
+      "false_alarms_per_month": 0.25,
+      "precision": 0.6
+    },
+    {
+      "threshold": 0.2891424821085226,
+      "hit_rate": 0.6,
+      "storms_caught": 9,
+      "storms_missed": 6,
+      "false_alarms": 5,
+      "false_alarms_per_month": 0.20833333333333334,
+      "precision": 0.6428571428571429
+    },
+    {
+      "threshold": 0.317512585572603,
+      "hit_rate": 0.5333333333333333,
+      "storms_caught": 8,
+      "storms_missed": 7,
+      "false_alarms": 5,
+      "false_alarms_per_month": 0.20833333333333334,
+      "precision": 0.6153846153846154
+    },
+    {
+      "threshold": 0.3365468835590912,
+      "hit_rate": 0.4666666666666667,
+      "storms_caught": 7,
+      "storms_missed": 8,
+      "false_alarms": 5,
+      "false_alarms_per_month": 0.20833333333333334,
+      "precision": 0.5833333333333334
+    },
+    {
+      "threshold": 0.3777739613880366,
+      "hit_rate": 0.4666666666666667,
+      "storms_caught": 7,
+      "storms_missed": 8,
+      "false_alarms": 4,
+      "false_alarms_per_month": 0.16666666666666666,
+      "precision": 0.6363636363636364
+    },
+    {
+      "threshold": 0.3867682337845022,
+      "hit_rate": 0.4666666666666667,
+      "storms_caught": 7,
+      "storms_missed": 8,
+      "false_alarms": 3,
+      "false_alarms_per_month": 0.125,
+      "precision": 0.7
+    },
+    {
+      "threshold": 0.3917815052549214,
+      "hit_rate": 0.4,
+      "storms_caught": 6,
+      "storms_missed": 9,
+      "false_alarms": 3,
+      "false_alarms_per_month": 0.125,
+      "precision": 0.6666666666666666
+    },
+    {
+      "threshold": 0.419473159377162,
+      "hit_rate": 0.4,
+      "storms_caught": 6,
+      "storms_missed": 9,
+      "false_alarms": 2,
+      "false_alarms_per_month": 0.08333333333333333,
+      "precision": 0.75
+    },
+    {
+      "threshold": 0.4609816918822165,
+      "hit_rate": 0.3333333333333333,
+      "storms_caught": 5,
+      "storms_missed": 10,
+      "false_alarms": 2,
+      "false_alarms_per_month": 0.08333333333333333,
+      "precision": 0.7142857142857143
+    },
+    {
+      "threshold": 0.4956474060104108,
+      "hit_rate": 0.26666666666666666,
+      "storms_caught": 4,
+      "storms_missed": 11,
+      "false_alarms": 2,
+      "false_alarms_per_month": 0.08333333333333333,
+      "precision": 0.6666666666666666
+    },
+    {
+      "threshold": 0.5098624823079712,
+      "hit_rate": 0.26666666666666666,
+      "storms_caught": 4,
+      "storms_missed": 11,
+      "false_alarms": 1,
+      "false_alarms_per_month": 0.041666666666666664,
+      "precision": 0.8
+    },
+    {
+      "threshold": 0.510594793847701,
+      "hit_rate": 0.2,
+      "storms_caught": 3,
+      "storms_missed": 12,
+      "false_alarms": 1,
+      "false_alarms_per_month": 0.041666666666666664,
+      "precision": 0.75
+    },
+    {
+      "threshold": 0.687426858545703,
+      "hit_rate": 0.2,
+      "storms_caught": 3,
+      "storms_missed": 12,
+      "false_alarms": 0,
+      "false_alarms_per_month": 0.0,
+      "precision": 1.0
+    },
+    {
+      "threshold": 0.7702175923268577,
+      "hit_rate": 0.13333333333333333,
+      "storms_caught": 2,
+      "storms_missed": 13,
+      "false_alarms": 0,
+      "false_alarms_per_month": 0.0,
+      "precision": 1.0
+    },
+    {
+      "threshold": 0.7715033006705049,
+      "hit_rate": 0.06666666666666667,
+      "storms_caught": 1,
+      "storms_missed": 14,
+      "false_alarms": 0,
+      "false_alarms_per_month": 0.0,
+      "precision": 1.0
+    }
+  ]
+}

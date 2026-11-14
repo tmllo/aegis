@@ -10,7 +10,7 @@ In progress. This run uses split A and does not open the test years (2024 onward
 - [x] EDA — development set only, 1,024 flares, 42 storms
 - [x] Charts — four PNGs in ml/results/
 - [x] Models — logistic regression, C=10, validation Brier skill 0.418
-- [ ] Thresholds
+- [x] Thresholds — watch 0.0308 (3.25 false alarms/month), warning 0.159 (0.63/month)
 - [ ] v1 saved
 - [ ] Synthetic crew
 - [ ] Pitch outline
@@ -128,3 +128,24 @@ Permutation importance on validation, measured as the rise in Brier score when t
 | linked CME flag | 0.0030 |
 
 Speed, longitude, and flare size all carry weight. The CME flag adds less once speed is in the model, because the fast CMEs are already the linked ones.
+
+## D3 — Metrics
+
+Reported on validation only. Hit rate is storms caught divided by the 15 validation storms. A false alarm is a non-storm flare at or above the threshold; per month divides that count by the 24 calendar months from January 2022 through December 2023. Precision is storms caught divided by flares at or above the threshold. Lead time is flare peak to the linked GOES >10 MeV onset, median over hits. Brier skill uses the train+validation climatology. Calibration is five quantile bins of validation probability.
+
+## D4 — Thresholds
+
+Watch is the highest threshold with hit rate at least 95%. Warning is the highest with hit rate at least 80%. With 15 storms, 14/15 is 93.3%, so the 95% rule means catching all 15.
+
+| Cut | Threshold | Hit rate | Caught | False alarms | Per month | Precision | Median lead time |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Watch | 0.0308 | 100% | 15/15 | 78 | 3.25 | 16.1% | 7.9 h |
+| Warning | 0.159 | 80% | 12/15 | 15 | 0.63 | 44.4% | 8.6 h |
+
+Every hit has an onset, and none of those onsets are before the flare peak.
+
+The watch bar is set by one storm, the 28 Mar 2022 flare, whose probability is 0.031. The next-lowest storm sits at 0.143. Catching that single extra storm is what moves the threshold from about 0.14 down to 0.031 and raises false alarms from 17 to 78. The rule still stands: 95% on 15 storms does not allow a miss.
+
+Warning lands on 12/15 exactly. The three misses are the three lowest probabilities (0.031, 0.143, 0.148).
+
+Calibration, validation probabilities in five equal-count bins: the bottom four bins, 432 flares, contain no storms (mean probabilities 0.3%, 0.7%, 1.2%, 2.0%). The top bin, 108 flares, has mean probability 12.8% and an observed storm rate of 13.9% (15 storms). The ranking is doing the work. The probabilities in that top bin are close to the rate.
