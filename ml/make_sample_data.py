@@ -12,12 +12,15 @@ Crew scenarios planted for the demo:
   c1 Commander: systolic BP drifting up over the last days -> heart amber
   c2 Engineer:  sleep falling                              -> brain red
   c3 Scientist: steady today, storm dose kept in history   -> overall green
-Baseline flags live in ml/crew_flags.py (task T6). This file still draws the crew.
+Daily vitals are an AR(1) with correlated shocks. The planted days are applied
+after that draw. Baseline flags live in ml/crew_flags.py.
 """
 import json
 import random
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
+
+import numpy as np
 
 from crew_flags import baseline as personal_baseline, flag_series as personal_flags, status_from as status_today
 
@@ -103,6 +106,58 @@ METRICS = {
                                   "red": "Career limit reached: no further exposure allowed."}),
 }
 
+# D6, pre-approved. Vitals share 0.6; mood 0.6; sleep 0.5; exercise 0.4.
+DRAW_METRICS = ["hr", "bp_sys", "bp_dia", "glucose", "temp", "sleep_h", "mood", "exercise_min"]
+AR_PHI = {
+    "hr": 0.6, "bp_sys": 0.6, "bp_dia": 0.6, "glucose": 0.6, "temp": 0.6,
+    "mood": 0.6, "sleep_h": 0.5, "exercise_min": 0.4,
+}
+# Pairs not listed here are 0. Checked for positive definiteness before drawing.
+APPROVED_CORR = (("sleep_h", "mood", 0.4), ("sleep_h", "hr", -0.3), ("hr", "bp_sys", 0.3))
+
+
+def correlation_matrix():
+    index = {name: i for i, name in enumerate(DRAW_METRICS)}
+    matrix = np.eye(len(DRAW_METRICS))
+    for a, b, rho in APPROVED_CORR:
+        i, j = index[a], index[b]
+        matrix[i, j] = matrix[j, i] = rho
+    return matrix
+
+
+def innovation_correlation(target, phi):
+    """Shock correlations that leave the stationary correlations at `target`."""
+    out = np.eye(len(phi))
+    for i in range(len(phi)):
+        for j in range(i + 1, len(phi)):
+            scale = np.sqrt((1 - phi[i] ** 2) * (1 - phi[j] ** 2))
+            out[i, j] = out[j, i] = target[i, j] * (1 - phi[i] * phi[j]) / scale
+    return out
+
+
+def min_eigenvalue(matrix):
+    value = float(np.linalg.eigvalsh(matrix).min())
+    if value <= 0:
+        raise RuntimeError(f"correlation matrix is not positive definite (min eigenvalue {value})")
+    return value
+
+
+def draw_latent(member, n_days, rng, shock_chol, marginal_chol):
+    """Stationary AR(1) in stated-sd units, correlated across metrics."""
+    k = len(DRAW_METRICS)
+    phi = np.array([AR_PHI[m] for m in DRAW_METRICS])
+    z = np.zeros((n_days, k))
+    z[0] = marginal_chol @ rng.standard_normal(k)
+    scale = np.sqrt(1 - phi ** 2)
+    for t in range(1, n_days):
+        z[t] = phi * z[t - 1] + scale * (shock_chol @ rng.standard_normal(k))
+    latent = {}
+    for i, metric in enumerate(DRAW_METRICS):
+        mu, sd = member["base"][metric]
+        latent[metric] = mu + sd * z[:, i]
+    return latent
+
+
 CREW = [
     dict(id="c1", name="Cmdr. Ana Silva", role="Commander", age=44,
          base=dict(hr=(62, 3), bp_sys=(116, 4), bp_dia=(74, 3), glucose=(92, 5), temp=(36.9, 0.15),
@@ -117,21 +172,39 @@ CREW = [
 STORM_DAY = 70  # a solar storm hits the base on this mission day (adds dose for everyone)
 
 
-def simulate(member):
+def _rounded_series(member, latent):
+    """Rounded daily inputs with no planted days, so the baseline matches the file."""
+    rows = []
+    for d in range(DAYS):
+        r = {"date": str(START + timedelta(days=d))}
+        for m in member["base"]:
+            v = float(latent[m][d])
+            r[m] = round(v, 1) if m in ("temp", "sleep_h") else round(v)
+            if m == "mood":
+                r[m] = int(min(5, max(1, round(v))))
+        rows.append(r)
+    return rows
+
+
+def simulate(member, latent, own_baseline):
     rows, cum, bone = [], 0.0, 0.0
     for d in range(DAYS):
         day = START + timedelta(days=d)
         r = {"date": str(day)}
         for m, (mu, sd) in member["base"].items():
-            v = random.gauss(mu, sd)
-            # planted scenarios
-            if member["id"] == "c3" and d == DAYS - 1:
-                # Steady today. One draw past 2σ would light her up; the storm dose is an earlier day.
-                v = min(mu + 1.25 * sd, max(mu - 1.25 * sd, v))
+            v = float(latent[m][d])
+            # Planted days are measured from this astronaut's own first-14-day
+            # baseline. An AR(1) mean can sit off the catalogue value, and the
+            # flags judge that baseline, not the catalogue.
+            if member["id"] == "c3" and d == DAYS - 1 and m in own_baseline:
+                mean, width = own_baseline[m]["mean"], own_baseline[m]["sd"]
+                v = min(mean + 1.25 * width, max(mean - 1.25 * width, v))
             if member["id"] == "c1" and m == "bp_sys" and d >= DAYS - 5:
-                v = mu + sd * (1.9 + 0.2 * (d - (DAYS - 5))) + random.gauss(0, 1)
+                mean, width = own_baseline[m]["mean"], own_baseline[m]["sd"]
+                v = mean + width * (1.9 + 0.2 * (d - (DAYS - 5)))
             if member["id"] == "c2" and m == "sleep_h" and d >= DAYS - 6:
-                v = mu - sd * (2.0 + 0.25 * (d - (DAYS - 6)))
+                mean, width = own_baseline[m]["mean"], own_baseline[m]["sd"]
+                v = mean - width * (2.0 + 0.25 * (d - (DAYS - 6)))
             if member["id"] == "c2" and m == "mood" and d >= DAYS - 5:
                 v = max(1, mu - 1.2)
             r[m] = round(v, 1) if m in ("temp", "sleep_h") else round(v)
@@ -150,18 +223,34 @@ def simulate(member):
     return rows
 
 
-def crew_file():
-    crew = []
+def build_crew():
+    """One seeded draw. Returns the contract payload and the pre-plant latent series."""
+    random.seed(7)
+    rng = np.random.default_rng(7)
+    target = correlation_matrix()
+    phi = np.array([AR_PHI[m] for m in DRAW_METRICS])
+    shock = innovation_correlation(target, phi)
+    spec = {
+        "target": target,
+        "min_eigenvalue_target": min_eigenvalue(target),
+        "min_eigenvalue_innovation": min_eigenvalue(shock),
+    }
+    marginal_chol = np.linalg.cholesky(target)
+    shock_chol = np.linalg.cholesky(shock)
+    crew, latents = [], []
     dose_per_day = ENVIRONMENTS[ENV]["dose_mSv_day"]
     for m in CREW:
-        s = simulate(m)
+        latent = draw_latent(m, DAYS, rng, shock_chol, marginal_chol)
+        own = personal_baseline(_rounded_series(m, latent), METRICS)
+        s = simulate(m, latent, own)
+        latents.append(latent)
         b = personal_baseline(s, METRICS)
         fl = personal_flags(s, b, METRICS, today=TODAY, env_dose_per_day=dose_per_day)
         crew.append({k: m[k] for k in ("id", "name", "role", "age")} |
                     {"baseline": b, "series": s, "flags": fl, "status": status_today(fl, METRICS, TODAY)})
     metrics_out = {k: {kk: vv for kk, vv in v.items() if kk != "low_only"} | {"low_side_only": v["low_only"]}
                    for k, v in METRICS.items()}
-    return {
+    payload = {
         "meta": {"generated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"), "simulated": True,
                  "note": "Simulated crew from published ranges. Not real astronaut data."},
         "mission": {"name": "Artemis Base Camp (sim)", "environment": ENV, "start_date": str(START), "today": str(TODAY)},
@@ -170,6 +259,12 @@ def crew_file():
         "metrics": metrics_out,
         "crew": crew,
     }
+    return payload, spec, latents
+
+
+def crew_file():
+    payload, _, _ = build_crew()
+    return payload
 
 
 def fake_storm_file():
@@ -227,16 +322,128 @@ def fake_storm_file():
     }
 
 
+def _fmt(matrix):
+    header = "| | " + " | ".join(DRAW_METRICS) + " |"
+    rule = "|---|" + "|".join("---:" for _ in DRAW_METRICS) + "|"
+    lines = [header, rule]
+    for i, name in enumerate(DRAW_METRICS):
+        cells = " | ".join(f"{matrix[i, j]:.2f}" for j in range(len(DRAW_METRICS)))
+        lines.append(f"| {name} | {cells} |")
+    return "\n".join(lines)
+
+
+def fidelity_report(spec, latents):
+    """Generator check on the continuous draws, before rounding and planted days."""
+    z = []
+    lag1 = {m: [] for m in DRAW_METRICS}
+    moments = []
+    for member, latent in zip(CREW, latents):
+        block = []
+        for metric in DRAW_METRICS:
+            mu, sd = member["base"][metric]
+            series = latent[metric]
+            block.append((series - mu) / sd)
+            lag1[metric].append(float(np.corrcoef(series[:-1], series[1:])[0, 1]))
+            moments.append({
+                "crew": member["id"],
+                "metric": metric,
+                "stated_mean": mu,
+                "realized_mean": float(series.mean()),
+                "stated_sd": sd,
+                "realized_sd": float(series.std(ddof=1)),
+            })
+        z.append(np.vstack(block))
+    stacked = np.hstack(z)
+    realized = np.corrcoef(stacked)
+    lines = [
+        "# Synthetic crew fidelity",
+        "",
+        "Simulated crew. Not real astronaut data. Numbers below are the continuous AR(1) draws, before rounding and before the planted demo days (Ana's blood pressure, Kenji's sleep and mood, Léa's last-day hold).",
+        "",
+        "## Positive definite",
+        "",
+        f"Approved correlation matrix minimum eigenvalue: {spec['min_eigenvalue_target']:.4f}.",
+        f"Innovation correlation matrix minimum eigenvalue: {spec['min_eigenvalue_innovation']:.4f}.",
+        "Both are positive, so the Cholesky draws are valid.",
+        "",
+        "Approved off-diagonal pairs: sleep↔mood +0.40, sleep↔resting HR −0.30, HR↔systolic BP +0.30. Every other pair is 0.",
+        "",
+        "AR(1) coefficients: vitals 0.60 (heart rate, both blood pressures, glucose, temperature), mood 0.60, sleep 0.50, exercise 0.40.",
+        "",
+        "## Approved correlation",
+        "",
+        _fmt(spec["target"]),
+        "",
+        "## Realized correlation",
+        "",
+        "Three astronauts, 75 days each, standardized by that astronaut's stated mean and sd, then pooled.",
+        "",
+        _fmt(realized),
+        "",
+        "## Lag-1 autocorrelation",
+        "",
+        "| Metric | Target | Ana | Kenji | Léa | Mean |",
+        "|---|---:|---:|---:|---:|---:|",
+    ]
+    for metric in DRAW_METRICS:
+        vals = lag1[metric]
+        lines.append(
+            f"| {metric} | {AR_PHI[metric]:.2f} | {vals[0]:.2f} | {vals[1]:.2f} | {vals[2]:.2f} | {np.mean(vals):.2f} |"
+        )
+    lines += [
+        "",
+        "## Means and standard deviations",
+        "",
+        "| Crew | Metric | Stated mean | Realized mean | Stated sd | Realized sd |",
+        "|---|---|---:|---:|---:|---:|",
+    ]
+    for row in moments:
+        lines.append(
+            f"| {row['crew']} | {row['metric']} | {row['stated_mean']:.2f} | {row['realized_mean']:.2f} | "
+            f"{row['stated_sd']:.2f} | {row['realized_sd']:.2f} |"
+        )
+    lines += [
+        "",
+        "With 75 days, a mean can sit a few tenths of a standard deviation off the stated value, and a single lag-1 estimate wobbles. The targets are the process, not a promise that one short mission matches them to two decimals.",
+        "",
+        "The JSON stores mood as an integer from 1 to 5 and rounds the other daily inputs. Those stored values are coarser than this table. Bone loss and radiation dose are built from the daily inputs and the planted storm day; they are not part of the correlation matrix.",
+        "",
+    ]
+    return "\n".join(lines)
+
+
+def assert_demo(crew):
+    by = {c["id"]: c["status"] for c in crew["crew"]}
+    problems = []
+    if by["c1"]["heart"] != "amber":
+        problems.append(f"c1 heart is {by['c1']['heart']}, expected amber")
+    if by["c2"]["brain"] != "red":
+        problems.append(f"c2 brain is {by['c2']['brain']}, expected red")
+    if by["c3"]["overall"] != "green":
+        problems.append(f"c3 overall is {by['c3']['overall']}, expected green")
+    if problems:
+        raise RuntimeError("planted demo scenarios did not land: " + "; ".join(problems))
+
+
 def write_crew(path=None):
     """Rewrite crew_data.json only. Leaves the storm forecast file alone."""
-    crew = crew_file()
+    crew, spec, latents = build_crew()
+    assert_demo(crew)
     path = Path(path) if path else ROOT / "web" / "public" / "data" / "crew_data.json"
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(crew, ensure_ascii=False), encoding="utf-8")
+    text = json.dumps(crew, ensure_ascii=False)
+    path.write_text(text, encoding="utf-8")
+    sample = ROOT / "contracts" / "crew_data.sample.json"
+    sample.write_text(json.dumps(crew, indent=1, ensure_ascii=False), encoding="utf-8")
+    report = ROOT / "ml" / "results" / "synthetic_crew.md"
+    report.parent.mkdir(parents=True, exist_ok=True)
+    report.write_text(fidelity_report(spec, latents), encoding="utf-8")
     for c in crew["crew"]:
         print(c["id"], c["name"], c["status"], f"{len(c['flags'])} flags")
         for f in c["flags"]:
             print(f"  {f['date']} {f['metric']:16} {f['severity']:5} z={f['z']}  {f['message']}")
+    print(f"Wrote {path}")
+    print(f"Wrote {report}")
     return crew
 
 

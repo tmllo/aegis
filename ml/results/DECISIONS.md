@@ -12,7 +12,7 @@ In progress. This run uses split A and does not open the test years (2024 onward
 - [x] Models — logistic regression, C=10, validation Brier skill 0.418
 - [x] Thresholds — watch 0.0308 (3.25 false alarms/month), warning 0.159 (0.63/month)
 - [x] v1 saved — ml/models/v1.pkl and ml/results/scorecard_v1.md
-- [ ] Synthetic crew
+- [x] Synthetic crew — correlations positive definite, demo cards unchanged, contract valid
 - [ ] Pitch outline
 
 ## Rules for this run
@@ -149,6 +149,16 @@ The watch bar is set by one storm, the 28 Mar 2022 flare, whose probability is 0
 Warning lands on 12/15 exactly. The three misses are the three lowest probabilities (0.031, 0.143, 0.148).
 
 Calibration, validation probabilities in five equal-count bins: the bottom four bins, 432 flares, contain no storms (mean probabilities 0.3%, 0.7%, 1.2%, 2.0%). The top bin, 108 flares, has mean probability 12.8% and an observed storm rate of 13.9% (15 storms). The ranking is doing the work. The probabilities in that top bin are close to the rate.
+
+## D6 — Synthetic crew
+
+Pre-approved correlations: sleep↔mood +0.4, sleep↔resting heart rate −0.3, heart rate↔systolic BP +0.3, every other pair 0. Minimum eigenvalue of that matrix: 0.461. The shock matrix that preserves those correlations under the AR(1) has minimum eigenvalue 0.456. Both are positive definite.
+
+AR(1) coefficients: heart rate, systolic and diastolic BP, glucose and temperature 0.6; mood 0.6; sleep 0.5; exercise 0.4.
+
+On the continuous draws (3 astronauts × 75 days), pooled correlations landed at sleep↔mood +0.50, sleep↔heart rate −0.19, heart rate↔systolic BP +0.44. Mean lag-1 was 0.56, 0.54, 0.51, 0.60 and 0.52 for the five vitals, 0.56 for mood, 0.37 for sleep and 0.45 for exercise. Means sit close to the stated values. Full table: `ml/results/synthetic_crew.md`. Seventy-five days is a short sample, so pairs that were set to 0 still wander by about 0.1–0.2.
+
+Planted days are applied after the draw, measured from each astronaut's own first 14 days, because that is what the flags use. Today: Ana heart amber (BP 2.6σ for 4 days), Kenji brain red (sleep 3.3σ), Léa overall green, with the 10 Nov storm dose still in her history. `python ml/validate_contracts.py` passed. The storm file is still the fake sample; this step did not touch it.
 
 ## v1 saved
 
