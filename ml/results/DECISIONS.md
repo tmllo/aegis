@@ -13,7 +13,7 @@ In progress. This run uses split A and does not open the test years (2024 onward
 - [x] Thresholds — watch 0.0308 (3.25 false alarms/month), warning 0.159 (0.63/month)
 - [x] v1 saved — ml/models/v1.pkl and ml/results/scorecard_v1.md
 - [x] Synthetic crew — correlations positive definite, demo cards unchanged, contract valid
-- [ ] Pitch outline
+- [x] Pitch outline — ml/results/pitch_outline.md, test numbers left as placeholders
 
 ## Rules for this run
 
