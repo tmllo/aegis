@@ -2,7 +2,11 @@
 
 ## Summary
 
-In progress. This run uses split A and does not open the test years (2024 onward). The closing summary replaces this paragraph when the run finishes.
+Split A is in force. Nothing from 2024 onward was loaded, scored, or plotted. v1 is a logistic regression (C=10, no class weights) fit on flares through 2021. Climatology is the train+validation storm rate, 4.10%. On 540 validation flares and 15 storms, Brier skill against that climatology is 0.418. Warning, the highest threshold that still catches at least 80%, is probability 0.159: 12/15 storms, 0.625 false alarms per month, precision 44%, median lead time 8.6 h. Watch, the highest threshold that still catches at least 95%, is 0.031: 15/15 storms, 3.25 false alarms per month, precision 16%, median lead time 7.9 h. Fourteen of fifteen would be 93%, so the 95% rule allows no miss.
+
+The best gradient booster scored 0.424. That is 0.006 ahead of the logistic model, inside the 0.02 band, so the simpler model was kept. C=10 is the top of the grid that was set beforehand; C=1 scored 0.409 and would have won on the same rule.
+
+Concerns. The watch bar is one storm. The 28 Mar 2022 flare has probability 0.031, and catching it is what creates 78 false alarms instead of 17. Warning is the cut that is usable. Validation was used for the grid, the family choice, and both thresholds, so 0.418 is a bit optimistic. The test score is still empty on purpose. DONKI is an analyst list, not every flare, and the label is a curated GOES >10 MeV link. The synthetic crew matrix is positive definite (minimum eigenvalue 0.46), the demo cards are Ana heart amber, Kenji brain red, Léa green, and a 75-day draw only approximates the approved correlations (sleep lag-1 came out at 0.37 against 0.50). The storm-forecast file is still the fake sample, because writing it would mean scoring the test set.
 
 ## Checklist
 
