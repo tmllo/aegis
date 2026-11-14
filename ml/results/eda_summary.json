@@ -1,0 +1,99 @@
+{
+  "set": "development 2010-2023, test not included",
+  "flares": 1024,
+  "storms": 42,
+  "by_class": [
+    {
+      "bin": "M",
+      "flares": 959,
+      "storms": 28,
+      "rate": 0.029197080291970802
+    },
+    {
+      "bin": "X",
+      "flares": 65,
+      "storms": 14,
+      "rate": 0.2153846153846154
+    }
+  ],
+  "by_longitude": [
+    {
+      "bin": "120\u201390\u00b0E",
+      "flares": 42,
+      "storms": 0,
+      "rate": 0.0
+    },
+    {
+      "bin": "90\u201360\u00b0E",
+      "flares": 170,
+      "storms": 3,
+      "rate": 0.01764705882352941
+    },
+    {
+      "bin": "60\u201330\u00b0E",
+      "flares": 157,
+      "storms": 2,
+      "rate": 0.012738853503184714
+    },
+    {
+      "bin": "30\u20130\u00b0E",
+      "flares": 126,
+      "storms": 5,
+      "rate": 0.03968253968253968
+    },
+    {
+      "bin": "0\u201330\u00b0W",
+      "flares": 133,
+      "storms": 7,
+      "rate": 0.05263157894736842
+    },
+    {
+      "bin": "30\u201360\u00b0W",
+      "flares": 166,
+      "storms": 11,
+      "rate": 0.06626506024096386
+    },
+    {
+      "bin": "60\u201390\u00b0W",
+      "flares": 201,
+      "storms": 13,
+      "rate": 0.06467661691542288
+    },
+    {
+      "bin": "90\u2013120\u00b0W",
+      "flares": 29,
+      "storms": 1,
+      "rate": 0.034482758620689655
+    }
+  ],
+  "longitude_outside_bins": 0,
+  "by_cme": [
+    {
+      "bin": "No linked CME",
+      "flares": 722,
+      "storms": 5,
+      "rate": 0.006925207756232687
+    },
+    {
+      "bin": "Linked CME",
+      "flares": 302,
+      "storms": 37,
+      "rate": 0.12251655629139073
+    }
+  ],
+  "cme_speed": {
+    "no_storm": {
+      "n": 265,
+      "median": 679.0,
+      "q25": 458.0,
+      "q75": 910.0
+    },
+    "storm": {
+      "n": 37,
+      "median": 1372.0,
+      "q25": 1101.0,
+      "q75": 1500.0
+    },
+    "flares_missing_speed": 722
+  }
+}

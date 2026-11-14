@@ -7,8 +7,8 @@ In progress. This run uses split A and does not open the test years (2024 onward
 ## Checklist
 
 - [x] Split — A: train through 2021, validation 2022–2023, test 2024–now held out and not opened
-- [ ] EDA
-- [ ] Charts
+- [x] EDA — development set only, 1,024 flares, 42 storms
+- [x] Charts — four PNGs in ml/results/
 - [ ] Models
 - [ ] Thresholds
 - [ ] v1 saved
@@ -45,3 +45,47 @@ Option A. Train is every development flare with peak year ≤ 2021. Validation i
 Why this one: validation has two years and 13 separate GOES >10 MeV events, enough to set a cutoff. Putting 2022 into training would leave 2023 alone (10 linked flares, 8 GOES events), and 4 of those 10 flares fall in December 2023. Stopping training at 2019 only moves 2020–2021, which is one positive.
 
 The validation positive rate (2.8%) is lower than the training rate (5.6%) because later years contain more logged M flares per storm. Thresholds are set on validation for that reason.
+
+## P2 — EDA
+
+All four charts use the 1,024 development flares (2010–2023) and the main label. 42 of them are storms. No 2024 row was plotted.
+
+### Storm rate by class
+
+M: 28/959 = 2.9%. X: 14/65 = 21.5%. Chart: `ml/results/storm_rate_by_class.png`.
+
+An X-class flare is tied to an Earth proton storm about one time in five; an M-class flare about one time in thirty. Size is a real signal, roughly seven to one. Most storms are still M-class, 28 of the 42, because M flares are what the catalogue is full of.
+
+### Storm rate by longitude (Parker spiral)
+
+30° bins, east to west. Every development flare falls inside −120° to 120°. Chart: `ml/results/parker_spiral_longitude.png`.
+
+| Bin | Flares | Storms | Rate |
+|---|---:|---:|---:|
+| 120–90°E | 42 | 0 | 0.0% |
+| 90–60°E | 170 | 3 | 1.8% |
+| 60–30°E | 157 | 2 | 1.3% |
+| 30–0°E | 126 | 5 | 4.0% |
+| 0–30°W | 133 | 7 | 5.3% |
+| 30–60°W | 166 | 11 | 6.6% |
+| 60–90°W | 201 | 13 | 6.5% |
+| 90–120°W | 29 | 1 | 3.4% |
+
+The storm rate climbs from about 1–2% on the eastern disk to about 6–7% on the western disk. That is the Parker spiral: field lines from the Sun's western hemisphere connect to Earth, so those particles reach us. The last bin is over the limb, one storm in 29 flares, too thin to claim the curve keeps rising past 90°W.
+
+### Linked CME
+
+No linked CME: 5/722 = 0.7%. Linked CME: 37/302 = 12.3%. Chart: `ml/results/storm_rate_by_cme.png`.
+
+A flare DONKI links to a CME is a storm about 12% of the time; a flare with no linked CME is a storm about 0.7% of the time. 37 of the 42 storms have that CME link. In this catalogue, an Earth proton event almost always comes with a CME the analysts already tied to the flare.
+
+### CME speed
+
+Among flares with a recorded CME speed. Chart: `ml/results/cme_speed_storm_vs_quiet.png`.
+
+| Group | n | Median km/s | Middle half |
+|---|---:|---:|---|
+| No storm | 265 | 679 | 458–910 |
+| Storm | 37 | 1,372 | 1,101–1,500 |
+
+The 722 flares with no speed are exactly the flares with no linked CME, so every linked CME in the development set has a speed. Storm CMEs are about twice as fast at the median. Fast ejections are the ones that drive the shock.
