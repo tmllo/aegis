@@ -2,6 +2,8 @@
 
 ## Summary
 
+**Final model: v1 (logistic regression, C=10).** The pre-declared v2 (GOES flux harmonisation + Parker connectivity) gained +0.016 Brier skill on validation, under the +0.02 bar, so v1 stays. Lead time now runs from issue time (later of flare peak and linked CME start): validation per-event median 6.0 h at warning, 4.2 h at watch. About two thirds of v1's skill rests on the curated CME link and speed (flare-only model: 0.141). See "Audit and v2" at the end.
+
 Split A is in force. Nothing from 2024 onward was loaded, scored, or plotted. v1 is a logistic regression (C=10, no class weights) fit on flares through 2021. Climatology is the train+validation storm rate, 4.10%. On 540 validation flares and 15 storms, Brier skill against that climatology is 0.418. Warning, the highest threshold that still catches at least 80%, is probability 0.159: 12/15 storms, 0.625 false alarms per month, precision 44%, median lead time 8.6 h. Watch, the highest threshold that still catches at least 95%, is 0.031: 15/15 storms, 3.25 false alarms per month, precision 16%, median lead time 7.9 h. Fourteen of fifteen would be 93%, so the 95% rule allows no miss.
 
 The best gradient booster scored 0.424. That is 0.006 ahead of the logistic model, inside the 0.02 band, so the simpler model was kept. C=10 is the top of the grid that was set beforehand; C=1 scored 0.409 and would have won on the same rule.
@@ -17,6 +19,7 @@ Concerns. The watch bar is one storm. The 28 Mar 2022 flare has probability 0.03
 - [x] Thresholds — watch 0.0308 (3.25 false alarms/month), warning 0.159 (0.63/month)
 - [x] v1 saved — ml/models/v1.pkl and ml/results/scorecard_v1.md
 - [x] Synthetic crew — correlations positive definite, demo cards unchanged, contract valid
+- [x] Audit, issue-time lead time, v2 evaluated and rejected — v1 final
 - [x] Pitch outline — ml/results/pitch_outline.md, test numbers left as placeholders
 
 ## Rules for this run
@@ -167,3 +170,45 @@ Planted days are applied after the draw, measured from each astronaut's own firs
 ## v1 saved
 
 `ml/models/v1.pkl` is the logistic model fit on train only, plus the climatology rate and the two thresholds. `ml/results/scorecard_v1.md` holds the validation metrics above. The pickle records `test_scored: false`. Validation was used for the grid, the family choice, and the thresholds, so this scorecard is a little optimistic relative to a set that was never used for any of those choices.
+
+## Audit and v2 (14 Nov)
+
+Test still sealed: everything below uses 2010–2023 only. `issue_time.py` reads only CMEs linked to development flares.
+
+### Audit findings, by severity
+
+High
+1. CME features are hindsight-curated (`train_v1.py:48-49`, `fetch_donki.py:133,209`). The flare→CME link is made by DONKI analysts after the fact, plausibly more carefully when a proton event followed; the speed is the "most accurate" analysis, revised later, and the max over all linked CMEs. Only 5/42 storms lack a CME link (no-CME storm rate 0.7%). Dropping both CME features cuts validation Brier skill from 0.418 to 0.141, so most of the skill depends on information a real-time forecaster would get later and noisier. Cannot be fixed without real-time CME catalogues (e.g. CACTus/SWPC alerts); the pitch should say the model assumes a CME speed is available.
+2. Lead time measured from flare peak (old `train_v1.py:264-266`), but the CME features exist only after the CME is seen. Fixed: issue time = later of peak and latest linked CME start. CME start is a first coronagraph frame; the speed arrives later still, so lead times remain slightly optimistic.
+
+Medium
+3. Hits and lead times counted per flare, not per storm. 15 validation "storms" are 13 distinct SEPs; Dec 2023 contributes three flares (16–31 h leads) to one event. Per-event warning hit rate is 10/13 (77%), below the 80% the threshold rule targets; per-event median lead is 6.0 h vs 8.6 h per flare. The scorecard now shows both.
+4. All selection on one set (`train_v1.py:132,168,254`): grid, family, both thresholds chosen on validation and reported on validation. Hit rates equal the targets by construction, and each threshold sits exactly on a storm's probability (watch = the 28 Mar 2022 flare). C=10 is the top grid edge. Validation numbers are an upper bound; only the test set can say.
+5. GOES flux scale shift: pre-2018 fluxes carry the GOES-8–15 0.7 factor, 2020+ do not. Train and validation are on different scales; likely part of why the validation storm rate per M flare is half the training rate (2.8% vs 5.6%).
+
+Low
+6. Climatology uses train+validation labels (`train_v1.py:122`), so the baseline sees validation. Sensitivity is small: v1 skill is 0.431 vs train-only rate, 0.418 vs train+val, 0.415 vs the validation rate itself. The 0.415 figure is the most conservative.
+7. False alarms counted per flare; bursts from one active region count several times. Excluding flares inside an ongoing storm (`prepare_model_flares.py:196`) is reasonable operationally but the score never covers those flares.
+8. A no-CME forecast can only be issued once you've waited long enough to see no CME, so the issue time for no-CME flares is also slightly early.
+
+No split leak found: the time split holds, no duplicate flare IDs, no missing longitudes, and the loader drops 2024+ before use. One validation flare (31 Dec 2023) is linked to a 3 Jan 2024 onset; that is its own label, not a test row.
+
+### Lead time from issue time (v1, validation)
+
+| Cut | Per flare (from peak → from issue) | Per event, from issue | Events caught |
+|---|---:|---:|---:|
+| Watch 0.0308 | 7.87 → 7.87 h | 4.2 h | 13/13 |
+| Warning 0.159 | 8.56 → 8.56 h | 6.0 h | 10/13 |
+
+The per-flare medians do not move because the CMEs start a median 0.4 h after peak and the median hits have CMEs starting before peak. The real change is counting per event.
+
+### v2 (pre-declared, `train_v2.py`)
+
+Two changes together, nothing tuned: (1) divide pre-2018 GOES fluxes by 0.7; (2) replace linear longitude with cos(longitude − 60°), connectivity to the nominal Parker footpoint. Same C=10, features otherwise, thresholds by the same rules. Rule set beforehand: accept only if Brier skill gains more than 0.02 and the warning hit rate does not drop.
+
+| | Brier skill | Warning thr. | Warning caught | Warning FA/month | Precision | Per-event lead (warning) |
+|---|---:|---:|---:|---:|---:|---:|
+| v1 | 0.418 | 0.159 | 12/15 (10/13 events) | 0.625 | 0.44 | 6.0 h |
+| v2 | 0.434 | 0.164 | 12/15 (10/13 events) | 0.458 | 0.52 | 8.6 h |
+
+Gain +0.016, under 0.02. **v2 rejected; v1 stays final.** No v2.pkl saved. Ablations (information only, not candidates): connectivity alone 0.454, harmonisation alone 0.404. Connectivity alone would have passed, but choosing it after seeing those numbers would be selecting on validation again, so it is not adopted. Full output: `ml/results/v2_evaluation.json`.

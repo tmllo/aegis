@@ -27,6 +27,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
 from devset import ROOT, load_development_set
+from issue_time import add_issue_time, event_lead_times, lead_hours
 
 RESULTS = ROOT / "ml" / "results"
 MODELS = ROOT / "ml" / "models"
@@ -104,7 +105,7 @@ def split_frames():
     if set(dev["split"]) != {"train", "val"}:
         raise RuntimeError(f"unexpected splits: {set(dev['split'])}")
     train = dev[dev["split"] == "train"].reset_index(drop=True)
-    val = dev[dev["split"] == "val"].reset_index(drop=True)
+    val = add_issue_time(dev[dev["split"] == "val"].reset_index(drop=True))
     if train["peak_time"].dt.year.max() > 2021 or val["peak_time"].dt.year.min() < 2022:
         raise RuntimeError("train/validation boundary is wrong")
     if val["peak_time"].dt.year.max() > 2023:
@@ -221,6 +222,8 @@ def stage_fit() -> None:
         "peak_time": val["peak_time"].dt.strftime("%Y-%m-%dT%H:%M:%SZ"),
         "y": y_val,
         "p": p_val,
+        "issue_time": val["issue_time"].dt.strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "linked_goes10_ids": val["linked_goes10_ids"],
         "linked_goes10_onset": val["linked_goes10_onset"],
     })
     pred.to_csv(RESULTS / "val_predictions.csv", index=False)
@@ -259,16 +262,18 @@ def highest_threshold(y: np.ndarray, p: np.ndarray, target: float) -> dict:
 
 def lead_times(pred: pd.DataFrame, threshold: float) -> dict:
     hit = pred[(pred["y"] == 1) & (pred["p"] >= threshold)].copy()
-    onset = pd.to_datetime(hit["linked_goes10_onset"], utc=True, errors="coerce")
-    peak = pd.to_datetime(hit["peak_time"], utc=True)
-    hours = (onset - peak).dt.total_seconds() / 3600
-    known = hours.dropna()
-    return {
+    # Issue time = later of flare peak and linked CME start (see issue_time.py).
+    known = lead_hours(hit["issue_time"], hit["linked_goes10_onset"]).dropna()
+    from_peak = lead_hours(hit["peak_time"], hit["linked_goes10_onset"]).dropna()
+    out = {
         "hits": int(len(hit)),
         "hits_with_onset": int(len(known)),
         "median_lead_time_h": None if known.empty else round(float(known.median()), 2),
         "negative_lead_times": int((known < 0).sum()),
+        "median_lead_time_from_peak_h": None if from_peak.empty else round(float(from_peak.median()), 2),
     }
+    out.update(event_lead_times(pred, threshold))
+    return out
 
 
 def reliability(y: np.ndarray, p: np.ndarray, bins: int = 5) -> list[dict]:
@@ -347,15 +352,15 @@ Brier skill versus that climatology, on validation: {selection["winner"]["brier_
 
 A false alarm is a non-storm flare at or above the threshold. The month count is the 24 calendar months from January 2022 through December 2023.
 
-| Cut | Rule | Threshold | Hit rate | Storms caught | False alarms / month | Precision | Median lead time (h) |
-|---|---|---:|---:|---:|---:|---:|---:|
-| Watch | highest threshold with hit rate ≥ 95% | {a["threshold"]:.4f} | {a["hit_rate"]:.3f} | {a["storms_caught"]}/{a["storms_caught"] + a["storms_missed"]} | {a["false_alarms_per_month"]:.3f} | {a["precision"]:.3f} | {a["lead_time"]["median_lead_time_h"]} |
-| Warning | highest threshold with hit rate ≥ 80% | {w["threshold"]:.4f} | {w["hit_rate"]:.3f} | {w["storms_caught"]}/{w["storms_caught"] + w["storms_missed"]} | {w["false_alarms_per_month"]:.3f} | {w["precision"]:.3f} | {w["lead_time"]["median_lead_time_h"]} |
+| Cut | Rule | Threshold | Hit rate (flares) | Storm flares caught | Storm events caught | False alarms / month | Precision | Median lead time, per flare (h) | Median lead time, per event (h) |
+|---|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| Watch | highest threshold with hit rate ≥ 95% | {a["threshold"]:.4f} | {a["hit_rate"]:.3f} | {a["storms_caught"]}/{a["storms_caught"] + a["storms_missed"]} | {a["lead_time"]["events_caught"]}/{a["lead_time"]["events"]} | {a["false_alarms_per_month"]:.3f} | {a["precision"]:.3f} | {a["lead_time"]["median_lead_time_h"]} | {a["lead_time"]["median_event_lead_time_h"]} |
+| Warning | highest threshold with hit rate ≥ 80% | {w["threshold"]:.4f} | {w["hit_rate"]:.3f} | {w["storms_caught"]}/{w["storms_caught"] + w["storms_missed"]} | {w["lead_time"]["events_caught"]}/{w["lead_time"]["events"]} | {w["false_alarms_per_month"]:.3f} | {w["precision"]:.3f} | {w["lead_time"]["median_lead_time_h"]} | {w["lead_time"]["median_event_lead_time_h"]} |
 
 Watch lead times: {a["lead_time"]["hits_with_onset"]} of {a["lead_time"]["hits"]} hits have an onset, {a["lead_time"]["negative_lead_times"]} of those are negative.
 Warning lead times: {w["lead_time"]["hits_with_onset"]} of {w["lead_time"]["hits"]} hits have an onset, {w["lead_time"]["negative_lead_times"]} of those are negative.
 
-Negative lead time means the linked GOES >10 MeV onset is before the flare peak. The main label is an analyst link, not a guarantee that the flare came first.
+Lead time runs from issue time to the linked GOES >10 MeV onset. Issue time is the later of the flare peak and the linked CME's start time (flare peak when there is no CME), because the CME features cannot be known before the CME is seen. Per event: one lead time per distinct SEP, from the earliest flare at or above the threshold. Measured from flare peak instead (the old definition), the per-flare medians are {a['lead_time']['median_lead_time_from_peak_h']} h (watch) and {w['lead_time']['median_lead_time_from_peak_h']} h (warning). Negative lead time means the onset is before the issue time. The main label is an analyst link, not a guarantee that the flare came first.
 
 Validation was used to pick the grid point, to pick the model family, and to set these two thresholds. These validation numbers are therefore a bit optimistic. The held-out test score is not in this file.
 """

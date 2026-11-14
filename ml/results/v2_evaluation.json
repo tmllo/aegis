@@ -1,0 +1,138 @@
+{
+  "rule": "accept if BSS gain > 0.02 and warning hit rate does not drop",
+  "climatology_rate_train_val": 0.041015625,
+  "brier_v1": 0.015812003101035463,
+  "brier_v2": 0.015389939888839998,
+  "bss_v1": 0.4182788493776518,
+  "bss_v2": 0.43380648973193636,
+  "bss_gain": 0.015527640354284555,
+  "ablation_bss": {
+    "harmonise_only": 0.40443270206326865,
+    "connectivity_only": 0.45407613669940383
+  },
+  "cuts_v1": {
+    "watch": {
+      "threshold": 0.03078466854644506,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 78,
+      "false_alarms_per_month": 3.25,
+      "precision": 0.16129032258064516,
+      "target": 0.95,
+      "lead_time": {
+        "hits": 15,
+        "hits_with_onset": 15,
+        "median_lead_time_h": 7.87,
+        "negative_lead_times": 0,
+        "median_lead_time_from_peak_h": 7.87,
+        "events": 13,
+        "events_caught": 13,
+        "event_hit_rate": 1.0,
+        "median_event_lead_time_h": 4.2,
+        "negative_event_lead_times": 0
+      }
+    },
+    "warning": {
+      "threshold": 0.1588648007726645,
+      "hit_rate": 0.8,
+      "storms_caught": 12,
+      "storms_missed": 3,
+      "false_alarms": 15,
+      "false_alarms_per_month": 0.625,
+      "precision": 0.4444444444444444,
+      "target": 0.8,
+      "lead_time": {
+        "hits": 12,
+        "hits_with_onset": 12,
+        "median_lead_time_h": 8.56,
+        "negative_lead_times": 0,
+        "median_lead_time_from_peak_h": 8.56,
+        "events": 13,
+        "events_caught": 10,
+        "event_hit_rate": 0.7692307692307693,
+        "median_event_lead_time_h": 6.03,
+        "negative_event_lead_times": 0
+      }
+    }
+  },
+  "cuts_v2": {
+    "watch": {
+      "threshold": 0.030837040999141894,
+      "hit_rate": 1.0,
+      "storms_caught": 15,
+      "storms_missed": 0,
+      "false_alarms": 55,
+      "false_alarms_per_month": 2.2916666666666665,
+      "precision": 0.21428571428571427,
+      "target": 0.95,
+      "lead_time": {
+        "hits": 15,
+        "hits_with_onset": 15,
+        "median_lead_time_h": 7.87,
+        "negative_lead_times": 0,
+        "median_lead_time_from_peak_h": 7.87,
+        "events": 13,
+        "events_caught": 13,
+        "event_hit_rate": 1.0,
+        "median_event_lead_time_h": 4.2,
+        "negative_event_lead_times": 0
+      }
+    },
+    "warning": {
+      "threshold": 0.1643931426889551,
+      "hit_rate": 0.8,
+      "storms_caught": 12,
+      "storms_missed": 3,
+      "false_alarms": 11,
+      "false_alarms_per_month": 0.4583333333333333,
+      "precision": 0.5217391304347826,
+      "target": 0.8,
+      "lead_time": {
+        "hits": 12,
+        "hits_with_onset": 12,
+        "median_lead_time_h": 10.6,
+        "negative_lead_times": 0,
+        "median_lead_time_from_peak_h": 10.81,
+        "events": 13,
+        "events_caught": 10,
+        "event_hit_rate": 0.7692307692307693,
+        "median_event_lead_time_h": 8.56,
+        "negative_event_lead_times": 0
+      }
+    }
+  },
+  "reliability_v2": [
+    {
+      "bin": "(-0.000849, 0.00266]",
+      "n": 108,
+      "mean_p": 0.0016,
+      "observed_rate": 0.0
+    },
+    {
+      "bin": "(0.00266, 0.00683]",
+      "n": 108,
+      "mean_p": 0.0043,
+      "observed_rate": 0.0
+    },
+    {
+      "bin": "(0.00683, 0.0133]",
+      "n": 108,
+      "mean_p": 0.0108,
+      "observed_rate": 0.0
+    },
+    {
+      "bin": "(0.0133, 0.0199]",
+      "n": 108,
+      "mean_p": 0.0159,
+      "observed_rate": 0.0
+    },
+    {
+      "bin": "(0.0199, 0.647]",
+      "n": 108,
+      "mean_p": 0.1091,
+      "observed_rate": 0.1389
+    }
+  ],
+  "accepted": false
+}

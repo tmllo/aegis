@@ -18,7 +18,13 @@
       "hits": 15,
       "hits_with_onset": 15,
       "median_lead_time_h": 7.87,
-      "negative_lead_times": 0
+      "negative_lead_times": 0,
+      "median_lead_time_from_peak_h": 7.87,
+      "events": 13,
+      "events_caught": 13,
+      "event_hit_rate": 1.0,
+      "median_event_lead_time_h": 4.2,
+      "negative_event_lead_times": 0
     }
   },
   "warning": {
@@ -34,7 +40,13 @@
       "hits": 12,
       "hits_with_onset": 12,
       "median_lead_time_h": 8.56,
-      "negative_lead_times": 0
+      "negative_lead_times": 0,
+      "median_lead_time_from_peak_h": 8.56,
+      "events": 13,
+      "events_caught": 10,
+      "event_hit_rate": 0.7692307692307693,
+      "median_event_lead_time_h": 6.03,
+      "negative_event_lead_times": 0
     }
   },
   "reliability": [
