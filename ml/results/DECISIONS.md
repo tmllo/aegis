@@ -9,7 +9,7 @@ In progress. This run uses split A and does not open the test years (2024 onward
 - [x] Split — A: train through 2021, validation 2022–2023, test 2024–now held out and not opened
 - [x] EDA — development set only, 1,024 flares, 42 storms
 - [x] Charts — four PNGs in ml/results/
-- [ ] Models
+- [x] Models — logistic regression, C=10, validation Brier skill 0.418
 - [ ] Thresholds
 - [ ] v1 saved
 - [ ] Synthetic crew
@@ -89,3 +89,42 @@ Among flares with a recorded CME speed. Chart: `ml/results/cme_speed_storm_vs_qu
 | Storm | 37 | 1,372 | 1,101–1,500 |
 
 The 722 flares with no speed are exactly the flares with no linked CME, so every linked CME in the development set has a speed. Storm CMEs are about twice as fast at the median. Fast ejections are the ones that drive the shock.
+
+## P4 — Models
+
+Target is `sep_linked_goes10`. Features are log10(flare flux), solar longitude (west positive), a linked-CME flag, and log10(CME speed). Missing speeds are median-imputed inside the logistic pipeline and left missing for gradient boosting. No class weights. Each candidate is fit on the 484 training flares and scored on the 540 validation flares.
+
+Climatology predicts 42/1024 = 0.0410 for every flare. That rate uses train and validation together. Its validation Brier score is 0.0272, and its skill is 0 by definition.
+
+Close call: a model within 0.02 validation Brier skill of the leader loses to the simpler family. Order of simplicity: climatology, logistic regression, gradient boosting.
+
+| Candidate | Validation Brier | Brier skill |
+|---|---:|---:|
+| climatology | 0.0272 | 0.000 |
+| logistic C=0.01 | 0.0241 | 0.115 |
+| logistic C=0.1 | 0.0180 | 0.339 |
+| logistic C=1 | 0.0161 | 0.409 |
+| logistic C=10 | 0.0158 | 0.418 |
+| boosting, lr 0.05, depth 2, leaf 20 | 0.0170 | 0.374 |
+| boosting, lr 0.05, depth 2, leaf 40 | 0.0163 | 0.402 |
+| boosting, lr 0.05, depth 3, leaf 20 | 0.0193 | 0.291 |
+| boosting, lr 0.05, depth 3, leaf 40 | 0.0156 | 0.424 |
+| boosting, lr 0.1, depth 2, leaf 20 | 0.0194 | 0.285 |
+| boosting, lr 0.1, depth 2, leaf 40 | 0.0173 | 0.362 |
+| boosting, lr 0.1, depth 3, leaf 20 | 0.0222 | 0.184 |
+| boosting, lr 0.1, depth 3, leaf 40 | 0.0176 | 0.351 |
+
+The best skill is 0.424, from the shallow booster with learning rate 0.05, depth 3 and leaf 40. Logistic regression at C=10 scores 0.418. The gap is 0.006, inside the 0.02 band, so the logistic model is the one we keep. C=1 scores 0.409 and would have won on the same rule. C=10 is the top of the grid that was set before looking.
+
+Standardized coefficients, all pointing the way the physics goes: linked CME +1.03, log10 CME speed +1.00, longitude +0.66, log10 flux +0.52. West of central meridian raises the probability. On validation the model’s mean probability is 0.014 on the eastern hemisphere and 0.052 on the western hemisphere. The observed storm rates there are 0.4% and 5.0%.
+
+Permutation importance on validation, measured as the rise in Brier score when that column is shuffled (`ml/results/feature_importance_v1.csv`):
+
+| Feature | Brier increase |
+|---|---:|
+| log10 CME speed | 0.0090 |
+| longitude | 0.0035 |
+| log10 flare flux | 0.0031 |
+| linked CME flag | 0.0030 |
+
+Speed, longitude, and flare size all carry weight. The CME flag adds less once speed is in the model, because the fast CMEs are already the linked ones.

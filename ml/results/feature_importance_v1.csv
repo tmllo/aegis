@@ -1,0 +1,5 @@
+feature,val_brier_increase,std
+log10_cme_speed,0.009011,0.000942
+longitude_deg,0.003473,0.001073
+log10_class_flux,0.003072,0.001066
+has_linked_cme,0.002953,0.000817

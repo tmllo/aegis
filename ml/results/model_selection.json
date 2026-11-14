@@ -1,0 +1,205 @@
+{
+  "label": "sep_linked_goes10",
+  "fit_on": "train peak years <= 2021",
+  "climatology_rate_train_val": 0.041015625,
+  "close_brier_skill": 0.02,
+  "features": [
+    "log10_class_flux",
+    "longitude_deg",
+    "has_linked_cme",
+    "log10_cme_speed"
+  ],
+  "n_train": 484,
+  "n_train_storms": 27,
+  "n_val": 540,
+  "n_val_storms": 15,
+  "grid": [
+    {
+      "name": "climatology",
+      "kind": "climatology",
+      "params": {
+        "rate": 0.041015625
+      },
+      "brier": 0.02718141343858507,
+      "brier_skill": 0.0
+    },
+    {
+      "name": "logistic_C0.01",
+      "kind": "logistic",
+      "params": {
+        "C": 0.01,
+        "class_weight": null
+      },
+      "brier": 0.02406252106718074,
+      "brier_skill": 0.11474356837444444
+    },
+    {
+      "name": "logistic_C0.1",
+      "kind": "logistic",
+      "params": {
+        "C": 0.1,
+        "class_weight": null
+      },
+      "brier": 0.0179603772871054,
+      "brier_skill": 0.33924049506528053
+    },
+    {
+      "name": "logistic_C1",
+      "kind": "logistic",
+      "params": {
+        "C": 1.0,
+        "class_weight": null
+      },
+      "brier": 0.016067346340963996,
+      "brier_skill": 0.40888481103945185
+    },
+    {
+      "name": "logistic_C10",
+      "kind": "logistic",
+      "params": {
+        "C": 10.0,
+        "class_weight": null
+      },
+      "brier": 0.015812003101035463,
+      "brier_skill": 0.4182788493776518
+    },
+    {
+      "name": "hgb_lr0.05_depth2_leaf20",
+      "kind": "boosting",
+      "params": {
+        "learning_rate": 0.05,
+        "max_depth": 2,
+        "min_samples_leaf": 20,
+        "max_iter": 200,
+        "class_weight": null
+      },
+      "brier": 0.017007453301417345,
+      "brier_skill": 0.3742984212412366
+    },
+    {
+      "name": "hgb_lr0.05_depth2_leaf40",
+      "kind": "boosting",
+      "params": {
+        "learning_rate": 0.05,
+        "max_depth": 2,
+        "min_samples_leaf": 40,
+        "max_iter": 200,
+        "class_weight": null
+      },
+      "brier": 0.01625674920329164,
+      "brier_skill": 0.40191670900327225
+    },
+    {
+      "name": "hgb_lr0.05_depth3_leaf20",
+      "kind": "boosting",
+      "params": {
+        "learning_rate": 0.05,
+        "max_depth": 3,
+        "min_samples_leaf": 20,
+        "max_iter": 200,
+        "class_weight": null
+      },
+      "brier": 0.01926699121539965,
+      "brier_skill": 0.2911703705573526
+    },
+    {
+      "name": "hgb_lr0.05_depth3_leaf40",
+      "kind": "boosting",
+      "params": {
+        "learning_rate": 0.05,
+        "max_depth": 3,
+        "min_samples_leaf": 40,
+        "max_iter": 200,
+        "class_weight": null
+      },
+      "brier": 0.01564364964858468,
+      "brier_skill": 0.42447254687727476
+    },
+    {
+      "name": "hgb_lr0.1_depth2_leaf20",
+      "kind": "boosting",
+      "params": {
+        "learning_rate": 0.1,
+        "max_depth": 2,
+        "min_samples_leaf": 20,
+        "max_iter": 200,
+        "class_weight": null
+      },
+      "brier": 0.019445737894343458,
+      "brier_skill": 0.28459430786114015
+    },
+    {
+      "name": "hgb_lr0.1_depth2_leaf40",
+      "kind": "boosting",
+      "params": {
+        "learning_rate": 0.1,
+        "max_depth": 2,
+        "min_samples_leaf": 40,
+        "max_iter": 200,
+        "class_weight": null
+      },
+      "brier": 0.017342585346309152,
+      "brier_skill": 0.36196896509838294
+    },
+    {
+      "name": "hgb_lr0.1_depth3_leaf20",
+      "kind": "boosting",
+      "params": {
+        "learning_rate": 0.1,
+        "max_depth": 3,
+        "min_samples_leaf": 20,
+        "max_iter": 200,
+        "class_weight": null
+      },
+      "brier": 0.022171471510189594,
+      "brier_skill": 0.1843149893479663
+    },
+    {
+      "name": "hgb_lr0.1_depth3_leaf40",
+      "kind": "boosting",
+      "params": {
+        "learning_rate": 0.1,
+        "max_depth": 3,
+        "min_samples_leaf": 40,
+        "max_iter": 200,
+        "class_weight": null
+      },
+      "brier": 0.017647657915242306,
+      "brier_skill": 0.3507453924308891
+    }
+  ],
+  "winner": {
+    "name": "logistic_C10",
+    "kind": "logistic",
+    "params": {
+      "C": 10.0,
+      "class_weight": null
+    },
+    "brier": 0.015812003101035463,
+    "brier_skill": 0.4182788493776518
+  },
+  "coefficients": [
+    {
+      "feature": "log10_class_flux",
+      "standardized_coefficient": 0.5179
+    },
+    {
+      "feature": "longitude_deg",
+      "standardized_coefficient": 0.6579
+    },
+    {
+      "feature": "log10_cme_speed",
+      "standardized_coefficient": 0.9958
+    },
+    {
+      "feature": "has_linked_cme",
+      "standardized_coefficient": 1.0298
+    }
+  ],
+  "direction_check": {
+    "val_mean_p_east": 0.0139,
+    "val_mean_p_west": 0.0523,
+    "val_storm_rate_east": 0.0039,
+    "val_storm_rate_west": 0.0495
+  }
+}
