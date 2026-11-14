@@ -78,6 +78,12 @@ Test, scored once after the model was frozen. 1,528 flares, 17 distinct GOES >10
 
 Dropping 1–20 May leaves v1 skill at 0.385 and the flare-time ablation at −0.012, slightly worse than guessing the climatology rate.
 
+Slide charts, drawn from these numbers:
+
+- `ml/results/slide_parker_spiral.png` — development set only, east to west.
+- `ml/results/slide_hit_vs_false_alarms.png` — test hit rate against false alarms per month, watch and warning marked.
+- `ml/results/slide_may2024_timeline.png` — May flare probabilities, both thresholds, both onsets.
+
 ## Limitations
 
 Fifteen validation storms is a small set to tune two thresholds. The 95% watch rule cannot miss even one of them, so a single low-scoring storm on 28 Mar 2022 pulls the watch threshold down to 0.031 and produces 3.25 false alarms per month. Fourteen of fifteen would have been 93%, which fails that rule. Warning, at 0.63 false alarms per month, is the cut that is usable in a demo.

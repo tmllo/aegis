@@ -24,6 +24,7 @@ Concerns. The watch bar is one validation storm. The 28 Mar 2022 flare has proba
 - [x] Audit, issue-time lead time, v2 evaluated and rejected — v1 final
 - [x] Pitch outline — ml/results/pitch_outline.md, test numbers filled from the one scoring run
 - [x] Test — scored once on 15 Nov 2026; per-storm warning 16/17, skill 0.413, flare-time ablation 0.055
+- [x] P8 — ml/results/metrics.md and three slide charts
 
 ## Rules for this run
 
