@@ -89,11 +89,9 @@ export default function Checkin() {
     setDir(n < i ? -1 : 1);
     setI(n);
   };
-  // one tap answers a scale question: the choice lights up, then the next question slides in
+  // a tap only picks the answer; the crew moves on with Next (Emile, 15 Nov: no auto-advance)
   const pickThenNext = (apply: () => void) => {
     apply();
-    window.clearTimeout(advance.current);
-    advance.current = window.setTimeout(() => go(i + 1), 280);
   };
   const set = (k: MetricKey, val: number) => setDraft((d) => ({ ...d, [k]: Math.round(val * 100) / 100 }));
   const start = (k: MetricKey) => draft[k] ?? Math.round(preview.rows[k].mean ?? preview.rows[k].value ?? 0);
