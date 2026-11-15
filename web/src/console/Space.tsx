@@ -3,21 +3,14 @@
 // public domain), lit by the one sun with no ambient fill and a tiny earthshine on the dark side.
 // Both are small textures loaded after the first view.
 import { useMemo } from 'react';
-import { useThree } from '@react-three/fiber';
 import { useTexture } from '@react-three/drei';
 import * as THREE from 'three';
 
 const base = `${import.meta.env.BASE_URL}refs/space/`;
 
+/** Dropped: a 4K sky map is blurry behind the body at this field of view. The fine point stars
+ * in the scene carry the sky; this stays as a no-op so the scene keeps building. */
 export function StarSky() {
-  const tex = useTexture(`${base}starmap-4k.jpg`);
-  const { scene } = useThree();
-  useMemo(() => {
-    tex.mapping = THREE.EquirectangularReflectionMapping;
-    tex.colorSpace = THREE.SRGBColorSpace;
-    scene.background = tex;
-    scene.backgroundIntensity = 0.12; // a faint Milky Way haze; the point stars on top carry the detail
-  }, [tex, scene]);
   return null;
 }
 

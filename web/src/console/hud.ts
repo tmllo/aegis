@@ -34,6 +34,12 @@ interface Hud {
   /** Compare: per crew member, organ -> status for the metric being compared. */
   compare: Partial<Record<TargetId, Status>>[];
   setCompare: (c: Partial<Record<TargetId, Status>>[]) => void;
+  /** Idle mode (20 s without input): slow orbit and gentle breathing. */
+  idle: boolean;
+  setIdle: (b: boolean) => void;
+  /** Live heart rate from the camera scan; drives the heart pulse on the body. */
+  heartBpm: number | null;
+  setHeartBpm: (b: number | null) => void;
   /** Body model ready. */
   bodyReady: boolean;
   setYaw: (y: number) => void;
@@ -47,6 +53,10 @@ export const useHud = create<Hud>((set) => ({
   focus: null,
   tint: {},
   bodyReady: false,
+  idle: false,
+  setIdle: (idle) => set((s) => (s.idle === idle ? s : { idle })),
+  heartBpm: null,
+  setHeartBpm: (heartBpm) => set({ heartBpm }),
   asOf: null,
   setAsOf: (asOf) => set({ asOf }),
   compare: [],

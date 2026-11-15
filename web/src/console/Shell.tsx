@@ -24,6 +24,7 @@ export function Shell() {
   const [server, setServer] = useState<boolean | null>(null);
   const nav = useNavigate();
   const [sound, setSound] = useState(false);
+  const [credits, setCredits] = useState(false);
   // a soft tick on every tap when sound is on
   useEffect(() => {
     const f = (e: PointerEvent) => (e.target as HTMLElement)?.closest?.('button, a') && tick();
@@ -143,8 +144,15 @@ export function Shell() {
 
 
       <footer className="cx-credits">
-        {[...DISCLAIMERS, data ? `Space weather data: ${data.storm.meta.data_credit}` : ''].filter(Boolean).join('  ·  ')}
-        {'  ·  '}Anatomy: BodyParts3D 4.0, DBCLS, CC BY 4.0 · Earth: NASA Blue and Black Marble, public domain · Clouds: Solar System Scope, CC BY 4.0 · Video: NASA KSC-20190225-MH-SPX01-0001, CC0 · Orbital elements: CelesTrak (celestrak.org) · Stars: NASA SVS Deep Star Maps, Gaia ESA/DPAC · Moon: NASA SVS CGI Moon Kit (LRO)
+        <span>{[...DISCLAIMERS, data ? `Space weather data: ${data.storm.meta.data_credit}` : ''].filter(Boolean).join('  ·  ')}</span>
+        <button type="button" className="cx-credits-btn" aria-expanded={credits} onClick={() => setCredits((c) => !c)}>
+          Credits
+        </button>
+        {credits && (
+          <span className="cx-credits-pop">
+            Anatomy: BodyParts3D 4.0, DBCLS, CC BY 4.0 · Earth: NASA Blue and Black Marble, public domain · Clouds: Solar System Scope, CC BY 4.0 · Video: NASA KSC-20190225-MH-SPX01-0001, CC0 · Orbital elements: CelesTrak (celestrak.org) · Stars: NASA SVS Deep Star Maps, Gaia ESA/DPAC
+          </span>
+        )}
       </footer>
       <div className="cx-grain" aria-hidden />
       <p id="cx-tele" className="cx-telemetry" aria-hidden />

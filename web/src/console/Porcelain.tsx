@@ -110,7 +110,21 @@ export function Porcelain({
 
   const meshes = useRef<Record<string, THREE.Mesh | null>>({});
   const reduced = useRef(typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches);
-  useFrame((_, dt) => {
+  const idle = useHud((s) => s.idle);
+  const bpm = useHud((s) => s.heartBpm);
+  useFrame((state, dt) => {
+    const time = state.clock.elapsedTime;
+    // gentle breathing in idle mode; the heart beats at the camera-scan rate when there is one
+    if (group.current) group.current.scale.set(1, 1, idle && !reduced.current ? 1 + 0.006 * Math.sin(time * 1.3) : 1);
+    const heart = meshes.current['heart'];
+    if (heart) {
+      const ph = bpm ? (time * bpm) / 60 % 1 : 0;
+      const s = bpm && !reduced.current ? 1 + 0.05 * (ph < 0.15 ? Math.sin((ph / 0.15) * Math.PI * 0.5) : Math.exp(-(ph - 0.15) * 7)) : 1;
+      if (!heart.geometry.boundingBox) heart.geometry.computeBoundingBox();
+      const c = heart.geometry.boundingBox!.getCenter(new THREE.Vector3());
+      heart.scale.setScalar(s);
+      heart.position.copy(c).multiplyScalar(1 - s); // beat about the heart's own centre
+    }
     const k = reduced.current ? 1 : 1 - Math.exp(-Math.min(dt, 0.05) / 0.06); // about 180 ms
     for (const [n, m] of Object.entries(mats)) {
       const goal = goals[n];
