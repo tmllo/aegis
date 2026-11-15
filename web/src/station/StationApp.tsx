@@ -9,21 +9,25 @@ import { BRAND, LEVEL_STATUS, LEVEL_WORD, LINK_DELAY, TAGLINE, WORD, fmtDay, sea
 import { useStation } from './state';
 import { cue, Dot, Icon } from './ui';
 import { Demo, DemoButton } from './Demo';
+import { HabitatStatusPill, useHabitat } from '../habitat';
 import './station.css';
 
 const CrewHealth = lazy(() => import('./pages/CrewHealth'));
 const Checkin = lazy(() => import('./pages/Checkin'));
 const Radiation = lazy(() => import('./pages/Radiation'));
+const Habitat = lazy(() => import('./pages/Habitat'));
 
 const NAV = [
   { to: '/', label: 'Overview', icon: Icon.overview, key: '1' },
   { to: '/crew', label: 'Crew health', icon: Icon.crew, key: '2' },
   { to: '/checkin', label: 'Check-in', icon: Icon.checkin, key: '3' },
   { to: '/radiation', label: 'Radiation', icon: Icon.radiation, key: '4' },
+  { to: '/habitat', label: 'Habitat', icon: Icon.cabin, key: '5' },
 ];
 
 function Shell() {
   const { data, loadState, error, env, setEnv, views, sw, day, queue } = useStationData();
+  const habitat = useHabitat(); // loaded once here; screens read it from the Outlet context
   const alarm = useStation((s) => s.alarm);
   const setAlarm = useStation((s) => s.setAlarm);
   const sound = useStation((s) => s.sound);
@@ -134,6 +138,7 @@ function Shell() {
               <span>{alarmOn ? 'STORM WARNING' : `Space weather · ${LEVEL_WORD[sw.level]}`}</span>
             </button>
           )}
+          {habitat.data && <HabitatStatusPill data={habitat.data} onClick={() => nav('/habitat')} />}
         </div>
       </header>
 
@@ -150,7 +155,7 @@ function Shell() {
 
       <main className="st-main">
         <Suspense fallback={<div className="st-wait" />}>
-          <Outlet />
+          <Outlet context={habitat} />
         </Suspense>
       </main>
 
@@ -219,6 +224,7 @@ export function StationApp() {
           <Route path="/checkin" element={<Checkin />} />
           <Route path="/checkin/:id" element={<Checkin />} />
           <Route path="/radiation" element={<Radiation />} />
+          <Route path="/habitat" element={<Habitat />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

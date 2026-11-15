@@ -7,6 +7,8 @@ import { CW_LABEL, CW_RANK, DUTY_LABEL, HAZARD_LABEL, MOOD_WORD, SYSTEMS, SYSTEM
 import { Causes, CWChip, LabEvidence, Loop, SystemRecord, WristTile } from '../health';
 import { useStation, type SystemId } from '../state';
 import { cue, Dot, Icon, TrendChart } from '../ui';
+import { EnvironmentalCauseChip } from '../../habitat';
+import { useHabitatData } from '../habitat';
 
 const BodyCanvas = lazy(() => import('../BodyCanvas'));
 
@@ -174,6 +176,8 @@ function SystemPanel({ v, sys, onSurgeon }: { v: CrewView; sys: SystemId; onSurg
   const c = v.sys[sys];
   const called = useStation((s) => s.surgeon[v.m.id]);
   const ex = useStation((s) => s.extras[v.m.id]);
+  const habitat = useHabitatData().data;
+  const nav = useNavigate();
   if (!data) return null;
   // the reading in trouble first; calm ones get a short chart
   const rows = def.metrics.map((k) => v.rows[k]).sort((a, b) => CW_RANK[b.cw] - CW_RANK[a.cw]);
@@ -230,6 +234,7 @@ function SystemPanel({ v, sys, onSurgeon }: { v: CrewView; sys: SystemId; onSurg
               {r.running > 1 && <em className={`is-${r.cw}`}>{r.running} days</em>}
             </div>
             {r.k !== 'dose_mSv_cum' && <TrendChart points={r.history} lo={r.lo} hi={r.hi} mean={r.mean} unit={r.unit} digits={r.k === 'temp' || r.k === 'sleep_h' ? 1 : r.k === 'dose_mSv_day' ? 2 : 0} height={r.cw === 'nominal' ? (c === 'nominal' ? 80 : 60) : 112} />}
+            {habitat && <EnvironmentalCauseChip data={habitat} crewId={v.m.id} metric={r.k} onOpen={(id) => nav(`/habitat?focus=${encodeURIComponent(id)}`)} />}
           </div>
         ))}
 
