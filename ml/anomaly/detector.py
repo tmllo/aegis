@@ -33,6 +33,8 @@ def _robust_center_scale(v: np.ndarray) -> tuple[float, float]:
     v = v[np.isfinite(v)]
     med = float(np.median(v))
     mad = float(np.median(np.abs(v - med)))
+    if mad == 0:  # step-like / mostly-constant channels: fall back to sd (expressed in MAD units)
+        mad = float(np.std(v)) / MAD_TO_SD
     return med, max(mad, EPS)
 
 
