@@ -19,4 +19,5 @@
 - 08:20 integration task 2: checkup `vital.resp_rate` and `cog.pvt_rt` stored as `crew_spot`, quality estimated, no thresholds, contract files unchanged. Commit 9f7b959.
 - 08:35 integration task 3: frontend contract fixture and test. Every listed call returns the fields the app reads. `scripts/check_frontend_reads.py` guards new paths. Commit d8304cc.
 - 08:45 integration task 4: `scripts/smoke_e2e.py` against a copied store. All frontend calls ✓, and the EVA and organ lanes ✓ (not 404). Commit 5754836.
-- 08:55 integration task 5: organ `target` for the drawn body, EVA frame `metrics` with catalog keys, 60 min / 5 s under 1 s.
+- 08:55 integration task 5: organ `target` for the drawn body, EVA frame `metrics` with catalog keys, 60 min / 5 s in 78 ms. Commit 1977c46.
+- 09:05 integration task 6: `GET /api/space-weather/now` from the recorded SWPC samples. Forecast file unchanged.
