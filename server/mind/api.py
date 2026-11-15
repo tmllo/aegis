@@ -10,7 +10,11 @@ from typing import Literal
 from uuid import uuid4
 
 from fastapi import APIRouter, Header, HTTPException
+import re
+
 from pydantic import BaseModel
+
+CLIENT_ID = re.compile(r"[A-Za-z0-9_-]{1,64}")
 
 from ..api import deps
 from . import engine, records, repo
@@ -30,6 +34,7 @@ class ObservationIn(BaseModel):
 class TaskIn(BaseModel):
     subject: str
     label: str
+    id: str | None = None          # client-made id (offline-first apps); kept if valid, safe to resend
     kind: Literal["habit", "todo"] = "todo"
     schedule: str | None = None
     due: str | None = None
@@ -148,7 +153,15 @@ def post_task(body: TaskIn) -> dict:
     else:
         schedule = None
         due = _day("due", body.due) or today
-    task = records.Task(f"self-{body.subject}-{uuid4().hex[:8]}", body.subject, body.kind, label, "self", today,
+    if body.id is not None:
+        if not CLIENT_ID.fullmatch(body.id):
+            raise HTTPException(422, "id: 1-64 characters, letters, digits, '-' or '_'")
+        existing = repo.get_task(store, body.id)
+        if existing is not None:
+            if existing.subject != body.subject:
+                raise HTTPException(409, f"task {body.id!r} belongs to another crew member")
+            return engine.task_view(cat, store, existing, today)       # same call sent twice: no duplicate
+    task = records.Task(body.id or f"self-{body.subject}-{uuid4().hex[:8]}", body.subject, body.kind, label, "self", today,
                         schedule=schedule, due=due, metric=body.metric)
     repo.put_task(store, task)
     return engine.task_view(cat, store, task, today)
@@ -158,6 +171,7 @@ def post_task(body: TaskIn) -> dict:
 @_serialized
 def post_task_event(task_id: str, body: TaskEventIn) -> dict:
     cat, store = deps.cat(), deps.store()
+    task_id = engine.resolve_task_id(cat, task_id)                      # accepts the app's routine names too
     task = repo.get_task(store, task_id)
     if task is None:
         raise HTTPException(404, f"unknown task {task_id!r}")

@@ -13,18 +13,21 @@ checkin:
 
 routines:
 - id: checkin
+  aliases: [check-in]   # name used by web/src/data/mind.ts
   label: Daily check-in (mood, stress, energy, connection, sleep)
   schedule: daily
   metric: self.mood
   basis: NASA lists isolation and confinement among the five hazards of human spaceflight; a short daily self-rating
     gives each crew member a personal baseline so a drift is seen early (PROJECT_CONTEXT, Mind layer).
 - id: exercise
+  aliases: [exercise-block]   # name used by web/src/data/mind.ts
   label: Exercise block (about 2 h)
   schedule: daily
   metric: self.exercise_min
   basis: ISS crews exercise about two hours a day to limit bone and muscle loss (NASA, ISS exercise; PROJECT_CONTEXT
     section 10). Verify the figure before quoting it on a slide.
 - id: sleep_window
+  aliases: [sleep-window]   # name used by web/src/data/mind.ts
   label: Keep the sleep window (8.5 h scheduled)
   schedule: daily
   metric: self.sleep_h
@@ -34,11 +37,13 @@ routines:
   schedule: daily
   basis: Fluid shifts in microgravity and low cabin humidity make planned drinking part of the crew day. Team habit.
 - id: journal
+  aliases: [journal-line]   # name used by web/src/data/mind.ts
   label: One journal line
   schedule: daily
   basis: Expressive writing is a low-cost self-care habit used in isolated-confined analogues. Private, never sent to
     the ground. Team habit.
 - id: call_home
+  aliases: [call-home]   # name used by web/src/data/mind.ts
   label: Call home
   schedule: days:wed,sun
   metric: self.social
