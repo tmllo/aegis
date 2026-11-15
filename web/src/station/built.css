@@ -1,0 +1,53 @@
+/* What we built (pages/Built.tsx): a numbered menu, one hairline row per section */
+.bt {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  border-top: 1px solid var(--line-2, rgba(255, 255, 255, 0.2));
+}
+.bt-row {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr) minmax(0, 1.2fr);
+  gap: 24px;
+  padding: 16px 8px;
+  color: var(--ink, #fff);
+  text-decoration: none;
+  border-bottom: 1px solid var(--line-2, rgba(255, 255, 255, 0.2));
+  transition: background-color 160ms ease-out;
+}
+.bt-row:hover { background: rgba(255, 255, 255, 0.05); }
+.bt-row:focus-visible { outline: 2px solid var(--ink, #fff); outline-offset: -2px; }
+.bt-n { font-variant-numeric: tabular-nums; font-size: 15px; opacity: 0.6; padding-top: 3px; }
+.bt-main { display: flex; flex-direction: column; gap: 4px; }
+.bt-main b { font-size: 20px; font-weight: 500; }
+.bt-solves { font-size: 15px; line-height: 1.45; opacity: 0.85; }
+.bt-proof { margin: 0; display: flex; flex-direction: column; gap: 4px; font-size: 14px; line-height: 1.4; }
+.bt-proof div { display: grid; grid-template-columns: 76px minmax(0, 1fr); gap: 8px; }
+.bt-proof dt { opacity: 0.6; }
+.bt-proof dd { margin: 0; }
+@media (max-width: 760px) {
+  .bt-row { grid-template-columns: 32px minmax(0, 1fr); }
+  .bt-proof { grid-column: 2; }
+}
+/* full width: no side columns on this page */
+.fr.bt-page { grid-template-columns: 0 minmax(0, 1fr) 0; }
+.fr.bt-page .fr-left, .fr.bt-page .fr-right { display: none; }
+.fr.bt-page .fr-object { align-items: flex-start; justify-content: center; }
+
+/* page scroll + intro + big numbers */
+.bt-wrap { width: min(1180px, 100%); max-height: 100%; overflow-y: auto; display: flex; flex-direction: column; gap: 40px; padding-bottom: 128px; }
+.bt-intro { display: flex; flex-direction: column; gap: 12px; max-width: 64ch; }
+.bt-intro p { margin: 0; font-size: 19px; line-height: 1.5; }
+.bt-big { margin: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 24px; border-top: 1px solid var(--line-2, rgba(255, 255, 255, 0.2)); padding-top: 24px; }
+.bt-big div { display: flex; flex-direction: column; gap: 8px; }
+.bt-big dt { font-size: clamp(40px, 4vw, 60px); font-weight: 300; line-height: 1; font-variant-numeric: tabular-nums; }
+.bt-big dd { margin: 0; display: flex; flex-direction: column; gap: 4px; }
+.bt-big b { font-size: 16px; font-weight: 500; }
+.bt-big span { font-size: 14px; line-height: 1.4; opacity: 0.7; }
+.bt-big.is-small { margin-top: -16px; }
+.bt-big.is-small dt { font-size: clamp(28px, 2.4vw, 36px); }
+.bt-big.is-small b { font-weight: 400; opacity: 0.85; font-size: 15px; }
+@media (max-width: 760px) {
+  .bt-big { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

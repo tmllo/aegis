@@ -1,0 +1,31 @@
+/* Daily check: compact step list, nothing clipped (e7, 15 Nov). */
+
+/* the current step ring sat outside the mark and was cut off by the scrolling column: draw it inside */
+.st .fr .fr-check.is-on .fr-check-mark {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--ink);
+}
+
+/* step list: tighter rows so all steps fit without scrolling */
+.st .fr.is-check .fr-left {
+  gap: 6px;
+}
+.st .fr.is-check .fr-check {
+  min-height: 40px;
+  align-items: center;
+}
+.st .fr.is-check .fr-check-mark {
+  width: 26px;
+  height: 26px;
+  font-size: 13px;
+}
+.st .fr.is-check .fr-check-t span:empty {
+  display: none;
+}
+.st .fr.is-check .fr-check-t span:empty::before {
+  content: none;
+}
+.st .fr.is-check .fr-check:not(.is-on) .fr-check-t b {
+  font-weight: 400;
+  color: var(--ink-2);
+}

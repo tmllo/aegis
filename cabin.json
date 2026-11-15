@@ -1,0 +1,108 @@
+{
+  "source": "isslive",
+  "server": "https://push.lightstreamer.com",
+  "adapter_set": "ISSLIVE",
+  "fetched_at": "2026-11-15T02:03:39.615663+00:00",
+  "rows": [
+    {
+      "item": "USLAB000058",
+      "metric": "cabin.pressure",
+      "label": "Cabin pressure (US Lab)",
+      "value": "758.05",
+      "unit": "mmHg",
+      "t": "2026-11-15T01:33:51.503000+00:00",
+      "age_h": 0.5,
+      "signal": null
+    },
+    {
+      "item": "USLAB000059",
+      "metric": "cabin.temp",
+      "label": "Cabin temperature (US Lab)",
+      "value": "23.4",
+      "unit": "degC",
+      "t": "2026-11-15T02:02:50.202000+00:00",
+      "age_h": 0.0,
+      "signal": null
+    },
+    {
+      "item": "USLAB000053",
+      "metric": "cabin.ppo2",
+      "label": "ppO2 (US Lab)",
+      "value": "165.85",
+      "unit": "mmHg",
+      "t": "2026-11-02T14:51:27.004000+00:00",
+      "age_h": 299.2,
+      "signal": null
+    },
+    {
+      "item": "USLAB000055",
+      "metric": "cabin.ppco2",
+      "label": "ppCO2 (US Lab)",
+      "value": "2.44",
+      "unit": "mmHg",
+      "t": "2026-11-02T15:01:08.004000+00:00",
+      "age_h": 299.0,
+      "signal": null
+    },
+    {
+      "item": "NODE3000001",
+      "metric": "cabin.ppo2_node3",
+      "label": "ppO2 (Node 3)",
+      "value": "150.67",
+      "unit": "mmHg",
+      "t": "2026-11-02T14:51:26.004000+00:00",
+      "age_h": 299.2,
+      "signal": null
+    },
+    {
+      "item": "NODE3000003",
+      "metric": "cabin.ppco2_node3",
+      "label": "ppCO2 (Node 3)",
+      "value": "2.95",
+      "unit": "mmHg",
+      "t": "2026-11-03T04:34:00.004000+00:00",
+      "age_h": 285.5,
+      "signal": null
+    },
+    {
+      "item": "NODE3000005",
+      "metric": "cabin.urine_tank",
+      "label": "Urine tank",
+      "value": "49.0",
+      "unit": "%",
+      "t": "2026-11-15T00:21:15.900000+00:00",
+      "age_h": 1.7,
+      "signal": null
+    },
+    {
+      "item": "NODE3000008",
+      "metric": "cabin.waste_water",
+      "label": "Waste water tank",
+      "value": "71.1",
+      "unit": "%",
+      "t": "2026-11-15T02:03:18.706000+00:00",
+      "age_h": 0.0,
+      "signal": null
+    },
+    {
+      "item": "NODE3000009",
+      "metric": "cabin.water_clean",
+      "label": "Clean water tank",
+      "value": "57.2",
+      "unit": "%",
+      "t": "2026-11-15T02:03:18.706000+00:00",
+      "age_h": 0.0,
+      "signal": null
+    },
+    {
+      "item": "TIME_000001",
+      "metric": "link.station_time",
+      "label": "Station time / signal",
+      "value": "318/02:03:36",
+      "unit": "",
+      "t": "2026-11-15T02:03:36.719000+00:00",
+      "age_h": 0.0,
+      "signal": true
+    }
+  ]
+}

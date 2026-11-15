@@ -10,6 +10,7 @@ Always follow these docs before changing code or data:
 1. `CLAUDE.md` (repo root)
 2. `ml/CLAUDE.md` (Tomas's data + ML workstream)
 3. `contracts/DATA_CONTRACT.md` (the only interface with `/web`)
+4. `docs/ARCHITECTURE.md` (layers, import direction, caution & warning ladder, safety rule). For `/web` work: `web/REDESIGN-RULES.md` and `bash web/scripts/check-all.sh`
 
 Read `PROJECT_CONTEXT.md` before changing product behavior.
 

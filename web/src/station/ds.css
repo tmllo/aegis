@@ -1,0 +1,692 @@
+/* e^x design system. Loaded after station.css; every screen is built from these classes only.
+   Scene: an astronaut glancing at a wall screen in a dimmed lunar habitat (and judges at a projector):
+   a lit navy sky, light thin type, one white main button, status as shape + word + colour.
+
+   Colours   sky (surface) · surface (rows) · line · ink (3 levels) · calm / watch / act (status only)
+   Type      Inter Tight · 14 caption · 16 body · 18 row · 24 line · 40 numbers · 60 title
+   Spacing   4 · 8 · 12 · 16 · 24 · 32 · 48 · 64
+   Layout    read 480 | stage 1fr | list 440, 48 px gutters, same on every screen */
+@import '@fontsource/inter-tight/latin-200.css';
+
+.st.ds {
+  --sky-0: oklch(0.2 0.07 272);
+  --sky-1: oklch(0.25 0.08 272);
+  --sky-2: oklch(0.26 0.1 290);
+  --sky: linear-gradient(118deg, var(--sky-1) 0%, var(--sky-0) 45%, var(--sky-2) 100%);
+  --surface: oklch(0.29 0.07 272 / 0.78);
+  --surface-hi: oklch(0.35 0.08 272 / 0.92);
+  --line: oklch(0.88 0.03 272 / 0.16);
+  --line-2: oklch(0.88 0.03 272 / 0.34);
+  --ink: oklch(0.98 0.008 272);
+  --ink-2: oklch(0.88 0.03 272);
+  --ink-3: oklch(0.78 0.04 272);
+  --calm: oklch(0.86 0.1 215);
+  --watch: oklch(0.84 0.14 75);
+  --act: oklch(0.72 0.17 28);
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* legacy tokens used by station.css components (charts, sensors, replay) */
+  --bg: var(--sky-0);
+  --bg2: var(--sky-1);
+  --panel: var(--surface);
+  --panel-solid: oklch(0.27 0.07 272);
+  --line2: var(--line-2);
+  --text: var(--ink);
+  --dim: var(--ink-2);
+  --faint: var(--ink-3);
+  --accent: var(--calm);
+  --green: var(--calm);
+  --amber: var(--watch);
+  --red: var(--act);
+  --blue: var(--calm);
+  --r: 0px;
+  --mono: 'Inter Tight', system-ui, sans-serif;
+  --sans: 'Inter Tight', system-ui, sans-serif;
+
+  grid-template-columns: 1fr;
+  grid-template-rows: auto 1fr auto;
+  grid-template-areas: 'top' 'main' 'foot';
+  background: var(--sky);
+  color: var(--ink);
+  font-size: 16px;
+}
+.ds :focus-visible {
+  outline: 2px solid var(--calm);
+  outline-offset: 3px;
+}
+
+/* ---------------------------------------------------------------- frame */
+.ds-top {
+  grid-area: top;
+  position: relative;
+  z-index: 30;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  height: 80px;
+  padding: 0 24px 0 32px;
+  border-bottom: 1px solid var(--line);
+}
+.ds-brand {
+  justify-self: start;
+  font-size: 32px;
+  font-weight: 300;
+  line-height: 1;
+  color: var(--ink);
+}
+.ds-brand sup {
+  font-size: 15px;
+}
+.ds-tabs {
+  display: flex;
+  height: 80px;
+}
+.ds-tabs a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 24px;
+  font-size: 17px;
+  color: var(--ink-2);
+  text-decoration: none;
+  box-shadow: inset 0 -2px 0 transparent;
+  transition: color 160ms var(--ease), box-shadow 160ms var(--ease);
+}
+.ds-tabs a:hover {
+  color: var(--ink);
+}
+.ds-tabs a.is-on {
+  color: var(--ink);
+  box-shadow: inset 0 -2px 0 var(--ink);
+}
+.ds-menu {
+  justify-self: end;
+  position: relative;
+}
+.ds-menu-pop {
+  position: absolute;
+  right: 0;
+  top: 72px;
+  width: 340px;
+  padding: 4px 16px;
+  background: oklch(0.24 0.075 272);
+  border: 1px solid var(--line-2);
+  animation: ds-drop 160ms var(--ease);
+}
+@keyframes ds-drop {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+.ds-menu-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  min-height: 64px;
+  border-bottom: 1px solid var(--line);
+  font-size: 16px;
+  color: var(--ink-2);
+  text-align: left;
+}
+.ds-menu-row:last-child {
+  border-bottom: 0;
+}
+.ds-menu-row b {
+  font-weight: 400;
+  color: var(--ink);
+}
+button.ds-menu-row:hover b {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.ds-menu-row select {
+  height: 44px;
+  padding: 0 8px;
+  background: var(--surface);
+  border: 1px solid var(--line-2);
+  color: var(--ink);
+  font: inherit;
+}
+.ds .st-foot {
+  gap: 24px;
+  padding: 10px 24px 12px;
+  border-top: 1px solid var(--line);
+  font-size: 13px;
+  color: var(--ink-3);
+}
+.ds .st-main {
+  overflow: auto;
+}
+
+/* buttons: one system */
+.ds-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 64px;
+  padding: 0 24px;
+  border: 1px solid transparent;
+  font-size: 17px;
+  font-weight: 500;
+  text-align: center;
+  transition: background-color 160ms var(--ease), border-color 160ms var(--ease), transform 120ms var(--ease);
+}
+.ds-btn:active:not(:disabled) {
+  transform: scale(0.985);
+}
+.ds-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.ds-btn.is-primary {
+  background: var(--ink);
+  color: var(--sky-0);
+}
+.ds-btn.is-primary:hover:not(:disabled) {
+  background: var(--ink-2);
+}
+.ds-btn.is-secondary {
+  border-color: var(--line-2);
+  color: var(--ink);
+}
+.ds-btn.is-secondary:hover:not(:disabled) {
+  border-color: var(--ink);
+  background: oklch(0.98 0.008 272 / 0.06);
+}
+.ds-btn.is-danger {
+  background: var(--act);
+  color: oklch(0.2 0.05 28);
+}
+.ds-btn.is-danger:hover:not(:disabled) {
+  background: oklch(0.77 0.15 28);
+}
+.ds-btn.is-quiet {
+  min-height: 48px;
+  padding: 0 4px;
+  justify-content: flex-start;
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 5px;
+  text-decoration-color: var(--line-2);
+}
+.ds-btn.is-quiet:hover {
+  text-decoration-color: var(--ink);
+}
+.ds-btn.is-wide {
+  width: 100%;
+}
+
+/* shapes */
+.ds-shape {
+  flex: none;
+}
+.ds-shape.is-green {
+  fill: none;
+  stroke: var(--calm);
+  stroke-width: 2;
+}
+.ds-shape.is-amber {
+  fill: var(--watch);
+}
+.ds-shape.is-red {
+  fill: var(--act);
+}
+
+/* fields (check-in, test a flare) */
+.ds-field {
+  display: grid;
+  gap: 12px;
+  padding: 24px 0;
+  border-top: 1px solid var(--line-2);
+}
+.ds-field-h {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+}
+.ds-field-h b {
+  font-size: 20px;
+  font-weight: 500;
+}
+.ds-field-h span {
+  font-size: 15px;
+  color: var(--ink-2);
+}
+.ds-field-v {
+  display: grid;
+  grid-template-columns: 72px 1fr 72px;
+  align-items: center;
+  gap: 16px;
+}
+.ds-field-v output {
+  text-align: center;
+  font-size: 64px;
+  font-weight: 200;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.ds-field-v output small {
+  margin-left: 8px;
+  font-size: 18px;
+  font-weight: 400;
+  color: var(--ink-2);
+}
+.ds-field[data-s='amber'] output {
+  color: var(--watch);
+}
+.ds-field[data-s='red'] output {
+  color: var(--act);
+}
+.ds-step {
+  height: 72px;
+  border: 1px solid var(--line-2);
+  font-size: 28px;
+  font-weight: 300;
+  transition: background-color 160ms var(--ease), border-color 160ms var(--ease), transform 120ms var(--ease);
+}
+.ds-step:hover {
+  border-color: var(--ink);
+  background: oklch(0.98 0.008 272 / 0.06);
+}
+.ds-step:active {
+  transform: scale(0.96);
+}
+.ds-range {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 48px;
+  background: transparent;
+  cursor: pointer;
+}
+.ds-range::-webkit-slider-runnable-track {
+  height: 4px;
+  background: var(--line-2);
+}
+.ds-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 36px;
+  height: 36px;
+  margin-top: -16px;
+  border-radius: 50%;
+  background: var(--ink);
+}
+.ds-range::-moz-range-track {
+  height: 4px;
+  background: var(--line-2);
+}
+.ds-range::-moz-range-thumb {
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--ink);
+}
+.ds-scale {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+}
+.ds-scale button {
+  display: grid;
+  gap: 4px;
+  place-items: center;
+  min-height: 80px;
+  border: 1px solid var(--line-2);
+  font-size: 14px;
+  color: var(--ink-2);
+  transition: background-color 160ms var(--ease), color 160ms var(--ease), border-color 160ms var(--ease), transform 120ms var(--ease);
+}
+.ds-scale button b {
+  font-size: 26px;
+  font-weight: 300;
+  color: var(--ink);
+}
+.ds-scale button:hover {
+  border-color: var(--ink);
+}
+.ds-scale button:active {
+  transform: scale(0.97);
+}
+.ds-scale button.is-on {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--sky-0);
+}
+.ds-scale button.is-on b {
+  color: var(--sky-0);
+}
+.ds-hint {
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--ink-2);
+}
+.ds-hint em {
+  font-style: normal;
+}
+.ds-field[data-s='amber'] .ds-hint em {
+  color: var(--watch);
+}
+.ds-field[data-s='red'] .ds-hint em {
+  color: var(--act);
+}
+
+/* ---------------------------------------------------------------- stage objects */
+.ds-scene {
+  position: absolute;
+  inset: 0;
+}
+.ds-scene canvas {
+  display: block;
+}
+/* the 3D scene draws on near-black; the sky laid over it in screen mode turns black into the sky */
+.ds-scene::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  background: var(--sky);
+}
+
+/* body stage */
+.ds-body {
+  position: absolute;
+  inset: 0;
+}
+.ds-body .st-bodystage,
+.ds-body > div {
+  height: 100%;
+}
+.ds .st-hs {
+  border-radius: 0;
+  background: var(--surface-hi);
+  border: 1px solid var(--line-2);
+  font-family: 'Inter Tight', system-ui, sans-serif;
+}
+
+/* trend chart in the list column */
+.ds .st-trend {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.ds .st-band {
+  fill: oklch(0.86 0.1 215 / 0.12);
+}
+.ds .st-line {
+  stroke: var(--ink);
+}
+.ds .st-mean {
+  stroke: var(--line-2);
+}
+.ds .st-axis {
+  fill: var(--ink-3);
+  font-family: 'Inter Tight', system-ui, sans-serif;
+  font-size: 12px;
+}
+.ds .st-today {
+  fill: var(--ink);
+}
+
+/* sensors (camera pulse, reaction test) inside check-in */
+.ds :is(.st-scan, .st-pvt) {
+  border-radius: 0;
+  background: var(--surface);
+  border: 1px solid var(--line-2);
+}
+.ds :is(.st-scan, .st-pvt) .st-btn {
+  min-height: 56px;
+  border-radius: 0;
+  font-weight: 500;
+}
+.ds :is(.st-scan, .st-pvt) .st-btn.is-primary {
+  background: var(--ink) !important;
+  color: var(--sky-0) !important;
+  border-color: var(--ink) !important;
+}
+.ds .st-cap {
+  font-family: 'Inter Tight', system-ui, sans-serif;
+  font-size: 14px;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ink-2);
+}
+
+/* ---------------------------------------------------------------- radiation: the Sun scan */
+.fc-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.fc-corona {
+  animation: fc-breathe 6s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+@keyframes fc-breathe {
+  50% {
+    opacity: 0.7;
+    transform: scale(1.03);
+  }
+}
+.fc-grid :is(ellipse, line) {
+  fill: none;
+  stroke: oklch(0.98 0.008 272 / 0.16);
+  stroke-width: 0.8;
+}
+.fc-band {
+  fill: oklch(0.86 0.1 215 / 0.12);
+  stroke: oklch(0.86 0.1 215 / 0.55);
+  stroke-dasharray: 4 5;
+}
+.fc-svg-cap {
+  font-size: 14px;
+  fill: var(--ink-2);
+}
+.fc-flare circle {
+  fill: oklch(0.98 0.008 272 / 0.75);
+}
+.fc-flare.is-amber circle {
+  fill: var(--watch);
+}
+.fc-flare.is-red circle {
+  fill: var(--act);
+}
+.fc-ping {
+  fill: none !important;
+  stroke: var(--ink);
+  stroke-width: 1.5;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: fc-ping 1.8s ease-out infinite;
+}
+@keyframes fc-ping {
+  to {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+.fc-sweep {
+  animation: fc-spin 7s linear infinite;
+}
+@keyframes fc-spin {
+  to {
+    transform: rotate(-360deg);
+  }
+}
+.fc-ring {
+  fill: none;
+  stroke: oklch(0.86 0.1 215 / 0.32);
+}
+.fc-ring.is-ticks {
+  stroke-dasharray: 1 11;
+  stroke-width: 6;
+}
+.fc-reticle {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: fc-lock 0.4s var(--ease);
+}
+@keyframes fc-lock {
+  from {
+    opacity: 0;
+    transform: scale(1.4);
+  }
+}
+.fc-reticle :is(path, line) {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 2;
+}
+.fc-reticle.is-amber :is(path, line) {
+  stroke: var(--watch);
+}
+.fc-reticle.is-red :is(path, line) {
+  stroke: var(--act);
+}
+.fc-reticle text {
+  font-size: 17px;
+  fill: var(--ink);
+}
+.fc-testdot {
+  fill: var(--ink);
+}
+.fc-field {
+  fill: none;
+  stroke: oklch(0.86 0.1 215 / 0.45);
+  stroke-width: 1.5;
+  stroke-dasharray: 6 6;
+  animation: fc-dash 1.2s linear infinite;
+}
+.fc-field.is-amber {
+  stroke: var(--watch);
+}
+.fc-field.is-red {
+  stroke: var(--act);
+  stroke-width: 2.5;
+}
+@keyframes fc-dash {
+  to {
+    stroke-dashoffset: -12;
+  }
+}
+.fc-particle {
+  fill: oklch(0.93 0.06 215);
+}
+.fc-particle.is-amber {
+  fill: oklch(0.9 0.09 75);
+}
+.fc-particle.is-red {
+  fill: oklch(0.88 0.07 28);
+}
+.fc-crew circle {
+  fill: var(--calm);
+}
+.fc-crew .fc-crew-halo {
+  fill: none;
+  stroke: oklch(0.86 0.1 215 / 0.5);
+}
+.fc-crew text {
+  font-size: 17px;
+  fill: var(--ink);
+}
+.fc-hud text {
+  font-size: 14px;
+  fill: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------------------------------------------------------------- shared overlays in the same language */
+.ds .st-toasts {
+  gap: 8px;
+}
+.ds .st-toast {
+  border-radius: 0;
+  background: oklch(0.24 0.075 272);
+  border: 1px solid var(--line-2);
+  box-shadow: none;
+}
+.ds .st-demo {
+  border-radius: 0;
+  background: oklch(0.24 0.075 272);
+  border: 1px solid var(--line-2);
+  box-shadow: none;
+}
+.ds .st-demo .st-btn {
+  border-radius: 0;
+  min-height: 52px;
+}
+.ds .st-demo .st-btn.is-primary {
+  background: var(--ink) !important;
+  color: var(--sky-0) !important;
+  border-color: var(--ink) !important;
+}
+.ds .st-demo-n i.is-on {
+  background: var(--ink);
+}
+.ds .st-shelter-box {
+  border-radius: 0;
+}
+.ds .st-shelter-box h2 {
+  font-size: 60px;
+  font-weight: 200;
+  letter-spacing: -0.02em;
+}
+.ds .st-shelter-box .st-cap {
+  color: oklch(0.9 0.06 28);
+}
+.ds .st-shelter-steps span {
+  border-radius: 0;
+}
+.ds .st-shelter-box .st-btn {
+  min-height: 72px;
+  border-radius: 0;
+  background: var(--ink) !important;
+  color: oklch(0.2 0.05 28) !important;
+}
+.ds .st-shelterbar {
+  border-radius: 0;
+}
+.ds .st-shelterbar button {
+  border-radius: 0;
+}
+/* replay (Tomas's component) */
+.ds .st-replay {
+  border-radius: 0;
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+.ds .st-replay :is(.st-btn, .st-chip, button) {
+  border-radius: 0 !important;
+}
+.ds .st-replay .st-btn.is-primary {
+  background: var(--ink) !important;
+  color: var(--sky-0) !important;
+  border-color: var(--ink) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ds *,
+  .ds *::before,
+  .ds *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+
+.ds-field-v.is-compact {
+  grid-template-columns: 64px 1fr 64px;
+}
+.ds-field-v.is-compact .ds-step {
+  height: 64px;
+}

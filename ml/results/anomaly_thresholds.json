@@ -1,0 +1,35 @@
+{
+ "generated_at": "2026-11-15T19:06:42Z",
+ "winner": "ridge",
+ "model_name": "forecast_residual_ridge_v1",
+ "params": {
+  "L": 60,
+  "span": 30
+ },
+ "thresholds": {
+  "amber": 30.0,
+  "red": 60.0
+ },
+ "min_duration_steps": 10,
+ "gap": 50,
+ "tuned_on": "MSL",
+ "red_rule": "no grid cutoff reached 80% precision on MSL; fell back to 2 x amber",
+ "validation": {
+  "dataset": "NASA SMAP + MSL labeled telemetry anomalies (Hundman et al., KDD 2018)",
+  "tuned_on": "MSL (27 channels, 36 labeled anomalies)",
+  "tested_on": "SMAP (54 channels, 68 labeled anomalies)",
+  "protocol": "event-wise, no point-adjust",
+  "model": {
+   "precision": 0.433,
+   "recall": 0.485,
+   "f0_5": 0.443,
+   "false_alarms_per_10k_steps": 1.17
+  },
+  "baseline_static_3sigma": {
+   "precision": 0.224,
+   "recall": 0.412,
+   "f0_5": 0.247,
+   "false_alarms_per_10k_steps": 5.163
+  }
+ }
+}

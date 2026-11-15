@@ -1,0 +1,149 @@
+/* Guided demo: a spotlight on the one part that matters and a bar over the dock with what it shows and
+   where the data comes from. Tokens from ds.css. */
+.dm-spot {
+  position: fixed;
+  z-index: 60;
+  pointer-events: none;
+  border-radius: 14px;
+  border: 2px solid var(--calm);
+  box-shadow: 0 0 0 9999px oklch(0.12 0.05 272 / 0.55);
+  opacity: 0;
+  transition:
+    left 420ms var(--ease),
+    top 420ms var(--ease),
+    width 420ms var(--ease),
+    height 420ms var(--ease),
+    opacity 200ms ease-out;
+}
+.dm-spot.is-on {
+  opacity: 1;
+}
+
+.dm-bar {
+  position: fixed;
+  z-index: 61;
+  left: 48px;
+  right: 48px;
+  bottom: 52px;
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr) minmax(0, 1.1fr) auto;
+  align-items: center;
+  gap: 32px;
+  padding: 20px 24px 24px;
+  background: var(--panel-solid);
+  border: 1px solid var(--line-2);
+  border-radius: 16px;
+  color: var(--ink);
+}
+.dm-step {
+  display: grid;
+  gap: 4px;
+}
+.dm-n {
+  font-size: 14px;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+.dm-step b {
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+.dm-say {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.45;
+  color: var(--ink);
+}
+.dm-data {
+  margin: 0;
+  display: grid;
+  gap: 8px;
+  padding-left: 24px;
+  border-left: 1px solid var(--line-2);
+}
+.dm-data div {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  gap: 12px;
+  align-items: baseline;
+}
+.dm-data dt {
+  font-size: 14px;
+  color: var(--ink-3);
+}
+.dm-data dd {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.35;
+  color: var(--ink-2);
+}
+.dm-act {
+  display: flex;
+  gap: 12px;
+}
+.dm-track {
+  position: absolute;
+  left: 24px;
+  right: 24px;
+  bottom: 10px;
+  display: flex;
+  gap: 6px;
+}
+.dm-track i {
+  flex: 1;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--line);
+  transition: background 250ms ease-out;
+}
+.dm-track i.is-on {
+  background: var(--calm);
+}
+.dm-step b,
+.dm-say,
+.dm-data {
+  animation: dm-in 220ms var(--ease) both;
+}
+@keyframes dm-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+@media (max-width: 1100px) {
+  .dm-bar {
+    left: 16px;
+    right: 16px;
+    bottom: 16px;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 12px 16px;
+  }
+  .dm-say,
+  .dm-data {
+    grid-column: 1 / -1;
+  }
+  .dm-data {
+    padding-left: 0;
+    border-left: 0;
+    padding-top: 12px;
+    border-top: 1px solid var(--line-2);
+  }
+  .dm-act {
+    grid-row: 1;
+    grid-column: 2;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dm-spot,
+  .dm-track i {
+    transition: none;
+  }
+  .dm-step b,
+  .dm-say,
+  .dm-data {
+    animation: none;
+  }
+}

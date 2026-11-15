@@ -1,0 +1,41 @@
+/* Globe markers: a point and a two-line label. Quiet until hovered; the focused one carries the accent. */
+.gm {
+  position: absolute;
+  left: -7px;
+  top: -7px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: rgb(236 244 248);
+  font: 400 13px/1.25 'Inter Tight', system-ui, sans-serif;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: opacity 180ms ease-out;
+}
+.gm[data-hidden='true'] { opacity: 0; pointer-events: none; }
+.gm-dot {
+  width: 14px;
+  height: 14px;
+  flex: none;
+  border-radius: 50%;
+  border: 1.5px solid rgb(var(--accent, 79 224 232) / 0.9);
+  background: rgb(var(--accent, 79 224 232) / 0.18);
+  transition: transform 160ms ease-out, background 160ms ease-out;
+}
+.gm[data-status='amber'] .gm-dot { border-color: rgb(255 196 87); background: rgb(255 196 87 / 0.2); }
+.gm[data-status='red'] .gm-dot { border-color: rgb(255 107 97); background: rgb(255 107 97 / 0.22); }
+.gm-text { display: grid; gap: 1px; padding: 5px 9px; border-radius: 8px; background: rgb(6 10 14 / 0.55); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); transition: background 160ms ease-out; }
+.gm-text b { font-weight: 500; }
+.gm-text small { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgb(168 190 200); }
+.gm:hover .gm-dot { transform: scale(1.2); background: rgb(var(--accent, 79 224 232) / 0.4); }
+.gm:hover .gm-text { background: rgb(12 20 28 / 0.8); }
+.gm:active .gm-dot { transform: scale(0.9); }
+.gm[aria-pressed='true'] .gm-dot { background: rgb(var(--accent, 79 224 232)); box-shadow: 0 0 0 4px rgb(var(--accent, 79 224 232) / 0.18); }
+.gm:focus-visible { outline: none; }
+.gm:focus-visible .gm-text { outline: 2px solid rgb(var(--accent, 79 224 232)); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { .gm, .gm-dot, .gm-text { transition: none; } }

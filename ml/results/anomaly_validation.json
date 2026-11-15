@@ -1,0 +1,429 @@
+{
+ "generated_at": "2026-11-15T19:06:42Z",
+ "runtime_s": 40.72401022911072,
+ "data": {
+  "MSL": {
+   "channels": 27,
+   "events": 36
+  },
+  "SMAP": {
+   "channels": 54,
+   "events": 68
+  }
+ },
+ "winner": "ridge",
+ "red": 60.0,
+ "red_rule": "no grid cutoff reached 80% precision on MSL; fell back to 2 x amber",
+ "detectors": {
+  "static": {
+   "model": {},
+   "amber": 3.0,
+   "min_duration_steps": 10,
+   "gap": 50,
+   "msl": {
+    "precision": 0.28888888888888886,
+    "recall": 0.6944444444444444,
+    "f0_5": 0.3270933977455716,
+    "false_alarms_per_10k_steps": 8.680437819582526,
+    "median_delay_steps": 7.0,
+    "hits": 25,
+    "missed": 11,
+    "true_alarms": 26,
+    "false_alarms": 64,
+    "pred_events": 90,
+    "true_events": 36,
+    "steps": 73729
+   },
+   "n_configs": 9,
+   "msl_sweep": [
+    {
+     "thr": 3.0,
+     "precision": 0.28888888888888886,
+     "recall": 0.6944444444444444
+    }
+   ],
+   "smap": {
+    "precision": 0.22413793103448276,
+    "recall": 0.4117647058823529,
+    "f0_5": 0.24661246612466126,
+    "false_alarms_per_10k_steps": 5.162610766682116,
+    "median_delay_steps": 15.5,
+    "hits": 28,
+    "missed": 40,
+    "true_alarms": 65,
+    "false_alarms": 225,
+    "pred_events": 290,
+    "true_events": 68,
+    "steps": 435826
+   }
+  },
+  "static_tuned": {
+   "model": {},
+   "amber": 30,
+   "min_duration_steps": 1,
+   "gap": 50,
+   "msl": {
+    "precision": 0.6470588235294118,
+    "recall": 0.3333333333333333,
+    "f0_5": 0.5445544554455445,
+    "false_alarms_per_10k_steps": 0.8137910455858617,
+    "median_delay_steps": -39.0,
+    "hits": 12,
+    "missed": 24,
+    "true_alarms": 11,
+    "false_alarms": 6,
+    "pred_events": 17,
+    "true_events": 36,
+    "steps": 73729
+   },
+   "n_configs": 90,
+   "msl_sweep": [
+    {
+     "thr": 2,
+     "precision": 0.19540229885057472,
+     "recall": 0.9166666666666666
+    },
+    {
+     "thr": 3,
+     "precision": 0.23529411764705882,
+     "recall": 0.8611111111111112
+    },
+    {
+     "thr": 4,
+     "precision": 0.2956521739130435,
+     "recall": 0.8611111111111112
+    },
+    {
+     "thr": 5,
+     "precision": 0.30927835051546393,
+     "recall": 0.75
+    },
+    {
+     "thr": 6,
+     "precision": 0.3218390804597701,
+     "recall": 0.7222222222222222
+    },
+    {
+     "thr": 8,
+     "precision": 0.32926829268292684,
+     "recall": 0.6666666666666666
+    },
+    {
+     "thr": 10,
+     "precision": 0.3125,
+     "recall": 0.6388888888888888
+    },
+    {
+     "thr": 15,
+     "precision": 0.3013698630136986,
+     "recall": 0.5555555555555556
+    },
+    {
+     "thr": 20,
+     "precision": 0.5517241379310345,
+     "recall": 0.4166666666666667
+    },
+    {
+     "thr": 30,
+     "precision": 0.6470588235294118,
+     "recall": 0.3333333333333333
+    }
+   ],
+   "smap": {
+    "precision": 0.5555555555555556,
+    "recall": 0.4117647058823529,
+    "f0_5": 0.5192878338278931,
+    "false_alarms_per_10k_steps": 0.9177974696323762,
+    "median_delay_steps": 16.5,
+    "hits": 28,
+    "missed": 40,
+    "true_alarms": 50,
+    "false_alarms": 40,
+    "pred_events": 90,
+    "true_events": 68,
+    "steps": 435826
+   }
+  },
+  "ridge": {
+   "model": {
+    "L": 60,
+    "span": 30
+   },
+   "amber": 30,
+   "min_duration_steps": 10,
+   "gap": 50,
+   "msl": {
+    "precision": 0.9285714285714286,
+    "recall": 0.4444444444444444,
+    "f0_5": 0.7624633431085044,
+    "false_alarms_per_10k_steps": 0.13563184093097697,
+    "median_delay_steps": 4.5,
+    "hits": 16,
+    "missed": 20,
+    "true_alarms": 13,
+    "false_alarms": 1,
+    "pred_events": 14,
+    "true_events": 36,
+    "steps": 73729
+   },
+   "n_configs": 810,
+   "msl_sweep": [
+    {
+     "thr": 2,
+     "precision": 0.2845528455284553,
+     "recall": 1.0
+    },
+    {
+     "thr": 3,
+     "precision": 0.2755102040816326,
+     "recall": 0.8055555555555556
+    },
+    {
+     "thr": 4,
+     "precision": 0.32894736842105265,
+     "recall": 0.75
+    },
+    {
+     "thr": 5,
+     "precision": 0.36923076923076925,
+     "recall": 0.7222222222222222
+    },
+    {
+     "thr": 6,
+     "precision": 0.45652173913043476,
+     "recall": 0.6388888888888888
+    },
+    {
+     "thr": 8,
+     "precision": 0.525,
+     "recall": 0.6388888888888888
+    },
+    {
+     "thr": 10,
+     "precision": 0.625,
+     "recall": 0.5833333333333334
+    },
+    {
+     "thr": 15,
+     "precision": 0.6896551724137931,
+     "recall": 0.5
+    },
+    {
+     "thr": 20,
+     "precision": 0.7222222222222222,
+     "recall": 0.4444444444444444
+    },
+    {
+     "thr": 30,
+     "precision": 0.9285714285714286,
+     "recall": 0.4444444444444444
+    }
+   ],
+   "smap": {
+    "precision": 0.43333333333333335,
+    "recall": 0.4852941176470588,
+    "f0_5": 0.44281585466556567,
+    "false_alarms_per_10k_steps": 1.1701917737812797,
+    "median_delay_steps": 17.0,
+    "hits": 33,
+    "missed": 35,
+    "true_alarms": 39,
+    "false_alarms": 51,
+    "pred_events": 90,
+    "true_events": 68,
+    "steps": 435826
+   }
+  },
+  "hgb": {
+   "model": {
+    "L": 30,
+    "span": 30
+   },
+   "amber": 30,
+   "min_duration_steps": 10,
+   "gap": 0,
+   "msl": {
+    "precision": 0.5866666666666667,
+    "recall": 0.6388888888888888,
+    "f0_5": 0.5964167845355964,
+    "false_alarms_per_10k_steps": 4.2045870688602855,
+    "median_delay_steps": 5.0,
+    "hits": 23,
+    "missed": 13,
+    "true_alarms": 44,
+    "false_alarms": 31,
+    "pred_events": 75,
+    "true_events": 36,
+    "steps": 73729
+   },
+   "n_configs": 360,
+   "msl_sweep": [
+    {
+     "thr": 2,
+     "precision": 0.17100371747211895,
+     "recall": 1.0
+    },
+    {
+     "thr": 3,
+     "precision": 0.2171945701357466,
+     "recall": 1.0
+    },
+    {
+     "thr": 4,
+     "precision": 0.2651162790697674,
+     "recall": 1.0
+    },
+    {
+     "thr": 5,
+     "precision": 0.270935960591133,
+     "recall": 0.9722222222222222
+    },
+    {
+     "thr": 6,
+     "precision": 0.2864321608040201,
+     "recall": 0.9444444444444444
+    },
+    {
+     "thr": 8,
+     "precision": 0.3103448275862069,
+     "recall": 0.8333333333333334
+    },
+    {
+     "thr": 10,
+     "precision": 0.35135135135135137,
+     "recall": 0.7777777777777778
+    },
+    {
+     "thr": 15,
+     "precision": 0.41509433962264153,
+     "recall": 0.7222222222222222
+    },
+    {
+     "thr": 20,
+     "precision": 0.4367816091954023,
+     "recall": 0.7222222222222222
+    },
+    {
+     "thr": 30,
+     "precision": 0.5866666666666667,
+     "recall": 0.6388888888888888
+    }
+   ],
+   "smap": {
+    "precision": 0.27070063694267515,
+    "recall": 0.6470588235294118,
+    "f0_5": 0.3063364130790905,
+    "false_alarms_per_10k_steps": 5.254390513645354,
+    "median_delay_steps": 17.5,
+    "hits": 44,
+    "missed": 24,
+    "true_alarms": 85,
+    "false_alarms": 229,
+    "pred_events": 314,
+    "true_events": 68,
+    "steps": 435826
+   }
+  },
+  "iforest": {
+   "model": {
+    "W": 10
+   },
+   "amber": 8,
+   "min_duration_steps": 10,
+   "gap": 0,
+   "msl": {
+    "precision": 0.65625,
+    "recall": 0.3055555555555556,
+    "f0_5": 0.5337338262476895,
+    "false_alarms_per_10k_steps": 2.983900500481493,
+    "median_delay_steps": 27.0,
+    "hits": 11,
+    "missed": 25,
+    "true_alarms": 42,
+    "false_alarms": 22,
+    "pred_events": 64,
+    "true_events": 36,
+    "steps": 73729
+   },
+   "n_configs": 270,
+   "msl_sweep": [
+    {
+     "thr": 2,
+     "precision": 0.25263157894736843,
+     "recall": 0.7222222222222222
+    },
+    {
+     "thr": 3,
+     "precision": 0.2982456140350877,
+     "recall": 0.6944444444444444
+    },
+    {
+     "thr": 4,
+     "precision": 0.35294117647058826,
+     "recall": 0.5555555555555556
+    },
+    {
+     "thr": 5,
+     "precision": 0.40310077519379844,
+     "recall": 0.4444444444444444
+    },
+    {
+     "thr": 6,
+     "precision": 0.4782608695652174,
+     "recall": 0.3611111111111111
+    },
+    {
+     "thr": 8,
+     "precision": 0.65625,
+     "recall": 0.3055555555555556
+    },
+    {
+     "thr": 10,
+     "precision": 0.3157894736842105,
+     "recall": 0.08333333333333333
+    },
+    {
+     "thr": 15,
+     "precision": 0.0,
+     "recall": 0.0
+    },
+    {
+     "thr": 20,
+     "precision": 0.0,
+     "recall": 0.0
+    },
+    {
+     "thr": 30,
+     "precision": 0.0,
+     "recall": 0.0
+    }
+   ],
+   "smap": {
+    "precision": 0.7668161434977578,
+    "recall": 0.14705882352941177,
+    "f0_5": 0.416098890402959,
+    "false_alarms_per_10k_steps": 1.1931367105220891,
+    "median_delay_steps": 12.5,
+    "hits": 10,
+    "missed": 58,
+    "true_alarms": 171,
+    "false_alarms": 52,
+    "pred_events": 223,
+    "true_events": 68,
+    "steps": 435826
+   }
+  }
+ },
+ "bootstrap": {
+  "f0_5_ci95": [
+   0.28910816257757793,
+   0.7377132621671385
+  ],
+  "diff_vs_baseline_ci95": [
+   -0.041511558160749876,
+   0.49034748373655973
+  ],
+  "p_diff_le_0": 0.043
+ },
+ "verdict": "The winner scores higher than the static 3\u03c3 baseline on SMAP, but the paired bootstrap CI of the difference includes 0: the gain is not statistically clear on this data. Against the stronger tuned static baseline (F0.5 0.52) the winner is not better."
+}

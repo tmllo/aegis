@@ -2,15 +2,23 @@
 
 Vite + React + R3F, Flight Record look (`src/styles/flight.css`). Offline by default. Dev: `npm run dev` (http://127.0.0.1:5630).
 
-## Routes
-| Route | Screen | Source |
-|---|---|---|
-| `/body` (default) | 01 Body: 3D body, seven plates with leader callouts, side note (value vs own band mean +/- 2 sd, days running, explanation, action, re-measure). URL keeps `?crew=&plate=&metric=` | `src/features/body/` |
-| `/cabin` | 02 Cabin: air (pressure, ppO2, ppCO2, CO planned, temperature, humidity planned), water tanks, crew dose (today, career vs limit), storm forecast feed, model card | `src/features/cabin/` |
-| `/cabin/replay` | May 2024 replay (the radiation concept, reused) | `src/concepts/radiation/` |
-| `/concepts`, `/concepts/:id` | Design concepts, not in the nav | `src/concepts/*` |
+## Routes (the crew console, `src/console/`)
+One persistent R3F scene (`World.tsx`: Earth with real-sun terminator, ISS track from a CelesTrak TLE, porcelain body in a grey studio) behind a HUD (`Shell.tsx`: mark + crew seats, section tabs 1-9, telemetry, actions). The camera flies between sections.
+| Route | Screen |
+|---|---|
+| `/` | Crew: cabin rail, selected crew vitals rail (three-state widgets), active alerts + one action |
+| `/vitals` | Body levels 1-3 (`?t=organ&k=metric&deep=1`), signal bars, analytics |
+| `/cabin` | Recorded ISS cabin (14 Nov), radial dial, tanks, commands, pressure emergency confirm (`?drill=1`) |
+| `/storm`, `/storm/replay` | Flares, Sun plot, dose, model scores, storm probability; May 2024 replay |
+| `/systems` | Sensors -> Cabin -> e^x -> Crew HUD -> Escalation, sources from `docs/lineage.json` |
+| `/mind` | Self-report, habits/to-dos (server tasks when `/api` answers), private journal |
+| `/timeline` | All mission days; drag to replay the whole HUD as of a day |
+| `/shelter` | Shelter drill from the latest verified warning; dose sheltered (estimate) vs not |
+| `/compare` | All crew bodies side by side, one metric lit |
+| `/handoff` | Case bundle for an onboard AI medical assistant, sent with the one-way light delay |
+| `/concepts`, `/concepts/:id` | Design concepts, not in the nav |
 
-Shell (`src/app/Shell.tsx`): nav 01 Body / 02 Cabin, crew switcher (shared by both sections), mission facts, footer with every disclaimer and the anatomy credit.
+Check: `node scripts/check-ui.mjs` clicks every control and fails on console errors or external requests.
 
 ## Data layer (`src/data`, the only network code)
 - `http.ts`: `getJson(path)` relative to the app origin (rejects non-JSON, so a static host's index.html is "no server"); `hasServer()` probes `/api/health` once.

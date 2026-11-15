@@ -17,3 +17,4 @@ Project: AEGIS, a crew health monitor with radiation early-warning, for NASA Spa
 3. The clock is the main constraint: prefer the simplest thing that works for the demo. Ask before adding a dependency or a new framework.
 4. No real astronaut health data. Crew data is simulated.
 5. Commit small and often with clear messages.
+6. Follow `docs/ARCHITECTURE.md`: layers, import direction, the caution & warning ladder and the safety rule (Emergency only from a measured event; a model forecast raises Warning at most). Web changes also follow `web/REDESIGN-RULES.md` and must pass `bash web/scripts/check-all.sh`.

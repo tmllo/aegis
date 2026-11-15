@@ -1,0 +1,50 @@
+# Live inputs the crew app can measure itself (session 1f, 2026-11-15): camera scan (breathing), the simulated
+# wrist band (SpO2) and the reaction test (PVT, the Psychomotor Vigilance Test ISS crews use for fatigue).
+# kind self_report so POST /api/observations accepts them (server/mind/records.py checkin_batch); no contract_key,
+# so the v1 JSON files do not change. Scored against the member's own baseline once 14 days exist.
+metrics:
+- key: cog.pvt_rt
+  label: Reaction time (PVT)
+  unit: ms
+  kind: self_report
+  hazard: isolation
+  body_region: brain
+  rule:
+    type: baseline_z
+    high_side_only: true
+    sd_floor: 25
+  explain: Slower reactions than your own usual are an early sign of fatigue and short sleep, which affect attention on
+    long missions.
+  how_to_measure: 'Reaction test in the daily check: tap as soon as the dot appears, about one minute.'
+  actions:
+    amber: Protect tonight's sleep window and repeat the test tomorrow.
+    red: Tell the commander before safety-critical work and repeat the test after rest.
+- key: vital.resp_rate
+  label: Breathing rate
+  unit: /min
+  kind: self_report
+  hazard: closed_environment
+  body_region: whole_body
+  rule:
+    type: display_only
+  explain: Breathing rate at rest from the camera scan. A camera estimate, not a medical device.
+  how_to_measure: Camera scan, seated and still, about 25 seconds.
+  actions:
+    amber: Re-scan at rest.
+    red: Re-scan at rest and tell the crew medical officer if you feel short of breath.
+- key: vital.spo2
+  label: Blood oxygen
+  unit: '%'
+  kind: self_report
+  hazard: closed_environment
+  body_region: whole_body
+  absolute_red:
+    min: 90
+    max: 100
+  rule:
+    type: display_only
+  explain: Oxygen saturation from the wrist band. In a closed cabin, a drop can come from cabin air or from the body.
+  how_to_measure: Wrist band, at rest.
+  actions:
+    amber: Re-measure at rest and check the cabin oxygen reading.
+    red: Tell the crew medical officer now and check the cabin oxygen reading.

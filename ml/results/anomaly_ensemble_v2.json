@@ -1,0 +1,127 @@
+{
+ "generated_at": "2026-11-15T20:11:32Z",
+ "model_name": "level_residual_ensemble_v2",
+ "members": {
+  "level": {
+   "model": {},
+   "amber": 30,
+   "min_duration_steps": 1,
+   "gap": 50
+  },
+  "residual": {
+   "model": {
+    "L": 60,
+    "span": 30
+   },
+   "amber": 30,
+   "min_duration_steps": 10,
+   "gap": 50
+  }
+ },
+ "red_over_amber": 2.0,
+ "msl": {
+  "precision": 0.6818181818181818,
+  "recall": 0.5,
+  "f0_5": 0.635593220338983,
+  "false_alarms_per_10k_steps": 0.9494228865168387,
+  "median_delay_steps": -3.5,
+  "hits": 18,
+  "missed": 18,
+  "true_alarms": 15,
+  "false_alarms": 7,
+  "pred_events": 22,
+  "true_events": 36,
+  "steps": 73729
+ },
+ "smap": {
+  "precision": 0.38095238095238093,
+  "recall": 0.5294117647058824,
+  "f0_5": 0.40358744394618834,
+  "false_alarms_per_10k_steps": 2.0879892434136558,
+  "median_delay_steps": 16.0,
+  "hits": 36,
+  "missed": 32,
+  "true_alarms": 56,
+  "false_alarms": 91,
+  "pred_events": 147,
+  "true_events": 68,
+  "steps": 435826
+ },
+ "smap_is_second_look": true,
+ "msl_sources": {
+  "hits_by_source": {
+   "level": 2,
+   "residual": 6,
+   "both": 10
+  },
+  "false_alarms_by_source": {
+   "level": 6,
+   "residual": 1,
+   "both": 0
+  }
+ },
+ "smap_sources": {
+  "hits_by_source": {
+   "level": 3,
+   "residual": 8,
+   "both": 25
+  },
+  "false_alarms_by_source": {
+   "level": 40,
+   "residual": 51,
+   "both": 0
+  }
+ },
+ "bootstrap_vs_static3": {
+  "f0_5_ci95": [
+   0.3005866721319675,
+   0.6566652884300824
+  ],
+  "diff_vs_baseline_ci95": [
+   -0.06203892562038845,
+   0.3984614048901952
+  ],
+  "p_diff_le_0": 0.0485
+ },
+ "bootstrap_vs_v1": {
+  "f0_5_ci95": [
+   0.3005866721319675,
+   0.6566652884300824
+  ],
+  "diff_vs_baseline_ci95": [
+   -0.21281117592181623,
+   0.04083617983114102
+  ],
+  "p_diff_le_0": 0.7505
+ },
+ "bootstrap_vs_static_tuned": {
+  "f0_5_ci95": [
+   0.3005866721319675,
+   0.6566652884300824
+  ],
+  "diff_vs_baseline_ci95": [
+   -0.42219815623186746,
+   0.01278658418568823
+  ],
+  "p_diff_le_0": 0.956
+ },
+ "verdict": "On this second look, v2 scores F0.5 0.40 on SMAP vs 0.44 for v1 and 0.52 for the tuned static rule. v2 is NOT the best of the four, but because SMAP was reused, treat this as indicative, not as a clean held-out result.",
+ "validation": {
+  "dataset": "NASA SMAP + MSL labeled telemetry anomalies (Hundman et al., KDD 2018)",
+  "tuned_on": "MSL (27 channels, 36 labeled anomalies)",
+  "tested_on": "SMAP (54 channels, 68 labeled anomalies)",
+  "protocol": "event-wise, no point-adjust; v2 SMAP figures are a second look at the test set (v1 pre-registered single look: F0.5 0.44)",
+  "model": {
+   "precision": 0.381,
+   "recall": 0.529,
+   "f0_5": 0.404,
+   "false_alarms_per_10k_steps": 2.088
+  },
+  "baseline_static_3sigma": {
+   "precision": 0.224,
+   "recall": 0.412,
+   "f0_5": 0.247,
+   "false_alarms_per_10k_steps": 5.163
+  }
+ }
+}
