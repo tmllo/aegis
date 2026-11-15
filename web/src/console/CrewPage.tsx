@@ -89,6 +89,15 @@ export default function CrewPage() {
         )}
       </div>
 
+      {/* keyboard: Tab reaches each body region, Enter focuses it, Esc returns */}
+      <nav className="hot-keys" aria-label="Body regions">
+        {(Object.keys(TARGETS) as TargetId[]).map((id) => (
+          <button key={id} type="button" onClick={() => setParams({ t: id }, { replace: true })}>
+            {TARGETS[id].label}
+          </button>
+        ))}
+      </nav>
+
       <button type="button" className="sq one-checkin" aria-pressed={panel === 'checkin'} onClick={() => setParams(panel === 'checkin' ? {} : { p: 'checkin' }, { replace: true })}>
         <Icon name="mind" size={18} />
         <span>Check-in</span>

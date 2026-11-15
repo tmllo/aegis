@@ -9,6 +9,8 @@ import { useConsole } from './useConsole';
 // three.js and the scene load only after the intro, so nothing competes with the video
 const World = lazy(() => import('./World').then((m) => ({ default: m.World })));
 import { useHud } from './hud';
+import { Scramble } from './Scramble';
+import { setAudio, tick } from './audio';
 import './console.css';
 
 export const SECTIONS = [
@@ -21,6 +23,24 @@ export function Shell() {
   const { data, views, seat, cv, setCrew, day, loadState, error } = useConsole();
   const [server, setServer] = useState<boolean | null>(null);
   const nav = useNavigate();
+  const [sound, setSound] = useState(false);
+  // a soft tick on every tap when sound is on
+  useEffect(() => {
+    const f = (e: PointerEvent) => (e.target as HTMLElement)?.closest?.('button, a') && tick();
+    addEventListener('pointerdown', f);
+    return () => removeEventListener('pointerdown', f);
+  }, []);
+  // ring reticle over hotspots: organs (from the scene), buttons and links
+  const [ring, setRing] = useState<{ x: number; y: number } | null>(null);
+  const hover = useHud((s) => s.hover);
+  useEffect(() => {
+    const f = (e: PointerEvent) => {
+      const el = e.target as HTMLElement;
+      setRing(el?.closest?.('canvas') ? null : el?.closest?.('button, a, [role="slider"]') ? { x: e.clientX, y: e.clientY } : null);
+    };
+    addEventListener('pointermove', f);
+    return () => removeEventListener('pointermove', f);
+  }, []);
   const loc = useLocation();
 
   useEffect(() => {
@@ -105,12 +125,15 @@ export function Shell() {
         <nav className="cx-tabs" aria-label="Sections">
           {SECTIONS.map((s, i) => (
             <NavLink key={s.to} to={s.to} end={s.to === '/'} className={({ isActive }) => (isActive ? 'on' : '')}>
-              {s.name}
+              <Scramble text={s.name} />
               <kbd>{i + 1}</kbd>
             </NavLink>
           ))}
         </nav>
         <div className="cx-icons">
+          <button type="button" className="cx-sound" aria-pressed={sound} onClick={() => { setAudio(!sound); setSound(!sound); }}>
+            Sound {sound ? 'on' : 'off'}
+          </button>
           <span className="cx-day">Day {day ?? '--'}</span>
           <span className="cx-live" data-on={server || undefined} title={server ? 'Server live' : 'Offline'}>
             <i /> {server ? 'Live' : 'Offline'}
@@ -121,9 +144,11 @@ export function Shell() {
 
       <footer className="cx-credits">
         {[...DISCLAIMERS, data ? `Space weather data: ${data.storm.meta.data_credit}` : ''].filter(Boolean).join('  ·  ')}
-        {'  ·  '}Anatomy: BodyParts3D 4.0, DBCLS, CC BY 4.0 · Earth: NASA Blue and Black Marble, public domain · Clouds: Solar System Scope, CC BY 4.0 · Video: NASA KSC-20190225-MH-SPX01-0001, CC0 · Orbital elements: CelesTrak (celestrak.org)
+        {'  ·  '}Anatomy: BodyParts3D 4.0, DBCLS, CC BY 4.0 · Earth: NASA Blue and Black Marble, public domain · Clouds: Solar System Scope, CC BY 4.0 · Video: NASA KSC-20190225-MH-SPX01-0001, CC0 · Orbital elements: CelesTrak (celestrak.org) · Stars: NASA SVS Deep Star Maps, Gaia ESA/DPAC · Moon: NASA SVS CGI Moon Kit (LRO)
       </footer>
       <div className="cx-grain" aria-hidden />
+      <p id="cx-tele" className="cx-telemetry" aria-hidden />
+      {(hover || ring) && <i className="cx-ring" style={{ left: hover ? hover.x : ring!.x, top: hover ? hover.y : ring!.y }} aria-hidden />}
 
     </div>
   );

@@ -441,3 +441,12 @@ button.wg:hover { border-color: rgb(255 255 255 / 0.22); }
 .cx-live i { width: 8px; height: 8px; border-radius: 50%; background: rgb(var(--faint)); }
 .cx-live[data-on] i { background: rgb(var(--accent)); }
 .cx-icons { gap: 22px; }
+.cx-telemetry { position: absolute; z-index: 20; left: 32px; bottom: 30px; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.12em; color: rgb(var(--faint)); pointer-events: none; font-variant-numeric: tabular-nums; }
+.cx-ring { position: fixed; z-index: 95; width: 34px; height: 34px; margin: -17px 0 0 -17px; border-radius: 50%; border: 1px solid rgb(var(--accent) / 0.8); pointer-events: none; transition: left 60ms linear, top 60ms linear; }
+.cx-sound { height: 40px; padding: 0 12px; border-radius: 8px; border: 1px solid rgb(255 255 255 / 0.12); font-size: 12px; color: rgb(var(--dim)); }
+.cx-sound[aria-pressed='true'] { color: rgb(var(--ink)); border-color: rgb(var(--accent) / 0.6); }
+.cx-grain { display: none; }
+@media (prefers-reduced-motion: reduce) { .cx-ring { transition: none; } }
+.hot-keys { position: absolute; z-index: 15; left: 50%; translate: -50% 0; bottom: 70px; display: flex; gap: 6px; opacity: 0; pointer-events: none; }
+.hot-keys:focus-within { opacity: 1; pointer-events: auto; }
+.hot-keys button { height: 56px; padding: 0 16px; border-radius: 10px; border: 1px solid rgb(255 255 255 / 0.14); background: rgb(var(--glass) / 0.7); font-size: 13px; }
