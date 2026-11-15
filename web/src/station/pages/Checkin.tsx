@@ -2,7 +2,7 @@
 // "Skipped". Every value is scored live against the astronaut's own usual range (core/scoring through
 // model.buildView). Blood pressure is asked on BP days (every third mission day) or when flagged.
 // Saving updates every screen and is kept for the flight surgeon.
-import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import type { MetricKey } from '../../data/types';
 import { buildView, MOOD_WORD, useStationData, SYSTEMS, RANK, CW_LABEL, CW_RANK, fmtV } from '../model';
@@ -50,6 +50,8 @@ export default function Checkin() {
   const [draft, setDraft] = useState<Partial<Record<MetricKey, number>>>({});
   const [ex, setEx] = useState<Extras>({});
   const [seen, setSeen] = useState<Set<number>>(new Set());
+  const [dir, setDir] = useState<1 | -1>(1);
+  const advance = useRef<number>();
 
   useEffect(() => {
     setDraft({});
@@ -57,6 +59,14 @@ export default function Checkin() {
     setI(0);
     setSeen(new Set());
   }, [v?.m.id]);
+  useEffect(() => () => window.clearTimeout(advance.current), []);
+  const keys = useRef<(e: KeyboardEvent) => void>();
+  useEffect(() => {
+    const on = (e: KeyboardEvent) => keys.current?.(e);
+    // capture phase: on a 1-5 question the digits answer it instead of switching pages
+    window.addEventListener('keydown', on, true);
+    return () => window.removeEventListener('keydown', on, true);
+  }, []);
 
   const preview = useMemo(() => (v && data ? buildView(data.crew, data.crew.crew.find((m) => m.id === v.m.id)!, draft, env, true) : null), [v, data, draft, env]);
   if (!data) return null;
@@ -72,9 +82,17 @@ export default function Checkin() {
   const answered = (s: Step) =>
     s.kind === 'number' ? draft[s.k] != null : s.kind === 'scale' ? (s.k ? draft[s.k] != null : ex[s.ex!] != null) : s.kind === 'pvt' ? ex.pvtMs != null : s.kind === 'bp' ? draft.bp_sys != null : !!ex.symptoms;
   const go = (n: number) => {
+    window.clearTimeout(advance.current);
     cue('tick', sound);
     setSeen((x) => new Set(x).add(i));
+    setDir(n < i ? -1 : 1);
     setI(n);
+  };
+  // one tap answers a scale question: the choice lights up, then the next question slides in
+  const pickThenNext = (apply: () => void) => {
+    apply();
+    window.clearTimeout(advance.current);
+    advance.current = window.setTimeout(() => go(i + 1), 280);
   };
   const set = (k: MetricKey, val: number) => setDraft((d) => ({ ...d, [k]: Math.round(val * 100) / 100 }));
   const start = (k: MetricKey) => draft[k] ?? Math.round(preview.rows[k].mean ?? preview.rows[k].value ?? 0);
@@ -103,7 +121,7 @@ export default function Checkin() {
     return (
       <div key={k} className="ds-field" data-s={val == null ? undefined : r.status}>
         <div className="ds-field-h">
-          <b>{label}</b>
+          {label && <b>{label}</b>}
           <span>{r.mean != null ? `Your usual ${r.lo!.toFixed(d)}–${r.hi!.toFixed(d)} ${r.unit}` : ''}</span>
         </div>
         <div className="ds-field-v">
@@ -111,8 +129,8 @@ export default function Checkin() {
             −
           </button>
           <output>
-            {val == null ? <span className="ds-empty">Not set</span> : fmtV(k, val)}
-            {val != null && <small>{r.unit}</small>}
+            <span className={val == null ? 'ck-ghost' : undefined}>{fmtV(k, val ?? start(k))}</span>
+            <small>{r.unit}</small>
           </output>
           <button type="button" className="ds-step" onClick={() => (cue('tick', sound), set(k, Math.min(max, start(k) + (draft[k] == null ? 0 : st))))} aria-label={`More ${label}`}>
             +
@@ -140,7 +158,7 @@ export default function Checkin() {
             }}
           />
         )}
-        {stepper(cur.k, cur.step, cur.min, cur.max, cur.k === 'hr' && ex.scanBpm ? 'Heart rate (camera estimate)' : cur.title)}
+        {stepper(cur.k, cur.step, cur.min, cur.max, cur.k === 'hr' && ex.scanBpm ? 'Camera estimate' : '')}
       </>
     );
   } else if (cur?.kind === 'scale') {
@@ -149,7 +167,7 @@ export default function Checkin() {
       <div className="ds-field">
         <div className="ds-scale">
           {[1, 2, 3, 4, 5].map((n) => (
-            <button key={n} type="button" className={val === n ? 'is-on' : ''} aria-pressed={val === n} onClick={() => (cue('tick', sound), cur.k ? set(cur.k, n) : setEx((e) => ({ ...e, [cur.ex!]: n })))}>
+            <button key={n} type="button" className={val === n ? 'is-on' : ''} aria-pressed={val === n} onClick={() => pickThenNext(() => (cue('tick', sound), cur.k ? set(cur.k, n) : setEx((e) => ({ ...e, [cur.ex!]: n }))))}>
               <b>{n}</b>
               {cur.words[n]}
             </button>
@@ -188,7 +206,6 @@ export default function Checkin() {
     const done = steps.filter(answered);
     body = (
       <>
-        <p className="fr-big">With these values: {CW_LABEL[preview.cw]}.</p>
         <p className="ds-note">
           {done.length} of {steps.length} answered{done.length < steps.length ? `. Skipped: ${steps.filter((s) => !answered(s)).map((s) => s.title.toLowerCase()).join(', ')}` : ''}.
           {ex.symptoms ? ` Symptoms: ${ex.symptoms.toLowerCase()}.` : ''}
@@ -197,16 +214,37 @@ export default function Checkin() {
     );
   }
 
+  // keyboard: Enter continues (unless a button has focus, which Enter already presses), 1-5 answers a scale
+  keys.current = (e) => {
+    if (e.metaKey || e.ctrlKey || e.altKey || e.target instanceof HTMLButtonElement || e.target instanceof HTMLTextAreaElement) return;
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (last) finish();
+      else go(i + 1);
+    } else if (cur?.kind === 'scale' && /^[1-5]$/.test(e.key)) {
+      e.stopPropagation();
+      document.querySelectorAll<HTMLButtonElement>('.ck .ds-scale button')[Number(e.key) - 1]?.click();
+    }
+  };
+
   const metric = cur?.kind === 'number' ? cur.k : cur?.kind === 'scale' && cur.k ? cur.k : cur?.kind === 'bp' ? 'bp_sys' : null;
 
   return (
     <Page
+      className="is-check"
       title={`Daily check · ${roleOf(v.m)}`}
-      sub={last ? 'Check your answers, then save' : cur.ask}
       left={[...steps, { id: 'review', title: 'Review', ask: '', kind: 'text' as const }].map((s, n) => (
-        <Check key={s.id} s="green" mark={n === i || !seen.has(n) || n === steps.length ? n + 1 : undefined} title={s.title} word={n === i ? 'Now' : n === steps.length ? 'Last' : seen.has(n) ? (answered(s) ? 'Done' : 'Skipped') : 'To do'} on={n === i} onClick={() => go(n)} />
+        <Check key={s.id} s="green" mark={n === i || !seen.has(n) || n === steps.length ? n + 1 : undefined} title={s.title} word={n === i ? 'Now' : seen.has(n) ? (answered(s) ? 'Done' : 'Skipped') : ''} on={n === i} onClick={() => go(n)} />
       ))}
-      object={<div className="fr-panel">{body}</div>}
+      object={
+        <div className="fr-panel ck">
+          <div key={i} className="ck-step" data-dir={dir}>
+            <p className="ck-count">{last ? 'Review' : `${i + 1} of ${steps.length}`}</p>
+            <h2 className="ck-q">{last ? `With these values: ${CW_LABEL[preview.cw]}` : cur.ask}</h2>
+            {body}
+          </div>
+        </div>
+      }
       right={
         last ? (
           <>

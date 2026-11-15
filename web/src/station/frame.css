@@ -855,3 +855,102 @@ button.fr-vital:active {
     min-height: 52px;
   }
 }
+
+/* ---------------------------------------------------------------- daily check (one question per step) */
+.fr-panel.ck {
+  align-content: center;
+  padding: 8px 4px 32px;
+}
+.ck-step {
+  display: grid;
+  gap: 24px;
+  width: min(600px, 100%);
+  margin: 0 auto;
+  animation: ck-in 220ms var(--ease) both;
+}
+.ck-step[data-dir='-1'] {
+  animation-name: ck-back;
+}
+@keyframes ck-in {
+  from { opacity: 0; transform: translateY(12px); }
+}
+@keyframes ck-back {
+  from { opacity: 0; transform: translateY(-12px); }
+}
+.ck-count {
+  margin: 0;
+  font-size: 15px;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+.ck-q {
+  margin: -16px 0 8px;
+  font-size: clamp(24px, 2.4vw, 34px);
+  font-weight: 400;
+  line-height: 1.2;
+  text-wrap: balance;
+}
+.ck .ds-field {
+  padding: 0;
+  border-top: 0;
+  gap: 16px;
+}
+.ck .ds-field + .ds-field {
+  padding-top: 24px;
+  border-top: 1px solid var(--line);
+}
+.ck .ds-field-v output span {
+  transition: color 160ms var(--ease);
+}
+.ck .ck-ghost {
+  color: var(--ink-3);
+}
+.ck .ds-scale button.is-on {
+  animation: ck-pick 200ms var(--ease);
+}
+@keyframes ck-pick {
+  50% { transform: scale(0.95); }
+}
+.ck .fr-big {
+  margin: 0;
+}
+@media (max-width: 1100px) {
+  .fr-panel.ck {
+    padding: 8px 0 24px;
+  }
+}
+@media (max-width: 560px) {
+  .ck-step {
+    gap: 20px;
+  }
+  .ck .ds-field-v {
+    grid-template-columns: 56px 1fr 56px;
+    gap: 8px;
+  }
+  .ck .ds-step {
+    height: 56px;
+  }
+  .ck .ds-field-v output {
+    font-size: 48px;
+  }
+  .ck .ds-scale {
+    gap: 4px;
+  }
+  .ck .ds-scale button {
+    min-height: 72px;
+    font-size: 12px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ck-step,
+  .ck .ds-scale button.is-on {
+    animation: none;
+  }
+}
+/* keep every checklist row the same height while its status word is still empty */
+.fr.is-check .fr-check-t span:empty::before {
+  content: '\00a0';
+}
+.ck .ds-field-h span:only-child {
+  margin-left: auto;
+}
