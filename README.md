@@ -2,6 +2,8 @@
 
 Crew health monitor with a radiation storm early-warning. **Start with `PROJECT_CONTEXT.md`.**
 
+**Project map (how research, ML, contract and web connect): `docs/MAP.md`.** Thesis and research: `docs/`.
+
 ## What's in here
 | File | For | What |
 |---|---|---|

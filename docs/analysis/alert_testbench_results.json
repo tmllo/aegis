@@ -1,0 +1,133 @@
+{
+  "setup": {
+    "missions_per_member": 2000,
+    "crew": 3,
+    "days": 75,
+    "baseline_days": 14,
+    "generator": "aegis/ml/make_sample_data.py (AR(1) + approved correlations)",
+    "note": "Simulated crew. Measures the alert rule, not human physiology."
+  },
+  "false_alarms_healthy": {
+    "A": {
+      "share_of_days_not_green": 0.297,
+      "share_of_days_red": 0.0295,
+      "amber_or_red_episodes_per_astronaut_month": 4.81,
+      "red_episodes_per_astronaut_month": 0.719,
+      "missions_with_any_false_red": 0.711,
+      "amber_episodes_per_month_by_metric": {
+        "hr": 1.34,
+        "bp_sys": 1.31,
+        "bp_dia": 1.33,
+        "glucose": 0.3,
+        "temp": 1.35,
+        "sleep_h": 0.66,
+        "mood": 0.36,
+        "exercise_min": 0.66
+      }
+    },
+    "B": {
+      "share_of_days_not_green": 0.139,
+      "share_of_days_red": 0.0062,
+      "amber_or_red_episodes_per_astronaut_month": 1.69,
+      "red_episodes_per_astronaut_month": 0.105,
+      "missions_with_any_false_red": 0.175,
+      "amber_episodes_per_month_by_metric": {
+        "hr": 0.42,
+        "bp_sys": 0.39,
+        "bp_dia": 0.41,
+        "glucose": 0.06,
+        "temp": 0.41,
+        "sleep_h": 0.16,
+        "mood": 0.05,
+        "exercise_min": 0.11
+      }
+    },
+    "C": {
+      "share_of_days_not_green": 0.179,
+      "share_of_days_red": 0.0188,
+      "amber_or_red_episodes_per_astronaut_month": 1.85,
+      "red_episodes_per_astronaut_month": 0.449,
+      "missions_with_any_false_red": 0.533,
+      "amber_episodes_per_month_by_metric": {
+        "hr": 0.45,
+        "bp_sys": 0.44,
+        "bp_dia": 0.45,
+        "glucose": 0.07,
+        "temp": 0.45,
+        "sleep_h": 0.18,
+        "mood": 0.12,
+        "exercise_min": 0.14
+      }
+    }
+  },
+  "detection": {
+    "bp_sys +2.5 sd, ramp 5 days": {
+      "A": {
+        "detected": 0.995,
+        "median_days_to_first_amber": 3.0,
+        "reached_red": 0.902
+      },
+      "B": {
+        "detected": 0.982,
+        "median_days_to_first_amber": 5.0,
+        "reached_red": 0.757
+      },
+      "C": {
+        "detected": 0.981,
+        "median_days_to_first_amber": 4.0,
+        "reached_red": 0.885
+      }
+    },
+    "bp_sys +1.5 sd, ramp 7 days": {
+      "A": {
+        "detected": 0.914,
+        "median_days_to_first_amber": 6.0,
+        "reached_red": 0.531
+      },
+      "B": {
+        "detected": 0.776,
+        "median_days_to_first_amber": 8.0,
+        "reached_red": 0.281
+      },
+      "C": {
+        "detected": 0.782,
+        "median_days_to_first_amber": 8.0,
+        "reached_red": 0.472
+      }
+    },
+    "sleep_h -2.5 sd, ramp 5 days": {
+      "A": {
+        "detected": 0.997,
+        "median_days_to_first_amber": 3.0,
+        "reached_red": 0.915
+      },
+      "B": {
+        "detected": 0.983,
+        "median_days_to_first_amber": 5.0,
+        "reached_red": 0.751
+      },
+      "C": {
+        "detected": 0.983,
+        "median_days_to_first_amber": 5.0,
+        "reached_red": 0.889
+      }
+    },
+    "hr +3 sd, step": {
+      "A": {
+        "detected": 1.0,
+        "median_days_to_first_amber": 0.0,
+        "reached_red": 0.97
+      },
+      "B": {
+        "detected": 0.998,
+        "median_days_to_first_amber": 2.0,
+        "reached_red": 0.915
+      },
+      "C": {
+        "detected": 0.997,
+        "median_days_to_first_amber": 1.0,
+        "reached_red": 0.962
+      }
+    }
+  }
+}

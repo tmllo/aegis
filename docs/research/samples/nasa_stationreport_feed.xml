@@ -1,0 +1,491 @@
+<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"
+	xmlns:content="http://purl.org/rss/1.0/modules/content/"
+	xmlns:wfw="http://wellformedweb.org/CommentAPI/"
+	xmlns:dc="http://purl.org/dc/elements/1.1/"
+	xmlns:atom="http://www.w3.org/2005/Atom"
+	xmlns:sy="http://purl.org/rss/1.0/modules/syndication/"
+	xmlns:slash="http://purl.org/rss/1.0/modules/slash/"
+	xmlns:media="http://search.yahoo.com/mrss/" >
+
+<channel>
+	<title>ISS On-Orbit Status Report - NASA</title>
+	<atom:link href="https://www.nasa.gov/blogs/stationreport/feed/" rel="self" type="application/rss+xml" />
+	<link>https://www.nasa.gov</link>
+	<description>Official National Aeronautics and Space Administration Website</description>
+	<lastBuildDate>Wed, 22 Jan 2025 15:26:33 +0000</lastBuildDate>
+	<language>en-US</language>
+	<sy:updatePeriod>
+	hourly	</sy:updatePeriod>
+	<sy:updateFrequency>
+	1	</sy:updateFrequency>
+	<generator>https://wordpress.org/?v=7.0.8</generator>
+	<item>
+		<title>ISS Daily Summary Report Discontinued</title>
+		<link>https://www.nasa.gov/blogs/stationreport/2024/07/26/iss-daily-summary-report-discontinued/</link>
+		
+		<dc:creator><![CDATA[Bill Keeter]]></dc:creator>
+		<pubDate>Sat, 27 Jul 2024 02:23:00 +0000</pubDate>
+				<guid isPermaLink="false">https://www.nasa.gov/?post_type=nasa-blog&#038;p=808335</guid>
+
+					<description><![CDATA[Beginning Monday, July 29th, the IMC Daily Summary will be discontinued. To learn more about the groundbreaking science and engineering happening daily on the International Space Station, please visit the space station blog at https://blogs.nasa.gov/spacestation/, or browse a variety of space station research resources at  https://nasa.gov/iss-science/.]]></description>
+										<content:encoded><![CDATA[
+<p class="wp-block-paragraph"><strong>Beginning Monday, July 29th, the IMC Daily Summary will be discontinued.</strong></p>
+
+
+
+<p class="wp-block-paragraph">To learn more about the groundbreaking science and engineering happening daily on the International Space Station, please visit the space station blog at <a href="https://blogs.nasa.gov/spacestation/" rel="noopener">https://blogs.nasa.gov/spacestation/</a>, or browse a variety of space station research resources at  <a href="https://nasa.gov/iss-science" rel="noopener">https://nasa.gov/iss-science/</a>.</p>
+
+
+
+<p class="wp-block-paragraph"></p>
+]]></content:encoded>
+					
+		
+		
+			</item>
+		<item>
+		<title>ISS Daily Summary Report – 7/26/2024</title>
+		<link>https://www.nasa.gov/blogs/stationreport/2024/07/26/iss-daily-summary-report-7-26-2024/</link>
+		
+		<dc:creator><![CDATA[Bill Keeter]]></dc:creator>
+		<pubDate>Fri, 26 Jul 2024 16:00:20 +0000</pubDate>
+				<guid isPermaLink="false">https://www.nasa.gov/?blogs-migration=iss-daily-summary-report-7-26-2024</guid>
+
+					<description><![CDATA[Boeing CST-100 Crewed Flight Test (CFT): The CFT crew continued assisting the ISS crew with various audits and housekeeping.  They also performed CloudNet Testing and STEMonstration Earth Science activities. Payloads: Sleep in Orbit: A crewmember transferred the MicroSD memory card into a Columbus Payload Laptop to allow the ground to downlink data. The Sleep in …]]></description>
+										<content:encoded><![CDATA[<p><strong>Boeing CST-100 Crewed Flight Test (CFT): </strong>The CFT crew continued assisting the ISS crew with various audits and housekeeping.  They also performed CloudNet Testing and STEMonstration Earth Science activities.</p>
+<p><strong>Payloads:</strong></p>
+<p><strong>Sleep in Orbit:</strong> A crewmember transferred the MicroSD memory card into a Columbus Payload Laptop to allow the ground to downlink data. The Sleep in Orbit hardware was restowed. More information on the experiment can be found <a href="https://www.nasa.gov/mission/station/research-explorer/investigation/#id=8866">here</a>.</p>
+<p><strong>STEMonstration Earth Science Demonstration – 3D Printing:</strong> An educational video was partially recorded explaining the 3D Printing in Space experiment. More information on this experiment can be found <a href="https://www.nasa.gov/mission/station/research-explorer/investigation/?#id=9199">here</a>.</p>
+<p><strong>Systems:</strong></p>
+<p><strong>CloudNet Testing: </strong>Today, the crew performed troubleshooting on CloudNet, one of the onboard virtual local area networks (VLAN). Previously, there have been ongoing issues regarding CloudNet connections since December 2023.  After today’s troubleshooting, the crew were able to successfully connect on multiple apps within CloudNet devices. CloudNet provides access to the internet from approved devices such as tablets and other proprietary electronics.</p>
+<p><strong>Node 1 Stowage Management: </strong>The crew took inventory of and reorganized stowage in Node 1. Several ISS crew members managed stowage, including disposal of unneeded common trash and relocating items as needed for the betterment of day-to-day operations.</p>
+<p><strong>Toolbox Insert Audit, PMM Standoff Audit, and Extravehicular Activity (EVA) Tool Stow: </strong>Today, the crew performed a set of audits onboard the ISS.  They inspected the condition of the tool inserts in the IVA Tool Box, replacing any missing socket tabs in Drawer 2.  They also audited the PMM standoffs and backfilled any open space with spare Iodine Compatible Water Containers (CWC-Is) from Node 3.  Finally, they stowed tools and hardware gathered from previous EVAs.</p>
+<p><strong>Overhead Crew Quarters (CQ) Airflow Measurement: </strong>The crew took Airflow Measurements in the Overhead CQ Intake Duct using the Velocicalc device.  The crew took five measurements at the intake outlet diffuser, one measurement at the intake airflow sensor, and one measurement above the intake fan.  Data was downlinked for ground teams to assess and develop a plan to improve CQ airflow.</p>
+<p><strong>Look Ahead Plan</strong></p>
+<p><strong>Saturday, July 27 (GMT 209)<br />
+</strong><strong>Payloads:</strong></p>
+<ul>
+<li>Human Research Facility (HRF) Collections</li>
+<li>ISS Ham Pass</li>
+</ul>
+<p><strong>Systems:</strong></p>
+<ul>
+<li>CST Hot Fire Thruster Test #2</li>
+<li>Waste and Hygiene Compartment (WHC) Pre-Treat Tank Remove &amp; Replace</li>
+</ul>
+<p><strong>Sunday, July 28 (GMT 210)<br />
+</strong><strong>Payloads:</strong></p>
+<ul>
+<li>Human Research Facility (HRF) Collections</li>
+</ul>
+<p><strong>Systems:</strong></p>
+<ul>
+<li>Crew off-duty</li>
+</ul>
+<p><strong>Monday, July 29 (GMT 211)<br />
+</strong><strong>Payloads:</strong></p>
+<ul>
+<li>B Complex – Optical Coherence Tomography (OCT)</li>
+<li>BioServe Centrifuge Checkout</li>
+<li>Glacier-1 Desiccant Swap</li>
+<li>Human Research Facility (HRF) Setup and Collections</li>
+<li>Immunity Assay Kit Gathering</li>
+<li>Iceberg-1 Desiccant Swap</li>
+<li>Kubik 5/6 Setup</li>
+<li>Telescience Resource Kit (TREK) Setup in Node 2</li>
+<li>Veggie Light Meter Install</li>
+</ul>
+<p><strong>Systems:</strong></p>
+<ul>
+<li>Columbus Deck 4 (COL1D4) Rack Rotation</li>
+<li>FGB USOS Audit Followup</li>
+<li>On-board Training (OBT) Cygnus NG-21 Rendezvous Review and Robotics Onboard Trainer (ROBoT) session</li>
+<li>CFT Sublimator Water Bag Fill</li>
+<li>CFT Suit Checkout</li>
+<li>Node 1 and Node 3 Intermodule Ventilation (IMV) Cleaning</li>
+</ul>
+<p><strong><em>Beginning Monday, July 29th, the IMC Daily Summary will be discontinued.</em></strong></p>
+<p><em>To learn more about the groundbreaking science and engineering happening daily on the International Space Station, please visit the space station blog at <a title="https://blogs.nasa.gov/spacestation/" href="https://blogs.nasa.gov/spacestation/" rel="noopener">https://blogs.nasa.gov/spacestation/</a>, or browse a variety of space station research resources at <a href="https://nasa.gov/iss-science" rel="noopener">https://nasa.gov/iss-science</a>.</em></p>
+]]></content:encoded>
+					
+		
+		
+			</item>
+		<item>
+		<title>ISS Daily Summary Report – 7/25/2024</title>
+		<link>https://www.nasa.gov/blogs/stationreport/2024/07/25/iss-daily-summary-report-7-25-2024/</link>
+		
+		<dc:creator><![CDATA[Bill Keeter]]></dc:creator>
+		<pubDate>Thu, 25 Jul 2024 16:00:48 +0000</pubDate>
+				<guid isPermaLink="false">https://www.nasa.gov/?blogs-migration=iss-daily-summary-report-7-25-2024</guid>
+
+					<description><![CDATA[Boeing CST-100 Crewed Flight Test (CFT): Today, the CFT crew performed checkouts and measurements in preparation for a future potential CFT undock. They also assisted the ISS crew in NanoRacks Airlock (NRAL) restow operations. Payloads: KIBO Robot Programming Challenge 5: Preparation activities and the Robo-Pro Challenge #5 Technical Rehearsal were performed using JEM Camera Robot …]]></description>
+										<content:encoded><![CDATA[<p><strong>Boeing CST-100 Crewed Flight Test (CFT): </strong>Today, the CFT crew performed checkouts and measurements in preparation for a future potential CFT undock. They also assisted the ISS crew in NanoRacks Airlock (NRAL) restow operations.</p>
+<p><strong>Payloads:</strong></p>
+<p><strong>KIBO Robot Programming Challenge 5:</strong> Preparation activities and the Robo-Pro Challenge #5 Technical Rehearsal were performed using JEM Camera Robot 2. More information on this experiment can be found <a href="https://www.nasa.gov/mission/station/research-explorer/investigation/?#id=7979">here</a>.</p>
+<p><strong>ESA Payload Data Router (PLDR):</strong> The PLDR was deinstalled and stowed. The PLDR was a Tech Demo with an objective to demonstrate the suitability of the KAM-500© Data Acquisition Unit (DAU) for use during future long duration space missions.</p>
+<p><strong>Space Tissue Equivalent Dosimeter (SpaceTED):</strong> The crew removed the memory card from the SpaceTED, and transferred the science data to a Station Support Computer (SSC). More information on this experiment can be found <a href="https://www.nasa.gov/mission/station/research-explorer/investigation/?#id=8739">here</a>.</p>
+<p><strong>Systems:</strong></p>
+<p><strong>NRAL Restow Operations: </strong>The crew performed restow operations on cargo in the Node 3 endcone following the completed NRAL operations from yesterday.  Previously, the crew had to temporarily unstow cargo from the Node 3 endcone prior to performing the ArgUS 1-1 installs over the last two days.</p>
+<p><strong>Butterfly iQ Venous Thromboembolism (VTE) Scans: </strong>The crew performed a VTE scan using the Butterfly iQ Ultrasound device. Butterfly iQ Ultrasound demonstrates the effectiveness of a portable ultrasound device used in conjunction with a mobile computing device in the space environment. Such commercial off-the-shelf technology could provide important medical capabilities for future exploration missions beyond low-Earth orbit.</p>
+<p><strong>Extravehicular Activities (EVA) Operations: </strong>Today, the crew completed multiple EVA activities as part of standard maintenance operations.  The Secondary Oxygen Package (SOP) Check-Out Fixture (SCOF) relief valve was cycled and checked out, which must be done once a year. The five most degraded sets of restraints for each Service and Cooling Umbilical (SCU) were removed and replaced (R&amp;R).  The crew also performed standard Simplified Aid for EVA Rescue (SAFER) Battery operations.</p>
+<p><strong>Look Ahead Plan</strong></p>
+<p><strong>Friday, July 26 (GMT 208)<br />
+</strong><strong>Payloads:</strong></p>
+<ul>
+<li>AstroPI Inspection</li>
+<li>ESA PowerBank Stow</li>
+<li>Human Research Facility (HRF) Collections</li>
+<li>Sleep In Orbit Data Downlink and Closeout</li>
+<li>STEMonstration (3D Printing) Video Recording</li>
+</ul>
+<p><strong>Systems:</strong></p>
+<ul>
+<li>Node 3 Stowage Management</li>
+<li>EVA Tool Stow</li>
+<li>CloudNet Testing</li>
+</ul>
+<p><strong><em>Beginning Monday, July 29th, the IMC Daily Summary will be discontinued.</em></strong></p>
+<p><em>To learn more about the groundbreaking science and engineering happening daily on the International Space Station, please visit the space station blog at <a title="https://blogs.nasa.gov/spacestation/" href="https://blogs.nasa.gov/spacestation/" rel="noopener">https://blogs.nasa.gov/spacestation/</a>, or browse a variety of space station research resources at <a href="https://nasa.gov/iss-science" rel="noopener">https://nasa.gov/iss-science</a>.</em></p>
+]]></content:encoded>
+					
+		
+		
+			</item>
+		<item>
+		<title>ISS Daily Summary Report – 7/24/2024</title>
+		<link>https://www.nasa.gov/blogs/stationreport/2024/07/24/iss-daily-summary-report-7-24-2024/</link>
+		
+		<dc:creator><![CDATA[Bill Keeter]]></dc:creator>
+		<pubDate>Wed, 24 Jul 2024 16:00:08 +0000</pubDate>
+				<guid isPermaLink="false">https://www.nasa.gov/?blogs-migration=iss-daily-summary-report-7-24-2024</guid>
+
+					<description><![CDATA[Boeing CST-100 Crewed Flight Test (CFT): Today, the CFT crew assisted the ISS crew by installing the ArgUS 1-1 Multi Payload Platform in the NanoRacks Airlock (NRAL).  They also assisted the ISS crew in the Butterfly iQ Scans and stowage management in the Columbus Module. Payloads: ArgUS 1-1: The assembled ArgUS 1-1 plate was installed …]]></description>
+										<content:encoded><![CDATA[<p><strong>Boeing CST-100 Crewed Flight Test (CFT): </strong>Today, the CFT crew assisted the ISS crew by installing the ArgUS 1-1 Multi Payload Platform in the NanoRacks Airlock (NRAL).  They also assisted the ISS crew in the Butterfly iQ Scans and stowage management in the Columbus Module.</p>
+<p><strong>Payloads:</strong></p>
+<p><strong>ArgUS 1-1:</strong> The assembled ArgUS 1-1 plate was installed onto the ArgUS Multi Payload Platform in the NRAL. More information about this investigation can be found <a href="https://www.nasa.gov/mission/station/research-explorer/investigation/?#id=9194">here</a>.</p>
+<p><strong>General-purpose Oceaneering Latching Device-2 (GOLD-2):</strong> A crewmember relocated two cameras from the NRAL and installed the Payload Mounting Plate and Passive GOLD-2 hardware inside the NRAL in the overhead position in preparation of future ArgUS 2-1 installation. The GOLD-2 hardware is designed to attach payloads to external payload platforms on the ISS via the Special Purpose Dexterous Manipulator (SPDM).</p>
+<p><strong>Thigh Cuff:</strong> In support of the Thigh Cuff investigation, the crew performed ultrasound scans, Optical Coherence Tomography (OCT), and blood pressure measurements. More information on this investigation can be found <a href="https://www.nasa.gov/mission/station/research-explorer/investigation/?#id=8984">here</a>.</p>
+<p><strong>Systems:</strong></p>
+<p><strong>Node 1 Deep Cleaning: </strong>Today, the crew continued deep cleaning Node 1.  Stowage was cleared and temporarily stowed to make room for the cleaning activity.  The crew vacuumed any dust and FOD that was found before wiping appropriate surfaces with disinfectant wipes.  Afterwards, the stowage was audited and replaced in its original configuration.  Finally, crew photo-documented the overall stowage configuration for ground teams to review later.</p>
+<p><strong>Butterfly iQ Venous Thromboembolism (VTE) Scans: </strong>The crew performed a VTE scan using the Butterfly iQ Ultrasound device. Butterfly iQ Ultrasound demonstrates the effectiveness of a portable ultrasound device used in conjunction with a mobile computing device in the space environment. Such commercial off-the-shelf technology could provide important medical capabilities for future exploration missions beyond low-Earth orbit.</p>
+<p><strong>COL Stowage Management: </strong>The crew took inventory of and reorganized stowage in COL. Several ISS crew members managed stowage, including disposal of unneeded common trash and relocating items as needed for the betterment of day-to-day operations.</p>
+<p><strong>Look Ahead Plan</strong></p>
+<p><strong>Thursday, July 25 (GMT 207)<br />
+</strong><strong>Payloads:</strong></p>
+<ul>
+<li>Advanced Resistive Exercise Device (ARED) Kinematics – Software update</li>
+<li>Complement of Integrated Protocols for Human Exploration Research on Varying Mission Durations (CIPHER)-Investigating Structure and Function of the Eye (ISAFE) – Measurements and Stow</li>
+<li>ESA Power Bank – Charging</li>
+<li>Human Research Facility (HRF) – Collections</li>
+<li>JAXA Internal Ball Camera 2 (Robot-2) – Checkout Prep for Robo-Pro Challenge #5 Technical Rehearsal</li>
+<li>Payload Data Router and Sensors – De-installation</li>
+<li>Space Tissue Equivalent Dosimeter (SpaceTED)<strong> –</strong>  Data Transfer</li>
+</ul>
+<p><strong>Systems:</strong></p>
+<ul>
+<li>CFT Operations</li>
+<li>Extravehicular Activity (EVA) Service and Cooling Umbilical (SCU) Restraint Remove and Replace</li>
+<li>EVA Routine Maintenance Operations</li>
+</ul>
+<p><strong><em>Beginning Monday, July 29th, the IMC Daily Summary will be discontinued.</em></strong></p>
+<p><em>To learn more about the groundbreaking science and engineering happening daily on the International Space Station, please visit the space station blog at <a title="https://blogs.nasa.gov/spacestation/" href="https://blogs.nasa.gov/spacestation/" rel="noopener">https://blogs.nasa.gov/spacestation/</a>, or browse a variety of space station research resources at <a href="https://nasa.gov/iss-science" rel="noopener">https://nasa.gov/iss-science</a>.</em></p>
+]]></content:encoded>
+					
+		
+		
+			</item>
+		<item>
+		<title>ISS Daily Summary Report – 7/23/2024</title>
+		<link>https://www.nasa.gov/blogs/stationreport/2024/07/23/iss-daily-summary-report-7-23-2024/</link>
+		
+		<dc:creator><![CDATA[Bill Keeter]]></dc:creator>
+		<pubDate>Tue, 23 Jul 2024 16:00:01 +0000</pubDate>
+				<guid isPermaLink="false">https://www.nasa.gov/?blogs-migration=iss-daily-summary-report-7-23-2024</guid>
+
+					<description><![CDATA[Boeing CST-100 Crewed Flight Test (CFT): The CFT crew assisted the ISS crew by performing payload activities. They completed the ArgUS 1-1 sub-payloads installation and several Thor-Davis sessions. Payloads: ArgUS 1-1: The ArgUS 1-1 sub-payloads were installed onto the ArgUS Multi Payload Platform and stowed in the NanoRacks Airlock (NRAL). More information about this investigation …]]></description>
+										<content:encoded><![CDATA[<p><strong>Boeing CST-100 Crewed Flight Test (CFT): </strong>The CFT crew assisted the ISS crew by performing payload activities. They completed the ArgUS 1-1 sub-payloads installation and several Thor-Davis sessions.</p>
+<p><strong>Payloads:</strong></p>
+<p><strong>ArgUS 1-1:</strong> The ArgUS 1-1 sub-payloads were installed onto the ArgUS Multi Payload Platform and stowed in the NanoRacks Airlock (NRAL). More information about this investigation can be found <a href="https://www.nasa.gov/mission/station/research-explorer/investigation/?#id=9194">here</a>.</p>
+<p><strong>KEyence Research Microscope Testbed (KERMIT):</strong> The crew installed a USB drive to allow the ground to upload new software. More information on the KERMIT facility can be found <a href="https://www.nasa.gov/mission/station/research-explorer/facility/?#id=8120">here</a>.</p>
+<p><strong>Thor-Davis:</strong> The crew set up the Thor-Davis experiment hardware and observed several thunderstorm areas for targets of interest. Thor-Davis studies the interaction of thunderstorms with the upper atmosphere. More information on this experiment can be found <a href="https://www.nasa.gov/mission/station/research-explorer/investigation/?#id=8958">here.</a></p>
+<p><strong>Systems:</strong></p>
+<p><strong>Four Bed Carbon Dioxide (CO2) (FBCO2) Air Save Pump (ASP) Remove and Replace (R&amp;R): </strong>The crew performed an R&amp;R of the ASP within FBCO2. Recently the ASP has been showing signs of degradation and has needed to be replaced. The FBCO2 is one of three CO2 scrubbers, along with two CO2 Removal Assemblies (CDRAs), onboard the USOS portion of the ISS.</p>
+<p><strong>Crew Quarters (CQ) Deep Cleaning:</strong> Today, the crew donned the Ghost Cam-mounted headstrap before performing a deep clean of the Port CQ within Node 2. They cleaned the Intake and Exhaust Ducts, Fans, and Airflow Sensors. Afterwards, they removed the Guide Vanes and cleaned the Intake Airflow Outlet region. The crew also met with ground specialists to walkthrough and review personal airflow customizations made to crew quarters on orbit.</p>
+<p><strong>Internal Thermal Control System (ITCS) Jumper Audit:</strong> An audit of the ITCS jumpers was performed to confirm jumper locations and add individual labels to aid in certain loss-of-cooling scenarios. The ITCS provides equipment cooling and heat rejection through a combination of water loops and interface heat exchangers.</p>
+<p><strong>Look Ahead Plan</strong></p>
+<p><strong>Wednesday, July 24 (GMT 206)<br />
+</strong><strong>Payloads:</strong></p>
+<ul>
+<li>Human Research Facility (HRF) Collections</li>
+<li>NRAL Payload Mounting Plate and General-Purpose Oceaneering Latching Device-2 (GOLD-2) Installation and Camera Move</li>
+<li>SABL X CO2 Controller Valve Open</li>
+<li>SAMS-2 Screen Clean</li>
+<li>Thigh Cuff Optical Coherence Tomography-2 (OCT-2) and Cardio Ultrasound Scan Operations</li>
+</ul>
+<p><strong>Systems:</strong></p>
+<ul>
+<li>Node 1 Deep Cleaning Operations</li>
+<li>COL Stowage Management</li>
+<li>Node 3 Endcone Cleanout</li>
+</ul>
+<p><strong><em>Beginning Monday, July 29th, the IMC Daily Summary will be discontinued.</em></strong></p>
+<p><em>To learn more about the groundbreaking science and engineering happening daily on the International Space Station, please visit the space station blog at <a title="https://blogs.nasa.gov/spacestation/" href="https://blogs.nasa.gov/spacestation/" rel="noopener">https://blogs.nasa.gov/spacestation/</a>, or browse a variety of space station research resources at <a href="https://nasa.gov/iss-science" rel="noopener">https://nasa.gov/iss-science</a>.</em></p>
+]]></content:encoded>
+					
+		
+		
+			</item>
+		<item>
+		<title>ISS Daily Summary Report – 7/22/2024</title>
+		<link>https://www.nasa.gov/blogs/stationreport/2024/07/22/iss-daily-summary-report-7-22-2024/</link>
+		
+		<dc:creator><![CDATA[Bill Keeter]]></dc:creator>
+		<pubDate>Mon, 22 Jul 2024 16:00:51 +0000</pubDate>
+				<guid isPermaLink="false">https://www.nasa.gov/?blogs-migration=iss-daily-summary-report-7-22-2024</guid>
+
+					<description><![CDATA[Boeing CST-100 Crewed Flight Test (CFT): Today, the CFT crew assisted the ISS crew by performing stowage clearing operations to prepare for the ArgUS installation operations. They also uploaded new software into the Microgravity Science Glovebox (MSG) Laptop Computer (MLC). Payloads: JEM Internal Ball Camera 2: The JEM Internal Ball Camera Robot 2 was setup …]]></description>
+										<content:encoded><![CDATA[<p><strong>Boeing CST-100 Crewed Flight Test (CFT):</strong> Today, the CFT crew assisted the ISS crew by performing stowage clearing operations to prepare for the ArgUS installation operations. They also uploaded new software into the Microgravity Science Glovebox (MSG) Laptop Computer (MLC).</p>
+<p><strong>Payloads:</strong></p>
+<p><strong>JEM Internal Ball Camera 2:</strong> The JEM Internal Ball Camera Robot 2 was setup and a checkout was performed using different docking station locations. More about this investigation can be found <a href="https://www.nasa.gov/mission/station/research-explorer/investigation/?#id=8065">here</a>.</p>
+<p><strong>MSG:</strong> The MLC was uploaded with new software. More about this facility can be found <a href="https://www.nasa.gov/mission/station/research-explorer/facility/?#id=341">here</a>.</p>
+<p><strong>Systems:</strong></p>
+<p><strong>ArgUS Preparation Operations:</strong> Today, the crew performed several stowage operations in the Node 3 Endcone and the NanoRacks Airlock (NRAL). The ArgUS adaptor was installed on the JEM Airlock (JEMAL) slide table in preparation for tomorrow, when a group of sub-payloads will be installed. ArGUS is a payload adapter that, when attached to the external platform Bartolomeo, allows multiple payloads to fit into one Bartolomeo payload slot. </p>
+<p><strong>Crew Quarters (CQ) Deep Cleaning:</strong> Today, the crew donned the Ghost Cam-mounted headstrap before performing a deep clean of both the deck and overhead CQs within Node 2. They cleaned the Intake and Exhaust Ducts, Fans, and Airflow Sensors.  Afterwards, they removed the Guide Vanes and cleaned the Intake Airflow Outlet region.</p>
+<p><strong>ISS Safety Video Survey:</strong> The crew performed a video survey of Node 2, Columbus, and JPM. The ISS Safety Video Survey involves obtaining video of the interior volume that allows the ground team to assess the current vehicle configuration and to identify any areas of concern related to ventilation blockage, flammability hazards, emergency egress paths, access to fire ports, and safety equipment.  The Safety Video Survey is performed approximately every six months.</p>
+<p><strong>Node 2 Stowage Management: </strong>The crew took inventory of and reorganized stowage in Node 2. Several ISS crew members managed stowage, including disposal of unneeded common trash and relocating items as needed for the betterment of day-to-day operations.</p>
+<p><strong>Look Ahead Plan</strong></p>
+<p><strong>Tuesday, July 23 (GMT 205)<br />
+</strong><strong>Payloads:</strong></p>
+<ul>
+<li>ArgUS 1-1 Sub-Payload and Plate Install in NRAL</li>
+<li>General-purpose Oceaneering Latching Device-2 (GOLD-2) – NRAL Camera Adjust</li>
+<li>Human Research Facility (HRF) Collections</li>
+<li>KEyence Research MIcroscope Testbed (KERMIT) Software Update</li>
+<li>Life Support Glovebox (LSG) Filter R&amp;R</li>
+<li>Sleep In Orbit Photo</li>
+<li>Thigh Cuff – Hardware Prep and Review</li>
+<li>THOR-Davis Session</li>
+</ul>
+<p><strong>Systems:</strong></p>
+<ul>
+<li>ArgUS Deploy</li>
+<li>In-Flight Maintenance (IFM) Four Bed Air Save Pump Remove and Replace (R&amp;R)</li>
+<li>CQ Deep Cleaning</li>
+<li>CQ Airflow Measurement</li>
+</ul>
+<p><strong><em>Beginning Monday, July 29th, the IMC Daily Summary will be discontinued.</em></strong></p>
+<p><em>To learn more about the groundbreaking science and engineering happening daily on the International Space Station, please visit the space station blog at <a title="https://blogs.nasa.gov/spacestation/" href="https://blogs.nasa.gov/spacestation/" rel="noopener">https://blogs.nasa.gov/spacestation/</a>, or browse a variety of space station research resources at <a href="https://nasa.gov/iss-science" rel="noopener">https://nasa.gov/iss-science</a>.</em></p>
+]]></content:encoded>
+					
+		
+		
+			</item>
+		<item>
+		<title>ISS Daily Summary Report – 7/18/2024</title>
+		<link>https://www.nasa.gov/blogs/stationreport/2024/07/18/iss-daily-summary-report-7-18-2024/</link>
+		
+		<dc:creator><![CDATA[Bill Keeter]]></dc:creator>
+		<pubDate>Thu, 18 Jul 2024 16:00:38 +0000</pubDate>
+				<guid isPermaLink="false">https://www.nasa.gov/?blogs-migration=iss-daily-summary-report-7-18-2024</guid>
+
+					<description><![CDATA[Boeing CST-100 Crewed Flight Test (CFT): Today, the CFT crew assisted the ISS crew with a few payload activities and completed Onboard Training for Backup Flight Control Proficiency. Payloads: Electro-static Levitation Furnace (ELF): The ELF cartridge holder containing the latest melted sample was removed and replaced with a new sample holder and sample. The completed …]]></description>
+										<content:encoded><![CDATA[<p><strong>Boeing CST-100 Crewed Flight Test (CFT): </strong>Today, the CFT crew assisted the ISS crew with a few payload activities and completed Onboard Training for Backup Flight Control Proficiency.</p>
+<p><strong>Payloads:</strong></p>
+<p><strong>Electro-static Levitation Furnace (ELF):</strong> The ELF cartridge holder containing the latest melted sample was removed and replaced with a new sample holder and sample. The completed sample was stowed for return. More information on this current experiment can be found <a href="https://www.nasa.gov/mission/station/research-explorer/investigation/?#id=1738">here.</a></p>
+<p><strong>ISS Ham Radio:</strong> The crew participated in an ISS Ham contact with Hokusetsu District Osaka Council Scout Association of Japan, Toyonaka, Japan. More information on this experiment can be found <a href="https://www.nasa.gov/mission/station/research-explorer/facility/?#id=337">here.</a></p>
+<p><strong>Nano Particle Haloing Suspension:</strong> The Nano Particle Haloing Suspension hardware was installed into the Microgravity Science Glovebox (MSG) facility. More information on this experiment can be found <a href="https://www.nasa.gov/mission/station/research-explorer/investigation/?#id=8366">here</a>.</p>
+<p><strong>Thigh Cuff:</strong> In support of the Thigh Cuff investigation, the crew performed ultrasound scans, Optical Coherence Tomography (OCT), and blood pressure measurements. More information on this investigation can be found <a href="https://www.nasa.gov/mission/station/research-explorer/investigation/?#id=8984">here</a>.</p>
+<p><strong>STEMonstration Earth Science Demonstration:</strong> An educational video was recorded explaining the basic structure and function of DNA and how scientific instruments on the International Space Station are used to study DNA in microgravity. More information on this experiment can be found <a href="https://www.nasa.gov/mission/station/research-explorer/facility/?#id=8998">here</a>.<strong><em> [Completed 7/17/24]</em></strong></p>
+<p><strong>Systems:</strong></p>
+<p><strong>USOS Food Audit:</strong> Today, the crew continued an ongoing food audit of USOS food storage onboard the ISS.  It is important to keep an accurate account of all food available on-orbit.  This detailed inventory will be used to determine what food items will be provisioned on future Cargo visits to the ISS.</p>
+<p><strong>Power Tool Battery Charge: </strong>Eight of the 2.0 Amp-hour battery packs were gathered, recharged, and verified for full charge.  The batteries used for USOS on-orbit operations are standard -302 Nickel Metal Hydride (NiMH) batteries.  Power Tool batteries are used by the Driver Drill, Impact Driver, Soldering Iron, Fiberscope, and some payloads.</p>
+<p><strong>Safety Video Followup: </strong>The crew completed followup actions to remediate a pair of safety violations identified during the ISS Safety Video Survey.  The ISS Safety Video survey is a video of the interior volume that allows the ground team to assess the current vehicle configuration and identify areas of concern related to ventilation blockage, flammability hazards, emergency egress paths, access to fire ports, and safety equipment.  The video was recorded last Friday and is performed approximately every six months.</p>
+<p><strong>Look Ahead Plan</strong></p>
+<p><strong>Friday, July 19 (GMT 201)<br />
+</strong><strong>Payloads:</strong></p>
+<ul>
+<li>Astrobee Off</li>
+</ul>
+<p><strong>Systems:</strong></p>
+<ul>
+<li>Crew Off-duty</li>
+</ul>
+<p><strong>Saturday, July 13 (GMT 202)<br />
+</strong><strong>Payloads:</strong></p>
+<ul>
+<li>THOR Davis Session</li>
+</ul>
+<p><strong>Systems:</strong></p>
+<ul>
+<li>Crew Off-Duty</li>
+</ul>
+<p><strong>Sunday, July 14 (GMT 203) </strong></p>
+<ul>
+<li>Crew Off-Duty</li>
+</ul>
+<p><strong>Monday, July 15 (GMT 204)<br />
+</strong><strong>Payloads:</strong></p>
+<ul>
+<li>Circadian Light Panel Install</li>
+<li>Human Research Facility (HRF) Collection Setup</li>
+<li>JAXA Robotic 2 Camera Checkout Prep</li>
+<li>Lumina USB Drive to Dosimeter Connect</li>
+<li>NanoRacks Airlock and External Platform Prep (NREP)</li>
+<li>Sleep In Orbit Post and Pre Sleep Operations</li>
+</ul>
+<p><strong>Systems:</strong></p>
+<ul>
+<li>Node 3 Endcone Stowage Cleanout</li>
+<li>Columbus Power Chains Reconfiguration</li>
+<li>Photo/TV Safety Video Survey</li>
+</ul>
+<p><strong><em>Beginning Monday, July 29th, the IMC Daily Summary will be discontinued.</em></strong></p>
+<p><em>To learn more about the groundbreaking science and engineering happening daily on the International Space Station, please visit the space station blog at <a title="https://blogs.nasa.gov/spacestation/" href="https://blogs.nasa.gov/spacestation/" rel="noopener">https://blogs.nasa.gov/spacestation/</a>, or browse a variety of space station research resources at <a href="https://nasa.gov/iss-science" rel="noopener">https://nasa.gov/iss-science</a>.</em></p>
+]]></content:encoded>
+					
+		
+		
+			</item>
+		<item>
+		<title>ISS Daily Summary Report – 7/17/2024</title>
+		<link>https://www.nasa.gov/blogs/stationreport/2024/07/17/iss-daily-summary-report-7-17-2024/</link>
+		
+		<dc:creator><![CDATA[Bill Keeter]]></dc:creator>
+		<pubDate>Wed, 17 Jul 2024 16:00:39 +0000</pubDate>
+				<guid isPermaLink="false">https://www.nasa.gov/?blogs-migration=iss-daily-summary-report-7-17-2024</guid>
+
+					<description><![CDATA[Boeing CST-100 Crewed Flight Test (CFT): Today, the CFT crew assisted the ISS crew by completing the ongoing Plant Water Management 6 (PWM-6) activities. Payloads: Plant Ultraviolet-B (Plant UV-B): A laptop was connected and setup in preparation for future Plant UV-B operations. More information on this experiment can be found here. Plant Water Management 6 …]]></description>
+										<content:encoded><![CDATA[<p><strong>Boeing CST-100 Crewed Flight Test (CFT): </strong>Today, the CFT crew assisted the ISS crew by completing the ongoing Plant Water Management 6 (PWM-6) activities.</p>
+<p><strong>Payloads:</strong></p>
+<p><strong>Plant Ultraviolet-B (Plant UV-B):</strong> A laptop was connected and setup in preparation for future Plant UV-B operations. More information on this experiment can be found <a href="https://www.nasa.gov/mission/station/research-explorer/investigation/?#id=9013">here</a>.</p>
+<p><strong>Plant Water Management 6 (PWM-6):</strong> The crew performed various Root tests with PWM-6 hardware. The tests will model roots that imitate various absorption rates. More about this experiment can be found <a href="https://www.nasa.gov/mission/station/research-explorer/investigation/?#id=8857">here</a>.</p>
+<p><strong>Zero Robotics-Astrobee:</strong> The crew positioned the Astrobee Free Flyer in the JEM and assisted the ground team in conducting multiple gesture-recognition software test runs. This set of maneuvers is a part of a competition dry run for UAE Zero Robotics Programming Challenge (UAE ZRPC). More information on this experiment can be found <a href="https://www.nasa.gov/mission/station/research-explorer/investigation/?#id=7856">here.</a></p>
+<p><strong>Systems:</strong></p>
+<p><strong>N3 Moderate Temperature Loop (MTL) Gas Trap Plug replacement</strong>: The N3 MTL Gas Trap Plug was replaced following the Fluid System Servicer (FSS) operations completed last week.  The MTL is one of the cooling loops that make up the overall Internal thermal Control System (ITCS) of the ISS.  The ITCS provides equipment cooling and heat rejection through a combination of water loops and heat exchangers.</p>
+<p><strong>General Stowage Management: </strong>The crew took inventory of and reorganized different sections of the ISS. Hardware related to the toilet system was collected and reorganized to improve stowage efficiency for future operations.  Several members of the crew worked in the Lab to organize and manage stowage, including disposal of unneeded common trash and relocating items as needed for the betterment of day-to-day operations.</p>
+<p><strong>Look Ahead Plan</strong></p>
+<p><strong>Thursday, July 18 (GMT 200)<br />
+</strong><strong>Payloads:</strong></p>
+<ul>
+<li>Astrobee Stowage Replace</li>
+<li>Electrostatic Levitation Furnace (ELF) Sample Holder Exchange</li>
+<li>ISS Ham Pass</li>
+<li>Minus Eighty-Degree Laboratory Freezer for ISS (MELFI) Icebrick Installs</li>
+<li>Nano Particle Haloing Suspension Hardware Setup</li>
+<li>Sleep In Orbit Post and Pre Sleep Operations</li>
+</ul>
+<ul>
+<li>Thigh Cuff Optical Coherence Tomography-2 (OCT-2) and Cardio Ultrasound Scan Operations</li>
+</ul>
+<p><strong>Systems:</strong></p>
+<ul>
+<li>JEM Stowage Reconfigure</li>
+<li>USOS Food Audit</li>
+<li>Node 2 and COL Safety Video Survey</li>
+<li>CFT Onboard Training (OBT) for Backup Flight Control Proficiency</li>
+</ul>
+<p><strong><em>Beginning Monday, July 29th, the IMC Daily Summary will be discontinued.</em></strong></p>
+<p><em>To learn more about the groundbreaking science and engineering happening daily on the International Space Station, please visit the space station blog at <a title="https://blogs.nasa.gov/spacestation/" href="https://blogs.nasa.gov/spacestation/" rel="noopener">https://blogs.nasa.gov/spacestation/</a>, or browse a variety of space station research resources at <a href="https://nasa.gov/iss-science" rel="noopener">https://nasa.gov/iss-science</a>.</em></p>
+]]></content:encoded>
+					
+		
+		
+			</item>
+		<item>
+		<title>ISS Daily Summary Report – 7/16/2024</title>
+		<link>https://www.nasa.gov/blogs/stationreport/2024/07/16/iss-daily-summary-report-7-16-2024/</link>
+		
+		<dc:creator><![CDATA[Bill Keeter]]></dc:creator>
+		<pubDate>Tue, 16 Jul 2024 16:00:17 +0000</pubDate>
+				<guid isPermaLink="false">https://www.nasa.gov/?blogs-migration=iss-daily-summary-report-7-16-2024</guid>
+
+					<description><![CDATA[Boeing CST-100 Crewed Flight Test (CFT): Today, the CFT crew assisted the ISS crew by completing a Waste Hygiene Compartment (WHC) Filter Removal &#038; Replacement (R&#038;R), and completing various hydroponic flow tests with Plant Water Management 6 (PWM-6) hardware. Payloads: Lumina: The crew power-cycled the Lumina hardware, and transferred the science data to a Station …]]></description>
+										<content:encoded><![CDATA[<p><strong>Boeing CST-100 Crewed Flight Test (CFT): </strong>Today, the CFT crew assisted the ISS crew by completing a Waste Hygiene Compartment (WHC) Filter Removal &amp; Replacement (R&amp;R), and completing various hydroponic flow tests with Plant Water Management 6 (PWM-6) hardware.</p>
+<p><strong>Payloads:</strong></p>
+<p><strong>Lumina: </strong>The crew power-cycled the Lumina hardware, and transferred the science data to a Station Support Computer (SSC) for subsequent downlink. Lumina uses optical fibers which darken on exposure to radiation as detectors. More information on the Lumina fiber dosimeter experiment can be found <a href="https://www.nasa.gov/mission/station/research-explorer/investigation/?#id=8444">here</a>.</p>
+<p><strong>Plant Water Management 5 and 6 (PWM-5/6):</strong> The crew performed various hydroponic flow tests with PWM-6 hardware. More about the PWM experiment can be found <a href="https://www.nasa.gov/mission/station/research-explorer/investigation/?#id=8857">here</a>.</p>
+<p><strong>Zero Treadmill-2 (Zero T2): </strong>A crewmember performed an Isometric Mid-Thigh Pull (IMTP) exercise on Advanced Resistive Exercise Device (ARED) equipment. More information on the Zero T2 experiment can be found <a href="https://www.nasa.gov/mission/station/research-explorer/investigation/?#id=8574">here</a>.</p>
+<p><strong>Systems:</strong></p>
+<p><strong>WHC Pump Separator and Filter Hose R&amp;R: </strong>Today, the crew performed In-Flight Maintenance on the WHC system, completing both a Pump Separator R&amp;R and a Filter Hose R&amp;R. The Pump Separator is a component of the WHC system that separates liquid from air.  The Filter Hose is a particulate filter inside the WHC that needs to be replaced every 12 months.  The WHC feeds directly into the Urine Processor Assembly (UPA) which purifies waste liquid into potable water onboard the ISS.</p>
+<p><strong>Functional Cargo Block (FGB) USOS Audit:</strong> The crew continued an audit of USOS hardware stowed in the FGB.  Audits are regularly performed in different sections of the ISS to ensure an accurate inventory of on-orbit equipment.  The FGB, also known as Zarya was the first module of the ISS, primarily used for storage.  It is the module connecting the Russian SM and the USOS Node 1.</p>
+<p><strong>PMA1 and FGB Hardware Gather:</strong> Today, the crew gathered equipment from PMA1 and the FGB.  This equipment was moved to Node 1 to insure accessibility during upcoming operations.</p>
+<p><strong>Look Ahead Plan</strong></p>
+<p><strong>Wednesday, July 17 (GMT 199)<br />
+</strong><strong>Payloads:</strong></p>
+<ul>
+<li>Astrobee Zero-Robotics Dry Run</li>
+<li>BioLab Glovebox Gloves Check</li>
+<li>ELC-6 Troubleshoot – Remove cable from ER9B And Use On ELC-6 Hooked Connected to ER11B</li>
+<li>JAXA Commercial Video Take 2 (PLT setup) Checkout with Materials Arriving On NG-21</li>
+<li>KEyence Research MIcroscope Testbed (KERMIT) USB Key Insert</li>
+<li>Minus Eighty-Degree Laboratory Freezer for ISS (MELFI) Icebrick Installs</li>
+<li>Plant UV-B Laptop Setup</li>
+<li>Plant Water Management 6 – Root Test Operations</li>
+<li>Protein Crystallization Research Facility (PCRF) Relocation</li>
+<li>Sleep In Orbit Post and Pre Sleep Operations and Battery Charge</li>
+<li>STEMonstration DNA demo</li>
+<li>Thigh Cuff Hardware Prep</li>
+</ul>
+<p><strong>Systems:</strong></p>
+<ul>
+<li>COL Stowage Management</li>
+<li>Node 3 Moderate Temperature Loop (MTL) Gas Trap Plug Replacement</li>
+<li>Toilet Hardware Cleanup</li>
+<li>USOS Food Audit</li>
+<li>LAB Stowage Management</li>
+</ul>
+<p><strong><em>Beginning Monday, July 29th, the IMC Daily Summary will be discontinued.</em></strong></p>
+<p><em>To learn more about the groundbreaking science and engineering happening daily on the International Space Station, please visit the space station blog at <a title="https://blogs.nasa.gov/spacestation/" href="https://blogs.nasa.gov/spacestation/" rel="noopener">https://blogs.nasa.gov/spacestation/</a>, or browse a variety of space station research resources at <a href="https://nasa.gov/iss-science" rel="noopener">https://nasa.gov/iss-science</a>.</em></p>
+]]></content:encoded>
+					
+		
+		
+			</item>
+		<item>
+		<title>ISS Daily Summary Report – 7/15/2024</title>
+		<link>https://www.nasa.gov/blogs/stationreport/2024/07/15/iss-daily-summary-report-7-15-2024/</link>
+		
+		<dc:creator><![CDATA[Bill Keeter]]></dc:creator>
+		<pubDate>Mon, 15 Jul 2024 16:00:09 +0000</pubDate>
+				<guid isPermaLink="false">https://www.nasa.gov/?blogs-migration=iss-daily-summary-report-7-15-2024</guid>
+
+					<description><![CDATA[Boeing CST-100 Crewed Flight Test (CFT): Today, the CFT crew assisted the ISS crew by performing a USOS food audit and continuing to complete different payload activities. Payloads: Combustion Integrated Rack (CIR): Fuel Oxidizer Management Assembly (FOMA) Calibration was performed. The upper rack doors were opened, the bottle valves were closed, the pressure in the …]]></description>
+										<content:encoded><![CDATA[<p><strong>Boeing CST-100 Crewed Flight Test (CFT): </strong>Today, the CFT crew assisted the ISS crew by performing a USOS food audit and continuing to complete different payload activities.</p>
+<p><strong>Payloads:</strong></p>
+<p><strong>Combustion Integrated Rack (CIR):</strong> <strong>Fuel Oxidizer Management Assembly (FOMA) Calibration</strong><strong> was performed. </strong>The upper rack doors were opened, the bottle valves were closed, the pressure in the manifolds was relieved, and then the upper rack doors were reclosed. The CIR rack will be powered to collect pressure transducer data with the bottle pressure transducers at ambient pressure and then the rack will be powered down. <strong>More about this facility can be found </strong><a href="https://www.nasa.gov/mission/station/research-explorer/facility/?#id=317">here</a><strong>.</strong></p>
+<p><strong>European Drawer Rack-2 (EDR-2):</strong> The laptop was uploaded with new software and the crew performed a checkout. More about this facility can be found <a href="https://www.nasa.gov/mission/station/research-explorer/facility/?#id=7978">here</a>.</p>
+<p><strong>Plant Water Management 5 and 6:</strong> The crew performed hardware gather and setup in preparation for this week’s operations. More about this experiment can be found <a href="https://www.nasa.gov/mission/station/research-explorer/investigation/?#id=8857">here</a>.</p>
+<p><strong>Space Fibers-3:</strong> The crew performed a hardware audit on the Space Fibers-3 experiment equipment and the sample preforms. More about this experiment can be found <a href="https://www.nasa.gov/mission/station/research-explorer/investigation/?#id=7375">here.</a></p>
+<p><strong>Systems:</strong></p>
+<p><strong>USOS Food Audit:</strong> Today, the crew continued an ongoing food audit of USOS food storage onboard the ISS.  It is important to keep an accurate account of all food available on-orbit.  This detailed inventory will be used to determine what food items will be provisioned on future Cargo visits to the ISS.</p>
+<p><strong>Extravehicular Activity (EVA) Service and Cooling Umbilical (SCU) Checkout and water (H2O) recharge:</strong> The newly installed SCU was activated and checked ou. The crew also refilled the EMU feedwater tanks with water after being used to charge the SCU cooling lines.</p>
+<p><strong>Compound Specific Analyzer – Combustion Products (CSA-CP) Maintenance: </strong>Today, the crew replaced the battery packs in all CSA-CPs and calibrated the units. The CSA-CPs provide real-time readings following a combustion event and subsequent clean-up efforts. The CSA-CPs are also used for continuous monitoring of carbon monoxide levels in the ISS.</p>
+<p><strong>Look Ahead Plan</strong></p>
+<p><strong>Tuesday, July 16 (GMT 198)<br />
+</strong><strong>Payloads:</strong></p>
+<ul>
+<li>Lumina Data Transfer</li>
+<li>Minus Eighty-Degree Laboratory Freezer for ISS (MELFI) Icebrick Installs</li>
+<li>Plant Water Management – Test Cell Operations</li>
+<li>Sleep In Orbit Post and Pre Sleep Operations</li>
+<li>Veggie Light Meter Installation</li>
+<li>Zero T2 Isometric Mid-Thigh Pull</li>
+</ul>
+<p><strong>Systems:</strong></p>
+<ul>
+<li>Crew Dragon Seat Liner Installation</li>
+<li>Crew Dragon Tablet Sync</li>
+<li>USOS Food Audit</li>
+<li>On-Board Training (OBT) Crew Dragon Emergency Review</li>
+<li>Waste and Hygiene Compartment (WHC) Manual Fill Operations</li>
+</ul>
+<p><strong><em>Beginning Monday, July 29th, the IMC Daily Summary will be discontinued.</em></strong></p>
+<p><em>To learn more about the groundbreaking science and engineering happening daily on the International Space Station, please visit the space station blog at <a title="https://blogs.nasa.gov/spacestation/" href="https://blogs.nasa.gov/spacestation/" rel="noopener">https://blogs.nasa.gov/spacestation/</a>, or browse a variety of space station research resources at <a href="https://nasa.gov/iss-science" rel="noopener">https://nasa.gov/iss-science</a>.</em></p>
+]]></content:encoded>
+					
+		
+		
+			</item>
+	</channel>
+</rss>
