@@ -633,3 +633,37 @@ button.wg:hover { border-color: rgb(255 255 255 / 0.22); }
 .vc .dial-ctl { border-radius: 50%; }
 .vc .sq[aria-pressed='true'] { border-color: #fff; color: #fff; }
 .vc .sq[aria-pressed='false'] { color: rgb(255 255 255 / 0.4); }
+/* HUD text stays in safe zones: a soft dark mask at the sides keeps it clear of the globe */
+.safe { position: absolute; top: 0; bottom: 0; z-index: 9; pointer-events: none; width: 680px; }
+.safe-left { left: 0; background: linear-gradient(90deg, rgb(2 4 10 / 0.92) 0, rgb(2 4 10 / 0.75) 60%, transparent 100%); }
+.safe-right { right: 0; background: linear-gradient(270deg, rgb(2 4 10 / 0.92) 0, rgb(2 4 10 / 0.75) 60%, transparent 100%); }
+.pat, .pat-actions { z-index: 20; }
+.sys-left { max-width: 600px; }
+.sys-left .pat-word { font-size: 72px; }
+.cab-left, .cab-right { width: 560px; }
+.cab-left .pat-line, .cab-right .pat-line { white-space: normal; }
+/* view controls: one tidy row, bottom right */
+.vc { flex-direction: row; align-items: center; gap: 8px; }
+.vc .vc-zoom { flex-direction: row; gap: 6px; }
+.vc .dial-ctl { width: 96px; height: 96px; }
+.vc .dial-ctl::before { inset: 8px; }
+.vc .dial-ctl button { width: 44px; height: 44px; }
+.vc-n { left: 26px !important; top: -10px !important; width: 44px !important; height: 30px !important; }
+.vc .vc-layers .sq { width: 76px; height: 56px; }
+.crew-right { right: 56px; top: 104px; width: 440px; bottom: 150px; }
+@media (max-width: 760px) { .safe { display: none; } }
+/* QA: readable captions, list fits, credits target */
+.vrow-l small, .vrow-v small { font-size: 11.5px; }
+.vrow { min-height: 52px; }
+.vlist { max-height: calc(100% - 200px); overflow-y: auto; }
+.cx-credits-btn { height: 32px; padding: 0 12px; font-size: 11px; }
+.hot-keys { bottom: auto; top: 84px; }
+@media (max-width: 760px) {
+  .cx-top { display: flex; flex-wrap: wrap; height: auto; min-height: 76px; padding: 8px 12px; gap: 8px; }
+  .cx-brand { flex: 1; }
+  .cx-crew .sq { width: 56px; min-width: 56px; }
+  .cx-icons { gap: 10px; }
+  .cx-tabs { order: 3; width: 100%; justify-content: space-between; }
+  .cx-tabs a { flex: 1; }
+  .vlist { position: relative; right: auto; top: auto; width: auto; max-height: none; margin: 10px 16px; }
+}

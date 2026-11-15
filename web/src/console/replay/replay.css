@@ -1,0 +1,111 @@
+/* Storm replay in the console's Crew pattern. Deep black space, text on the image, hairlines and
+   bracket corners only; amber = watch, red = warning, and two outcome colours of their own:
+   violet = a storm that came without a warning (miss), blue = a warning with no storm (false alarm). */
+.rp {
+  --rp-watch: 245 166 35;
+  --rp-warning: 239 68 68;
+  --rp-miss: 186 140 255;
+  --rp-fa: 110 168 255;
+  --rp-none: 150 168 178;
+  position: relative;
+  height: 100%;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-areas: 'alarm alarm' 'read sun' 'bottom bottom';
+  gap: 16px 48px;
+  color: #fff;
+  font-family: var(--font-sans, 'Inter Tight', system-ui, sans-serif);
+}
+
+/* alarm: the one filled block on the page, because it is the one thing that must be seen */
+.rp-alarm {
+  grid-area: alarm;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px 24px;
+  padding: 14px 20px;
+  background: rgb(var(--rp-warning));
+  color: #fff;
+  font-family: var(--font-mono, monospace);
+  font-size: 14px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  animation: rp-in 220ms ease-out;
+}
+.rp-alarm-lead { font-size: 13px; letter-spacing: 0.04em; text-transform: none; }
+
+.rp-read { grid-area: read; align-self: start; display: flex; flex-direction: column; gap: 14px; max-width: 560px; margin: 10px 0 0 10px; }
+.rp-word { font-size: 96px; font-weight: 200; line-height: 0.9; letter-spacing: -0.03em; color: #fff; transition: color 200ms ease-out; }
+.rp[data-level='watch'] .rp-word { color: rgb(var(--rp-watch)); }
+.rp[data-level='warning'] .rp-word { color: rgb(var(--rp-warning)); }
+.rp-line { font-variant-numeric: tabular-nums; }
+.rp-score { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+.rp-score i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; }
+.rp-score i.is-hit { background: rgb(var(--rp-warning)); }
+.rp-score i.is-miss { background: rgb(var(--rp-miss)); }
+.rp-score i.is-false-alarm { background: rgb(var(--rp-fa)); }
+
+.rp-sun { grid-area: sun; justify-self: center; align-self: center; width: min(100%, 300px); height: auto; max-height: 100%; overflow: visible; }
+.rp-axis { fill: rgb(255 255 255 / 0.55); font: 11px var(--font-mono, monospace); }
+
+.rp-dot { stroke: #050608; stroke-width: 1; transition: r 150ms ease-out; }
+.rp-dot.is-none { fill: rgb(var(--rp-none)); }
+.rp-dot.is-watch { fill: rgb(var(--rp-watch)); }
+.rp-dot.is-warning, .rp-dot.is-hit { fill: rgb(var(--rp-warning)); }
+.rp-dot.is-miss { fill: rgb(var(--rp-miss)); }
+.rp-dot.is-false-alarm { fill: rgb(var(--rp-fa)); }
+.rp-sun .rp-dot.is-latest { stroke: #fff; stroke-width: 2; }
+
+.rp-bottom { grid-area: bottom; display: flex; flex-direction: column; gap: 16px; }
+.rp-track { position: relative; height: 112px; cursor: ew-resize; touch-action: none; outline: none; }
+.rp-track:focus-visible { box-shadow: 0 0 0 1px #fff; }
+.rp-tl { width: 100%; height: 100%; display: block; }
+.rp-base { stroke: rgb(255 255 255 / 0.35); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.rp-th { stroke-width: 1; stroke-dasharray: 6 5; vector-effect: non-scaling-stroke; }
+.rp-th.is-watch { stroke: rgb(var(--rp-watch) / 0.8); }
+.rp-th.is-warning { stroke: rgb(var(--rp-warning) / 0.9); }
+.rp-onset { stroke: rgb(255 255 255 / 0.7); stroke-width: 1; stroke-dasharray: 2 4; vector-effect: non-scaling-stroke; }
+.rp-onset.is-miss { stroke: rgb(var(--rp-miss)); }
+.rp-head { stroke: #fff; stroke-width: 1.5; vector-effect: non-scaling-stroke; }
+.rp-tick { fill: rgb(255 255 255 / 0.55); font: 11px var(--font-mono, monospace); }
+.rp-th-label { position: absolute; right: 0; transform: translateY(-4px); font: 11px var(--font-mono, monospace); letter-spacing: 0.1em; text-transform: uppercase; pointer-events: none; }
+.rp-th-label.is-watch { color: rgb(var(--rp-watch)); }
+.rp-th-label.is-warning { color: rgb(var(--rp-warning)); }
+
+.rp-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 12px; }
+.rp-actions .solid { min-width: 132px; }
+.rp-actions .ghost:disabled { opacity: 0.4; cursor: default; }
+.rp-proof { margin-left: auto; text-align: right; }
+
+@keyframes rp-in { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+
+@media (max-width: 900px) {
+  .rp { grid-template-columns: 1fr; grid-template-rows: auto auto auto auto; grid-template-areas: 'alarm' 'read' 'sun' 'bottom'; gap: 20px; height: auto; min-height: 0; }
+  .rp-ticks span:nth-child(even) { display: none; }
+  .rp-read { margin: 4px 0 0 4px; }
+  .rp-word { font-size: 64px; }
+  .rp-sun { width: min(100%, 260px); }
+  .rp-track { height: 120px; }
+  .rp-proof { margin-left: 0; text-align: left; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rp-alarm { animation: none; }
+  .rp-word, .rp-dot { transition: none; }
+}
+
+/* placement inside the console (ReplayPage): below the Cabin back button, above the footer,
+   over a deep-black veil so the globe scene does not compete with the Sun */
+.rp-frame { position: absolute; inset: 156px 56px 56px; z-index: 25; overflow-y: auto; overflow-x: hidden; padding: 12px; }
+.rp-frame::before { content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none; background: #02040a; }
+@media (max-width: 900px) { .rp-frame { inset: 148px 16px 48px; } }
+.rp-lead { color: #fff; }
+
+.rp-ticks { position: absolute; left: 0; right: 0; bottom: 0; height: 16px; pointer-events: none; }
+.rp-ticks span { position: absolute; bottom: 0; transform: translateX(-50%); white-space: nowrap; font: 11px var(--font-mono, monospace); color: rgb(255 255 255 / 0.55); }
+.rp-ticks span:first-child { transform: none; }
+.rp-ticks span:last-child { transform: translateX(-100%); }

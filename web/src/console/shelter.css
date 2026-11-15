@@ -1,0 +1,18 @@
+/* Shelter drill: layout only. Type, rows and buttons come from the console pattern classes. */
+.sh-pat-left { left: 56px; top: 160px; width: 380px; }
+.sh-pat-right { right: 56px; top: 160px; width: 380px; }
+.sh-word { font-variant-numeric: tabular-nums; transition: color 200ms ease-out; }
+.sh-rule { color: rgb(var(--crit)); }
+.sh-rows { display: flex; flex-direction: column; margin: 10px 0 6px; border-bottom: 1px solid rgb(255 255 255 / 0.12); }
+.sh-rows .vrow { min-height: 52px; }
+.sh-rows .vrow:hover { background: none; }
+.sh-rows .vrow[data-on='false'] .vrow-l { color: rgb(255 255 255 / 0.55); }
+.sh-rows .vrow .cap { font-size: 10px; }
+.sh-big { font-size: 40px; }
+.solid.sh-go { background: rgb(var(--crit)); color: #fff; }
+@media (max-width: 1100px) {
+  .sh-pat-left { left: 20px; right: 20px; top: 150px; width: auto; }
+  .sh-pat-left .pat-word { font-size: 64px; }
+  .sh-pat-right { position: static; margin: 560px 20px 120px; width: auto; }
+}
+@media (prefers-reduced-motion: reduce) { .sh-word { transition: none; } }

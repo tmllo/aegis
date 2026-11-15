@@ -1,18 +1,11 @@
-// The May 2024 storm replay (the radiation concept), inside the console frame with console tokens.
-import { Link } from 'react-router-dom';
-import Radiation from '../concepts/radiation';
-import { Icon } from './ui';
+// The May 2024 storm replay inside the console frame. Back to Cabin is the Environment page's
+// own button (env-back), so this wrapper only places the replay on the deep-black scene.
+import StormReplay from './replay/StormReplay';
 
 export default function ReplayPage() {
   return (
-    <div className="cx-replay">
-      <Link to="/storm" className="cx-back">
-        <Icon name="back" size={18} />
-        Storm
-      </Link>
-      <div data-concept="radiation" className="cx-replay-body">
-        <Radiation />
-      </div>
+    <div className="rp-frame">
+      <StormReplay />
     </div>
   );
 }

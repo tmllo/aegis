@@ -10,7 +10,6 @@ import { useConsole } from './useConsole';
 const World = lazy(() => import('./World').then((m) => ({ default: m.World })));
 import { useHud } from './hud';
 import { Scramble } from './Scramble';
-import { setAudio, tick } from './audio';
 import './console.css';
 
 export const SECTIONS = [
@@ -23,14 +22,7 @@ export function Shell() {
   const { data, views, seat, cv, setCrew, day, loadState, error } = useConsole();
   const [server, setServer] = useState<boolean | null>(null);
   const nav = useNavigate();
-  const [sound, setSound] = useState(false);
   const [credits, setCredits] = useState(false);
-  // a soft tick on every tap when sound is on
-  useEffect(() => {
-    const f = (e: PointerEvent) => (e.target as HTMLElement)?.closest?.('button, a') && tick();
-    addEventListener('pointerdown', f);
-    return () => removeEventListener('pointerdown', f);
-  }, []);
   // ring reticle over hotspots: organs (from the scene), buttons and links
   const [ring, setRing] = useState<{ x: number; y: number } | null>(null);
   const hover = useHud((s) => s.hover);
@@ -95,7 +87,7 @@ export function Shell() {
         <i className="c tr" />
         <i className="c bl" />
         <i className="c br" />
-        <i className="reticle" />
+        {!(loc.pathname.startsWith('/systems') || new URLSearchParams(loc.search).get('mode') === 'replay') && <i className="reticle" />}
       </div>
       <div className="cx-page-wrap">
         <div className="cx-page" key={loc.pathname}>
@@ -132,9 +124,6 @@ export function Shell() {
           ))}
         </nav>
         <div className="cx-icons">
-          <button type="button" className="cx-sound" aria-pressed={sound} onClick={() => { setAudio(!sound); setSound(!sound); }}>
-            Sound {sound ? 'on' : 'off'}
-          </button>
           <span className="cx-day">Day {day ?? '--'}</span>
           <span className="cx-live" data-on={server || undefined} title={server ? 'Server live' : 'Offline'}>
             <i /> {server ? 'Live' : 'Offline'}

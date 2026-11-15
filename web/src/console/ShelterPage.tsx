@@ -1,10 +1,12 @@
-// Shelter drill: a real warning from storm_forecast.json replayed as a live alarm. The warning
+// Shelter drill, in the Crew screen's language (one big read, mono captions, hairline rows, one
+// white action): a real warning from storm_forecast.json replayed as a live alarm. The warning
 // arrives, a countdown runs to "particles arrive" (drill clock: one second per hour of the
 // model's real lead time), the crew moves to shelter with one confirm, and the dose with and
 // without shelter is compared. The sheltered figure is an estimate and says so.
 import { useEffect, useMemo, useState } from 'react';
 import { SHELTER_BANNER, sortedEvents } from '../core/radiation';
-import { Confirm, KV, Mark, Panel } from './ui';
+import { Confirm, Mark } from './ui';
+import './shelter.css';
 import { useConsole } from './useConsole';
 
 /** Assumed shelter effect on the storm excess. Not measured; shown on screen as an assumption. */
@@ -50,82 +52,100 @@ export default function ShelterPage() {
   const sheltered = excess != null ? normal + excess * SHELTER_KEEPS : null;
   const left = Math.max(0, lead - t);
 
+  const fmtT = (x?: string | null) => (x ?? '--').slice(0, 16).replace('T', ' ');
+  const word = phase === 'arrived' ? 'Arrived' : `${(phase === 'ready' ? lead : left).toFixed(1)} h`;
+  const line =
+    phase === 'ready' ? 'Lead time the model gave' : phase === 'warning' ? 'Particles arrive in · crew exposed' : phase === 'sheltered' ? 'Particles arrive in · crew in shelter' : 'Particles on station';
+  const steps: [string, boolean][] = [
+    ['Warning received', phase !== 'ready'],
+    ['Crew in shelter', phase === 'sheltered' || (phase === 'arrived' && t > 0)],
+    ['Particles arrive', phase === 'arrived'],
+  ];
+
   return (
     <>
-      <div className="sh-center" data-phase={phase}>
-        <span className="label">{phase === 'ready' ? 'Drill' : phase === 'arrived' ? 'Particles arrived' : 'Particles arrive in'}</span>
-        <b className="sh-count">{phase === 'ready' ? `${lead.toFixed(1)} h` : phase === 'arrived' ? '0.0 h' : `${left.toFixed(1)} h`}</b>
-        <span className="note">{phase === 'ready' ? 'Lead time the model gave for this storm' : 'Drill clock: 1 s = 1 h'}</span>
-        {phase !== 'ready' && <p className="sh-banner">{SHELTER_BANNER}</p>}
-        <div className="row2" style={{ marginTop: 18 }}>
-          {phase === 'ready' && (
-            <button type="button" className="btn btn-primary" onClick={() => { setT(0); setPhase('warning'); }}>
-              Start drill
-            </button>
-          )}
-          {phase === 'warning' && (
-            <button type="button" className="btn btn-alert" style={{ padding: '0 28px' }} onClick={() => setAsk(true)}>
-              Move to shelter
-            </button>
-          )}
-          {(phase === 'sheltered' || phase === 'arrived') && (
-            <button type="button" className="btn" onClick={() => { setT(0); setPhase('ready'); }}>
-              Reset drill
-            </button>
-          )}
-        </div>
-      </div>
+      <i className="safe safe-left" aria-hidden />
+      <i className="safe safe-right" aria-hidden />
 
-      <Panel label="Warning" icon="alert" aside={ev.flare_class} className="sh-left">
-        <dl className="kvs">
-          <KV k="Flare peak" v={ev.peak_time.slice(0, 16).replace('T', ' ')} />
-          <KV k="Class" v={ev.flare_class} />
-          <KV k="Source" v={ev.source_location ?? '--'} />
-          <KV k="Storm probability" v={`${Math.round(ev.p_storm * 100)} %`} status="red" />
-          <KV k="Linked CME" v={ev.has_linked_cme ? `${ev.cme_speed_kms ?? '--'} km/s` : 'None'} />
-          <KV k="Lead time" v={`${lead.toFixed(1)} h`} />
-          <KV k="Storm onset" v={(ev.storm_onset_time ?? '--').slice(0, 16).replace('T', ' ')} />
-        </dl>
-        <div className="steps gap">
-          {[
-            ['Warning received', phase !== 'ready'],
-            ['Crew to shelter', phase === 'sheltered' || (phase === 'arrived' && t > 0)],
-            ['Particles arrive', phase === 'arrived'],
-          ].map(([l, on], k) => (
-            <div key={l as string} className="step">
-              <span className="step-n">{String(k + 1).padStart(2, '0')}</span>
+      <section className="pat sh-pat-left" aria-live="polite">
+        <span className="cap">Shelter drill · {ev.flare_class} flare · {fmtT(ev.peak_time)}</span>
+        <b className={`pat-word sh-word ${phase === 'warning' ? 'st-red' : ''}`}>{word}</b>
+        <span className="cap pat-line">{line}{phase === 'warning' || phase === 'sheltered' ? ' · 1 s = 1 h' : ''}</span>
+        {phase !== 'ready' && <span className="cap sh-rule">{SHELTER_BANNER}</span>}
+        <div className="sh-rows">
+          {steps.map(([l, on]) => (
+            <div key={l} className="vrow" data-on={on}>
               <Mark s={on ? 'green' : null} />
-              <span className="step-t">{l as string}</span>
-              <span className="step-v" />
+              <span className="vrow-l">{l}</span>
+              <span className="cap">{on ? 'Done' : ''}</span>
             </div>
           ))}
         </div>
-      </Panel>
+        <span className="cap">
+          Storm chance {Math.round(ev.p_storm * 100)} % · {ev.has_linked_cme ? `CME ${ev.cme_speed_kms ?? '--'} km/s` : 'no CME'} · source {ev.source_location ?? '--'}
+        </span>
+        <span className="cap">Storm onset {fmtT(ev.storm_onset_time)}</span>
+      </section>
 
-      <Panel label={`Dose · ${seat[cv.m.id]}`} icon="dial" aside={`Storm day ${stormDay ?? '--'}`} className="sh-right">
-        <dl className="stats">
-          <div className="st" data-status="red">
-            <dt>Not sheltered</dt>
-            <dd>
+      <section className="pat sh-pat-right">
+        <span className="cap">Dose · {seat[cv.m.id]} · storm day {stormDay ?? '--'}</span>
+        <div className="sh-rows">
+          <div className="vrow" data-status="red">
+            <Mark s="red" />
+            <span className="vrow-l">Not sheltered</span>
+            <span className="vrow-v sh-big">
               {storm?.toFixed(2) ?? '--'}
               <small>mSv</small>
-            </dd>
+            </span>
           </div>
-          <div className="st">
-            <dt>Sheltered (estimate)</dt>
-            <dd>
+          <div className="vrow">
+            <Mark s="green" />
+            <span className="vrow-l">
+              Sheltered
+              <small>estimate</small>
+            </span>
+            <span className="vrow-v sh-big">
               {sheltered?.toFixed(2) ?? '--'}
               <small>mSv</small>
-            </dd>
+            </span>
           </div>
-        </dl>
-        <dl className="kvs gap">
-          <KV k="Site normal" v={`${normal} mSv/d`} />
-          <KV k="Storm excess" v={excess != null ? `${excess.toFixed(2)} mSv` : '--'} />
-          <KV k="Saved (estimate)" v={excess != null ? `${(excess * (1 - SHELTER_KEEPS)).toFixed(2)} mSv` : '--'} />
-        </dl>
-        <p className="note gap">Not sheltered: the simulated crew dose on the storm days. Sheltered: an estimate that assumes the shelter halves the storm excess; not measured.</p>
-      </Panel>
+          <div className="vrow">
+            <span />
+            <span className="vrow-l">Saved</span>
+            <span className="vrow-v">
+              {excess != null ? (excess * (1 - SHELTER_KEEPS)).toFixed(2) : '--'}
+              <small>mSv</small>
+            </span>
+          </div>
+          <div className="vrow">
+            <span />
+            <span className="vrow-l">Site normal</span>
+            <span className="vrow-v">
+              {normal}
+              <small>mSv/d</small>
+            </span>
+          </div>
+        </div>
+        <span className="cap">Sheltered assumes the shelter halves the storm excess · not measured</span>
+      </section>
+
+      <div className="pat-actions">
+        {phase === 'ready' && (
+          <button type="button" className="solid" onClick={() => { setT(0); setPhase('warning'); }}>
+            Start drill
+          </button>
+        )}
+        {phase === 'warning' && (
+          <button type="button" className="solid sh-go" onClick={() => setAsk(true)}>
+            Move to shelter
+          </button>
+        )}
+        {(phase === 'sheltered' || phase === 'arrived') && (
+          <button type="button" className="ghost" onClick={() => { setT(0); setPhase('ready'); }}>
+            Reset drill
+          </button>
+        )}
+      </div>
 
       <Confirm
         open={ask}

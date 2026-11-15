@@ -35,9 +35,9 @@
   --neutral-mark: 180 178 167;
 
   /* type */
-  --font-sans: 'IBM Plex Sans', system-ui, sans-serif;
+  --font-sans: 'Inter Tight', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
-  --font-display: 'Instrument Serif', 'Times New Roman', serif;
+  --font-display: 'Inter Tight', system-ui, sans-serif;
 
   /* shape: square corners; 2 px only where a fill needs softening */
   --radius-sm: 0px;

@@ -17,7 +17,6 @@ import { HandoffPanel } from './HandoffPanel';
 import { useConsole } from './useConsole';
 import { useHud } from './hud';
 import { InfoSheet } from './InfoSheet';
-import { ViewControls } from './Controls';
 import { Mark } from './ui';
 import { LINK_DELAY } from './model';
 import { useMissionStore } from '../data/store';
@@ -185,7 +184,11 @@ export default function CrewPage() {
   return (
     <div className="crew" data-idle={idle || undefined} data-status={cv.overall}>
       <AlarmStrip alarms={alarms} acked={acked} onAck={(id) => setAcked((a) => ({ ...a, [id]: true }))} />
-      {sheetRow ? (
+      {panel === 'checkin' ? (
+        <CheckinPanel className="crew-right" />
+      ) : panel === 'handoff' || handoff ? (
+        <HandoffPanel className="crew-right" />
+      ) : sheetRow ? (
         <InfoSheet r={sheetRow} target={target} cd={cd} m={cv.m} onClose={() => setParams({}, { replace: true })} />
       ) : (
         <div className="vlist" aria-label="Vitals">
@@ -261,8 +264,6 @@ export default function CrewPage() {
       </div>
 
 
-      <ViewControls layers style={{ left: 'calc(50% - 300px)', bottom: 64 }} />
-
       {/* keyboard: Tab reaches each body region, Enter focuses it, Esc returns */}
       <nav className="hot-keys" aria-label="Body regions">
         {(Object.keys(TARGETS) as TargetId[]).map((id) => (
@@ -272,8 +273,6 @@ export default function CrewPage() {
         ))}
       </nav>
 
-      {panel === 'checkin' && <CheckinPanel className="crew-right" />}
-      {handoff && <HandoffPanel className="crew-right" />}
       {scanning && <ScanOverlay onClose={() => setScanning(false)} />}
 
       {one && (

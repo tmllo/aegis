@@ -74,6 +74,8 @@ export default function EnvironmentPage() {
 
   return (
     <div className="cabin">
+      <i className="safe safe-left" aria-hidden />
+      <i className="safe safe-right" aria-hidden />
       <section className="pat cab-left">
         <span className="cap">Cabin · {live ? 'live' : 'recorded 14 Nov'}</span>
         <b className={`pat-word st-${air}`}>{air ? STATUS_WORD[air] : 'No feed'}</b>

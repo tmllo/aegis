@@ -34,6 +34,7 @@ export default function SystemsPage() {
 
   return (
     <>
+      <i className="safe safe-left" aria-hidden />
       <section className="pat sys-left">
         <span className="cap">How readings reach you</span>
         <b className="pat-word">{checks} checks today</b>

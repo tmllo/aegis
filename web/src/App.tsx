@@ -1,35 +1,11 @@
-import { lazy, Suspense, useMemo } from 'react';
-import { BrowserRouter, Link, Navigate, Route, Routes, useParams } from 'react-router-dom';
-import { conceptLoaders } from './registry';
-import { ConceptsIndex } from './ConceptsIndex';
+import { lazy } from 'react';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { Shell } from './console/Shell';
 import CrewPage from './console/CrewPage';
 
 // Crew is the first screen and loads with the shell; the others load when opened.
 const EnvironmentPage = lazy(() => import('./console/EnvironmentPage'));
 const SystemsPage = lazy(() => import('./console/SystemsPage'));
-
-function ConceptRoute() {
-  const { id = '' } = useParams();
-  const load = conceptLoaders[id];
-  const Concept = useMemo(() => (load ? lazy(load) : null), [load]);
-  if (!Concept) {
-    return (
-      <div className="grid h-full place-items-center">
-        <Link className="text-accent" to="/concepts">
-          No concept "{id}"
-        </Link>
-      </div>
-    );
-  }
-  return (
-    <div data-concept={id} className="h-full">
-      <Suspense fallback={null}>
-        <Concept />
-      </Suspense>
-    </div>
-  );
-}
 
 export function App() {
   return (
@@ -52,9 +28,6 @@ export function App() {
         <Route path="/shelter" element={<Navigate to="/environment?mode=shelter" replace />} />
         <Route path="/storm/replay" element={<Navigate to="/environment?mode=replay" replace />} />
         <Route path="/cabin/replay" element={<Navigate to="/environment?mode=replay" replace />} />
-        {/* design concepts: reachable, not in the nav */}
-        <Route path="/concepts" element={<ConceptsIndex />} />
-        <Route path="/concepts/:id" element={<ConceptRoute />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
