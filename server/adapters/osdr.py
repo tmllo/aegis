@@ -88,3 +88,7 @@ class Osdr:
                     batch.observations.append(Observation(sub[crew], m["key"], tp, None if shifted else _num(row[col]),
                                                           m["unit"], self.source, "recorded", attrs))
         return batch
+
+
+ORDER = 30
+ADAPTER = Osdr()

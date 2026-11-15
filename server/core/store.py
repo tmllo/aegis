@@ -8,6 +8,8 @@ from __future__ import annotations
 
 import json
 import sqlite3
+import threading
+from pathlib import Path
 from datetime import datetime, timezone
 from typing import Iterable
 
@@ -46,9 +48,13 @@ def _now() -> str:
 class Store:
     def __init__(self, path: str, catalog: Catalog):
         self.cat = catalog
-        self.db = sqlite3.connect(path)
+        self.db = sqlite3.connect(path, check_same_thread=False)   # shared by API worker threads
         self.db.row_factory = sqlite3.Row
+        self.lock = threading.RLock()                               # hold it for any write
         self.db.executescript(SCHEMA)
+        # Plugin tables: any server/<package>/schema.sql (e.g. server/mind/schema.sql) is applied here.
+        for sql in sorted(Path(__file__).resolve().parents[1].glob("*/schema.sql")):
+            self.db.executescript(sql.read_text(encoding="utf-8"))
 
     # ---- validation ----------------------------------------------------------
     def _check_obs(self, o: Observation) -> str | None:
@@ -68,6 +74,10 @@ class Store:
         """Store one adapter batch as one run. Returns the run id."""
         if batch.source not in self.cat.sources:
             raise ValueError(f"unknown source {batch.source!r}")
+        with self.lock:
+            return self._write(batch)
+
+    def _write(self, batch: Batch) -> int:
         cur = self.db.execute("INSERT INTO run (source, quality, started, note) VALUES (?,?,?,?)",
                               (batch.source, batch.quality, _now(), batch.note))
         run_id = cur.lastrowid
@@ -109,8 +119,11 @@ class Store:
 
     # ---- reads ---------------------------------------------------------------
     def observations(self, subject: str | None = None, metric: str | None = None, since: str | None = None,
-                     source: str | None = None) -> list[Observation]:
+                     source: str | None = None, prefix: str | None = None) -> list[Observation]:
         q, args = "SELECT * FROM observation WHERE 1=1", []
+        if prefix:
+            q += " AND metric LIKE ?"
+            args.append(prefix.replace("%", "") + "%")
         for col, val in (("subject", subject), ("metric", metric), ("source", source)):
             if val is not None:
                 q += f" AND {col}=?"

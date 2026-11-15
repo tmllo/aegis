@@ -10,7 +10,7 @@ import yaml
 CATALOG_DIR = Path(__file__).resolve().parents[1] / "catalog"
 HAZARDS = {"radiation", "isolation", "distance", "gravity", "closed_environment", "multiple"}
 REGIONS = {"brain", "heart", "blood", "bones", "whole_body", None}
-RULES = {"baseline_z", "absolute", "pre_flight_baseline", "display_only"}
+RULES = {"baseline_z", "absolute", "pre_flight_baseline", "display_only", "bands"}
 SUBJECT_KINDS = {"crew_sim", "crew_real", "habitat", "star"}
 
 
@@ -23,6 +23,14 @@ def _load(path: Path, key: str) -> list[dict[str, Any]] | dict[str, Any]:
         return yaml.safe_load(f)[key]
 
 
+def _load_all(root: Path, key: str) -> list[dict[str, Any]]:
+    """<key>.yaml plus every file in <key>.d/ (a lane adds its own file there, never edits a shared one)."""
+    items = list(_load(root / f"{key}.yaml", key))
+    for extra in sorted((root / f"{key}.d").glob("*.yaml")) if (root / f"{key}.d").is_dir() else []:
+        items += _load(extra, key) or []
+    return items
+
+
 @dataclass
 class Catalog:
     metrics: dict[str, dict]
@@ -30,15 +38,28 @@ class Catalog:
     sources: dict[str, dict]
     models: dict[str, dict]
     mission: dict
+    extra: dict          # any other catalog/*.yaml file, by stem (e.g. extra["routines"])
 
     @classmethod
     def load(cls, root: Path = CATALOG_DIR) -> "Catalog":
+        core = {"metrics", "subjects", "sources", "models", "mission"}
+        extra = {}
+        for f in sorted(root.glob("*.yaml")):
+            if f.stem not in core:
+                with f.open(encoding="utf-8") as fh:
+                    extra[f.stem] = yaml.safe_load(fh)
+        metrics: dict[str, dict] = {}
+        for m in _load_all(root, "metrics"):
+            if m["key"] in metrics:
+                raise CatalogError(f"metric {m['key']} defined twice")
+            metrics[m["key"]] = m
         cat = cls(
-            metrics={m["key"]: m for m in _load(root / "metrics.yaml", "metrics")},
-            subjects={s["id"]: s for s in _load(root / "subjects.yaml", "subjects")},
-            sources={s["id"]: s for s in _load(root / "sources.yaml", "sources")},
-            models={m["id"]: m for m in _load(root / "models.yaml", "models")},
+            metrics=metrics,
+            subjects={s["id"]: s for s in _load_all(root, "subjects")},
+            sources={s["id"]: s for s in _load_all(root, "sources")},
+            models={m["id"]: m for m in _load_all(root, "models")},
             mission=_load(root / "mission.yaml", "mission"),
+            extra=extra,
         )
         cat.check()
         return cat

@@ -15,12 +15,19 @@ views/explorer.py         python -m server.views.explorer -> server/out/explorer
 tests/     golden + integrity
 ```
 
+## Plug points (details: docs/backend/AGENT-RULES.md)
+- source: `adapters/<id>.py` with `ADAPTER` + `ORDER` (auto-discovered)
+- metrics/subjects/sources: `catalog/<kind>.d/<lane>.yaml` (merged; duplicate keys fail)
+- feature with tables: `server/<feature>/` with `schema.sql`, `plugin.py` (`after_build`), `api.py` (`router`)
+- endpoint: `api/routes/<name>.py` with `router`
+
 ## Run
 ```
 pip install -r server/requirements.txt
 python -m server.build                 # rebuild and compare with web/public/data (all 3 must say "identical")
 python -m server.build --write-app     # overwrite web/public/data/*.json once the check passes
 python -m pytest server/tests -q
+uvicorn server.api.app:app --port 8000     # API: /api/health, /api/observations, /api/catalog, /data/*.json; serves web/dist at /
 ```
 
 ## Lego rules

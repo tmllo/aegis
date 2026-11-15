@@ -42,3 +42,7 @@ class MlForecast:
                 batch.links.append(EventLink(fid, sid, "caused_sep", self.source))
             batch.forecasts.append(Forecast(fid, self.model_id, e["p_storm"], e["alert_level"], e["split"]))
         return batch
+
+
+ORDER = 20
+ADAPTER = MlForecast()

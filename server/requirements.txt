@@ -1,3 +1,6 @@
 pyyaml>=6
 pytest>=8
-lightstreamer-client-lib>=2.2  # only for probes/ and the live ISS adapter
+fastapi>=0.110
+uvicorn>=0.29
+httpx>=0.27
+lightstreamer-client-lib>=2.2  # live ISS adapter and probes/

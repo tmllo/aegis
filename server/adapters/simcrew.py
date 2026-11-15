@@ -31,3 +31,7 @@ class SimCrew:
                     batch.observations.append(Observation(member["id"], m["key"], row["date"], value, m["unit"],
                                                           self.source, "simulated"))
         return batch
+
+
+ORDER = 10
+ADAPTER = SimCrew()

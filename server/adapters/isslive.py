@@ -45,3 +45,7 @@ class IssLiveSnapshot:
                                                   {"item": item, "status_class": v.get("StatusClass"),
                                                    "fetched_at": doc["fetchedAtUTC"]}))
         return batch
+
+
+ORDER = 40
+ADAPTER = IssLiveSnapshot()

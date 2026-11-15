@@ -397,7 +397,7 @@ metrics:
   rule:
     type: display_only
     basis: no sourced limit yet
-- key: cabin.waste_water
+- key: cabin.water_waste
   label: Waste water tank
   unit: '%'
   kind: habitat_telemetry

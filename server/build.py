@@ -11,10 +11,9 @@ import json
 import sys
 from pathlib import Path
 
-from .adapters.isslive import IssLiveSnapshot
-from .adapters.ml_forecast import MlForecast
-from .adapters.osdr import Osdr
-from .adapters.simcrew import SimCrew
+import importlib
+
+from .adapters import discover
 from .core.catalog import Catalog
 from .core.store import Store
 from .engine.labs import score_labs
@@ -25,17 +24,24 @@ ROOT = Path(__file__).resolve().parents[1]
 APP_DATA = ROOT / "web" / "public" / "data"
 OUT = Path(__file__).resolve().parent / "out"
 
-# Register a new source here (and in catalog/sources.yaml).
-ADAPTERS = [SimCrew(), MlForecast(), Osdr(), IssLiveSnapshot()]
+PKG = Path(__file__).resolve().parent
+
+
+def plugins() -> list:
+    """Feature packages: any server/<name>/plugin.py. Each may define after_build(cat, store)."""
+    return [importlib.import_module(f"server.{p.parent.name}.plugin") for p in sorted(PKG.glob("*/plugin.py"))]
 
 
 def build(db: str = ":memory:") -> tuple[Catalog, Store, dict[str, dict]]:
     cat = Catalog.load()
     store = Store(db, cat)
-    for adapter in ADAPTERS:
+    for adapter in discover():                 # every server/adapters/*.py with ADAPTER
         store.write(adapter.load(cat))
     crew_results = score_all(store, cat)
     labs = score_labs(store, cat)
+    for plugin in plugins():                   # every server/<feature>/plugin.py
+        if hasattr(plugin, "after_build"):
+            plugin.after_build(cat, store)
     files = {
         "crew_data.json": contract_v1.crew_data(cat, store, crew_results),
         "storm_forecast.json": contract_v1.storm_forecast(cat, store),
