@@ -6,6 +6,7 @@ import { useFrame, useThree, type ThreeEvent } from '@react-three/fiber';
 import { Html, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import { SENSORS, SENSOR_NODE, SENSOR_NAME, type SensorId } from './suitData';
+import './shared.css';
 
 export const SUIT_URL = `${import.meta.env.BASE_URL}models/ana-suit.glb`;
 

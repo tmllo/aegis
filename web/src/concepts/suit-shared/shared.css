@@ -1,0 +1,55 @@
+/* Structure shared by the suit concepts. Colours and type come from each concept's scope. */
+
+/* sensor markers on Ana */
+.suit-marker-wrap { transition: opacity 250ms var(--ease-out); }
+.suit-marker-wrap[data-dim] { filter: saturate(0.3); }
+.suit-marker-wrap[data-dim] .suit-label,
+.suit-marker[data-active] .suit-label { opacity: 0; }
+.suit-marker { width: 64px; height: 64px; display: grid; place-items: center; cursor: pointer; border-radius: 50%; }
+.suit-marker:active { transform: scale(0.94); }
+
+/* reading */
+.rd { display: flex; flex-direction: column; height: 100%; }
+.rd > * { flex-shrink: 0; }
+.rd-head { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+.rd-close { height: 56px; min-width: 104px; padding: 0 22px; border-radius: 28px; font-size: 17px; border: 1px solid currentColor; opacity: 0.7; transition: opacity 160ms, transform 100ms var(--ease-out); }
+.rd-close:hover { opacity: 1; }
+.rd-num { display: flex; align-items: baseline; gap: 10px; margin-top: 24px; }
+.rd-num span { line-height: 0.95; font-variant-numeric: tabular-nums; }
+.rd-state { display: flex; align-items: center; gap: 10px; margin-top: 14px; font-size: 19px; }
+.rd-state span { opacity: 0.6; }
+.rd-bar { height: 36px; margin-top: 28px; }
+.rd-usual { margin-top: 8px; font-family: var(--font-mono); font-size: 15px; opacity: 0.65; }
+.rd-go { margin-top: auto; height: 72px; border-radius: 36px; font-size: 20px; font-weight: 600; transition: transform 100ms var(--ease-out), background 160ms, color 160ms; }
+.rd-go[data-done] { background: transparent !important; border: 1.5px solid currentColor; }
+.rd-close:active, .rd-go:active { transform: scale(0.97); }
+
+/* confirm: one big square button */
+.cf-scrim { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; background: rgb(0 0 0 / 0.55); }
+.cf-box { width: min(620px, calc(100vw - 32px)); padding: 40px 44px 32px; display: flex; flex-direction: column; align-items: center; text-align: center; }
+.cf-eyebrow { font-family: var(--font-mono); font-size: 13px; letter-spacing: 0.16em; text-transform: uppercase; opacity: 0.6; }
+.cf-title { font-size: 34px; margin-top: 8px; }
+.cf-body { margin-top: 14px; font-size: 18px; line-height: 1.45; opacity: 0.75; max-width: 44ch; }
+.cf-go { margin-top: 32px; width: 132px; height: 132px; border-radius: 18px; font-size: 22px; font-weight: 600; transition: transform 100ms var(--ease-out); }
+.cf-go:active { transform: scale(0.96); }
+.cf-cancel { margin-top: 12px; height: 56px; padding: 0 24px; font-size: 17px; opacity: 0.6; }
+
+/* systems: one line */
+.fl { display: flex; flex-direction: column; align-items: stretch; width: 100%; }
+.fl-row { position: relative; display: flex; justify-content: space-between; }
+.fl-line { position: absolute; left: 60px; right: 60px; top: 60px; height: 1px; background: currentColor; opacity: 0.35; overflow: hidden; }
+.fl-pk { position: absolute; inset: 0; animation: fl-move 6s linear infinite; }
+.fl-pk::after { content: ''; position: absolute; right: 0; top: -2px; width: 18px; height: 5px; border-radius: 3px; background: currentColor; }
+@keyframes fl-move { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+.fl-node { position: relative; width: 120px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.fl-dot { width: 120px; height: 120px; border-radius: 50%; display: grid; place-items: center; border: 1px solid currentColor; transition: transform 160ms var(--ease-out), background 160ms; }
+.fl-node[aria-pressed='true'] .fl-dot { transform: scale(1.08); }
+.fl-node:active .fl-dot { transform: scale(0.96); }
+.fl-name { margin-top: 8px; font-size: 24px; }
+.fl-value { font-family: var(--font-mono); font-size: 14px; letter-spacing: 0.06em; opacity: 0.65; white-space: nowrap; }
+.fl-does { margin-top: 40px; min-height: 1.5em; text-align: center; font-size: 22px; opacity: 0.8; }
+
+@media (prefers-reduced-motion: reduce) {
+  .fl-pk, .flow-packet { animation: none; display: none; }
+  .suit-marker-wrap, .fl-dot { transition: none; }
+}

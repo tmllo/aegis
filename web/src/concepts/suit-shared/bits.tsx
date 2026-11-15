@@ -33,48 +33,19 @@ export function BaselineBar({ r, className = '' }: { r: Reading; className?: str
   return (
     <svg viewBox="0 0 300 36" className={`w-full ${className}`} preserveAspectRatio="none" style={{ overflow: 'visible' }} aria-hidden>
       <line x1="0" x2="300" y1="18" y2="18" stroke="currentColor" strokeOpacity="0.25" strokeWidth="1" />
-      <rect x={b.lo * 300} width={Math.max(2, (b.hi - b.lo) * 300)} y="12" height="12" fill="currentColor" fillOpacity="0.16" rx="2" />
+      <rect x={b.lo * 300} width={Math.max(2, (b.hi - b.lo) * 300)} y="12" height="12" fill="currentColor" fillOpacity="0.18" rx="2" />
       {b.mean != null && <line x1={b.mean * 300} x2={b.mean * 300} y1="8" y2="28" stroke="currentColor" strokeOpacity="0.6" strokeWidth="1.5" />}
       <circle cx={b.v * 300} cy="18" r="7" fill={col} />
     </svg>
   );
 }
 
-/** Last 14 days with the band behind. */
-export function Spark({ r, className = '' }: { r: Reading; className?: string }) {
-  const vals = r.history.filter((v): v is number => v != null);
-  if (vals.length < 2) return null;
-  const lo = Math.min(...vals, r.lo ?? Infinity);
-  const hi = Math.max(...vals, r.hi ?? -Infinity);
-  const W = 300;
-  const H = 64;
-  const y = (v: number) => H - 4 - ((v - lo) / (hi - lo || 1)) * (H - 8);
-  const n = r.history.length;
-  const pts = r.history
-    .map((v, i) => (v == null ? null : `${(i / (n - 1)) * W},${y(v)}`))
-    .filter(Boolean)
-    .join(' ');
-  const last = r.history[n - 1];
-  return (
-    <svg viewBox={`0 0 ${W} ${H}`} className={`w-full ${className}`} preserveAspectRatio="none" style={{ overflow: 'visible' }} aria-hidden>
-      {r.lo != null && r.hi != null && (
-        <rect x="0" width={W} y={y(r.hi)} height={Math.max(1, y(r.lo) - y(r.hi))} fill="currentColor" fillOpacity="0.1" />
-      )}
-      <polyline points={pts} fill="none" stroke="currentColor" strokeOpacity="0.7" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
-      {last != null && <circle cx={W} cy={y(last)} r="4" fill={r.status ? STATUS_VAR[r.status] : 'currentColor'} />}
-    </svg>
-  );
-}
-
-/** "+2.5 sd vs her baseline" style line, from core/scoring z. */
-export function deltaText(r: Reading): string {
-  if (r.basis === 'limit') {
-    if (r.value == null) return 'No feed';
-    return r.limitSource ? `${r.limitSource} limit` : 'Cabin limit';
-  }
-  if (r.mean == null || r.value == null) return '';
-  const d = r.value - r.mean;
-  return `${d >= 0 ? '+' : '-'}${fmt(Math.abs(d), r.digits)} vs usual ${fmt(r.mean, r.digits)}`;
+/** One reference number: her usual value, or the cabin limit. */
+export function usualText(r: Reading): string {
+  if (r.basis === 'baseline') return r.mean == null ? '' : `Usual ${fmt(r.mean, r.digits)}`;
+  if (r.hi != null) return `Limit ${fmt(r.hi, r.digits)}`;
+  if (r.lo != null) return `Floor ${fmt(r.lo, r.digits)}`;
+  return '';
 }
 
 export const SUIT_CREDITS = [
@@ -100,4 +71,41 @@ export function statusRGB(st: Status): string {
   const name = st === 'green' ? '--ok' : st === 'amber' ? '--warn' : '--crit';
   const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
   return v ? `rgb(${v.split(/\s+/).join(',')})` : '#ffffff';
+}
+
+/**
+ * Arc gauge (270 degrees): her band as a thin segment, the value as the lit arc,
+ * the number in the middle. Gloved-touch sized; wrap it in a button.
+ */
+export function ArcGauge({ r, size = 200 }: { r: Reading | null; size?: number }) {
+  const b = r ? bandScale(r) : null;
+  const c = 100;
+  const R = 84;
+  const a0 = 135;
+  const sweep = 270;
+  const pt = (f: number) => {
+    const a = ((a0 + sweep * f) * Math.PI) / 180;
+    return [c + R * Math.cos(a), c + R * Math.sin(a)];
+  };
+  const arc = (f0: number, f1: number) => {
+    const [x0, y0] = pt(f0);
+    const [x1, y1] = pt(f1);
+    return `M${x0} ${y0} A${R} ${R} 0 ${sweep * (f1 - f0) > 180 ? 1 : 0} 1 ${x1} ${y1}`;
+  };
+  const col = r?.status ? STATUS_VAR[r.status] : 'currentColor';
+  const [vx, vy] = b ? pt(b.v) : [0, 0];
+  return (
+    <svg width={size} height={size} viewBox="0 0 200 200" className="arc-gauge" aria-hidden style={{ overflow: 'visible' }}>
+      <path d={arc(0, 1)} fill="none" stroke="currentColor" strokeOpacity="0.16" strokeWidth="3" strokeLinecap="round" />
+      {b && <path d={arc(b.lo, b.hi)} fill="none" stroke="currentColor" strokeOpacity="0.32" strokeWidth="9" />}
+      {b && <path d={arc(0, Math.max(0.001, b.v))} fill="none" stroke={col} strokeWidth="3.5" strokeLinecap="round" />}
+      {b && <circle cx={vx} cy={vy} r="7" fill={col} />}
+      <text x="100" y="104" textAnchor="middle" className="arc-value">
+        {r ? fmt(r.value, r.digits) : 'No feed'}
+      </text>
+      <text x="100" y="132" textAnchor="middle" className="arc-unit">
+        {r && r.value != null ? r.unit : ''}
+      </text>
+    </svg>
+  );
 }
