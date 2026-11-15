@@ -225,3 +225,17 @@
 :root[data-reduced-motion='true'] .fx-fade {
   animation: none !important;
 }
+
+/* Status marks, shared by every screen. */
+.fr-shape { flex: none; }
+.fr-shape-green, .fr-fill-green { fill: rgb(var(--ok)); }
+.fr-shape-amber, .fr-fill-amber { fill: rgb(var(--warn)); }
+.fr-shape-red, .fr-fill-red { fill: rgb(var(--crit)); }
+.fr-text-amber { color: rgb(var(--warn)); }
+.fr-text-red { color: rgb(var(--crit)); }
+.fr-shape-amber, .fr-breathe-amber { animation: fx-breathe 2s ease-in-out infinite; }
+.fr-shape-red, .fr-breathe-red { animation: fx-breathe 1s ease-in-out infinite; }
+.fx-status { display: inline-flex; align-items: center; gap: 8px; }
+@media (prefers-reduced-motion: reduce) {
+  .fr-shape-amber, .fr-shape-red, .fr-breathe-amber, .fr-breathe-red { animation: none !important; }
+}

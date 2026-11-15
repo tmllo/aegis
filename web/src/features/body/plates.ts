@@ -11,18 +11,12 @@ import {
   worst,
   type MetricScore,
 } from '../../core/scoring';
+import { ANCHOR_OVERRIDES, STRUCTURE_RANGES, type Layer, type Vec3 } from './model/bodyModel';
 import type { CrewData, CrewMember, EnvironmentId, MetricKey, Status } from '../../data/types';
 
 export type PlateId = 'temp' | 'brain' | 'dose' | 'heart' | 'blood' | 'bone' | 'muscle';
-export type NodeName =
-  | 'whole_body'
-  | 'brain'
-  | 'heart'
-  | 'blood'
-  | 'bones'
-  | 'bones_loadbearing'
-  | 'muscle_antigravity';
-export type Vec3 = [number, number, number];
+export type NodeName = Layer;
+export type { Vec3 };
 
 interface MapMetric {
   anchor: Vec3;
@@ -37,7 +31,6 @@ interface MapStructure {
   t: [number, number] | null;
 }
 interface BodyMap {
-  model: { nodes: Record<string, { bbox: [Vec3, Vec3] }> };
   metrics: Record<MetricKey, MapMetric>;
   structure_index: Record<string, MapStructure[]>;
 }
@@ -94,7 +87,7 @@ export interface Plate {
   illustrative: boolean;
 }
 
-export const anchorOf = (metric: MetricKey): Vec3 => bodyMap.metrics[metric].anchor;
+export const anchorOf = (metric: MetricKey): Vec3 => ANCHOR_OVERRIDES[metric] ?? bodyMap.metrics[metric].anchor;
 /**
  * Where a plate's mark, hit target and leader end. Organ plates: the shown
  * metric's anchor. Whole-body plates: a fixed point on the outline, pushed out
@@ -201,6 +194,8 @@ export function doseFraction(member: CrewMember, data: CrewData): number {
  */
 export function inkWeights(node: NodeName, metric: MetricKey, index: ArrayLike<number>, vertexCount: number): Float32Array {
   const out = new Float32Array(vertexCount);
+  // A model without matching structure ranges takes the colour on the whole layer.
+  if (!STRUCTURE_RANGES) return out.fill(1);
   const m = bodyMap.metrics[metric];
   const parts = m.parts[node];
   if (!parts) return out;
@@ -221,12 +216,12 @@ export function inkWeights(node: NodeName, metric: MetricKey, index: ArrayLike<n
 }
 
 /** Farthest distance from an anchor to the node's bounding box: the reach of the ink reveal. */
-export function reachOf(node: NodeName, anchor: Vec3): number {
-  const [min, max] = bodyMap.model.nodes[node].bbox;
+export function reachOf(box: { min: { x: number; y: number; z: number }; max: { x: number; y: number; z: number } }, anchor: Vec3): number {
+  const { min, max } = box;
   let d = 0;
-  for (const x of [min[0], max[0]])
-    for (const y of [min[1], max[1]])
-      for (const z of [min[2], max[2]]) d = Math.max(d, Math.hypot(x - anchor[0], y - anchor[1], z - anchor[2]));
+  for (const x of [min.x, max.x])
+    for (const y of [min.y, max.y])
+      for (const z of [min.z, max.z]) d = Math.max(d, Math.hypot(x - anchor[0], y - anchor[1], z - anchor[2]));
   return d + 0.05;
 }
 
@@ -255,7 +250,6 @@ export function shortLabels(metrics: MetricKey[], data: CrewData): Record<string
   return out;
 }
 
-export const STATUS_WORD: Record<Status, string> = { green: 'Nominal', amber: 'Caution', red: 'Alert' };
 
 /** At most `digits` decimals (default two), no trailing zeros. */
 export const fmt = (v: number, digits = 2): string => String(Number(v.toFixed(digits)));

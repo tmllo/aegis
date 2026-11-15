@@ -1,0 +1,15 @@
+{
+  "url": "models/aegis-body.glb",
+  "about": "The only file to edit when a new body GLB arrives. url is relative to public/. nodes maps each GLB node (or mesh) name to a render layer and a contract region. Several nodes may share a layer: they are merged. A layer with no node is simply not drawn. Anchors come from docs/body-map.json (metres, +y up, +z front, feet at y = 0); give a metric a new point under anchors if the new model differs. structureRanges is true only for the GLB that docs/body-map.json was measured on: its triangle ranges paint single structures. Set it to false for a new model and whole layers take the colour.",
+  "structureRanges": true,
+  "nodes": {
+    "whole_body": { "layer": "whole_body", "region": "whole_body" },
+    "brain": { "layer": "brain", "region": "brain" },
+    "heart": { "layer": "heart", "region": "heart" },
+    "blood": { "layer": "blood", "region": "blood" },
+    "bones": { "layer": "bones", "region": "bones" },
+    "bones_loadbearing": { "layer": "bones_loadbearing", "region": "bones" },
+    "muscle_antigravity": { "layer": "muscle_antigravity", "region": "bones" }
+  },
+  "anchors": {}
+}

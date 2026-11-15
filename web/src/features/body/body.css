@@ -1,5 +1,5 @@
 /* Flight Record, body surface. Everything is scoped to this concept. */
-[data-concept='flight-record-body'] {
+.fr-scope {
   --fr-ink-0: #14130f;
   --fr-ink-1: #1b1913;
   --fr-ink-2: #2e2f24;
@@ -50,15 +50,6 @@
   color: var(--fr-paper-2);
 }
 
-/* status: shape and word, colour last */
-.fr-shape { flex: none; }
-.fr-shape-green, .fr-fill-green { fill: var(--fr-ok); }
-.fr-shape-amber, .fr-fill-amber { fill: var(--fr-warn); }
-.fr-shape-red, .fr-fill-red { fill: var(--fr-crit); }
-.fr-text-amber { color: var(--fr-warn); }
-.fr-text-red { color: var(--fr-crit); }
-.fr-shape-amber, .fr-breathe-amber { animation: fr-breathe 2s ease-in-out infinite; }
-.fr-shape-red, .fr-breathe-red { animation: fr-breathe 1s ease-in-out infinite; }
 @keyframes fr-breathe { 50% { opacity: 0.6; } }
 
 /* ------------------------------------------------------------------ top strip: facts only, no controls */
@@ -241,7 +232,7 @@ circle.fr-mark { fill: var(--fr-ink-0); stroke: var(--fr-paper); stroke-width: 1
 
 /* ------------------------------------------------------------------ tablet */
 @media (max-width: 1100px) {
-  [data-concept='flight-record-body'] { --fr-pad: 24px; --fr-note-w: 340px; --fr-plate-w: 176px; }
+  .fr-scope { --fr-pad: 24px; --fr-note-w: 340px; --fr-plate-w: 176px; }
   .fr-title, .fr-mission-date, .fr-brand span { display: none; }
   .fr-mission { gap: 16px; }
   .fr-crew { width: calc(54% - var(--fr-pad)); }

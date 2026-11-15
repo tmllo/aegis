@@ -4,12 +4,11 @@
 // Anatomy: BodyParts3D 4.0 (c) Database Center for Life Science, CC BY 4.0, via human-atlas (MIT).
 import { useEffect, useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import type { MetricKey, Status } from '../../data/types';
+import { preloadBodyModel, useBodyModel } from './model/bodyModel';
 import { inkWeights, plateAnchor, reachOf, type NodeName, type Plate, type PlateId } from './plates';
 
-const MODEL_URL = `${import.meta.env.BASE_URL}models/aegis-body.glb`;
 
 export const INK: Record<Status | 'paper', string> = {
   paper: '#F4F1EA',
@@ -185,14 +184,17 @@ const WIDE = 3.7;
 const easeInOut = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 
 export function PlateBody({ plates, selected, metric, dose, turnDeg, reducedMotion, neutral, shiftPx, onProject }: PlateBodyProps) {
-  const { nodes } = useGLTF(MODEL_URL) as unknown as { nodes: Record<string, THREE.Mesh> };
+  const model = useBodyModel();
+  // Layers the loaded model actually has: a new model may leave some out.
+  const layers = useMemo(() => LAYERS.filter((d) => model[d.node]), [model]);
   const group = useRef<THREE.Group>(null);
 
   // Own geometries that share the cached buffers, so the cached GLB is never mutated.
   const geoms = useMemo(() => {
     const out = {} as Record<NodeName, THREE.BufferGeometry>;
-    for (const def of LAYERS) {
-      const src = nodes[def.node].geometry;
+    for (const def of layers) {
+      const src = model[def.node]!;
+      if (!src.boundingBox) src.computeBoundingBox();
       const g = new THREE.BufferGeometry();
       g.setIndex(src.index);
       g.setAttribute('position', src.attributes.position);
@@ -203,9 +205,9 @@ export function PlateBody({ plates, selected, metric, dose, turnDeg, reducedMoti
       out[def.node] = g;
     }
     return out;
-  }, [nodes]);
+  }, [model, layers]);
 
-  const mats = useMemo(() => Object.fromEntries(LAYERS.map((d) => [d.node, makeMaterial(d)])) as Record<NodeName, THREE.ShaderMaterial>, []);
+  const mats = useMemo(() => Object.fromEntries(layers.map((d) => [d.node, makeMaterial(d)])) as Record<NodeName, THREE.ShaderMaterial>, [layers]);
   const prepass = useMemo(() => new THREE.MeshBasicMaterial({ colorWrite: false }), []);
   const contour = useMemo(
     () =>
@@ -237,7 +239,7 @@ export function PlateBody({ plates, selected, metric, dose, turnDeg, reducedMoti
 
   // Which structures take the ink: the shown metric of each plate (selected metric, else its worst).
   useEffect(() => {
-    for (const def of LAYERS) {
+    for (const def of layers) {
       const plate = def.plate ? byId.get(def.plate) : undefined;
       if (!plate) continue;
       const m = plate.id === selected && metric ? metric : plate.primary;
@@ -248,7 +250,7 @@ export function PlateBody({ plates, selected, metric, dose, turnDeg, reducedMoti
       mats[def.node].uniforms.uAnchor.value.fromArray(plateAnchor(plate, m, 0));
       mats[def.node].uniforms.uInk.value.set(plate.status === 'green' || neutral ? LIFT : INK[plate.status]);
     }
-  }, [byId, selected, metric, geoms, mats, neutral]);
+  }, [byId, selected, metric, geoms, mats, neutral, layers]);
 
   // Dose contour colour follows the radiation plate's status.
   useEffect(() => {
@@ -261,8 +263,8 @@ export function PlateBody({ plates, selected, metric, dose, turnDeg, reducedMoti
   useEffect(() => {
     const plate = selected ? byId.get(selected) : undefined;
     if (!plate?.node) return;
-    reveal.current = { t: reducedMotion ? 1 : 0, reach: reachOf(plate.node, plateAnchor(plate, metric ?? plate.primary, 0)) };
-  }, [selected, metric, byId, reducedMotion]);
+    reveal.current = { t: reducedMotion ? 1 : 0, reach: !geoms[plate.node] ? 1 : reachOf(geoms[plate.node].boundingBox!, plateAnchor(plate, metric ?? plate.primary, 0)) };
+  }, [selected, metric, byId, reducedMotion, geoms]);
 
   const cam = useRef({ target: CENTER.clone(), dist: WIDE, shift: shiftPx.current });
   const goal = useMemo(() => new THREE.Vector3(), []);
@@ -279,7 +281,7 @@ export function PlateBody({ plates, selected, metric, dose, turnDeg, reducedMoti
     reveal.current.t = Math.min(1, reveal.current.t + dt / 0.4);
     const radius = easeInOut(reveal.current.t) * reveal.current.reach;
 
-    for (const def of LAYERS) {
+    for (const def of layers) {
       const u = mats[def.node].uniforms;
       const plate = def.plate ? byId.get(def.plate) : undefined;
       const isSel = !!plate && plate.id === selected;
@@ -340,15 +342,15 @@ export function PlateBody({ plates, selected, metric, dose, turnDeg, reducedMoti
 
   return (
     <group ref={group}>
-      {LAYERS.map((def) => (
+      {layers.map((def) => (
         <group key={def.node}>
           {def.prepass && <mesh geometry={geoms[def.node]} material={prepass} renderOrder={1} />}
           <mesh geometry={geoms[def.node]} material={mats[def.node]} renderOrder={def.order} />
         </group>
       ))}
-      <mesh geometry={geoms.whole_body} material={contour} renderOrder={6} />
+      {geoms.whole_body && <mesh geometry={geoms.whole_body} material={contour} renderOrder={6} />}
     </group>
   );
 }
 
-useGLTF.preload(MODEL_URL);
+preloadBodyModel();

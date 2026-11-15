@@ -1,17 +1,8 @@
 // The margin note: one metric read against the person's own baseline band.
 import { useLayoutEffect, useRef, useState } from 'react';
 import type { CrewData, CrewMember, EnvironmentId, MetricKey, Severity, Status } from '../../data/types';
-import { STATUS_WORD, daysRunning, firstSentence, fmt, measureSiteOf, referenceFor, shortLabels, type Plate, type Reference } from './plates';
-
-export function Shape({ status, size = 16 }: { status: Status; size?: number }) {
-  return (
-    <svg className={`fr-shape fr-shape-${status}`} width={size} height={size} viewBox="0 0 16 16" aria-hidden="true">
-      {status === 'green' && <circle cx="8" cy="8" r="5" />}
-      {status === 'amber' && <path d="M8 1.5 15 14.5H1Z" />}
-      {status === 'red' && <rect x="1.5" y="1.5" width="13" height="13" />}
-    </svg>
-  );
-}
+import { Shape, STATUS_WORD, Tween } from '../../ui/status';
+import { daysRunning, firstSentence, fmt, measureSiteOf, referenceFor, shortLabels, type Plate, type Reference } from './plates';
 
 const DAYS = 14;
 /** Chart furniture in real pixels: the chart is drawn at its measured size, so type never scales down. */
@@ -149,7 +140,7 @@ export function MarginNote({ plate, metric, member, data, environment, remeasure
         <span className="fr-label">{plate.scores.length > 1 ? `${plate.name} / ${names[metric]}` : meta.label}</span>
       </p>
       <p className="fr-line fr-hero">
-        <span className="fr-hero-num">{fmt(score.value)}</span>
+        <span className="fr-hero-num"><Tween value={score.value} format={fmt} /></span>
         <span className="fr-hero-unit">{meta.unit}</span>
         <span className={`fr-hero-status fr-text-${score.status}`}>
           <Shape status={score.status} size={20} />
@@ -183,6 +174,13 @@ export function MarginNote({ plate, metric, member, data, environment, remeasure
           </div>
         ))}
       </dl>
+
+      {score.status !== 'green' && (
+        <p className={`fr-line fr-how fr-rule-${score.status}`}>
+          <span className="fr-label">Action</span>
+          {meta.actions[score.status]}
+        </p>
+      )}
 
       {remeasure ? (
         <p className={`fr-line fr-how fr-rule-${score.status}`}>
