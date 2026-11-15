@@ -1,0 +1,57 @@
+# AEGIS data core API (FastAPI + uvicorn), single worker: the store is in-process.
+#
+# Build (the context is the repo root):
+#   podman build -f server/Containerfile -t aegis-api .
+#
+# Run:
+#   podman run --rm -p 8000:8000 aegis-api
+#   then open http://127.0.0.1:8000/api/health
+#
+# Keep the SQLite store (check-ins) across restarts with a named volume on /app/var:
+#   podman run --rm -p 8000:8000 -v aegis-var:/app/var aegis-api
+#   (a bind mount works too, but the host folder must be writable by UID 10001,
+#    e.g. podman run ... -v ./var:/app/var:Z --userns=keep-id:uid=10001,gid=10001)
+#
+# Serve a built web app at / by mounting web/dist read-only:
+#   podman run --rm -p 8000:8000 -v aegis-var:/app/var -v ./web/dist:/app/web/dist:ro,Z aegis-api
+#
+# Optional settings: -e AEGIS_REFRESH=0 (no background refresh of live adapters),
+#   -e AEGIS_STREAM_POLL_S=60 (seconds between re-runs of "stream" adapters),
+#   -e AEGIS_DB=:memory: (do not persist the store).
+# docker accepts the same commands (drop the :Z suffix and --userns).
+
+FROM python:3.12-slim
+
+ENV PYTHONIOENCODING=utf-8 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    AEGIS_DB=/app/var/aegis.db
+
+WORKDIR /app
+
+# Dependencies first so code changes do not invalidate this layer.
+COPY server/requirements.txt server/requirements.txt
+RUN pip install --no-cache-dir -r server/requirements.txt
+
+# Only what the API reads at runtime, at the same relative paths as in the repo.
+COPY server/ server/
+COPY web/public/data/ web/public/data/
+COPY docs/research/samples/ docs/research/samples/
+COPY data/real/ data/real/
+
+# Unprivileged user; the code stays root-owned (read-only for the app), only /app/var is writable.
+RUN groupadd --system --gid 10001 aegis \
+ && useradd --system --uid 10001 --gid 10001 --no-create-home --home-dir /app --shell /usr/sbin/nologin aegis \
+ && mkdir -p /app/var \
+ && chown 10001:10001 /app/var
+
+USER 10001:10001
+
+VOLUME ["/app/var"]
+EXPOSE 8000
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
+  CMD ["python", "-c", "import sys, urllib.request; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=4).status == 200 else 1)"]
+
+CMD ["python", "-m", "uvicorn", "server.api.app:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]
