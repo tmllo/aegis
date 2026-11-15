@@ -10,7 +10,8 @@ import type { MetricKey, Status } from '../data/types';
 import { useCameraScan } from '../scan';
 import { useWristband } from '../wearable';
 import { AlarmStrip, type Alarm } from './Monitor';
-import { fmt, METRIC_TARGET, RANK, rowOf, SHORT, STATUS_WORD, TARGET_METRICS } from './model';
+import { fmt, METRIC_TARGET, RANK, rowOf, SHORT, STATUS_WORD, TARGET_METRICS, toSteps, type Row } from './model';
+import { useEntries } from './entries';
 import { Confirm } from './ui';
 import { CheckinPanel } from './CheckinPanel';
 import { HandoffPanel } from './HandoffPanel';
@@ -18,9 +19,7 @@ import { useConsole } from './useConsole';
 import { useHud } from './hud';
 import { InfoSheet } from './InfoSheet';
 import { Mark } from './ui';
-import { LINK_DELAY } from './model';
-import { useMissionStore } from '../data/store';
-import type { EnvironmentId } from '../data/types';
+import { fmtDate, LINK_DELAY } from './model';
 
 const ALL: MetricKey[] = ['hr', 'bp_sys', 'bp_dia', 'glucose', 'temp', 'sleep_h', 'mood', 'exercise_min', 'bone_loss_pct', 'dose_mSv_day'];
 const VITAL: Partial<Record<MetricKey, string>> = { bp_sys: 'vital.bp_sys', bp_dia: 'vital.bp_dia', hr: 'vital.hr', temp: 'vital.temp', glucose: 'vital.glucose' };
@@ -114,12 +113,36 @@ function ScanOverlay({ onClose }: { onClose: () => void }) {
   );
 }
 
+/** 14 days of one reading, the person's usual band shaded, today as a dot. */
+function Spark({ r }: { r: Row }) {
+  const v = r.history.slice(-14);
+  const nums = v.filter((x): x is number => x != null);
+  if (nums.length < 2) return <i className="vspark" aria-hidden />;
+  const lo0 = Math.min(...nums, r.lo ?? Infinity);
+  const hi0 = Math.max(...nums, r.hi ?? -Infinity);
+  const pad = (hi0 - lo0 || 1) * 0.08;
+  const lo = lo0 - pad;
+  const hi = hi0 + pad;
+  const W = 72;
+  const H = 24;
+  const y = (x: number) => H - ((x - lo) / (hi - lo)) * H;
+  const x = (i: number) => (i / (v.length - 1)) * W;
+  const pts = v.map((val, i) => (val == null ? null : `${x(i).toFixed(1)},${y(val).toFixed(1)}`)).filter(Boolean).join(' ');
+  const last = v.length - 1;
+  return (
+    <svg className="vspark" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" aria-hidden>
+      {r.lo != null && r.hi != null && <rect x="0" width={W} y={y(r.hi)} height={Math.max(1, y(r.lo) - y(r.hi))} fill="rgb(255 255 255 / 0.1)" />}
+      <polyline points={pts} fill="none" stroke="currentColor" strokeWidth="1.2" vectorEffect="non-scaling-stroke" />
+      {v[last] != null && <circle cx={x(last)} cy={y(v[last]!)} r="2" fill="currentColor" />}
+    </svg>
+  );
+}
+
 export default function CrewPage() {
   const { cd, cv, seat } = useConsole();
   const [params, setParams] = useSearchParams();
   const { setFocus, setTint, heartBpm } = useHud();
   const [acked, setAcked] = useState<Record<string, boolean>>({});
-  const setEnv = useMissionStore((s) => s.setEnvironment);
   // the simulated wrist band streams HR, SpO2 and skin temperature at 1 Hz (demo: connects on load)
   const band = useWristband({ subject: cv?.m.id, hrMean: cv?.m.baseline.hr?.mean, hrSd: cv?.m.baseline.hr?.sd, day: cd?.mission.today });
   const bandOff = band.status === 'off';
@@ -131,6 +154,12 @@ export default function CrewPage() {
   const [result, setResult] = useState<string | null>(null);
   const [handoff, setHandoff] = useState(false);
   const [scanning, setScanning] = useState(false);
+  const [how, setHow] = useState(false);
+  const [edit, setEdit] = useState<MetricKey | null>(null);
+  const [draft, setDraft] = useState('');
+  const entries = useEntries((s) => s.byMember);
+  const put = useEntries((s) => s.put);
+  const setBodyTips = useHud((s) => s.setBodyTips);
   const panel = params.get('p');
   const rawT = params.get('t');
   const target = rawT && rawT in TARGETS ? (rawT as TargetId) : null;
@@ -146,9 +175,32 @@ export default function CrewPage() {
     }
     setTint(tint);
   }, [all, setTint]);
+  // callouts: each flagged organ gets a leader line to a small label on the body
+  useEffect(() => {
+    if (target) return setBodyTips([]);
+    const byT = new Map<TargetId, (typeof all)[number]>();
+    for (const r of all) {
+      const tg = METRIC_TARGET[r.k];
+      if (!tg || r.status === 'green') continue;
+      const cur = byT.get(tg);
+      if (!cur || RANK[r.status] > RANK[cur.status]) byT.set(tg, r);
+    }
+    setBodyTips(
+      [...byT].map(([tg, r]) => ({
+        id: tg,
+        pos: TARGETS[tg].spot as [number, number, number],
+        title: `${tg === 'dna' ? 'Whole body' : TARGETS[tg].label} · ${SHORT[r.k].toLowerCase()} ${fmt(r.value, r.digits)}\u00a0${r.unit}`,
+        line: '',
+        status: r.status,
+      })),
+    );
+  }, [all, target, setBodyTips]);
+  useEffect(() => () => setBodyTips([]), [setBodyTips]);
   useEffect(() => {
     setResult(null);
     setHandoff(false);
+    setEdit(null);
+    setHow(false);
   }, [cv?.m.id]);
 
   if (!cd || !cv) return <p className="cx-error cx-wait">Loading</p>;
@@ -157,7 +209,17 @@ export default function CrewPage() {
   const organRow = target ? all.find((r) => r.k === TARGET_METRICS[target][0]) : null;
   const one = organRow ?? flagged[0] ?? null;
   const red = one?.status === 'red';
-  const caption = one ? `${SHORT[one.k]} ${fmt(one.value, one.digits)} ${one.unit}${one.mean != null ? ` · usual ${fmt(one.mean, one.digits)}` : ''}` : 'All readings in range';
+  const caption = one ? `${SHORT[one.k]} ${fmt(one.value, one.digits)} ${one.unit}${one.mean != null ? ` · your usual ${fmt(one.mean, one.digits)}` : ''}` : 'All readings in range';
+  const top = flagged[0] ?? null;
+  const typed = entries[cv.m.id]?.[cd.mission.today] ?? {};
+  const save = (k: MetricKey) => {
+    const v = Number(draft.replace(',', '.'));
+    if (!draft.trim() || !Number.isFinite(v)) return;
+    put(cv.m.id, cd.mission.today, k, v);
+    setEdit(null);
+    const metric = VITAL[k];
+    if (metric) void postMeasure(cv.m.id, metric, `${cd.mission.today}T${new Date().toISOString().slice(11, 19)}Z`, v);
+  };
 
   const live = band.status === 'connected' && band.reading;
   const iToday = cv.m.series.findIndex((x) => x.date === cd.mission.today);
@@ -165,11 +227,10 @@ export default function CrewPage() {
   for (let j = iToday; j >= 0 && cv.m.series[j].hr != null; j--) streak++;
   const measuredToday = iToday >= 0 && cv.m.series[iToday].hr != null;
   const delay = LINK_DELAY[cd.mission.environment] ?? 'unknown';
-  const escalation = cv.overall === 'red' ? `Flight surgeon · report arrives in ~${delay}` : cv.overall === 'amber' ? 'Crew medical officer' : 'Self-care';
+  const escalation = cv.overall === 'red' ? `Report goes to the flight surgeon · arrives in about ${delay}` : cv.overall === 'amber' ? 'Report goes to the crew medical officer' : 'Self-care · nothing to report';
   const sheetK = (params.get('k') as MetricKey | null) ?? (target ? TARGET_METRICS[target][0] : null);
   const sheetRow = sheetK ? all.find((r) => r.k === sheetK) : undefined;
-  const day = new Date(`${cd.mission.today}T00:00:00Z`).toUTCString().slice(5, 11);
-  const alarms: Alarm[] = flagged.map((r) => ({ id: `${cv.m.id}-${r.k}`, status: r.status, text: `${r.label} ${fmt(r.value, r.digits)} ${r.unit}${r.mean != null ? `, usual ${fmt(r.mean, r.digits)}` : ''}`, since: `${Math.max(1, r.running)} d` }));
+  const alarms: Alarm[] = flagged.map((r) => ({ id: `${cv.m.id}-${r.k}`, status: r.status, text: `${SHORT[r.k]} ${fmt(r.value, r.digits)} ${r.unit}${r.mean != null ? ` · your usual ${fmt(r.mean, r.digits)}` : ''} · ${r.value != null && r.mean != null && r.value < r.mean ? 'low' : 'high'} for ${Math.max(1, r.running)} day${Math.max(1, r.running) === 1 ? '' : 's'}`, since: '' }));
 
   const act = async () => {
     setAsk(false);
@@ -192,56 +253,104 @@ export default function CrewPage() {
       ) : (
         <div className="vlist" aria-label="Vitals">
           <span className="cap">
-            Vitals · {seat[cv.m.id]} · {day}
+            Vitals · {seat[cv.m.id]} · {fmtDate(cd.mission.today)}
           </span>
           {live && (
             <span className="cap vlist-live">
-              Live HR {Math.round(band.reading!.hr)} bpm · SpO2 {Math.round(band.reading!.spo2)} % · {band.deviceName}
-              {heartBpm != null ? ` · camera ${Math.round(heartBpm)} bpm` : ''}
+              {`Live now · heart ${Math.round(band.reading!.hr)}\u00a0bpm · blood oxygen ${Math.round(band.reading!.spo2)}\u00a0%`}
+              {heartBpm != null ? ` · camera ${Math.round(heartBpm)}\u00a0bpm` : ''}
             </span>
           )}
           {all.map((r) => (
-            <button key={r.k} type="button" className="vrow" data-status={r.status !== 'green' ? r.status : undefined} aria-pressed={sheetK === r.k} onClick={() => METRIC_TARGET[r.k] && setParams({ t: METRIC_TARGET[r.k]!, k: r.k }, { replace: true })}>
-              <Mark s={r.status} size={9} />
-              <span className="vrow-l">
-                {SHORT[r.k]}
-                <small>{r.lo != null && r.hi != null ? `usual ${fmt(r.lo, r.digits)}-${fmt(r.hi, r.digits)}` : STATUS_WORD[r.status]}</small>
-              </span>
-              <span className="vrow-v">
-                {fmt(r.value, r.digits)}
-                <small>{r.unit}</small>
-              </span>
-            </button>
+            <div key={r.k} className="vrow" data-status={r.status !== 'green' ? r.status : undefined} data-editing={edit === r.k || undefined}>
+              <button type="button" className="vrow-main" aria-pressed={sheetK === r.k} onClick={() => METRIC_TARGET[r.k] && setParams({ t: METRIC_TARGET[r.k]!, k: r.k }, { replace: true })}>
+                <Mark s={r.status} size={9} />
+                <span className="vrow-l">
+                  {SHORT[r.k]}
+                  <small>
+                    {r.k in typed ? 'entered by crew · ' : ''}
+                    {r.lo != null && r.hi != null ? `your usual ${fmt(r.lo, r.digits)}-${fmt(r.hi, r.digits)}` : r.status === 'green' ? 'in range' : STATUS_WORD[r.status]}
+                  </small>
+                </span>
+                <Spark r={r} />
+              </button>
+              {edit === r.k ? (
+                <form
+                  className="vrow-edit"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    save(r.k);
+                  }}
+                >
+                  <input type="number" inputMode="decimal" step="any" autoFocus value={draft} onChange={(e) => setDraft(e.target.value)} onKeyDown={(e) => e.key === 'Escape' && setEdit(null)} aria-label={`${SHORT[r.k]} in ${r.unit}`} />
+                  <small>{r.unit}</small>
+                  <button type="submit" className="solid">
+                    Save
+                  </button>
+                  <button type="button" className="ghost" onClick={() => setEdit(null)}>
+                    Cancel
+                  </button>
+                </form>
+              ) : (
+                <button
+                  type="button"
+                  className="vrow-v"
+                  aria-label={`Enter a new ${SHORT[r.k].toLowerCase()} value`}
+                  onClick={() => {
+                    setEdit(r.k);
+                    setDraft(r.value != null ? String(r.value) : '');
+                  }}
+                >
+                  {fmt(r.value, r.digits)}
+                  <small>{r.unit}</small>
+                </button>
+              )}
+            </div>
           ))}
         </div>
       )}
       <section className="crew-read brk" aria-live="polite">
-        <span className="cap">
+        <span className="cap cap-u">
           {seat[cv.m.id]} · {cv.m.role}
         </span>
         <b className="crew-word">{STATUS_WORD[cv.overall]}</b>
         {!flagged.length && <span className="cap crew-line">{caption}</span>}
         {heartBpm != null && <span className="cap">Heart {Math.round(heartBpm)} bpm · camera estimate</span>}
-        <span className="cap crew-esc">Goes to: {escalation}</span>
+        <span className="cap crew-esc">{escalation}</span>
         <span className="cap">
-          {measuredToday ? 'Next measurement: tomorrow morning' : 'Measurement due now'} · {streak} days in a row
+          {measuredToday ? 'Next check tomorrow morning' : 'Check due now'} · {streak} days in a row
         </span>
-        <span className="crew-env" role="group" aria-label="Setting">
-          {(['iss', 'moon', 'transit', 'mars'] as EnvironmentId[]).map((e) => (
-            <button key={e} type="button" className="ghost" aria-pressed={cd.mission.environment === e} onClick={() => setEnv(e)}>
-              {e === 'iss' ? 'ISS' : e === 'moon' ? 'Moon' : e === 'transit' ? 'Transit' : 'Mars'}
-            </button>
-          ))}
-        </span>
-        <span className="cap crew-band">
-          {band.deviceName ?? 'Wrist band (simulated)'} · {band.status === 'connected' ? `connected${band.reading ? ` · battery ${Math.round(band.reading.battery)} %` : ''}` : band.status}
-          {band.status !== 'connected' && band.status !== 'pairing' && (
-            <button type="button" className="ghost crew-connect" onClick={() => band.connect('sim')}>
-              Connect
-            </button>
-          )}
-        </span>
+        {(band.status !== 'connected' || (band.reading && band.reading.battery < 20)) && (
+          <span className="cap crew-band">
+            {band.deviceName ?? 'Wrist band (simulated)'} · {band.status === 'connected' ? `battery low · ${Math.round(band.reading!.battery)}\u00a0%` : band.status}
+            {band.status !== 'connected' && band.status !== 'pairing' && (
+              <button type="button" className="ghost crew-connect" onClick={() => band.connect('sim')}>
+                Connect
+              </button>
+            )}
+          </span>
+        )}
         <AlarmStrip alarms={alarms} acked={acked} onAck={(id) => setAcked((a) => ({ ...a, [id]: true }))} />
+        {top && (
+          <div className="crew-do">
+            <span className="cap">What to do now</span>
+            <ol className="crew-steps">
+              {toSteps(top.action).map((s) => (
+                <li key={s}>{s}</li>
+              ))}
+            </ol>
+            <button type="button" className="ghost crew-how" aria-expanded={how} onClick={() => setHow((h) => !h)}>
+              How to measure
+            </button>
+            {how && (
+              <ol className="crew-steps">
+                {toSteps(cd.metrics[top.k].how_to_measure).map((s) => (
+                  <li key={s}>{s}</li>
+                ))}
+              </ol>
+            )}
+          </div>
+        )}
       </section>
 
       <div className="crew-actions">
@@ -251,10 +360,10 @@ export default function CrewPage() {
           </button>
         )}
         <button type="button" className="ghost" onClick={() => setScanning(true)}>
-          Scan
+          Camera check
         </button>
         <button type="button" className="ghost" aria-pressed={panel === 'checkin'} onClick={() => setParams(panel === 'checkin' ? {} : { p: 'checkin' }, { replace: true })}>
-          Check-in
+          Daily check-in
         </button>
         {target && (
           <button type="button" className="ghost" onClick={() => setParams({}, { replace: true })}>

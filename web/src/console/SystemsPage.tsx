@@ -19,36 +19,31 @@ export default function SystemsPage() {
   if (!data) return <p className="cx-error cx-wait">Loading</p>;
 
   const checks = views.reduce((n, v) => n + v.scores.length, 0);
-  const flagged = views.reduce((n, v) => n + v.scores.filter((s) => s.status !== 'green').length, 0);
   const m = data.storm.meta.metrics_test;
   const caught = Math.round(m.hit_rate * m.n_storms);
-  const steps = [
-    { name: 'Sensors', n: PLACEMENTS.length, sub: 'sources' },
-    { name: 'ex', n: checks, sub: 'checks' },
-    { name: 'Crew', n: views.length, sub: 'aboard' },
-    { name: 'Ground', n: flagged, sub: 'to report' },
-  ];
+  const crewShown = views.reduce((n, v) => n + v.scores.filter((s) => s.status !== 'green').length, 0);
+  const flagged = views.reduce((n, v) => n + v.scores.filter((s) => s.status === 'red').length, 0);
   const rows: [string, string, string][] = src
-    ? Object.entries(src).map(([k, s]) => [NAMES[k] ?? k, WORD[s.quality] ?? s.quality, s.at.slice(11, 16) + ' UTC'])
-    : PLACEMENTS.map((p) => [p.name, p.id === 'cabin' ? 'Recorded' : 'Simulated', '']);
+    ? Object.entries(src).map(([k, s]) => [k === 'ml_forecast' ? `${NAMES[k]} · ${data.storm.meta.model}` : NAMES[k] ?? k, WORD[s.quality] ?? s.quality, s.at.slice(11, 16) + ' UTC'])
+    : [...PLACEMENTS.map((p): [string, string, string] => [p.name, p.id === 'cabin' ? 'Recorded' : 'Simulated', '']), [`Storm model · ${data.storm.meta.model}`, 'Recorded', '']];
 
   return (
     <>
       <i className="safe safe-left" aria-hidden />
       <section className="pat sys-left">
         <span className="cap">How readings reach you</span>
-        <b className="pat-word">{checks} checks today</b>
+        <b className="pat-word">{checks} readings checked today</b>
         <span className="cap pat-line">
-          {steps.map((s) => `${s.name === 'ex' ? 'e\u02e3' : s.name} ${s.n}`).join('  \u2192  ')}
+          {PLACEMENTS.length} sensors · {checks} readings checked · {crewShown} shown to the crew · {flagged} sent to Earth
         </span>
         <span className="cap">
-          {caught} of {m.n_storms} storms caught · {Math.round(m.false_alarms_per_month)} false alarm a month
+          Storm forecast warned before {caught} of {m.n_storms} storms
         </span>
       </section>
 
       {open && (
         <section className="pat sys-src brk">
-          <span className="cap">Sources · {src ? 'server' : 'this device'}</span>
+          <span className="cap">Data sources · {src ? 'server' : 'this device'}</span>
           <table className="tbl">
             <tbody>
               {rows.map(([name, word, at]) => (
@@ -65,7 +60,7 @@ export default function SystemsPage() {
 
       <div className="pat-actions">
         <button type="button" className="ghost" aria-pressed={open} onClick={() => setOpen((o) => !o)}>
-          {open ? 'Hide sources' : 'Sources'}
+          {open ? 'Hide data sources' : 'Data sources'}
         </button>
         {open && src && (
           <button

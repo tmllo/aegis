@@ -5,6 +5,7 @@
 // p(storm) timeline with the watch and warning lines, storm onsets, misses and false alarms.
 // Look: ./replay.css, scoped to .rp.
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { audioOn } from '../audio';
 import { useMissionData } from '../../data/store';
 import type { AlertLevel, StormForecast, StormMeta } from '../../data/types';
@@ -18,7 +19,7 @@ const END = Date.parse('2024-05-20T23:59:00Z');
 const PLAY_MS = 30_000;
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'] as const;
 const WORD: Record<AlertLevel, string> = { none: 'Quiet', watch: 'Watch', warning: 'Warning' };
-const SHELTER = 'SEP likely: suspend EVA, crew to shelter (mission rule)';
+const SHELTER = 'Stop outside work · all crew to the shelter';
 
 export type Outcome = 'hit' | 'miss' | 'false-alarm' | 'none';
 
@@ -104,7 +105,7 @@ export function flareRadius(flareClass: string): number {
 
 function utc(ms: number): string {
   const d = new Date(ms);
-  return `${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]} ${String(d.getUTCHours()).padStart(2, '0')}:${String(d.getUTCMinutes()).padStart(2, '0')} UTC`;
+  return `${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}, ${String(d.getUTCHours()).padStart(2, '0')}:${String(d.getUTCMinutes()).padStart(2, '0')} UTC`;
 }
 
 /** Orthographic Sun seen from Earth; longitude west-positive, so west is on the right limb. */
@@ -171,11 +172,11 @@ function Sun({ flares, latestId }: { flares: Flare[]; latestId: string | null })
           r={flareRadius(f.flareClass)}
           className={`rp-dot is-${f.outcome === 'none' ? f.alert : f.outcome}${f.id === latestId ? ' is-latest' : ''}`}
         >
-          <title>{`${f.flareClass} · p ${f.p.toFixed(2)} · ${utc(f.t)}`}</title>
+          <title>{`Solar flare ${f.flareClass} · storm chance ${Math.round(f.p * 100)} % · ${utc(f.t)}`}</title>
         </circle>
       ))}
-      <text x={-SUN_R - 12} y={4} textAnchor="end" className="rp-axis">E</text>
-      <text x={SUN_R + 12} y={4} className="rp-axis">W</text>
+      <text x={-SUN_R - 12} y={4} textAnchor="end" className="rp-axis">East</text>
+      <text x={SUN_R + 12} y={4} className="rp-axis">West</text>
     </svg>
   );
 }
@@ -185,7 +186,7 @@ const xOf = (t: number) => ((t - START) / (END - START)) * TL.w;
 /** square-root scale: the thresholds sit low (watch ~0.04, warning ~0.16), so a linear axis hides them */
 const yOf = (p: number) => TL.bottom - Math.sqrt(Math.max(0, Math.min(1, p))) * (TL.bottom - TL.top);
 const pct = (p: number) => ((TL.h - yOf(p)) / TL.h) * 100;
-const fmtP = (p: number) => (p >= 0.1 ? p.toFixed(2) : p.toFixed(3));
+const pctText = (p: number) => `${Math.round(p * 100)} %`;
 
 function Timeline({
   prep,
@@ -242,7 +243,7 @@ function Proof({ meta: m }: { meta: StormMeta }) {
   const fa = falseAlarmFigure(mt.false_alarms_per_month);
   return (
     <span className="cap rp-proof">
-      Test {m.test_period[0].slice(0, 4)}–{m.test_period[1].slice(0, 4)} · {caught} of {mt.n_storms} storms caught · {fa.figure} {fa.label} · median {mt.median_lead_time_h.toFixed(1)} h ahead
+      Tested on {m.test_period[0].slice(0, 4)}–{m.test_period[1].slice(0, 4)} · warned before {caught} of {mt.n_storms} storms · about {fa.figure} {fa.label} · typically {mt.median_lead_time_h.toFixed(1)} h of warning
     </span>
   );
 }
@@ -254,6 +255,15 @@ export default function StormReplay() {
   const [t, setT] = useState(START);
   const [playing, setPlaying] = useState(false);
   const alarmed = useRef(false);
+  // deep link for the guided demo: ?at=<ISO time>&play=1
+  const [params] = useSearchParams();
+  const at = params.get('at');
+  const autoplay = params.get('play') === '1';
+  useEffect(() => {
+    const ms = at ? Date.parse(at) : NaN;
+    if (Number.isFinite(ms)) setT(Math.min(END, Math.max(START, ms)));
+    if (autoplay) setPlaying(true);
+  }, [at, autoplay]);
 
   useEffect(() => {
     if (!playing) return;
@@ -323,22 +333,22 @@ export default function StormReplay() {
       {level === 'warning' && (
         <div className="rp-alarm" role="alert">
           <span>{SHELTER}</span>
-          {arrived && lead != null && <span className="rp-alarm-lead">Warned {Math.floor(lead)} h before particles arrive (from flare peak)</span>}
+          {arrived && lead != null && <span className="rp-alarm-lead">{Math.floor(lead)} h of warning before the radiation arrived</span>}
         </div>
       )}
 
       <section className="rp-read brk" aria-live="polite">
-        <span className="cap">Storm replay · 5–20 May 2024</span>
+        <span className="cap">Radiation storm replay · 5–20 May 2024</span>
         <b className="pat-word rp-word">{WORD[level]}</b>
         <span className="cap rp-line">
           {utc(t)}
-          {latest ? ` · ${latest.flareClass} · p ${latest.p.toFixed(2)}` : ' · no flare yet'}
+          {latest ? ` · solar flare ${latest.flareClass} · storm chance ${Math.round(latest.p * 100)} %` : ' · no solar flare yet'}
         </span>
         {arrived && lead != null && level !== 'warning' && (
-          <span className="cap rp-lead">Warned {Math.floor(lead)} h before particles arrive (from flare peak)</span>
+          <span className="cap rp-lead">{Math.floor(lead)} h of warning before the radiation arrived</span>
         )}
         <span className="cap rp-score">
-          <i className="is-hit" /> {tally.hits} warned <i className="is-miss" /> {tally.misses} missed <i className="is-false-alarm" /> {tally.fa} false {tally.fa === 1 ? 'alarm' : 'alarms'}
+          <i className="is-hit" /> {tally.hits} {tally.hits === 1 ? 'storm' : 'storms'} warned <i className="is-miss" /> {tally.misses} {tally.misses === 1 ? 'storm' : 'storms'} missed <i className="is-false-alarm" /> {tally.fa} false {tally.fa === 1 ? 'alarm' : 'alarms'}
         </span>
       </section>
 
@@ -357,6 +367,7 @@ export default function StormReplay() {
           onKeyDown={keys}
         >
           <Timeline prep={prep} t={t} watch={storm.meta.thresholds.watch} warning={storm.meta.thresholds.warning} onSeek={seek} />
+          <span className="rp-yaxis" aria-hidden>Storm chance %</span>
           <span className="rp-ticks" aria-hidden>
             {[5, 8, 10, 12, 15, 18, 20].map((d) => (
               <span key={d} style={{ left: `${(xOf(Date.parse(`2024-05-${String(d).padStart(2, '0')}T00:00:00Z`)) / TL.w) * 100}%` }}>
@@ -365,10 +376,10 @@ export default function StormReplay() {
             ))}
           </span>
           <span className="rp-th-label is-warning" style={{ bottom: `${pct(storm.meta.thresholds.warning)}%` }}>
-            Warning {fmtP(storm.meta.thresholds.warning)}
+            Warning above {pctText(storm.meta.thresholds.warning)}
           </span>
           <span className="rp-th-label is-watch" style={{ bottom: `${pct(storm.meta.thresholds.watch)}%` }}>
-            Watch {fmtP(storm.meta.thresholds.watch)}
+            Watch above {pctText(storm.meta.thresholds.watch)}
           </span>
         </div>
         <div className="rp-actions">

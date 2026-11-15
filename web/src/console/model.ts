@@ -8,16 +8,16 @@ export const RANK: Record<Status, number> = { green: 0, amber: 1, red: 2 };
 
 /** UI names, 1-2 words. */
 export const SHORT: Record<MetricKey, string> = {
-  hr: 'Pulse',
-  bp_sys: 'Pressure',
-  bp_dia: 'Diastolic',
-  glucose: 'Glucose',
-  temp: 'Temp',
+  hr: 'Heart rate',
+  bp_sys: 'Blood pressure, upper',
+  bp_dia: 'Blood pressure, lower',
+  glucose: 'Blood sugar',
+  temp: 'Body temperature',
   sleep_h: 'Sleep',
   mood: 'Mood',
   exercise_min: 'Exercise',
   bone_loss_pct: 'Bone loss',
-  dose_mSv_day: 'Dose',
+  dose_mSv_day: 'Radiation today',
   dose_mSv_cum: 'Total dose',
 };
 
@@ -125,6 +125,19 @@ export function withMood(cd: CrewData, m: CrewMember, mood: number | undefined):
   return { ...m, series: m.series.map((r) => (r.date === cd.mission.today ? { ...r, mood } : r)) };
 }
 
+/** Values typed in by the crew today replace the series value, so they are scored like any reading. */
+export function withEntries(cd: CrewData, m: CrewMember, day: Partial<Record<MetricKey, number>> | undefined): CrewMember {
+  if (!day || !Object.keys(day).length) return m;
+  return { ...m, series: m.series.map((r) => (r.date === cd.mission.today ? { ...r, ...day } : r)) };
+}
+
+/** An action or how-to text as 1-3 short steps: one per sentence, or per clause when it is one sentence. */
+export function toSteps(text: string): string[] {
+  let s = text.split(/(?<=\.)\s+/).filter(Boolean);
+  if (s.length === 1 && /, and /.test(s[0])) s = s[0].replace(/\.$/, '').split(/,\s*(?:and\s+)?/);
+  return s.slice(0, 3).map((x) => x.trim().replace(/^./, (c) => c.toUpperCase()).replace(/[^.]$/, (c) => `${c}.`));
+}
+
 export function crewView(cd: CrewData, m: CrewMember): CrewView {
   const { status, scores } = statusOn(m, cd);
   const issue =
@@ -148,4 +161,10 @@ export const PLACEMENTS: { id: string; name: string; cls: string; reads: string;
 ];
 
 /** One-way signal delay to the ground for the mission site (physics, not data). */
-export const LINK_DELAY: Record<string, string> = { iss: 'seconds', moon: '1.3 s', transit: '3-20 min', mars: '4-24 min' };
+export const LINK_DELAY: Record<string, string> = { iss: 'under a second', moon: '1.3 s', transit: '3 to 20 min', mars: '4 to 24 min' };
+
+/** Where the crew is, in words. */
+export const PLACE: Record<string, string> = { iss: 'on the ISS', moon: 'on the Moon', transit: 'in transit to Mars', mars: 'on Mars' };
+
+/** 30 Jul 2026 */
+export const fmtDate = (d: string) => new Date(`${d.slice(0, 10)}T00:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });

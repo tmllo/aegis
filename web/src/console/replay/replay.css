@@ -109,3 +109,5 @@
 .rp-ticks span { position: absolute; bottom: 0; transform: translateX(-50%); white-space: nowrap; font: 11px var(--font-mono, monospace); color: rgb(255 255 255 / 0.55); }
 .rp-ticks span:first-child { transform: none; }
 .rp-ticks span:last-child { transform: translateX(-100%); }
+
+.rp-yaxis { position: absolute; left: 6px; top: 0; font: 11px var(--font-mono, monospace); letter-spacing: 0.1em; text-transform: uppercase; color: rgb(255 255 255 / 0.55); pointer-events: none; }

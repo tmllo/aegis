@@ -25,7 +25,7 @@ export function CheckinPanel({ className = '' }: { className?: string }) {
   const srv = mind.server[`${cv.m.id}|${cd.mission.today}`];
   const run = srv?.progress?.checkin_streak ?? streak(mind.reports[cv.m.id], cd.mission.today);
   return (
-    <Panel label="Check-in" icon="mind" aside={`${Object.keys(report).length}/5 · streak ${run} d`} className={className}>
+    <Panel label="Check-in" icon="mind" aside={`${Object.keys(report).length} of 5 answered · ${run} days in a row`} className={className}>
       {SCALES.map((s) => (
         <div key={s.key} className="scale">
           <span className="label">{s.label}</span>
@@ -41,15 +41,15 @@ export function CheckinPanel({ className = '' }: { className?: string }) {
       ))}
       {act && (
         <button type="button" className="btn" style={{ marginTop: 10 }} disabled={actDone} onClick={() => void logActivity(act.id, cv.m.id).then(setActDone)}>
-          {actDone ? `${act.label} · done` : `Try: ${act.label}${act.minutes ? ` (${act.minutes} min)` : ''}`}
+          {actDone ? `${act.label} · done` : `Suggested: ${act.minutes ? `${act.minutes} minutes of ` : ''}${act.label.toLowerCase()}`}
         </button>
       )}
       {week && (
         <p className="note" style={{ marginTop: 8 }}>
-          This week: {SCALES.map((s) => (week[s.key] != null ? `${s.label} ${week[s.key].toFixed(1)}` : null)).filter(Boolean).join(' · ')}
+          Your average this week: {SCALES.map((s) => (week[s.key] != null ? `${s.label} ${week[s.key].toFixed(1)}` : null)).filter(Boolean).join(' · ')}
         </p>
       )}
-      <p className="note" style={{ marginTop: 4 }}>{mind.queue.length ? `${mind.queue.length} waiting for the server` : 'Synced'}</p>
+      <p className="note" style={{ marginTop: 4 }}>{mind.queue.length ? `${mind.queue.length} waiting to send` : 'Saved'}</p>
     </Panel>
   );
 }

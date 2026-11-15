@@ -4,8 +4,9 @@ import { useEffect, useMemo } from 'react';
 import { useMissionData, useMissionStore } from '../data/store';
 import { useMind } from '../data/mind';
 import type { CrewMember } from '../data/types';
-import { crewView, RANK, withMood, type CrewView } from './model';
+import { crewView, RANK, withEntries, withMood, type CrewView } from './model';
 import { useHud } from './hud';
+import { useEntries } from './entries';
 
 /** Seat designations from the role field (UI layer only; no names on screen). */
 export function designations(crew: CrewMember[]): Record<string, string> {
@@ -26,6 +27,7 @@ let picked = false;
 export function useConsole() {
   const { data, loadState, error } = useMissionData();
   const reports = useMind((s) => s.reports);
+  const entries = useEntries((s) => s.byMember);
   const selectedId = useMissionStore((s) => s.selectedCrewId);
   const setCrew = useMissionStore((s) => s.setSelectedCrewId);
   const asOf = useHud((s) => s.asOf);
@@ -38,8 +40,8 @@ export function useConsole() {
   }, [data, asOf, env]);
 
   const views: CrewView[] = useMemo(
-    () => (cd ? cd.crew.map((m) => crewView(cd, withMood(cd, m, reports[m.id]?.[cd.mission.today]?.mood))) : []),
-    [cd, reports],
+    () => (cd ? cd.crew.map((m) => crewView(cd, withEntries(cd, withMood(cd, m, reports[m.id]?.[cd.mission.today]?.mood), entries[m.id]?.[cd.mission.today]))) : []),
+    [cd, reports, entries],
   );
   const seat = useMemo(() => (cd ? designations(cd.crew) : {}), [cd]);
 

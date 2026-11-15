@@ -11,11 +11,13 @@ const World = lazy(() => import('./World').then((m) => ({ default: m.World })));
 import { useHud } from './hud';
 import { Scramble } from './Scramble';
 import './console.css';
+import { DemoButton } from './demo/Demo';
 
 export const SECTIONS = [
   { to: '/', name: 'Crew' },
   { to: '/environment', name: 'Cabin' },
   { to: '/systems', name: 'Systems' },
+  { to: '/mind', name: 'Mind' },
 ] as const;
 
 export function Shell() {
@@ -124,6 +126,7 @@ export function Shell() {
           ))}
         </nav>
         <div className="cx-icons">
+          <DemoButton />
           <span className="cx-day">Day {day ?? '--'}</span>
           <span className="cx-live" data-on={server || undefined} title={server ? 'Server live' : 'Offline'}>
             <i /> {server ? 'Live' : 'Offline'}

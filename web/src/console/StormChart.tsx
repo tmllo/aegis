@@ -1,4 +1,4 @@
-// Storm probability over the latest flares: a teal line with diamond markers where the model
+// Storm chance over the latest flares: a teal line with diamond markers where the model
 // raised a watch or warning, the two thresholds as dashed lines, a crosshair readout.
 import { useRef, useState } from 'react';
 import type { FlareEvent, StormMeta } from '../data/types';
@@ -45,10 +45,11 @@ export function StormChart({ events, meta, height = 160 }: { events: FlareEvent[
           <g key={k}>
             <line x1="36" x2={W - 14} y1={y(meta.thresholds[k])} y2={y(meta.thresholds[k])} stroke={k === 'warning' ? 'rgb(var(--crit))' : 'rgb(var(--warn))'} strokeOpacity="0.55" strokeDasharray="4 5" vectorEffect="non-scaling-stroke" />
             <text x={W - 16} y={y(meta.thresholds[k]) - 5} textAnchor="end" className="chart-a">
-              {k === 'warning' ? 'Warning' : 'Watch'}
+              {k === 'warning' ? 'Warning' : 'Watch'} above {Math.round(meta.thresholds[k] * 100)} %
             </text>
           </g>
         ))}
+        <text x="4" y="12" className="chart-t" textAnchor="start">Storm chance %</text>
         <polyline points={pts} fill="none" stroke="rgb(var(--accent))" strokeWidth="1.6" filter="url(#glow)" vectorEffect="non-scaling-stroke" />
         {events.map((e, i) =>
           e.alert_level !== 'none' ? (
@@ -58,7 +59,7 @@ export function StormChart({ events, meta, height = 160 }: { events: FlareEvent[
         {hover != null && <line x1={x(hover)} x2={x(hover)} y1="6" y2={H - 22} stroke="rgb(var(--ink))" strokeOpacity="0.45" vectorEffect="non-scaling-stroke" />}
         {[0, Math.floor((n - 1) / 2), n - 1].map((i) => (
           <text key={i} x={x(i)} y={H - 6} textAnchor={i === 0 ? 'start' : i === n - 1 ? 'end' : 'middle'} className="chart-t">
-            {events[i].peak_time.slice(0, 10)}
+            {new Date(events[i].peak_time).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' })}
           </text>
         ))}
       </svg>
@@ -67,11 +68,11 @@ export function StormChart({ events, meta, height = 160 }: { events: FlareEvent[
           <>
             <span>{h.peak_time.slice(0, 16).replace('T', ' ')}</span>
             <b>{h.flare_class}</b>
-            <span>p {Math.round(h.p_storm * 100)}%</span>
-            <span>{h.alert_level === 'none' ? 'Quiet' : h.alert_level}</span>
+            <span>storm chance {Math.round(h.p_storm * 100)} %</span>
+            <span>{h.alert_level === 'none' ? 'Quiet' : h.alert_level === 'watch' ? 'Watch' : 'Warning'}</span>
           </>
         ) : (
-          <span>{meta.horizon_hours} h horizon · point at the line</span>
+          <span>Point at the line to read each flare</span>
         )}
       </div>
     </div>

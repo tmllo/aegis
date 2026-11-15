@@ -53,11 +53,11 @@ export function HandoffPanel({ className = "" }: { className?: string }) {
   } Dose today ${bundle.radiation.dose_today_mSv ?? '--'} mSv.`;
 
   return (
-    <Panel label="Handoff" icon="ground" aside={`One way ~${LINK_DELAY[cd.mission.environment] ?? '--'}`} className={className}>
-      <span className="label">Prepared for an onboard AI medical assistant such as NASA's CMO-DA</span>
+    <Panel label="Send to doctor" icon="ground" aside={`Signal delay to Earth: about ${LINK_DELAY[cd.mission.environment] ?? '--'}`} className={className}>
+      <span className="label">Summary for the onboard medical assistant (such as NASA's CMO-DA)</span>
       {!built ? (
         <button type="button" className="btn btn-primary gap" onClick={() => setBuilt(true)}>
-          Build case bundle
+          Prepare summary
         </button>
       ) : (
         <>
@@ -70,7 +70,7 @@ export function HandoffPanel({ className = "" }: { className?: string }) {
             </div>
             <span className="label">Earth</span>
           </div>
-          <p className="note">{sent == null ? `Report arrives in ~${LINK_DELAY[cd.mission.environment] ?? '--'}` : progress >= 1 ? 'Delivered to the flight surgeon queue' : `In transit${scale > 1 ? ' (shown 1 s per minute)' : ''}`}</p>
+          <p className="note">{sent == null ? `Signal delay to Earth: about ${LINK_DELAY[cd.mission.environment] ?? '--'}` : progress >= 1 ? 'Delivered to the flight surgeon queue' : `In transit${scale > 1 ? ' (shown 1 s per minute)' : ''}`}</p>
           <button type="button" className="btn btn-primary" style={{ marginTop: 10 }} onClick={() => { setSent(performance.now()); setNow(performance.now()); }}>
             {sent == null ? 'Send report' : progress >= 1 ? 'Send again' : 'Sending'}
           </button>

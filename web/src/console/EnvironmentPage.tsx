@@ -9,7 +9,7 @@ import { cabinOverall } from '../core/cabin';
 import { DOSE_CUM_AMBER_FRACTION } from '../core/scoring';
 import { doseSummary, sortedEvents } from '../core/radiation';
 import type { Status } from '../data/types';
-import { STATUS_WORD } from './model';
+import { fmtDate, PLACE, STATUS_WORD } from './model';
 import { Icon } from './ui';
 import { StormChart } from './StormChart';
 import ReplayPage from './ReplayPage';
@@ -17,11 +17,12 @@ import ShelterPage from './ShelterPage';
 import { useConsole } from './useConsole';
 
 const AIR = [
-  { key: 'cabin.ppco2', label: 'CO2' },
-  { key: 'cabin.ppo2', label: 'O2' },
-  { key: 'cabin.pressure', label: 'Pressure' },
-  { key: 'cabin.temp', label: 'Temp' },
+  { key: 'cabin.ppco2', label: 'Carbon dioxide' },
+  { key: 'cabin.ppo2', label: 'oxygen' },
+  { key: 'cabin.pressure', label: 'air pressure' },
+  { key: 'cabin.temp', label: '' },
 ];
+const TANK: Record<string, string> = { 'cabin.water_clean': 'drinking water', 'cabin.water_waste': 'waste water', 'cabin.urine_tank': 'urine' };
 const LEVEL: Record<string, Status> = { none: 'green', watch: 'amber', warning: 'red' };
 const COL: Record<Status, string> = { green: 'rgb(var(--accent))', amber: 'rgb(var(--warn))', red: 'rgb(var(--crit))' };
 
@@ -63,6 +64,7 @@ export default function EnvironmentPage() {
 
   const air = cabin ? cabinOverall(cabin.readings) : null;
   const live = cabin?.readings.some((r) => r.quality === 'live');
+  const recAt = cabin?.readings.find((r) => r.t != null)?.t;
   const tanks = cabin?.readings.filter((r) => r.metric.tank) ?? [];
   const latest = events.at(-1);
   const storm = latest ? LEVEL[latest.alert_level] : null;
@@ -77,48 +79,49 @@ export default function EnvironmentPage() {
       <i className="safe safe-left" aria-hidden />
       <i className="safe safe-right" aria-hidden />
       <section className="pat cab-left">
-        <span className="cap">Cabin · {live ? 'live' : 'recorded 14 Nov'}</span>
+        <span className="cap">Cabin air · {live ? 'live' : `recorded ${recAt ? fmtDate(new Date(recAt).toISOString()) : ''}`}</span>
         <b className={`pat-word st-${air}`}>{air ? STATUS_WORD[air] : 'No feed'}</b>
         <span className="cap pat-line">
           {AIR.map((a) => {
             const r = cabin?.readings.find((x) => x.metric.key === a.key);
-            return `${a.label} ${r?.value != null ? r.value.toFixed(r.metric.digits) : '--'} ${r?.metric.unit ?? ''}`;
+            const v = r?.value != null ? r.value.toFixed(r.metric.digits) : '--';
+            return a.key === 'cabin.ppco2' || a.key === 'cabin.ppo2' ? `${a.label} ${v}` : `${a.label ? `${a.label} ` : ''}${v} ${r?.metric.unit ?? ''}`;
           }).join(' · ')}
         </span>
-        <span className="cap">{tanks.map((t) => `${t.metric.short} ${t.value != null ? Math.round(t.value) : '--'} %`).join(' · ')}</span>
+        <span className="cap">Tanks · {tanks.map((t, i) => `${TANK[t.metric.key] ?? t.metric.short} ${t.value != null ? Math.round(t.value) : '--'} %${i === 0 ? ' full' : ''}`).join(' · ')}</span>
 
         <div className="cab-rad">
           <DoseBody status={doseStatus} f={f} />
           <div className="cab-dose-text">
-            <span className="cap">Radiation · {seat[cv.m.id]} · {cd.environments[cd.mission.environment]?.label}</span>
+            <span className="cap">Radiation so far · {seat[cv.m.id]} · {PLACE[cd.mission.environment] ?? cd.environments[cd.mission.environment]?.label}</span>
             <b className={`pat-word st-${doseStatus}`}>{dose.fraction != null ? `${(dose.fraction * 100).toFixed(1)} %` : '--'}</b>
             <span className="cap pat-line">
-              of career limit · {dose.cumulative_mSv?.toFixed(0) ?? '--'} of {dose.careerLimit_mSv} mSv · today {dose.daily_mSv?.toFixed(2) ?? '--'} mSv
+              of the career limit used · {dose.cumulative_mSv?.toFixed(0) ?? '--'} of {dose.careerLimit_mSv} mSv · today {dose.daily_mSv?.toFixed(2) ?? '--'} mSv
             </span>
-            <p className="cab-plain">Blood-forming marrow, the eye lens, the brain and the skin are the tissues most sensitive to space radiation; they are lit by this mission dose against the career limit.</p>
+            <p className="cab-plain">Radiation harms bone marrow, eyes, brain and skin first. They light up as the dose grows.</p>
           </div>
         </div>
       </section>
 
       <section className="pat cab-right">
-        <span className="cap">Storm · {data.storm.meta.horizon_hours} h forecast</span>
+        <span className="cap">Solar storm forecast · next {data.storm.meta.horizon_hours} hours</span>
         <b className={`pat-word st-${storm}`}>{latest ? (latest.alert_level === 'none' ? 'Quiet' : latest.alert_level === 'watch' ? 'Watch' : 'Warning') : 'No feed'}</b>
-        <span className="cap pat-line">{latest ? `Latest flare ${latest.flare_class} · storm chance ${Math.round(latest.p_storm * 100)} %` : 'No flare data'}</span>
+        <span className="cap pat-line">{latest ? `Storm chance ${Math.round(latest.p_storm * 100)} % · latest solar flare ${latest.flare_class}` : 'No flare data'}</span>
         <div className="cab-chart">
           <StormChart events={events} meta={data.storm.meta} height={150} />
         </div>
         <span className="cap">
-          {caught} of {m.n_storms} storms caught · {m.false_alarms_per_month.toFixed(1)} false alarms a month · {m.median_lead_time_h.toFixed(1)} h median lead · skill {m.brier_skill_vs_climatology.toFixed(2)}
+          Tested on {data.storm.meta.test_period.map((d) => d.slice(0, 4)).join('-')} · warned before {caught} of {m.n_storms} storms · about {Math.round(m.false_alarms_per_month)} false alarm{Math.round(m.false_alarms_per_month) === 1 ? '' : 's'} a month · typically {m.median_lead_time_h.toFixed(1)} h of warning
         </span>
-        <span className="cap">Model {data.storm.meta.model} · test period · data {data.storm.meta.data_credit}</span>
+        <span className="cap">Space weather data: NASA CCMC DONKI</span>
       </section>
 
       <div className="pat-actions">
         <button type="button" className="solid" onClick={() => setParams({ mode: 'replay' }, { replace: true })}>
-          Replay May 2024
+          Replay the May 2024 storm
         </button>
         <button type="button" className="ghost" onClick={() => setParams({ mode: 'shelter' }, { replace: true })}>
-          Shelter drill
+          Run a storm drill
         </button>
       </div>
     </div>

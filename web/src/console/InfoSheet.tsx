@@ -22,11 +22,11 @@ export function InfoSheet({ r, target, cd, m, onClose }: { r: Row; target: Targe
       <button type="button" className="ghost sheet-close" onClick={onClose}>
         Close
       </button>
-      <span className="cap">{target ? TARGETS[target].label : 'Vital'}</span>
+      <span className="cap">{target ? (target === 'dna' ? 'Whole body' : TARGETS[target].label) : 'Vital'}</span>
       <h2 className="sheet-title">{meta.label}</h2>
       <span className="sheet-now" data-status={r.status}>
         <Mark s={r.status} size={10} /> {fmt(r.value, r.digits)} {r.unit} · {STATUS_WORD[r.status]}
-        {r.mean != null && <small> · usual {fmt(r.lo, r.digits)}-{fmt(r.hi, r.digits)}</small>}
+        {r.mean != null && <small> · your usual {fmt(r.lo, r.digits)}-{fmt(r.hi, r.digits)}</small>}
       </span>
       {organ.map((o) => (
         <div key={o.k} className="sheet-row" data-status={o.status}>
@@ -38,7 +38,7 @@ export function InfoSheet({ r, target, cd, m, onClose }: { r: Row; target: Targe
           </b>
           <Band g={o} />
           <span className="cap">
-            Usual {fmt(o.mean, o.digits)} · band {o.lo != null && o.hi != null ? `${fmt(o.lo, o.digits)}-${fmt(o.hi, o.digits)}` : 'none'}
+            Your usual {fmt(o.mean, o.digits)}{o.lo != null && o.hi != null ? ` · range ${fmt(o.lo, o.digits)}-${fmt(o.hi, o.digits)}` : ''}
           </span>
         </div>
       ))}

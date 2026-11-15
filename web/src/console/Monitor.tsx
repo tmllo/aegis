@@ -105,9 +105,8 @@ export function AlarmStrip({ alarms, acked, onAck }: { alarms: Alarm[]; acked: R
         <div key={a.id} className="alarm" data-status={a.status} data-acked={acked[a.id] || undefined}>
           <Mark s={a.status} size={12} />
           <span className="alarm-text">{a.text}</span>
-          <span className="alarm-since">{a.since}</span>
           <button type="button" className="ghost alarm-ack" disabled={acked[a.id]} onClick={() => onAck(a.id)}>
-            {acked[a.id] ? 'Acknowledged' : 'Acknowledge'}
+            Seen
           </button>
         </div>
       ))}
