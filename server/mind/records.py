@@ -108,13 +108,18 @@ def scale_of(cat: Catalog, metric: str) -> dict | None:
 
 def checkin_batch(cat: Catalog, subject: str, metric: str, t: str, value: float, source: str = CHECKIN_SOURCE,
                   quality: str = "live") -> Batch:
-    """POST /api/observations body -> Batch. Accepts self-report and crew_daily metrics (a re-measure) for crew_sim subjects."""
+    """POST /api/observations body -> Batch. Accepts self-report, crew_daily, and crew_spot metrics for crew_sim subjects.
+
+    crew_spot is one reading from the daily check (camera breathing, on-screen reaction time). It is stored and not scored.
+    """
     s = cat.subjects.get(subject)
     if s is None or s.get("kind") != "crew_sim":
         raise ValueError(f"unknown crew member {subject!r}")
     m = cat.metrics.get(metric)
-    if m is None or m["kind"] not in ("self_report", "crew_daily"):
+    if m is None or m["kind"] not in ("self_report", "crew_daily", "crew_spot"):
         raise ValueError(f"{metric!r} is not a check-in or crew metric")
+    if m["kind"] == "crew_spot":
+        source, quality = "checkup", "estimated"
     if not isinstance(t, str) or not valid_time(t):
         raise ValueError(f"t {t!r}: use YYYY-MM-DD or YYYY-MM-DDTHH:MM:SSZ")
     if isinstance(value, bool) or not isinstance(value, (int, float)):

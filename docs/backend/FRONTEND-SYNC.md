@@ -2,7 +2,7 @@
 
 ## For Emile
 
-- Checkup save posts `vital.resp_rate` and `cog.pvt_rt` (`web/src/console/checkup/summary.ts`, sent from `CheckupPage.tsx` via `POST api/observations`). Those keys are not in the catalog, so the server answers 422. `vital.hr` is a catalog metric and is accepted. Do not post the other two until they exist as metrics. Adding them as `crew_daily` would change `crew_data.json` and fail the identical gate, and the alert cutoffs are a decision for Tomas.
+- Checkup save posts `vital.resp_rate` and `cog.pvt_rt`. The server stores both as `crew_spot` (`quality: "estimated"`, source `checkup`) and returns `assessment: null` with no tasks. There are no alert cutoffs: NASA publishes none, and any cutoff is Tomás's call (`docs/backend/REQUESTS.md`). They are not `crew_daily`, so `crew_data.json` does not change.
 - Vite dev proxies only `/api` (`web/vite.config.ts`). `fetch(BASE_URL + 'orbits/iss.tle')` in `Globe.tsx` and `web/src/globe-lab/iss.ts` reads `web/public/orbits/iss.tle` during `npm run dev`. `GET /orbits/iss.tle` on this server is used only when uvicorn serves the built app. Copy `server/out/orbits/iss.tle` into `web/public/orbits/` when the dev track should match the stored elements.
 - There is still no `tiangong` subject. Use `GET /orbits/tiangong.tle` and `GET /api/orbit?subject=tiangong`. A habitat subject would leak into `crew_data.json` `environments` (see `docs/backend/REQUESTS.md`).
 - CelesTrak elements reload at build and server start, not on a 6 h poll, until `test_live.py` stops requiring `refreshed == ["isslive"]`. A process left running keeps the elements it loaded at startup.

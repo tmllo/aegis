@@ -1,0 +1,25 @@
+# Spot readings from the daily check. kind crew_spot: stored on POST, never scored, never written into crew_data.json.
+# No alert bands. NASA publishes none for these, and the cutoffs are Tomas's call (docs/backend/REQUESTS.md).
+metrics:
+- key: vital.resp_rate
+  label: Breathing rate
+  unit: breaths/min
+  kind: crew_spot
+  hazard: closed_environment
+  body_region: whole_body
+  quality: estimated
+  rule:
+    type: display_only
+  explain: Camera estimate of breaths per minute during the daily check. Not a medical measurement.
+  how_to_measure: The checkup camera counts breaths. The number is an on-device estimate.
+- key: cog.pvt_rt
+  label: Reaction time
+  unit: ms
+  kind: crew_spot
+  hazard: isolation
+  body_region: brain
+  quality: estimated
+  rule:
+    type: display_only
+  explain: Median reaction time from the on-screen test during the daily check. Not a medical measurement.
+  how_to_measure: The daily check records the median of the reaction taps, in milliseconds.

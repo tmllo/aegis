@@ -117,6 +117,15 @@ def post_observation(body: ObservationIn) -> dict:
     run = next(r for r in store.runs() if r["id"] == run_id)
     if run["rejected"]:
         raise HTTPException(422, "; ".join(json.loads(run["errors"] or "[]")) or "rejected")
+    # A spot reading from the daily check is stored and not scored. No alert, no task.
+    if cat.metrics[metric]["kind"] == "crew_spot":
+        o = batch.observations[0]
+        return {
+            "stored": {"metric": o.metric, "t": o.t, "value": o.value, "quality": o.quality},
+            "assessment": None,
+            "opened_tasks": [],
+            "closed_tasks": [],
+        }
     res = engine.sync(cat, store, body.subject)
     day = records.day_of(t)
     same = [a for a in store.assessments(body.subject) if a.metric == metric and records.day_of(a.t) == day]

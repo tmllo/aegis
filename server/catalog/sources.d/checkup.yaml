@@ -1,0 +1,10 @@
+# On-device estimates from the Checkup page. Not a sensor log and not a medical device.
+sources:
+- id: checkup
+  label: Daily check (camera and reaction test)
+  org: e^x (on-device estimate)
+  real: false
+  adapter: server.mind.records.checkin_batch
+  cadence: on submit
+  input: POST /api/observations from the Checkup page
+  credit: On-device estimate from the camera and the on-screen reaction test. Not a medical measurement. Not real astronaut data.
