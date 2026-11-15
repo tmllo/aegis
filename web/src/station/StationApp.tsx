@@ -1,158 +1,129 @@
-// The station: one frame (rail, status strip, alert bar, footer) around four screens that hand off to
-// each other. Overview -> Crew health -> Check-in -> back to Crew health; Radiation -> replay -> alarm.
-import { lazy, Suspense, useEffect } from 'react';
+// The station shell: six instrument pages in one frame (see frame.tsx), the e^x mark and the menu in
+// the corners, the icon dock at the bottom, the storm-shelter alarm and toasts on top.
+// Pages follow the challenge and NASA's Crew Health Care System: Crew status · Body · Daily check ·
+// Care · Surgeon · Environment.
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { alarmActive } from '../core/alarm';
-import { BrowserRouter, Navigate, NavLink, Outlet, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Navigate, Outlet, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { ANATOMY_CREDIT, DISCLAIMERS } from '../components/Footer';
-import type { EnvironmentId } from '../data/types';
+import type { Status } from '../data/types';
 import Overview from './pages/Overview';
-import { BRAND, LEVEL_STATUS, LEVEL_WORD, LINK_DELAY, TAGLINE, WORD, fmtDay, seatOf, useStationData } from './model';
+import { BRAND, LEVEL_STATUS, LINK_DELAY, RANK, fmtDay, useStationData } from './model';
 import { useStation } from './state';
-import { cue, Dot, Icon } from './ui';
-import { Demo, DemoButton } from './Demo';
+import { cue, Dot } from './ui';
+import { Btn, roleOf } from './ds';
+import { Dock } from './frame';
+import { Demo } from './Demo';
 import './station.css';
+import './ds.css';
+import './frame.css';
 
-const CrewHealth = lazy(() => import('./pages/CrewHealth'));
-const Checkin = lazy(() => import('./pages/Checkin'));
-const Radiation = lazy(() => import('./pages/Radiation'));
+const Body = lazy(() => import('./pages/CrewHealth'));
+const Check = lazy(() => import('./pages/Checkin'));
+const Care = lazy(() => import('./pages/Care'));
+const Surgeon = lazy(() => import('./pages/Surgeon'));
+const Environment = lazy(() => import('./pages/Radiation'));
 
-const NAV = [
-  { to: '/', label: 'Overview', icon: Icon.overview, key: '1' },
-  { to: '/crew', label: 'Crew health', icon: Icon.crew, key: '2' },
-  { to: '/checkin', label: 'Check-in', icon: Icon.checkin, key: '3' },
-  { to: '/radiation', label: 'Radiation', icon: Icon.radiation, key: '4' },
-];
+const KEYS = ['/check', '/', '/care', '/radiation', '/surgeon'];
 
 function Shell() {
-  const { data, loadState, error, env, setEnv, views, sw, day, queue } = useStationData();
+  const { data, loadState, error, env, views, sw, day, queue } = useStationData();
   const alarm = useStation((s) => s.alarm);
   const setAlarm = useStation((s) => s.setAlarm);
   const sound = useStation((s) => s.sound);
-  const setSound = useStation((s) => s.setSound);
   const toasts = useStation((s) => s.toasts);
-  const seed = useStation((s) => s.seed);
+  const setDemo = useStation((s) => s.setDemoStep);
+  const me = useStation((s) => s.me);
+  const setMe = useStation((s) => s.setMe);
   const nav = useNavigate();
   const loc = useLocation();
+  const [menu, setMenu] = useState(false);
 
-  // seed XP / streaks from the logged days so the numbers look lived-in
-  useEffect(() => {
-    if (!data) return;
-    const xp: Record<string, number> = {};
-    const st: Record<string, number> = {};
-    for (const m of data.crew.crew) {
-      // a full check-in day has every self-measured reading
-      const full = (r: (typeof m.series)[number]) => (['hr', 'bp_sys', 'bp_dia', 'glucose', 'temp', 'sleep_h', 'mood', 'exercise_min'] as const).every((k) => r[k] != null);
-      xp[m.id] = m.series.filter(full).length * 40;
-      let s = 0;
-      for (let i = m.series.length - 2; i >= 0 && full(m.series[i]); i--) s++;
-      st[m.id] = s;
-    }
-    seed(xp, st);
-  }, [data, seed]);
-
+  // number keys 1-6 open the pages (not while typing)
   useEffect(() => {
     const k = (e: KeyboardEvent) => {
       const el = e.target as HTMLElement;
-      if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA')) return;
-      const n = NAV.find((x) => x.key === e.key);
-      if (n && !e.metaKey && !e.ctrlKey) nav(n.to);
+      if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT')) return;
+      const i = Number(e.key) - 1;
+      if (i >= 0 && i < KEYS.length && !e.metaKey && !e.ctrlKey) nav(KEYS[i]);
     };
     addEventListener('keydown', k);
     return () => removeEventListener('keydown', k);
   }, [nav]);
+  useEffect(() => setMenu(false), [loc.pathname]);
+  // sign in as the crew member with the most to look at, for the demo
+  useEffect(() => {
+    if (!me && views.length) setMe([...views].sort((a, b) => RANK[b.overall] - RANK[a.overall])[0].m.id);
+  }, [me, views, setMe]);
 
   if (loadState === 'error') return <p className="st-fatal">Data files could not be loaded: {error}</p>;
   if (!data) return <div className="st-loading"><span className="st-logo">{BRAND}</span><i /></div>;
 
-  const red = views.filter((v) => v.overall === 'red');
-  const top = queue.find((q) => q.tone === 'red');
   const alarmOn = alarmActive(alarm.phase);
+  const worst = (xs: Status[]): Status => (xs.includes('red') ? 'red' : xs.includes('amber') ? 'amber' : 'green');
+  const crewS = worst(views.map((v) => v.overall));
+  const envS: Status = alarmOn ? 'red' : sw ? LEVEL_STATUS[sw.level] : 'green';
+  const medic = me === 'medic';
+  const mine = views.find((v) => v.m.id === me);
+  const careS: Status = mine ? (mine.issues.some((r) => r.status === 'red') ? 'red' : mine.issues.length ? 'amber' : 'green') : worst(queue.filter((q) => q.tone !== 'info').map((q) => q.tone as Status));
 
   return (
-    <div className={`st ${alarmOn ? 'is-alarm' : ''}`}>
-      <aside className="st-rail">
-        <div className="st-brand" onClick={() => nav('/')}>
-          <svg viewBox="0 0 32 32" className="st-mark" aria-hidden>
-            <path d="M16 2 4 7v8c0 7.5 5.1 13.4 12 15 6.9-1.6 12-7.5 12-15V7z" fill="none" stroke="currentColor" strokeWidth="2" />
-            <path d="M9 17h4l2-5 3 9 2-4h3" fill="none" stroke="#5eead4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-          <span>{BRAND}</span>
-        </div>
-        <nav>
-          {NAV.map((n) => (
-            <NavLink key={n.to} to={n.to} end={n.to === '/'} className={({ isActive }) => `st-nav${isActive ? ' is-on' : ''}`} onClick={() => cue('tick', sound)}>
-              <n.icon />
-              <span>{n.label}</span>
-              {n.to === '/crew' && red.length > 0 && <b className="st-badge is-red">{red.length}</b>}
-              {n.to === '/checkin' && views.some((v) => !v.checkedIn) && <b className="st-badge">{views.filter((v) => !v.checkedIn).length}</b>}
-              {n.to === '/radiation' && sw && sw.level !== 'none' && <b className={`st-badge is-${LEVEL_STATUS[sw.level]}`}>!</b>}
-            </NavLink>
-          ))}
-        </nav>
-        <div className="st-rail-foot">
-          <button className="st-iconbtn" onClick={() => setSound(!sound)} title={sound ? 'Sound on' : 'Sound off'}>
-            <Icon.sound on={sound} />
-          </button>
-          <DemoButton />
-        </div>
-      </aside>
-
-      <header className="st-top">
-        <div className="st-mission">
-          <p className="st-cap">{TAGLINE}</p>
-          <h1>{data.crew.mission.name}</h1>
-        </div>
-        <div className="st-facts">
-          <label className="st-fact st-env">
-            <span>Location</span>
-            <select value={env} onChange={(e) => setEnv(e.target.value as EnvironmentId)}>
-              {(Object.keys(data.crew.environments) as EnvironmentId[]).map((k) => (
-                <option key={k} value={k}>
-                  {data.crew.environments[k].label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <div className="st-fact">
-            <span>Mission day</span>
-            <b>{day}</b>
-          </div>
-          <div className="st-fact">
-            <span>Date</span>
-            <b>{fmtDay(data.crew.mission.today)}</b>
-          </div>
-        </div>
-        <div className="st-crewpills">
-          {views.map((v) => (
-            <button key={v.m.id} className={`st-pill is-${v.overall}`} onClick={() => nav(`/crew/${v.m.id}`)} title={`${v.m.name}: ${WORD[v.overall]}`}>
-              <Dot s={v.overall} pulse />
-              <span>{seatOf(v.m)}</span>
+    <div className={`st ds is-frame ${alarmOn ? 'is-alarm' : ''}`}>
+      <button type="button" className="fr-corner is-l ds-brand" onClick={() => (cue('tick', sound), nav('/'))} aria-label="e to the x, crew status">
+        e<sup>x</sup>
+      </button>
+      <div className="fr-corner is-r ds-menu">
+        <Btn kind="secondary" onClick={() => setMenu((m) => !m)}>
+          Menu
+        </Btn>
+        {menu && (
+          <div className="ds-menu-pop">
+            <label className="ds-menu-row">
+              <span>Signed in as</span>
+              <select value={me ?? ''} onChange={(e) => (setMe(e.target.value), setMenu(false), nav('/'))}>
+                {views.map((v) => (
+                  <option key={v.m.id} value={v.m.id}>
+                    {roleOf(v.m)}
+                  </option>
+                ))}
+                <option value="medic">Crew medic</option>
+              </select>
+            </label>
+            <div className="ds-menu-row">
+              <span>Mission day</span>
+              <b>
+                {day} · {fmtDay(data.crew.mission.today)}
+              </b>
+            </div>
+            <button type="button" className="ds-menu-row" onClick={() => { setMenu(false); setDemo(0); }}>
+              <span>Guided demo</span>
+              <b>Start</b>
             </button>
-          ))}
-          {sw && (
-            <button className={`st-pill is-${alarmOn ? 'red' : LEVEL_STATUS[sw.level]}`} onClick={() => nav('/radiation')}>
-              <Icon.radiation />
-              <span>{alarmOn ? 'STORM WARNING' : `Space weather · ${LEVEL_WORD[sw.level]}`}</span>
-            </button>
-          )}
-        </div>
-      </header>
-
-      {top && !alarmOn && !loc.pathname.startsWith('/crew') && !loc.pathname.startsWith('/checkin') && (
-        <div className="st-alertbar">
-          <Dot s="red" pulse size={9} />
-          <b>{top.who}</b>
-          <span>{top.title}</span>
-          <button onClick={() => nav(top.to)}>
-            {top.cta} <Icon.arrow />
-          </button>
-        </div>
-      )}
+          </div>
+        )}
+      </div>
 
       <main className="st-main">
         <Suspense fallback={<div className="st-wait" />}>
           <Outlet />
         </Suspense>
+        <Dock
+          items={
+            medic
+              ? [
+                  { to: '/', label: 'Crew', icon: 'crew', alert: crewS, end: true },
+                  { to: '/radiation', label: 'Radiation', icon: 'environment', alert: envS },
+                  { to: '/surgeon', label: 'Surgeon', icon: 'surgeon' },
+                ]
+              : [
+                  { to: '/check', label: 'Check in', icon: 'check', alert: mine && !mine.checkedIn ? 'amber' : undefined },
+                  { to: '/', label: 'Me', icon: 'body', alert: mine?.overall, end: true },
+                  { to: '/care', label: 'Care', icon: 'care', alert: careS },
+                  { to: '/radiation', label: 'Radiation', icon: 'environment', alert: envS },
+                  { to: '/surgeon', label: 'Surgeon', icon: 'surgeon' },
+                ]
+          }
+        />
       </main>
 
       <footer className="st-foot">
@@ -165,7 +136,7 @@ function Shell() {
 
       {alarmOn && <Shelter onAck={() => setAlarm({ ...alarm, phase: 'sheltered' })} phase={alarm.phase} flare={alarm.flare} p={alarm.p} onOpen={() => nav('/radiation')} here={loc.pathname.startsWith('/radiation')} />}
 
-      <div className="st-toasts">
+      <div className="st-toasts" role="status">
         {toasts.map((t) => (
           <div key={t.id} className={`st-toast is-${t.tone}`}>
             <b>{t.title}</b>
@@ -185,7 +156,7 @@ function Shelter({ phase, flare, p, onAck, onOpen, here }: { phase: string; flar
         <Dot s="red" pulse />
         <b>Emergency · storm in progress</b>
         <span>Particles have arrived. All crew stay in the shelter. Dose monitored every 5 min.</span>
-        {!here && <button onClick={onOpen}>Open radiation</button>}
+        {!here && <button onClick={onOpen}>Open environment</button>}
       </div>
     );
   if (phase === 'sheltered')
@@ -194,7 +165,7 @@ function Shelter({ phase, flare, p, onAck, onOpen, here }: { phase: string; flar
         <Dot s="red" pulse />
         <b>Crew in storm shelter</b>
         <span>EVA suspended until particle flux drops. Dose monitored every 5 min.</span>
-        {!here && <button onClick={onOpen}>Open radiation</button>}
+        {!here && <button onClick={onOpen}>Open environment</button>}
       </div>
     );
   return (
@@ -218,21 +189,40 @@ function Shelter({ phase, flare, p, onAck, onOpen, here }: { phase: string; flar
   );
 }
 
+/** Home: an astronaut lands on their own status; the crew medic on the crew view. */
+function Home() {
+  const me = useStation((s) => s.me);
+  return me === 'medic' ? <Overview /> : <Body />;
+}
+
+/** Old links (/crew/:id, /checkin/:id) keep working. */
+function Moved({ to }: { to: string }) {
+  const { id } = useParams();
+  const loc = useLocation();
+  return <Navigate to={`${to}${id ? `/${id}` : ''}${loc.search}`} replace />;
+}
+
 export function StationApp() {
   return (
     <BrowserRouter basename={import.meta.env.BASE_URL}>
       <Routes>
         <Route element={<Shell />}>
-          <Route path="/" element={<Overview />} />
-          <Route path="/crew" element={<CrewHealth />} />
-          <Route path="/crew/:id" element={<CrewHealth />} />
-          <Route path="/checkin" element={<Checkin />} />
-          <Route path="/checkin/:id" element={<Checkin />} />
-          <Route path="/radiation" element={<Radiation />} />
+          <Route path="/" element={<Home />} />
+          <Route path="/crew" element={<Overview />} />
+          <Route path="/body" element={<Body />} />
+          <Route path="/body/:id" element={<Body />} />
+          <Route path="/check" element={<Check />} />
+          <Route path="/check/:id" element={<Check />} />
+          <Route path="/care" element={<Care />} />
+          <Route path="/surgeon" element={<Surgeon />} />
+          <Route path="/radiation" element={<Environment />} />
+          <Route path="/environment" element={<Navigate to="/radiation" replace />} />
+          <Route path="/crew/:id" element={<Moved to="/body" />} />
+          <Route path="/checkin" element={<Moved to="/check" />} />
+          <Route path="/checkin/:id" element={<Moved to="/check" />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   );
 }
-

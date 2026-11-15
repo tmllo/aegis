@@ -16,3 +16,8 @@ Any change to the shape of `storm_forecast.json` or `crew_data.json` goes here f
 
 ## PROPOSED 2026-11-15 (Emile's app review): bone loss rate
 - `ml/make_sample_data.py` line 218 uses 0.045 for the simulated bone loss slope; that overshoots the ~1 %/month NASA figure for load-bearing bone in microgravity. Suggest 0.027. Tomas's lane: no app change needed, the app reads `bone_loss_pct` as given.
+
+## PROPOSED 2026-11-15 22:45 (Emile's app, simplicity pass): two daily metrics the app cannot show yet
+- `hrv_ms` (heart rate variability, morning RMSSD, ms, two-sided, region `heart`): a recovery and stress signal the crew wants next to resting heart rate. Not in `crew_data.json`; the app shows nothing for it until it lands. Suggested: one value per day in `series`, baseline like `hr`.
+- `weight_kg` (body weight, weekly, low-side and high-side, region `whole_body`): tracks nutrition and fluid loss on long missions. Not in `crew_data.json`; the app shows nothing for it until it lands. Suggested: one value per week in `series` (other days null), scored on absolute change from the first week.
+- Both are additive keys in `metrics` and `series`; no existing key changes. Tomas's lane: nothing in the app changes until they are in the file.

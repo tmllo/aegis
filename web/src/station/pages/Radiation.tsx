@@ -1,11 +1,12 @@
 // Radiation: space weather now, dose per crew against the career limit, the model's held-out scorecard,
 // the live forecast feed, and the May 2024 replay that drives the station-wide shelter alarm.
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { EnvironmentId, StormForecast } from '../../data/types';
+import type { StormForecast } from '../../data/types';
 import { prepare, flareRadius, type Flare, type Prepared } from '../../console/replay/StormReplay';
-import { LEVEL_STATUS, LEVEL_WORD, firstName, fmtV, seatOf, useStationData } from '../model';
+import { LEVEL_STATUS, LEVEL_WORD, useStationData } from '../model';
 import { useStation } from '../state';
-import { Card, Chip, cue, Dot, Icon, STATUS_COLOR } from '../ui';
+import Forecast from './Forecast';
+import { cue, Dot, Icon, STATUS_COLOR } from '../ui';
 
 const START = Date.parse('2024-05-05T00:00:00Z');
 const END = Date.parse('2024-05-20T23:59:00Z');
@@ -18,140 +19,9 @@ const utc = (ms: number) => {
 };
 
 export default function Radiation() {
-  const { data, sw, doses, env, setEnv } = useStationData();
-  if (!data || !sw) return null;
-  const meta = data.storm.meta;
-  const mt = meta.metrics_test;
-  const limit = data.crew.career_limit_mSv;
-  const envs = Object.keys(data.crew.environments) as EnvironmentId[];
-  const maxEnv = Math.max(...envs.map((e) => data.crew.environments[e].dose_mSv_day));
-  const cum = Math.max(...doses.map((d) => d.d.cumulative_mSv ?? 0));
-
-  return (
-    <div className="st-page st-radpage">
-      <Replay storm={data.storm} />
-
-      <div className="st-rad-top">
-        <Card title="Space weather now" right={<Chip s={LEVEL_STATUS[sw.level]} solid={sw.level !== 'none'}>{LEVEL_WORD[sw.level]}</Chip>}>
-          <div className="st-swnow">
-            <div className={`st-big is-${LEVEL_STATUS[sw.level]}`}>
-              {Math.round(sw.p * 100)}
-              <small>%</small>
-            </div>
-            <div>
-              <p>Chance of a solar radiation storm in the next {meta.horizon_hours} h</p>
-              <p className="st-muted st-small">
-                Latest flare {sw.latest?.flare_class} at {sw.latest?.source_location ?? 'unknown location'} · {sw.latest ? new Date(sw.latest.peak_time).toUTCString().slice(5, 22) : ''} UTC
-              </p>
-            </div>
-          </div>
-          <div className="st-thresh">
-            <span>
-              <Dot s="amber" size={8} /> Watch ≥ {(meta.thresholds.watch * 100).toFixed(0)}%
-            </span>
-            <span>
-              <Dot s="red" size={8} /> Shelter warning ≥ {(meta.thresholds.warning * 100).toFixed(0)}%
-            </span>
-          </div>
-        </Card>
-
-        <Card title="Crew dose vs career limit" right={<span className="st-muted">{limit} mSv NASA limit</span>}>
-          <div className="st-dosebars is-big">
-            {doses.map(({ v, d }) => (
-              <div key={v.m.id}>
-                <span>
-                  {seatOf(v.m)} · {firstName(v.m)}
-                </span>
-                <div className="st-bar">
-                  <i style={{ width: `${((d.cumulative_mSv ?? 0) / limit) * 100}%` }} />
-                </div>
-                <b>
-                  {fmtV('dose_mSv_cum', d.cumulative_mSv)} <small>mSv</small>
-                </b>
-              </div>
-            ))}
-          </div>
-          <div className="st-envs">
-            {envs.map((e) => {
-              const r = data.crew.environments[e].dose_mSv_day;
-              const days = Math.round((limit - cum) / r);
-              return (
-                <button key={e} className={e === env ? 'is-on' : ''} onClick={() => setEnv(e)}>
-                  <span>{data.crew.environments[e].label}</span>
-                  <i style={{ height: `${(r / maxEnv) * 34 + 4}px` }} />
-                  <b>{r} mSv/d</b>
-                  <em>~{days} d to limit</em>
-                </button>
-              );
-            })}
-          </div>
-        </Card>
-
-        <Card title="Forecast model · held-out test" right={<span className="st-muted">{meta.test_period[0].slice(0, 4)}–{meta.test_period[1].slice(0, 4)}</span>}>
-          <div className="st-scores">
-            <div>
-              <b>
-                {Math.round(mt.hit_rate * mt.n_storms)}/{mt.n_storms}
-              </b>
-              <span>storms warned</span>
-            </div>
-            <div>
-              <b>{mt.false_alarms_per_month.toFixed(1)}</b>
-              <span>false alarms / month</span>
-            </div>
-            <div>
-              <b>{mt.median_lead_time_h.toFixed(1)} h</b>
-              <span>median warning time</span>
-            </div>
-            <div>
-              <b>+{Math.round(mt.brier_skill_vs_climatology * 100)}%</b>
-              <span>skill vs climatology</span>
-            </div>
-          </div>
-          <p className="st-muted st-small">
-            Trained on {meta.train_period[0].slice(0, 4)}–{meta.train_period[1].slice(0, 4)} NASA DONKI flares, CMEs and SEP events ({meta.model.replace('_', ' ')}). Scored once on {mt.n_flares.toLocaleString()} unseen flares. Top signals: CME speed, flare longitude, flare class.
-          </p>
-        </Card>
-      </div>
-
-
-      <Card title="Forecast feed" right={<span className="st-muted">latest flares, newest first</span>} className="st-feed">
-        <table>
-          <thead>
-            <tr>
-              <th>Peak (UTC)</th>
-              <th>Class</th>
-              <th>Location</th>
-              <th>CME</th>
-              <th>Storm chance, {meta.horizon_hours} h</th>
-              <th>Alert</th>
-            </tr>
-          </thead>
-          <tbody>
-            {sw.recent.slice(0, 8).map((e) => (
-              <tr key={e.flare_id}>
-                <td className="st-num">{e.peak_time.slice(0, 16).replace('T', ' ')}</td>
-                <td>
-                  <b>{e.flare_class}</b>
-                </td>
-                <td>{e.source_location ?? '—'}</td>
-                <td>{e.has_linked_cme ? `${e.cme_speed_kms ?? '?'} km/s` : '—'}</td>
-                <td>
-                  <div className="st-pbar">
-                    <i style={{ width: `${Math.min(100, Math.sqrt(e.p_storm) * 100)}%`, background: STATUS_COLOR[LEVEL_STATUS[e.alert_level]] }} />
-                    <span>{(e.p_storm * 100).toFixed(1)}%</span>
-                  </div>
-                </td>
-                <td>
-                  <Chip s={LEVEL_STATUS[e.alert_level]}>{LEVEL_WORD[e.alert_level]}</Chip>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </Card>
-    </div>
-  );
+  const { data } = useStationData();
+  if (!data) return null;
+  return <Forecast replay={<Replay storm={data.storm} />} />;
 }
 
 /* ------------------------------------------------------------------ replay */

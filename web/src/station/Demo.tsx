@@ -2,9 +2,9 @@
 // what to point at. Arrow keys move between beats, Esc closes. Built from the live data, nothing scripted.
 import { useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CW_RANK, SYSTEMS, RANK, firstName, issueLine, useStationData } from './model';
+import { CW_RANK, SYSTEMS, RANK, issueLine, useStationData } from './model';
+import { roleOf } from './ds';
 import { useStation } from './state';
-import { Icon } from './ui';
 
 interface Beat {
   to: string;
@@ -25,25 +25,14 @@ export function useBeats(): Beat[] {
     const beats: Beat[] = [
       { to: '/', title: 'Crew health today', say: `${cleared} of ${views.length} crew cleared for EVA. Every reading is judged against that astronaut's own baseline, and every alert uses NASA's caution & warning classes, which say who has to act.` },
     ];
-    if (amber) beats.push({ to: `/crew/${amber.m.id}?s=${sysOfCW(amber)}`, title: `${firstName(amber.m)} · caution`, say: `${amber.issue ? issueLine(amber.issue) : ''}. Fine by textbook ranges, flagged because it is not normal for this astronaut. Countermeasure loop: act, re-measure, close.` });
-    if (red) beats.push({ to: `/crew/${red.m.id}?s=${sysOfCW(red)}`, title: `${firstName(red.m)} · warning`, say: `${red.issue ? issueLine(red.issue) : ''}. A warning puts them on hold for safety-critical tasks and opens a line to the flight surgeon.` });
-    beats.push({ to: `/checkin/${(red ?? byRank[0]).m.id}`, title: 'Daily health check', say: 'About a minute: sleep and mind, a camera pulse scan, vitals, and a 30-second reaction test. Saving re-scores everything and closes the countermeasure loop.' });
-    if (data.real) beats.push({ to: `/crew/${(byRank[byRank.length - 1] ?? byRank[0]).m.id}?s=blood`, title: 'Proof on real NASA data', say: `On the published Inspiration4 blood panels, a personal baseline flags ${data.real.flags.filter((f) => f.kind === 'inside_lab_far_from_baseline').length} shifts that standard lab ranges call normal.` });
+    if (amber) beats.push({ to: `/body/${amber.m.id}?s=${sysOfCW(amber)}`, title: `${roleOf(amber.m)} · caution`, say: `${amber.issue ? issueLine(amber.issue) : ''}. Fine by textbook ranges, flagged because it is not normal for this astronaut. Countermeasure loop: act, re-measure, close.` });
+    if (red) beats.push({ to: `/body/${red.m.id}?s=${sysOfCW(red)}`, title: `${roleOf(red.m)} · warning`, say: `${red.issue ? issueLine(red.issue) : ''}. A warning puts them on hold for safety-critical tasks and opens a line to the flight surgeon.` });
+    beats.push({ to: `/check/${(red ?? byRank[0]).m.id}`, title: 'Daily health check', say: 'About a minute: sleep and mind, a camera pulse scan, vitals, and a 30-second reaction test. Saving re-scores everything and closes the countermeasure loop.' });
+    if (data.real) beats.push({ to: `/body/${(byRank[byRank.length - 1] ?? byRank[0]).m.id}?s=blood`, title: 'Proof on real NASA data', say: `On the published Inspiration4 blood panels, a personal baseline flags ${data.real.flags.filter((f) => f.kind === 'inside_lab_far_from_baseline').length} shifts that standard lab ranges call normal.` });
     beats.push({ to: '/radiation', title: 'Radiation early warning', say: `Radiation is the hazard that can't be felt. Trained on ${Number(data.storm.meta.train_period[1].slice(0, 4)) - Number(data.storm.meta.train_period[0].slice(0, 4)) + 1} years of NASA DONKI data, scored once on unseen 2024–2026: ${Math.round(mt.hit_rate * mt.n_storms)} of ${mt.n_storms} storms warned, about ${mt.false_alarms_per_month.toFixed(0)} false alarm a month.` });
     beats.push({ to: '/radiation#replay', title: 'May 2024 superstorm', say: 'Press play. The model never saw 2024. Watch the shelter warning go out hours ahead, then the emergency when the particles actually arrive.' });
     return beats;
   }, [data, views]);
-}
-
-export function DemoButton() {
-  const set = useStation((s) => s.setDemoStep);
-  const step = useStation((s) => s.demoStep);
-  return (
-    <button className={`st-demo-btn${step != null ? ' is-on' : ''}`} onClick={() => set(step == null ? 0 : null)} title="Guided demo">
-      <Icon.play />
-      <span>Demo</span>
-    </button>
-  );
 }
 
 export function Demo() {
@@ -55,8 +44,7 @@ export function Demo() {
 
   useEffect(() => {
     if (!beat) return;
-    nav(beat.to.replace('#replay', ''));
-    if (beat.to.endsWith('#replay')) window.setTimeout(() => document.querySelector('.st-replay')?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 300);
+    nav(beat.to);
   }, [beat, nav]);
 
   useEffect(() => {

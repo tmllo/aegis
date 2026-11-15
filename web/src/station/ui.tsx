@@ -1,31 +1,11 @@
-// Small shared pieces: status chip, dot, trend chart with personal baseline band, sparkline, ring gauge, icons.
-import type { ReactNode } from 'react';
+// Small shared pieces used by the design system and Tomas's replay: dot, trend chart with the personal baseline band, icons, sound cues.
 import type { Status } from '../data/types';
-import { WORD } from './model';
 
 export function Dot({ s, size = 10, pulse = false }: { s: Status; size?: number; pulse?: boolean }) {
   return <i className={`st-dot is-${s}${pulse && s !== 'green' ? ' is-pulse' : ''}`} style={{ width: size, height: size }} aria-hidden />;
 }
 
-export function Chip({ s, children, solid = false }: { s: Status | 'info'; children?: ReactNode; solid?: boolean }) {
-  return <span className={`st-chip is-${s}${solid ? ' is-solid' : ''}`}>{children ?? (s === 'info' ? 'Info' : WORD[s])}</span>;
-}
-
-export function Card({ title, right, children, className = '', onClick }: { title?: ReactNode; right?: ReactNode; children: ReactNode; className?: string; onClick?: () => void }) {
-  return (
-    <section className={`st-card ${onClick ? 'is-click' : ''} ${className}`} onClick={onClick}>
-      {(title || right) && (
-        <header className="st-card-h">
-          <h3>{title}</h3>
-          {right}
-        </header>
-      )}
-      {children}
-    </section>
-  );
-}
-
-export const STATUS_COLOR: Record<Status, string> = { green: '#34d399', amber: '#fbbf24', red: '#f87171' };
+export const STATUS_COLOR: Record<Status, string> = { green: '#7ee2ff', amber: '#ffbe5c', red: '#ff7062' };
 
 /** Daily values with the personal baseline band (mean ± 2 sd), flags marked, today highlighted. */
 export function TrendChart({
@@ -100,52 +80,6 @@ export function TrendChart({
       </text>
       <title>{unit}</title>
     </svg>
-  );
-}
-
-export function Spark({ values, s, w = 120, h = 32 }: { values: (number | null)[]; s: Status; w?: number; h?: number }) {
-  const v = values.filter((x): x is number => x != null);
-  if (v.length < 2) return null;
-  const min = Math.min(...v);
-  const max = Math.max(...v);
-  let d = '';
-  values.forEach((val, i) => {
-    if (val == null) return;
-    const px = (i / (values.length - 1)) * w;
-    const py = h - 3 - ((val - min) / (max - min || 1)) * (h - 6);
-    d += `${d ? 'L' : 'M'}${px.toFixed(1)},${py.toFixed(1)}`;
-  });
-  return (
-    <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} className="st-spark" aria-hidden>
-      <path d={d} stroke={STATUS_COLOR[s]} />
-    </svg>
-  );
-}
-
-/** Ring gauge 0..1. */
-export function Ring({ value, size = 132, stroke = 10, color = '#5eead4', children }: { value: number; size?: number; stroke?: number; color?: string; children?: ReactNode }) {
-  const r = (size - stroke) / 2;
-  const c = 2 * Math.PI * r;
-  const v = Math.max(0, Math.min(1, value));
-  return (
-    <div className="st-ring" style={{ width: size, height: size }}>
-      <svg width={size} height={size}>
-        <circle cx={size / 2} cy={size / 2} r={r} stroke="rgba(255,255,255,0.08)" strokeWidth={stroke} fill="none" />
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={r}
-          stroke={color}
-          strokeWidth={stroke}
-          fill="none"
-          strokeLinecap="round"
-          strokeDasharray={`${c * v} ${c}`}
-          transform={`rotate(-90 ${size / 2} ${size / 2})`}
-          style={{ transition: 'stroke-dasharray 600ms cubic-bezier(.16,1,.3,1)' }}
-        />
-      </svg>
-      <div className="st-ring-in">{children}</div>
-    </div>
   );
 }
 

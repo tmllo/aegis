@@ -1,0 +1,857 @@
+/* e^x instrument frame (gauge layout, after Emile's reference of 15 Nov):
+   checklist left · gauges top centre · one object centre · bars right · icon dock bottom.
+   Uses the ds.css tokens (sky, surface, line, ink, calm/watch/act). */
+
+/* the frame replaces the old top bar: brand and menu sit in the corners */
+.ds.is-frame {
+  grid-template-rows: 1fr auto;
+  grid-template-areas: 'main' 'foot';
+}
+.ds.is-frame .ds-top {
+  display: none;
+}
+.fr-corner {
+  position: absolute;
+  z-index: 40;
+  top: 20px;
+}
+.fr-corner.is-l {
+  left: 32px;
+}
+.fr-corner.is-r {
+  right: 24px;
+}
+.ds.is-frame .st-main {
+  position: relative;
+  overflow: hidden;
+}
+
+.fr {
+  position: relative;
+  display: grid;
+  grid-template-columns: 340px minmax(0, 1fr) 380px;
+  grid-template-rows: auto minmax(0, 1fr) 112px;
+  grid-template-areas:
+    'left title right'
+    'left centre right'
+    'footl dock footr';
+  column-gap: 40px;
+  height: 100%;
+  padding: 24px 48px 0;
+  animation: ds-in 220ms var(--ease);
+}
+.fr-title {
+  grid-area: title;
+  text-align: center;
+  padding: 4px 0 8px;
+}
+.fr-title h1 {
+  margin: 0;
+  font-size: 30px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+.fr-title p {
+  margin-top: 4px;
+  font-size: 15px;
+  color: var(--ink-2);
+}
+.fr-left,
+.fr-right {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: none;
+  padding-top: 72px;
+}
+.fr-left {
+  grid-area: left;
+  gap: 20px;
+}
+.fr-right {
+  grid-area: right;
+  gap: 28px;
+}
+.fr-centre {
+  grid-area: centre;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.fr-object {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+.fr-foot-l {
+  grid-area: footl;
+  align-self: center;
+  display: flex;
+  gap: 0;
+}
+.fr-foot-r {
+  grid-area: footr;
+  align-self: center;
+  justify-self: end;
+  display: flex;
+  gap: 12px;
+}
+.fr-cap {
+  font-size: 14px;
+  color: var(--ink-3);
+}
+
+/* checklist */
+.fr-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  width: 100%;
+  min-height: 52px;
+  padding: 2px 0;
+  text-align: left;
+  color: var(--ink);
+}
+button.fr-check {
+  transition: opacity 160ms var(--ease);
+}
+button.fr-check:hover .fr-check-t b {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  text-decoration-color: var(--line-2);
+}
+.fr-check.is-on .fr-check-mark {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+.fr-check-mark {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: oklch(0.98 0.008 272 / 0.12);
+}
+.fr-check-mark.is-amber {
+  background: oklch(0.84 0.14 75 / 0.18);
+}
+.fr-check-mark.is-red {
+  background: oklch(0.72 0.17 28 / 0.2);
+}
+.fr-check-t {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+.fr-check-t b {
+  font-size: 17px;
+  font-weight: 500;
+}
+.fr-check-t span {
+  font-size: 15px;
+  color: var(--ink-2);
+}
+.fr-check.is-amber .fr-check-t span {
+  color: var(--watch);
+}
+.fr-check.is-red .fr-check-t span {
+  color: var(--act);
+}
+
+/* bars */
+.fr-bar {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: end;
+  gap: 8px 16px;
+}
+.fr-bar-l {
+  font-size: 15px;
+  color: var(--ink-2);
+}
+.fr-bar-v {
+  grid-row: span 2;
+  align-self: center;
+  font-size: 22px;
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.fr-bar.is-amber .fr-bar-v {
+  color: var(--watch);
+}
+.fr-bar.is-red .fr-bar-v {
+  color: var(--act);
+}
+.fr-bar-track {
+  height: 6px;
+  background: oklch(0.88 0.03 272 / 0.16);
+  overflow: hidden;
+}
+.fr-bar-track i {
+  display: block;
+  height: 100%;
+  background: var(--calm);
+  transform-origin: left;
+  transition: transform 300ms var(--ease);
+}
+.fr-bar.is-amber .fr-bar-track i {
+  background: var(--watch);
+}
+.fr-bar.is-red .fr-bar-track i {
+  background: var(--act);
+}
+.fr-bar-n {
+  grid-column: 1 / -1;
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+/* dock */
+.fr-dock {
+  position: absolute;
+  z-index: 35;
+  left: 50%;
+  bottom: 0;
+  translate: -50% 0;
+  display: flex;
+  gap: 4px;
+  padding: 10px 28px 8px;
+  background: oklch(0.2 0.065 272 / 0.92);
+  border: 1px solid var(--line);
+  border-bottom: 0;
+  clip-path: polygon(24px 0, calc(100% - 24px) 0, 100% 100%, 0 100%);
+}
+.fr-dock a {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  min-width: 84px;
+  padding: 8px 6px 10px;
+  font-size: 14px;
+  color: var(--ink-2);
+  text-decoration: none;
+  transition: color 160ms var(--ease);
+}
+.fr-dock a:hover {
+  color: var(--ink);
+}
+.fr-dock a.is-on {
+  color: var(--ink);
+}
+.fr-dock a.is-on::after {
+  content: '';
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 0;
+  height: 3px;
+  background: var(--ink);
+}
+.fr-dock-i {
+  position: relative;
+  width: 30px;
+  height: 30px;
+}
+.fr-dock-i svg:first-child {
+  width: 30px;
+  height: 30px;
+}
+.fr-dock-i .ds-shape {
+  position: absolute;
+  right: -6px;
+  top: -2px;
+}
+.fr-dock a.is-on .fr-dock-i svg:first-child {
+  color: var(--ink);
+}
+
+/* footer segmented choice (like SYSTEMS | CABIN) */
+.fr-seg {
+  display: flex;
+}
+.fr-seg button {
+  min-height: 64px;
+  min-width: 128px;
+  padding: 0 22px;
+  border: 1px solid var(--line-2);
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--ink);
+  transition: background-color 160ms var(--ease), color 160ms var(--ease);
+}
+.fr-seg button + button {
+  border-left: 0;
+}
+.fr-seg button:hover {
+  background: oklch(0.98 0.008 272 / 0.06);
+}
+.fr-seg button.is-on {
+  background: var(--ink);
+  color: var(--sky-0);
+}
+
+/* object helpers */
+.fr-object .ds-scene,
+.fr-object .ds-body,
+.fr-object .fc-svg {
+  position: absolute;
+  inset: 0;
+}
+.fr-object .ds-scene::after {
+  /* fixed: the gradient lines up with the page sky, so the scene has no visible box */
+  background: var(--sky) fixed;
+}
+.fr-detail {
+  display: grid;
+  gap: 14px;
+}
+.fr-detail h2 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 500;
+}
+.fr-detail p {
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+.fr-detail p b {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+/* centre panel for text objects (care plan, surgeon note, check-in input) */
+.fr-object {
+  overflow: hidden;
+}
+.fr-panel {
+  position: absolute;
+  z-index: 3;
+  top: 24px;
+  bottom: 0;
+  left: 50%;
+  translate: -50% 0;
+  width: min(720px, 100%);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  padding: 2px 4px 24px;
+  display: grid;
+  align-content: start;
+  gap: 16px;
+}
+.fr-loop {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border: 1px solid var(--line-2);
+}
+.fr-loop li {
+  list-style: none;
+  display: grid;
+  gap: 4px;
+  padding: 16px;
+  border-right: 1px solid var(--line);
+  font-size: 14px;
+  color: var(--ink-3);
+}
+.fr-loop li:last-child {
+  border-right: 0;
+}
+.fr-loop li b {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--ink-2);
+}
+.fr-loop li.is-done b,
+.fr-loop li.is-now b {
+  color: var(--ink);
+}
+.fr-loop li.is-now {
+  background: oklch(0.98 0.008 272 / 0.08);
+  box-shadow: inset 0 -3px 0 var(--ink);
+}
+.fr-big {
+  font-size: 34px;
+  font-weight: 300;
+  line-height: 1.25;
+  text-wrap: balance;
+}
+.fr-soap {
+  display: grid;
+  gap: 12px;
+}
+.fr-soap label {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 16px;
+  align-items: start;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  font-size: 15px;
+  color: var(--ink-2);
+}
+.fr-soap textarea {
+  width: 100%;
+  min-height: 64px;
+  padding: 10px 12px;
+  background: oklch(0.2 0.06 272 / 0.8);
+  border: 1px solid var(--line-2);
+  color: var(--ink);
+  font: 16px/1.45 'Inter Tight', system-ui, sans-serif;
+  resize: vertical;
+}
+.fr-soap textarea:focus-visible {
+  outline: 2px solid var(--calm);
+  outline-offset: 2px;
+}
+
+@media (max-width: 1360px) {
+  .fr {
+    grid-template-columns: 280px minmax(0, 1fr) 300px;
+    column-gap: 24px;
+    padding: 20px 24px 0;
+  }
+  .fr-dock a {
+    min-width: 72px;
+  }
+}
+@media (max-width: 1100px) {
+  .ds.is-frame .st-main {
+    overflow: auto;
+  }
+  .fr {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    height: auto;
+    min-height: 100%;
+    padding: 72px 16px 120px;
+  }
+  .fr-left,
+  .fr-right {
+    padding-top: 0;
+    overflow: visible;
+  }
+  .fr-centre {
+    order: -1;
+  }
+  .fr-title {
+    order: -2;
+  }
+  .fr-object {
+    min-height: 340px;
+  }
+  .fr-foot-l,
+  .fr-foot-r {
+    justify-self: auto;
+    flex-wrap: wrap;
+  }
+  .fr-foot-r > * {
+    flex: 1;
+  }
+  .fr-dock {
+    position: fixed;
+    left: 0;
+    right: 0;
+    translate: none;
+    justify-content: space-between;
+    padding: 6px 4px 4px;
+    clip-path: none;
+    overflow-x: auto;
+  }
+  .fr-dock a {
+    min-width: 56px;
+    padding: 6px 2px 8px;
+    font-size: 12px;
+  }
+  .fr-dock-i,
+  .fr-dock-i svg:first-child {
+    width: 24px;
+    height: 24px;
+  }
+  .ds.is-frame .st-foot {
+    padding-bottom: 76px;
+  }
+}
+@media (max-width: 480px) {
+  .fr-soap label {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+  .fr-loop {
+    grid-template-columns: 1fr 1fr;
+  }
+  .fr-seg button {
+    min-width: 0;
+    flex: 1;
+  }
+  .fr-seg {
+    width: 100%;
+  }
+}
+/* replay view: Tomas's replay fills centre and right */
+.fr.is-replay .fr-centre {
+  grid-column: 2 / 4;
+  grid-row: centre;
+}
+.fr.is-replay .fr-right {
+  display: none;
+}
+.fr-replay {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  padding-bottom: 16px;
+}
+
+.fr-check-mark.is-plain {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink-2);
+  background: transparent;
+  border: 1px solid var(--line-2);
+}
+.fr-check.is-on .fr-check-mark.is-plain {
+  color: var(--sky-0);
+  background: var(--ink);
+  border-color: var(--ink);
+}
+@media (max-width: 1100px) {
+  .fr-object {
+    overflow: visible;
+  }
+  .fr-panel {
+    position: relative;
+    top: auto;
+    left: auto;
+    translate: none;
+    margin: 0 auto;
+    overflow: visible;
+  }
+}
+
+/* readings inside the right column (body detail) */
+.ds-reading {
+  display: grid;
+  gap: 4px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+.ds-reading-h {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  font-size: 15px;
+  color: var(--ink-2);
+}
+.ds-reading-h b {
+  font-size: 24px;
+  font-weight: 400;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.ds-reading-h b small {
+  margin-left: 6px;
+  font-size: 14px;
+  color: var(--ink-2);
+}
+.ds-reading[data-s='amber'] .ds-reading-h b {
+  color: var(--watch);
+}
+.ds-reading[data-s='red'] .ds-reading-h b {
+  color: var(--act);
+}
+.ds-note {
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+@media (max-width: 1100px) {
+  .ds.is-frame .st-foot {
+    gap: 2px 10px;
+    padding: 8px 12px 76px;
+    font-size: 11px;
+    line-height: 1.4;
+  }
+  .fr-corner.is-r .ds-btn {
+    min-height: 48px;
+    padding: 0 16px;
+  }
+}
+
+/* vital card: icon, value, label, then a 28-day bar chart (grey, flagged days in colour) or a value-against-range bar */
+.fr-vital {
+  display: grid;
+  gap: 10px;
+  width: 100%;
+  padding: 14px 16px 12px;
+  background: oklch(0.29 0.07 272 / 0.72);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  text-align: left;
+  color: var(--ink);
+  transition: background-color 160ms var(--ease), border-color 160ms var(--ease), transform 120ms var(--ease);
+}
+button.fr-vital:hover {
+  background: oklch(0.33 0.08 272 / 0.85);
+  border-color: var(--line-2);
+}
+button.fr-vital:active {
+  transform: scale(0.99);
+}
+.fr-vital.is-on {
+  border-color: var(--ink-2);
+  background: oklch(0.34 0.08 272 / 0.9);
+}
+.fr-v-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.fr-v-icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--line-2);
+  color: var(--ink-2);
+}
+.fr-v-icon svg {
+  width: 18px;
+  height: 18px;
+}
+.fr-v-icon.is-amber {
+  color: var(--watch);
+  border-color: oklch(0.84 0.14 75 / 0.5);
+}
+.fr-v-icon.is-red {
+  color: var(--act);
+  border-color: oklch(0.72 0.17 28 / 0.55);
+}
+.fr-v-t {
+  flex: 1;
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.fr-v-t b {
+  font-size: 20px;
+  font-weight: 500;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+.fr-v-t b small {
+  margin-left: 4px;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--ink-2);
+}
+.fr-vital.is-amber .fr-v-t b {
+  color: var(--watch);
+}
+.fr-vital.is-red .fr-v-t b {
+  color: var(--act);
+}
+.fr-v-t > span {
+  font-size: 14px;
+  color: var(--ink-2);
+}
+.fr-v-chart {
+  display: block;
+  width: 100%;
+  height: 36px;
+}
+.fr-v-band {
+  fill: oklch(0.86 0.1 215 / 0.1);
+}
+.fr-v-bar {
+  fill: oklch(0.88 0.03 272 / 0.32);
+}
+.fr-v-bar.is-today {
+  fill: var(--ink);
+}
+.fr-v-bar.is-amber {
+  fill: var(--watch);
+}
+.fr-v-bar.is-red {
+  fill: var(--act);
+}
+.fr-v-range {
+  position: relative;
+  display: block;
+  height: 14px;
+  background: radial-gradient(circle, oklch(0.88 0.03 272 / 0.45) 1px, transparent 1.5px) 0 50% / 6px 6px repeat-x;
+}
+.fr-v-range-band {
+  position: absolute;
+  top: 5px;
+  height: 4px;
+  background: oklch(0.86 0.1 215 / 0.35);
+}
+.fr-v-range-dot {
+  position: absolute;
+  top: 1px;
+  width: 12px;
+  height: 12px;
+  margin-left: -6px;
+  border-radius: 50%;
+  background: var(--ink);
+  transition: left 250ms var(--ease);
+}
+.fr-v-range-dot.is-amber {
+  background: var(--watch);
+}
+.fr-v-range-dot.is-red {
+  background: var(--act);
+}
+.fr-v-note {
+  font-size: 13px;
+  color: var(--ink-3);
+}
+.fr-vitals {
+  display: grid;
+  gap: 10px;
+}
+.fr-right {
+  gap: 10px;
+}
+.fr-right > .fr-cap {
+  margin-top: 8px;
+}
+.fr-right > .fr-cap:first-child {
+  margin-top: 0;
+}
+.ds-text {
+  width: 100%;
+  min-height: 72px;
+  padding: 0 20px;
+  background: oklch(0.2 0.06 272 / 0.8);
+  border: 1px solid var(--line-2);
+  color: var(--ink);
+  font: 20px 'Inter Tight', system-ui, sans-serif;
+}
+.ds-text::placeholder {
+  color: var(--ink-3);
+}
+.ds-text:focus-visible {
+  outline: 2px solid var(--calm);
+  outline-offset: 2px;
+}
+.ds-empty {
+  font-size: 24px;
+  font-weight: 400;
+  color: var(--ink-3);
+}
+/* symptom tap-list: square toggles, same language as the 1-5 scales */
+.ds-chips {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 8px;
+}
+.ds-chips button {
+  min-height: 72px;
+  padding: 0 16px;
+  border: 1px solid var(--line-2);
+  font-size: 17px;
+  color: var(--ink);
+  transition: background-color 160ms var(--ease), color 160ms var(--ease), border-color 160ms var(--ease), transform 120ms var(--ease);
+}
+.ds-chips button:hover {
+  border-color: var(--ink);
+}
+.ds-chips button:active {
+  transform: scale(0.97);
+}
+.ds-chips button.is-on {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--sky-0);
+}
+
+/* body labels: a dot for quiet systems, a label for flagged or selected ones */
+.ds .st-hs.is-dot {
+  padding: 0;
+  width: 28px;
+  height: 28px;
+  justify-content: center;
+  background: oklch(0.24 0.075 272 / 0.8);
+  border-radius: 50%;
+}
+.ds .st-hs.is-dot span {
+  display: none;
+}
+/* dock and footer share the bottom row without touching at laptop widths */
+@media (max-width: 1440px) {
+  .fr-dock {
+    padding: 8px 16px 6px;
+  }
+  .fr-dock a {
+    min-width: 68px;
+    font-size: 13px;
+  }
+  .fr-dock-i,
+  .fr-dock-i svg:first-child {
+    width: 26px;
+    height: 26px;
+  }
+  .fr-foot-l .ds-btn,
+  .fr-foot-r .ds-btn,
+  .fr-seg button {
+    min-height: 56px;
+    min-width: 0;
+    padding: 0 18px;
+    font-size: 15px;
+  }
+}
+/* shorter laptop screens: tighter lists so nothing runs under the footer */
+@media (max-height: 920px) {
+  .fr-left,
+  .fr-right {
+    padding-top: 56px;
+  }
+  .fr-left {
+    gap: 10px;
+  }
+  .fr-check {
+    min-height: 44px;
+  }
+  .fr-check-t b {
+    font-size: 16px;
+  }
+  .fr-check-t span {
+    font-size: 14px;
+  }
+  .fr-vital {
+    gap: 6px;
+    padding: 10px 14px 8px;
+  }
+  .fr-v-chart {
+    height: 24px;
+  }
+  .fr-v-icon {
+    width: 30px;
+    height: 30px;
+  }
+}
+/* the right column starts below the Menu button */
+.fr-right {
+  padding-top: 96px;
+}
+@media (max-height: 920px) {
+  .fr-right {
+    padding-top: 84px;
+  }
+  .fr-corner .ds-btn {
+    min-height: 52px;
+  }
+}

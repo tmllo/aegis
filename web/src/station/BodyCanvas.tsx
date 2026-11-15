@@ -158,10 +158,13 @@ function Labels({ tint, focus, values, onPick }: { tint: Record<SystemId, Status
       {(Object.keys(SPOTS) as SystemId[]).map((s) => {
         const sp = SPOTS[s];
         const show = !focus || focus === s;
+        // a quiet body: only flagged or selected systems carry a text label; the others are a dot to tap
+        const text = tint[s] !== 'green' || focus === s;
+        if (!values[s]) return null;
         return (
           <group key={s} position={sp.p}>
             <Html zIndexRange={[30, 0]} style={{ pointerEvents: show ? 'auto' : 'none', opacity: show ? 1 : 0, transition: 'opacity 250ms' }}>
-              <button className={`st-hs is-${tint[s]} side-${sp.side}${focus === s ? ' is-on' : ''}`} onClick={() => onPick(s)}>
+              <button className={`st-hs is-${tint[s]} side-${sp.side}${focus === s ? ' is-on' : ''}${text ? '' : ' is-dot'}`} onClick={() => onPick(s)} aria-label={`${values[s].name} ${values[s].line}`}>
                 <i />
                 <span>
                   <b>{values[s].name}</b>
@@ -177,12 +180,9 @@ function Labels({ tint, focus, values, onPick }: { tint: Record<SystemId, Status
 }
 
 type View = { pos: [number, number, number]; target: [number, number, number] };
-function viewFor(focus: SystemId | null): View {
-  if (!focus || focus === 'whole_body') return { pos: [0, 0.96, 2.95], target: [0, 0.9, 0] };
-  const t = TARGETS[SYSTEM_TARGET[focus]];
-  const c = t.box.c;
-  const d = Math.max(focus === 'blood' ? 1.15 : 0.75, Math.hypot(...t.box.h) * 4.2);
-  return { pos: [c[0] + 0.15, c[1] + 0.05, c[2] + d], target: [c[0], c[1], c[2]] };
+// The whole body stays in view (Emile): a selected system is highlighted and labelled, not zoomed into.
+function viewFor(_focus: SystemId | null): View {
+  return { pos: [0, 0.92, 3.5], target: [0, 0.88, 0] };
 }
 
 function Rig({ focus }: { focus: SystemId | null }) {

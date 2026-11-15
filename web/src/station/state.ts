@@ -26,6 +26,9 @@ export interface Plan {
 export interface Extras {
   stress?: number;
   energy?: number;
+  sleepQuality?: number;
+  /** free text from the last check-in step */
+  symptoms?: string;
   pvtMs?: number;
   pvtLapses?: number;
   pvtStatus?: 'green' | 'amber' | 'red';
@@ -72,6 +75,13 @@ interface StationState {
   toasts: Toast[];
   sound: boolean;
   demoStep: number | null;
+  /** who is using this screen: a crew id, or 'medic' (the crew medical officer). Health data is private:
+   *  an astronaut sees only their own; the medic sees only what each person shares. */
+  me: string | null;
+  setMe: (me: string) => void;
+  /** per crew id: does this person share their status and readings with the medic (default yes) */
+  shared: Record<string, boolean>;
+  setShared: (id: string, on: boolean) => void;
 
   saveCheckin: (crewId: string, rec: CheckinRecord, extras?: Extras) => void;
   startPlan: (crewId: string, metric: string, from: Plan['from']) => void;
@@ -99,6 +109,10 @@ export const useStation = create<StationState>((set) => ({
   toasts: [],
   sound: true,
   demoStep: null,
+  me: null,
+  setMe: (me) => set({ me }),
+  shared: {},
+  setShared: (id, on) => set((s) => ({ shared: { ...s.shared, [id]: on } })),
 
   startPlan: (crewId, metric, from) => set((s) => ({ plans: { ...s.plans, [`${crewId}:${metric}`]: { startedAt: Date.now(), stage: 'started', from } } })),
   settlePlan: (crewId, metric, stage) =>

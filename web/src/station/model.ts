@@ -8,16 +8,18 @@ import { useMissionData, useMissionStore } from '../data/store';
 import type { CrewData, CrewMember, EnvironmentId, FlareEvent, MetricKey, RegionStatus, Status, StormForecast } from '../data/types';
 import { useStation, type SystemId } from './state';
 
-export const BRAND = 'AEGIS';
+export const BRAND = 'e^x';
 export const TAGLINE = 'Crew health & radiation early warning';
 
-export const WORD: Record<Status, string> = { green: 'Nominal', amber: 'Caution', red: 'Warning' };
+/** Plain status words on every screen (Emile, 15 Nov): no class codes on the main path. */
+export const WORD: Record<Status, string> = { green: 'OK', amber: 'Act today', red: 'Act now' };
 
 /* Caution & warning classes, after NASA-STD-3001 Vol 2 (Table 10.3-1): the class says who acts.
    Advisory is our own early band (1.5σ drift) so a trend shows before it becomes a caution. */
 export type CW = 'nominal' | 'advisory' | 'caution' | 'warning' | 'emergency';
 export const CW_RANK: Record<CW, number> = { nominal: 0, advisory: 1, caution: 2, warning: 3, emergency: 4 };
-export const CW_LABEL: Record<CW, string> = { nominal: 'Nominal', advisory: 'Advisory', caution: 'Caution', warning: 'Warning', emergency: 'Emergency' };
+/** Plain words for the caution & warning classes (docs/ARCHITECTURE.md section 3 keeps the NASA names). */
+export const CW_LABEL: Record<CW, string> = { nominal: 'OK', advisory: 'Watch', caution: 'Act today', warning: 'Act now', emergency: 'Shelter now' };
 export const CW_OWNER: Record<CW, string> = {
   nominal: 'No action',
   advisory: 'Crew · self-care, keep logging',
@@ -91,8 +93,8 @@ export const fmtV = (k: MetricKey, v: number | null | undefined): string => (v =
 
 export const MOOD_WORD = ['', 'Very low', 'Low', 'Okay', 'Good', 'Great'];
 
-export const ROLE_SHORT: Record<string, string> = { Commander: 'CDR', 'Flight Engineer': 'FE', 'Mission Scientist': 'MS' };
-export const seatOf = (m: CrewMember) => ROLE_SHORT[m.role] ?? m.role.slice(0, 3).toUpperCase();
+/** Display name of the seat: the full role in sentence case (Emile: no CDR/FE/MS abbreviations). */
+export const seatOf = (m: CrewMember) => m.role.charAt(0).toUpperCase() + m.role.slice(1).toLowerCase();
 export const surname = (m: CrewMember) => m.name.split(' ').slice(-1)[0];
 export const firstName = (m: CrewMember) => m.name.replace(/^\S+\.\s/, '').split(' ')[0];
 export const initials = (m: CrewMember) =>
@@ -193,13 +195,12 @@ export function buildView(cd: CrewData, raw: CrewMember, entries: Partial<Record
   return { m, status, overall: status.overall, scores, rows, issue: dedup[0] ?? null, issues: dedup, drifts, cw, sys, checkedIn };
 }
 
-/** One sentence for a row in trouble: "Sleep 5.4 h, 3.1σ below her usual for 4 days". */
+/** One sentence for a row in trouble: "Sleep 5.4 h, below your usual for 4 days". No sigma on screen. */
 export function issueLine(r: MetricRow): string {
   const val = `${r.label} ${fmtV(r.k, r.value)}${r.unit === '1-5' ? '/5' : ` ${r.unit}`}`;
   if (r.z == null) return `${val}, outside the safe range`;
   const dir = r.z >= 0 ? 'above' : 'below';
-  const days = r.running > 1 ? ` for ${r.running} days` : '';
-  return `${val} · ${Math.abs(r.z).toFixed(1)}σ ${dir} own baseline${days}`;
+  return `${val}, ${dir} your usual${r.running > 1 ? ` for ${r.running} days` : ' today'}`;
 }
 
 export function systemStatus(v: CrewView, s: SystemId): Status {
@@ -257,16 +258,16 @@ export function actionQueue(views: CrewView[], sw: SpaceWeather | null, phase: A
         who: `${seatOf(v.m)} · ${firstName(v.m)}`,
         title: issueLine(r),
         detail: r.action ?? '',
-        cta: r.status === 'red' ? 'Open & call surgeon' : 'Open countermeasure',
-        to: `/crew/${v.m.id}?s=${metricSystem(r.k)}`,
+        cta: r.status === 'red' ? 'Open and contact surgeon' : 'Open countermeasure',
+        to: `/body/${v.m.id}?s=${metricSystem(r.k)}`,
       });
     }
   }
   for (const v of views)
     for (const r of v.drifts)
-      out.push({ id: `${v.m.id}-${r.k}-adv`, cw: 'advisory', tone: 'info', who: `${seatOf(v.m)} · ${firstName(v.m)}`, title: `${r.label} drifting ${r.z! >= 0 ? 'up' : 'down'} · ${Math.abs(r.z!).toFixed(1)}σ`, detail: 'Not a caution yet. Keep logging; the trend is being watched.', cta: 'Open trend', to: `/crew/${v.m.id}?s=${metricSystem(r.k)}` });
+      out.push({ id: `${v.m.id}-${r.k}-adv`, cw: 'advisory', tone: 'info', who: `${seatOf(v.m)} · ${firstName(v.m)}`, title: `${r.label} drifting ${r.z! >= 0 ? 'up' : 'down'}`, detail: 'Not a caution yet. Keep logging; the trend is being watched.', cta: 'Open trend', to: `/body/${v.m.id}?s=${metricSystem(r.k)}` });
   for (const v of views) {
-    if (!v.checkedIn) out.push({ id: `${v.m.id}-checkin`, tone: 'info', who: `${seatOf(v.m)} · ${firstName(v.m)}`, title: 'Daily check-in due', detail: 'Sleep, mood and vitals: about a minute.', cta: 'Start check-in', to: `/checkin/${v.m.id}` });
+    if (!v.checkedIn) out.push({ id: `${v.m.id}-checkin`, tone: 'info', who: `${seatOf(v.m)} · ${firstName(v.m)}`, title: 'Daily check-in due', detail: 'Sleep, mood and vitals: about a minute.', cta: 'Start check-in', to: `/check/${v.m.id}` });
   }
   if (sw && sw.level !== 'none' && !cls)
     out.push({ id: 'sw', tone: LEVEL_STATUS[sw.level], who: 'Space weather', title: `${LEVEL_WORD[sw.level]}: storm chance ${Math.round(sw.p * 100)}%`, detail: 'Keep EVA plans flexible and check the forecast again.', cta: 'Open radiation', to: '/radiation' });
