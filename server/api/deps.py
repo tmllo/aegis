@@ -76,7 +76,7 @@ def _set_files(files: dict, source_store: Store | None = None) -> None:
 
 
 def rederive(cat_=None, store_: Store | None = None) -> dict:
-    """Recompute derived rows and contract views now (after a check-in), from the store the caller wrote to."""
+    """Recompute derived rows and contract views now, from the store the caller wrote to (for a route that writes facts)."""
     store_ = store_ or _state["store"]
     files = derive(cat_ or _state["cat"], store_)
     _set_files(files, store_)

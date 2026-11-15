@@ -1,6 +1,6 @@
 # Live lane: fresh data and check-ins
 
-Code: `server/api/refresh.py`, `server/api/routes/live.py`, `server/adapters/checkin.py`. The build is split into `build.build()` (load + derive) and `build.derive()` (derive only). Tests: `server/tests/test_live.py`.
+Code: `server/api/refresh.py`, `server/api/routes/live.py`, `server/api/deps.py` (store, `LockedStore`). The build is split into `build.build()` (load + derive) and `build.derive()` (derive only). Tests: `server/tests/test_live.py`.
 
 ## Keeping data fresh
 When the API starts, it builds once and then starts one background thread. Every adapter whose source has a timed `cadence` in the catalog is re-run on that cadence:
@@ -14,7 +14,7 @@ When the API starts, it builds once and then starts one background thread. Every
 
 Each pass works like this. If a recorded or cached batch is identical to the last one (the ISS snapshot every 60 s, for example), it is skipped: no run row is added and nothing is re-derived. `adapter.load()` runs with no lock held, so a slow feed blocks no request. Then `store.write()` takes `store.lock`, and `build.derive()` rebuilds assessments, plugin rows and the three contract views under the same lock. The new `/data/*.json` set is swapped in as a whole. If an adapter fails, its previous rows stay and it is retried on its next cadence. The space-weather adapters (`donki` 15 min, `swpc` 5 min, `hapi` daily) are picked up automatically when they land.
 
-The store is the same SQLite file the whole time. The default is `server/data/aegis.db` (gitignored); set `AEGIS_DB` to change it, or `:memory:` for a throwaway store. At startup every adapter is loaded into that file again with INSERT OR REPLACE on the same keys. A refresh only adds a run. Neither recreates the store or deletes from a fact table (observation, event, forecast, or a plugin's note, task, task_event or sleep_session), so check-ins and notes survive both a refresh and a restart. The only table that is wiped and rebuilt is the derived `assessment` table. `AEGIS_REFRESH=0` turns the thread off. `server/tests/conftest.py` makes tests use `:memory:` with no thread.
+The store is the same SQLite file the whole time. The default is `server/data/aegis.db` (gitignored). Routes read it through `deps.LockedStore`, which holds `store.lock` for every call, until `core/store.py` locks its own reads (REQUESTS.md). Set `AEGIS_DB` to change it, or `:memory:` for a throwaway store. At startup every adapter is loaded into that file again with INSERT OR REPLACE on the same keys. A refresh only adds a run. Neither recreates the store or deletes from a fact table (observation, event, forecast, or a plugin's note, task, task_event or sleep_session), so check-ins and notes survive both a refresh and a restart. The only table that is wiped and rebuilt is the derived `assessment` table. `AEGIS_REFRESH=0` turns the thread off. `server/tests/conftest.py` makes tests use `:memory:` with no thread.
 
 ```
 GET /api/refresh
@@ -26,38 +26,10 @@ POST /api/refresh                 (all polled sources now; ?source=isslive for o
            "runs": 1, "unchanged": 0, "last_run": 7, "last_rows": 10, "last_rejected": 0, "last_error": null}]}
 ```
 
-## Check-in: `POST /api/observations`
-A check-in goes through `server/adapters/checkin.py` and then the same `store.write` validation as every source. The stored row has `source: "checkin"` and `quality: "live"`. The adapter refuses these with a 422 before the store sees them:
-- a subject that is not a `crew_sim` member
-- a metric that is not `self.*` or of kind `self_report`
-- a value that is not a finite number (strings and booleans are refused too)
-- a `unit` that differs from the catalog unit
-- a `t` that is not ISO 8601, or a time with no timezone
-- a value outside the metric's optional `valid: {min, max}`
+## Check-ins
+`POST /api/observations` belongs to the Mind lane (`server/mind/api.py`, shapes in `MIND-API.md`). This lane only makes sure what it stores lasts. Check-ins, notes, tasks and task events are written into the same store file that refreshes and restarts reuse. `server/tests/test_live.py` checks this: a check-in survives a refresh, a refresh creates no store and deletes no user row, and a file store survives a restart.
 
-- a value outside the metric's range: the catalog's `valid`, or 0 to `absolute_red.max` when there is no `valid` (mood 0..5, sleep 0..24 h, exercise 0..600 min), or a number too large to be a float
-- a `t` before the mission `start_date` or after tomorrow (UTC)
-
-`t` defaults to now and is stored in UTC.
-
-**For Emile:** a check-in sits next to the simulated value for the same day, so `GET /api/observations?subject=c1&metric=self.mood` can return two rows for 2026-11-15, one with `quality: "simulated"` and one with `quality: "live"`. Prefer `live`. A date-only check-in (`2026-11-15`) and a timed one (`2026-11-15T08:30:00Z`) are separate rows.
-
-```
-POST /api/observations
-{"subject": "c1", "metric": "self.mood", "t": "2026-11-15", "value": 4}
-
-200
-{"subject": "c1", "metric": "self.mood", "t": "2026-11-15", "value": 4.0, "unit": "/5",
- "source": "checkin", "quality": "live", "run_id": 6, "assessments": []}
-
-POST /api/observations
-{"subject": "c1", "metric": "cabin.ppo2", "value": 4}
-
-422
-{"detail": "metric 'cabin.ppo2' is not a self-report metric"}
-```
-
-`assessments` lists the engine's flags for that subject, metric and day after the re-derive. It stays empty until the engine scores check-in rows (see `docs/backend/REQUESTS.md`, `crew_series`). The response to `GET /api/observations` does not change: the check-in appears there as `{metric, t, value, quality: "live"}`.
+**For Emile:** a check-in sits next to the simulated value for the same day, so `GET /api/observations?subject=c1&metric=self.mood` can return two rows for one day, `quality: "simulated"` and `quality: "live"`. Prefer `live`.
 
 ## Run
 ```

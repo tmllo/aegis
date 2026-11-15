@@ -1,4 +1,5 @@
-"""Live lane: background refresh on catalog cadence, and check-ins through POST /api/observations."""
+"""Live lane: background refresh on catalog cadence, one store that survives refresh and restart.
+Check-ins go through the Mind lane's POST /api/observations (its validation is tested in test_mind.py)."""
 import threading
 
 import pytest
@@ -17,15 +18,21 @@ def client(monkeypatch):
     return TestClient(create_app())
 
 
-PLUGIN_TABLES = ("note", "task", "task_event", "sleep_session")   # Mind / sleep lanes; stand-ins until they land
+PLUGIN_TABLES = ("note", "task", "task_event", "sleep_session")   # Mind lane (real) + sleep lane (stand-in until it lands)
 FACT_TABLES = ("run", "observation", "event", "event_link", "forecast") + PLUGIN_TABLES
 
 
-def _seed_plugin_tables(store):
+def _seed_plugin_tables(client, store):
+    """User rows through the Mind API (a journal note, a self task and a tap on it), plus a sleep_session stand-in."""
+    r = client.post("/api/notes", params={"subject": "c1"}, headers={"X-Crew-Member": "c1"},
+                    json={"text": "Good call home.", "tags": ["family"]})
+    assert r.status_code == 201, r.text
+    task = client.post("/api/tasks", json={"subject": "c1", "label": "Stretch", "kind": "habit"})
+    assert task.status_code == 201, task.text
+    assert client.post(f"/api/tasks/{task.json()['id']}/events", json={"status": "skipped"}).status_code == 201
     with store.lock:
-        for name in PLUGIN_TABLES:
-            store.db.execute(f"CREATE TABLE IF NOT EXISTS {name} (id INTEGER PRIMARY KEY, body TEXT)")
-            store.db.execute(f"INSERT INTO {name} (body) VALUES ('kept')")
+        store.db.execute("CREATE TABLE IF NOT EXISTS sleep_session (id INTEGER PRIMARY KEY, body TEXT)")
+        store.db.execute("INSERT INTO sleep_session (body) VALUES ('kept')")
         store.db.commit()
 
 
@@ -125,7 +132,7 @@ def test_slow_adapter_does_not_block_requests(client):
     try:
         assert client.get("/api/observations", params={"subject": "iss", "kind": "cabin"}).status_code == 200
         res = client.post("/api/observations", json={"subject": "c1", "metric": "self.mood", "t": "2026-11-15", "value": 4})
-        assert res.status_code == 200                           # writes too: load() holds no lock
+        assert res.status_code == 201                           # writes too: load() holds no lock
     finally:
         gate.set()
         worker.join(5)
@@ -149,69 +156,9 @@ def test_post_refresh_endpoint(client):
     assert client.get("/api/refresh").json()["jobs"][0]["runs"] == 1
 
 
-# ---- check-in ------------------------------------------------------------------
-def test_checkin_stored_and_returned(client):
-    res = client.post("/api/observations", json={"subject": "c1", "metric": "self.mood", "t": "2026-11-15", "value": 4})
-    assert res.status_code == 200, res.text
-    body = res.json()
-    assert {k: body[k] for k in ("subject", "metric", "t", "value", "unit", "source", "quality")} == {
-        "subject": "c1", "metric": "self.mood", "t": "2026-11-15", "value": 4.0, "unit": _unit("self.mood"),
-        "source": "checkin", "quality": "live"}
-    assert isinstance(body["assessments"], list) and isinstance(body["run_id"], int)
-    rows = client.get("/api/observations", params={"subject": "c1", "metric": "self.mood", "since": "2026-11-15"}).json()
-    assert {"metric": "self.mood", "t": "2026-11-15", "value": 4.0, "quality": "live"} in rows
-    assert client.get("/api/health").json()["sources"]["checkin"]["quality"] == "live"
-
-
-def test_checkin_instant_normalised_to_utc(client):
-    res = client.post("/api/observations", json={"subject": "c2", "metric": "self.sleep_h", "t": "2026-11-15T09:30:00+01:00",
-                                                 "value": 7.5})
-    assert res.status_code == 200 and res.json()["t"] == "2026-11-15T08:30:00Z"
-
-
-def test_checkin_returns_assessments_for_that_day(client, monkeypatch):
-    from server.core.records import Assessment
-    a = Assessment("c1", "self.mood", "2026-11-15", "baseline_z@3d", "amber", -2.1, "low", "call home")
-    real = deps.rederive
-
-    def rederive_with_flag(*args):
-        files = real(*args)
-        deps.store().replace_assessments([*deps.store().assessments(), a])
-        return files
-
-    monkeypatch.setattr(deps, "rederive", rederive_with_flag)
-    body = client.post("/api/observations", json={"subject": "c1", "metric": "self.mood", "t": "2026-11-15", "value": 2}).json()
-    assert body["assessments"] == [{"subject": "c1", "metric": "self.mood", "t": "2026-11-15", "rule": "baseline_z@3d",
-                                    "severity": "amber", "z": -2.1, "message": "low", "action": "call home"}]
-
-
-@pytest.mark.parametrize("payload,why", [
-    ({"subject": "iss", "metric": "self.mood", "value": 3}, "not a crew member"),
-    ({"subject": "nobody", "metric": "self.mood", "value": 3}, "not a crew member"),
-    ({"subject": "c1", "metric": "cabin.ppo2", "value": 3}, "not a self-report metric"),
-    ({"subject": "c1", "metric": "self.nope", "value": 3}, "not a self-report metric"),
-    ({"subject": "c1", "metric": "self.mood", "value": "4"}, "finite number"),
-    ({"subject": "c1", "metric": "self.mood", "value": True}, "finite number"),
-    ({"subject": "c1", "metric": "self.mood"}, "finite number"),
-    ({"subject": "c1", "metric": "self.mood", "value": 3, "unit": "kg"}, "unit"),
-    ({"subject": "c1", "metric": "self.mood", "value": 3, "t": "yesterday"}, "ISO 8601"),
-    ({"subject": "c1", "metric": "self.mood", "value": 3, "t": "2026-11-15T08:00:00"}, "timezone"),
-    ({"subject": "c1", "metric": "self.mood", "value": 10 ** 400}, "finite number"),
-    ({"subject": "c1", "metric": "self.mood", "value": -1e300}, "outside"),
-    ({"subject": "c1", "metric": "self.sleep_h", "value": 25}, "outside"),
-    ({"subject": "c1", "metric": "self.mood", "value": 3, "t": "2099-01-01"}, "outside the mission"),
-    ({"subject": "c1", "metric": "self.mood", "value": 3, "t": "0001-01-01"}, "outside the mission"),
-])
-def test_checkin_rejected(client, payload, why):
-    n_runs = len(deps.store().runs())
-    res = client.post("/api/observations", json=payload)
-    assert res.status_code == 422 and why in res.text
-    assert len(deps.store().runs()) == n_runs                   # refused before the store: no run, no row
-
-
 # ---- same store, nothing wiped, survives restart ----------------------------------
 def test_checkin_survives_refresh(client):
-    assert client.post("/api/observations", json=MOOD).status_code == 200
+    assert client.post("/api/observations", json=MOOD).status_code == 201
     assert client.post("/api/refresh").json()["refreshed"] == ["isslive"]
     assert MOOD_ROW in _mood_rows(client)
 
@@ -219,7 +166,7 @@ def test_checkin_survives_refresh(client):
 def test_refresh_reuses_store_and_wipes_no_fact_table(client, monkeypatch):
     import server.core.store as store_mod
     store = deps.raw_store()
-    _seed_plugin_tables(store)
+    _seed_plugin_tables(client, store)
     client.post("/api/observations", json=MOOD)
     before = _snapshot(store)
 
@@ -236,8 +183,8 @@ def test_refresh_reuses_store_and_wipes_no_fact_table(client, monkeypatch):
     after = _snapshot(store)
     for table, rows in before.items():                          # every old row still there, unchanged
         assert set(rows) <= set(after[table]), table
-    for table in PLUGIN_TABLES + ("event", "event_link", "forecast"):
-        assert after[table] == before[table], table             # refresh of isslive adds nothing here
+    for table in ("note", "task_event", "sleep_session", "event", "event_link", "forecast"):
+        assert after[table] == before[table], table             # user rows untouched; isslive adds nothing here
     assert len(after["observation"]) == len(before["observation"]) + 1   # one new FakeIss reading, no duplicates
     assert MOOD_ROW in _mood_rows(client)
 
@@ -246,10 +193,10 @@ def test_file_store_survives_restart(tmp_path, monkeypatch):
     db = tmp_path / "aegis.db"
     monkeypatch.setenv("AEGIS_DB", str(db))
     first = TestClient(create_app())
-    _seed_plugin_tables(deps.store())
-    assert first.post("/api/observations", json=MOOD).status_code == 200
+    _seed_plugin_tables(first, deps.raw_store())
+    assert first.post("/api/observations", json=MOOD).status_code == 201
     sleep = {"subject": "c2", "metric": "self.sleep_h", "t": "2026-11-15T07:00:00Z", "value": 6.5}
-    assert first.post("/api/observations", json=sleep).status_code == 200
+    assert first.post("/api/observations", json=sleep).status_code == 201
     first.post("/api/refresh")
     before = _snapshot(deps.store(), ("observation",) + PLUGIN_TABLES)
     deps.store().db.close()                                     # the old process is gone
