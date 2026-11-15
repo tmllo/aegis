@@ -93,14 +93,96 @@ def check_crew(d):
     print(f"crew: {len(d.get('crew', []))} members, {len(d.get('crew', [{}])[0].get('series', []))} days")
 
 
+HAB_CHANNELS = {"ppco2_mmhg", "ppo2_kpa", "cabin_pressure_kpa", "temp_c", "rh_pct"}
+HAB_META = ("generated_at", "model", "simulated_habitat", "note", "sample_interval_min", "baseline_period",
+            "thresholds", "min_duration_steps", "validation", "data_credit")
+HAB_ANOM = ("id", "channel", "fault", "start", "end", "detected_at", "limit_crossed_at", "lead_time_h", "peak_score",
+            "severity", "status", "planted", "detected", "message", "action", "linked_crew_flags")
+LINKS = {"ppco2_mmhg": {"sleep_h", "mood"}, "ppo2_kpa": {"hr"}, "cabin_pressure_kpa": {"hr"},
+         "temp_c": {"sleep_h", "temp"}, "rh_pct": set()}  # mirror of ml/anomaly/config.py LINK_TABLE
+
+
+def check_habitat(d, crew):
+    """v2 contract: contracts/HABITAT_CONTRACT.md."""
+    from datetime import datetime, timedelta
+    def ts(s): return datetime.strptime(s, "%Y-%m-%dT%H:%M:%SZ")
+    m = d.get("meta", {})
+    for k in HAB_META:
+        if k not in m: err(f"habitat.meta.{k} missing")
+    if m.get("simulated_habitat") is not True: err("habitat.meta.simulated_habitat must be true")
+    if "FAKE" in str(m.get("model", "")): warn("habitat: still the FAKE sample, not the real model output")
+    th = m.get("thresholds", {})
+    if set(th) != {"amber", "red"}: err(f"habitat.meta.thresholds keys bad: {set(th)}")
+    v = m.get("validation")
+    if v is not None:
+        for k in ("dataset", "tuned_on", "tested_on", "protocol", "model", "baseline_static_3sigma"):
+            if k not in v: err(f"habitat.meta.validation.{k} missing")
+    ch = d.get("channels", {})
+    if set(ch) != HAB_CHANNELS: err(f"habitat.channels keys mismatch: {set(ch) ^ HAB_CHANNELS}")
+    for k, c in ch.items():
+        if c.get("body_region") not in REGIONS: err(f"habitat.channels.{k}.body_region bad")
+        for f in ("label", "unit", "subsystem", "limits", "absolute_red", "explain", "health_link", "actions"):
+            if f not in c: err(f"habitat.channels.{k}.{f} missing")
+    ser = d.get("series", [])
+    if not ser: err("habitat.series empty"); return
+    prev = None
+    for i, r in enumerate(ser):
+        t = str(r.get("time", ""))
+        if not t.endswith("Z"): err(f"habitat.series[{i}].time not ISO 'Z'"); break
+        if prev and t <= prev: err(f"habitat.series[{i}].time not strictly increasing"); break
+        prev = t
+        if set(r) != HAB_CHANNELS | {"time", "score"}: err(f"habitat.series[{i}] keys bad"); break
+        if not isinstance(r.get("score"), dict) or set(r["score"]) != HAB_CHANNELS: err(f"habitat.series[{i}].score keys bad"); break
+    mis = crew.get("mission", {})
+    if ser[0]["time"][:10] > mis.get("start_date", "") or ser[-1]["time"][:10] < mis.get("today", ""):
+        err(f"habitat.series {ser[0]['time']}..{ser[-1]['time']} does not cover mission {mis.get('start_date')}..{mis.get('today')}")
+    flags = {(c["id"], f["metric"], f["date"]) for c in crew.get("crew", []) for f in c.get("flags", [])}
+    crew_ids = {c["id"] for c in crew.get("crew", [])}
+    for a in d.get("anomalies", []):
+        aid = a.get("id", "?")
+        miss = [k for k in HAB_ANOM if k not in a]
+        if miss: err(f"habitat.anomalies[{aid}] missing {miss}"); continue
+        if a["channel"] not in HAB_CHANNELS: err(f"habitat.anomalies[{aid}].channel bad")
+        if a["severity"] not in ("amber", "red"): err(f"habitat.anomalies[{aid}].severity bad")
+        if a["status"] not in ("active", "resolved"): err(f"habitat.anomalies[{aid}].status bad")
+        if (a["status"] == "active") != (a["end"] is None): err(f"habitat.anomalies[{aid}] status/end mismatch")
+        if a["detected"] != (a["detected_at"] is not None): err(f"habitat.anomalies[{aid}] detected/detected_at mismatch")
+        if not a["planted"] and a["fault"] is not None: err(f"habitat.anomalies[{aid}] false alarm with a fault name")
+        if a["detected_at"] and a["limit_crossed_at"]:
+            exp = (ts(a["limit_crossed_at"]) - ts(a["detected_at"])).total_seconds() / 3600
+            if a["lead_time_h"] is None or abs(a["lead_time_h"] - exp) > 1e-6: err(f"habitat.anomalies[{aid}].lead_time_h {a['lead_time_h']} != {exp}")
+        elif a["lead_time_h"] is not None: err(f"habitat.anomalies[{aid}].lead_time_h should be null")
+        hi = (ts((a["end"] or mis.get("today", "") + "T00:00:00Z")[:10] + "T00:00:00Z") + timedelta(days=3)).strftime("%Y-%m-%d")
+        for lf in a["linked_crew_flags"]:
+            if lf.get("crew_id") not in crew_ids: err(f"habitat.anomalies[{aid}] links unknown crew {lf.get('crew_id')}"); continue
+            if lf.get("metric") not in LINKS.get(a["channel"], set()): err(f"habitat.anomalies[{aid}] links {lf.get('metric')} not in the link table")
+            for dd in (lf.get("from"), lf.get("to")):
+                if (lf["crew_id"], lf["metric"], dd) not in flags: err(f"habitat.anomalies[{aid}] link date {dd} is not a real {lf['crew_id']} {lf['metric']} flag")
+                elif not a["start"][:10] <= dd <= hi: err(f"habitat.anomalies[{aid}] link date {dd} outside the anomaly window")
+    st = d.get("status", {})
+    if st.get("overall") not in SEV or set(st.get("by_channel", {})) != HAB_CHANNELS or not set(st["by_channel"].values()) <= SEV:
+        err(f"habitat.status bad: {st}")
+    an = d.get("anomalies", [])
+    print(f"habitat: {len(ser)} rows, {len(an)} anomalies ({sum(a.get('planted', False) for a in an)} planted, "
+          f"{sum(not a.get('planted', True) for a in an)} false alarms), status {st.get('overall')}")
+
+
 def main():
     folder = Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / "web" / "public" / "data"
+    loaded = {}
     for name, fn in (("storm_forecast.json", check_storm), ("crew_data.json", check_crew)):
         p = folder / name
         if not p.exists(): err(f"{p} not found"); continue
         d = json.loads(p.read_text(encoding="utf-8"))
         no_nan(d, name)
         fn(d)
+        loaded[name] = d
+    p = folder / "habitat_telemetry.json"
+    if not p.exists(): err(f"{p} not found")
+    else:
+        d = json.loads(p.read_text(encoding="utf-8"))
+        no_nan(d, "habitat_telemetry.json")
+        check_habitat(d, loaded.get("crew_data.json", {}))
     for w in warnings: print("WARN ", w)
     for e in errors: print("ERROR", e)
     print("OK, matches the contract" if not errors else f"{len(errors)} error(s)")
