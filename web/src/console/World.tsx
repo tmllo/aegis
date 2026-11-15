@@ -34,6 +34,7 @@ type V3 = [number, number, number];
 type View = { pos: V3; target: V3 };
 
 function viewFor(path: string, focus: string | null, sun: THREE.Vector3): View {
+  if (path.startsWith('/compare')) return { pos: [0, BODY_Y + 1.0, 4.6], target: [0, BODY_Y + 0.88, 0] };
   if (path.startsWith('/vitals')) {
     const t = focus ? TARGETS[focus as keyof typeof TARGETS] : null;
     if (t) {
@@ -144,6 +145,8 @@ export function World() {
   const [fly, setFly] = useState<View | null>(null);
   const [near, setNear] = useState(false);
   const body = loc.pathname.startsWith('/vitals');
+  const compare = loc.pathname.startsWith('/compare');
+  const crewTints = useHud((s) => s.compare);
 
   // the real sun in world space (the Earth is tilted and turned by the dial)
   const sun = useMemo(() => sunLocal().applyEuler(new THREE.Euler(TILT, body ? 0 : yaw, 0)), [yaw, body]);
@@ -189,7 +192,7 @@ export function World() {
         <Lightformer form="rect" intensity={0.7} position={[3, 1, 2.5]} rotation={[0, 0.9, 0]} scale={[3, 5, 1]} color="#eef1f5" />
         <Lightformer form="rect" intensity={0.3} position={[0, 2, -4]} rotation={[0, Math.PI, 0]} scale={[6, 3, 1]} color="#d9e2ee" />
       </Environment>
-      {body && <Backdrop />}
+      {(body || compare) && <Backdrop />}
       <spotLight position={[-2.2, BODY_Y + 4, 3]} angle={0.6} penumbra={1} intensity={30} distance={14} color="#ffffff" target-position={[0, BODY_Y + 0.9, 0]} />
       <group position={[0, BODY_Y, 0]} rotation={[0, body ? yaw : 0, 0]} visible={body}>
         <Suspense fallback={null}>
@@ -207,8 +210,16 @@ export function World() {
         {body && bodyTips.map((b) => <Pin key={b.id} tip={b} />)}
         <ContactShadows position={[0, 0.002, 0]} opacity={0.5} scale={2.2} blur={2.4} far={1.2} frames={1} />
       </group>
+      {compare &&
+        crewTints.map((tn, k) => (
+          <group key={k} position={[(k - (crewTints.length - 1) / 2) * 0.9, BODY_Y, 0]}>
+            <Suspense fallback={null}>
+              <Porcelain focus={null} tint={tn} onPick={() => undefined} />
+            </Suspense>
+          </group>
+        ))}
 
-      <CameraRig view={view} body={body} onNear={setNear} />
+      <CameraRig view={view} body={body || compare} onNear={setNear} />
     </Canvas>
   );
 }

@@ -60,6 +60,8 @@ function track<T>(name: string, p: Promise<T>) {
 }
 
 if (el) {
+  // the mark shows in the app's own font, so it does not jump at the handoff
+  void document.fonts.load('300 28px "Inter Tight"').then(() => el.classList.add('boot-font'), () => el.classList.add('boot-font'));
   // Count items by wrapping the manager's own itemStart/itemEnd, not its onStart/onProgress/onLoad
   // callbacks: drei's useProgress store overwrites those callbacks as soon as drei is imported,
   // which cut this screen off from the loads (it then only closed at MAX_MS).

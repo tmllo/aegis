@@ -5,6 +5,7 @@ import { useMissionData, useMissionStore } from '../data/store';
 import { useMind } from '../data/mind';
 import type { CrewMember } from '../data/types';
 import { crewView, RANK, withMood, type CrewView } from './model';
+import { useHud } from './hud';
 
 /** Seat designations from the role field (UI layer only; no names on screen). */
 export function designations(crew: CrewMember[]): Record<string, string> {
@@ -27,7 +28,9 @@ export function useConsole() {
   const reports = useMind((s) => s.reports);
   const selectedId = useMissionStore((s) => s.selectedCrewId);
   const setCrew = useMissionStore((s) => s.setSelectedCrewId);
-  const cd = data?.crew ?? null;
+  const asOf = useHud((s) => s.asOf);
+  // replaying a day (Timeline) = the same data with the mission clock set to that day
+  const cd = useMemo(() => (data?.crew ? (asOf ? { ...data.crew, mission: { ...data.crew.mission, today: asOf } } : data.crew) : null), [data, asOf]);
 
   const views: CrewView[] = useMemo(
     () => (cd ? cd.crew.map((m) => crewView(cd, withMood(cd, m, reports[m.id]?.[cd.mission.today]?.mood))) : []),
@@ -45,5 +48,5 @@ export function useConsole() {
 
   const cv = views.find((v) => v.m.id === selectedId) ?? views[0] ?? null;
   const day = cd && cv ? cv.m.series.findIndex((r) => r.date === cd.mission.today) + 1 : null;
-  return { data, cd, loadState, error, views, seat, cv, setCrew, day };
+  return { data, cd, loadState, error, views, seat, cv, setCrew, day, asOf };
 }

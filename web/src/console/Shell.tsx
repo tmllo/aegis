@@ -19,10 +19,14 @@ export const SECTIONS = [
   { to: '/storm', name: 'Storm' },
   { to: '/systems', name: 'Systems' },
   { to: '/mind', name: 'Mind' },
+  { to: '/timeline', name: 'Timeline' },
+  { to: '/shelter', name: 'Shelter' },
+  { to: '/compare', name: 'Compare' },
+  { to: '/handoff', name: 'Handoff' },
 ] as const;
 
 export function Shell() {
-  const { data, cd, views, seat, cv, setCrew, day, loadState, error } = useConsole();
+  const { data, cd, views, seat, cv, setCrew, day, loadState, error, asOf } = useConsole();
   const { cabin } = useCabin();
   const [server, setServer] = useState<boolean | null>(null);
   const [ask, setAsk] = useState<null | 'measure' | 'ground'>(null);
@@ -105,8 +109,8 @@ export function Shell() {
         <div className="cx-icons">
           <dl className="cx-tele">
             <div>
-              <dt>Day</dt>
-              <dd>{day ?? '--'}</dd>
+              <dt>{asOf ? 'Replay' : 'Day'}</dt>
+              <dd style={asOf ? { color: 'rgb(var(--warn))' } : undefined}>{day ?? '--'}</dd>
             </div>
             <div>
               <dt>ppCO2</dt>

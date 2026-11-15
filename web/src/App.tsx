@@ -12,6 +12,10 @@ const StormPage = lazy(() => import('./console/StormPage'));
 const ReplayPage = lazy(() => import('./console/ReplayPage'));
 const SystemsPage = lazy(() => import('./console/SystemsPage'));
 const MindPage = lazy(() => import('./console/MindPage'));
+const TimelinePage = lazy(() => import('./console/TimelinePage'));
+const ShelterPage = lazy(() => import('./console/ShelterPage'));
+const ComparePage = lazy(() => import('./console/ComparePage'));
+const HandoffPage = lazy(() => import('./console/HandoffPage'));
 
 function ConceptRoute() {
   const { id = '' } = useParams();
@@ -47,6 +51,10 @@ export function App() {
           <Route path="/storm/replay" element={<ReplayPage />} />
           <Route path="/systems" element={<SystemsPage />} />
           <Route path="/mind" element={<MindPage />} />
+          <Route path="/timeline" element={<TimelinePage />} />
+          <Route path="/shelter" element={<ShelterPage />} />
+          <Route path="/compare" element={<ComparePage />} />
+          <Route path="/handoff" element={<HandoffPage />} />
         </Route>
         {/* old addresses */}
         <Route path="/body" element={<Navigate to="/vitals" replace />} />

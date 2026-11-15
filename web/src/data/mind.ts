@@ -10,10 +10,10 @@ export type ScaleKey = 'mood' | 'stress' | 'energy' | 'sleep_quality' | 'social'
 /** 1-5 scales, a word on every step (no emojis). stress is high-side, the others low-side. */
 export const SCALES: { key: ScaleKey; label: string; words: [string, string, string, string, string] }[] = [
   { key: 'mood', label: 'Mood', words: ['Very low', 'Low', 'Okay', 'Good', 'Great'] },
-  { key: 'stress', label: 'Stress', words: ['None', 'Low', 'Some', 'High', 'Very high'] },
+  { key: 'stress', label: 'Stress', words: ['Calm', 'Settled', 'Some pressure', 'Strained', 'Overwhelmed'] },
   { key: 'energy', label: 'Energy', words: ['Drained', 'Low', 'Okay', 'Good', 'High'] },
   { key: 'sleep_quality', label: 'Sleep', words: ['Very poor', 'Poor', 'Fair', 'Good', 'Great'] },
-  { key: 'social', label: 'Social', words: ['Isolated', 'Distant', 'Okay', 'Connected', 'Close'] },
+  { key: 'social', label: 'Social', words: ['Cut off', 'Distant', 'Okay', 'Connected', 'Close'] },
 ];
 
 export type SelfReport = Partial<Record<ScaleKey, number>>;
@@ -96,6 +96,8 @@ interface MindState {
   queue: Pending[];
   /** What the server said for subject|date (tasks with system tasks and real streaks, progress). */
   server: Record<string, { tasks: ServerTask[]; progress: Progress | null }>;
+  /** Scale words from the server's /api/checkin, when it answers (else SCALES). */
+  words: Partial<Record<ScaleKey, string[]>>;
   pull: (subject: string, date: string) => Promise<void>;
   setScore: (subject: string, date: string, key: ScaleKey, value: number) => void;
   addNote: (subject: string, text: string) => void;
@@ -131,8 +133,16 @@ const routineId = (subject: string, label: string) => `routine-${subject}-${labe
 export const useMind = create<MindState>((set, get) => ({
   ...load(),
   server: {},
+  words: {},
   pull: async (subject, date) => {
     if (!(await hasServer())) return;
+    getJson<{ metrics: { key: string; scale?: { words?: string[] } }[] }>(`api/checkin?subject=${encodeURIComponent(subject)}&date=${date}`)
+      .then((c) => {
+        const w: Partial<Record<ScaleKey, string[]>> = {};
+        for (const m of c.metrics ?? []) if (m.scale?.words?.length === 5) w[m.key.replace('self.', '') as ScaleKey] = m.scale.words;
+        set({ words: w });
+      })
+      .catch(() => undefined);
     try {
       const [tasks, progress] = await Promise.all([
         getJson<{ tasks: ServerTask[] }>(`api/tasks?subject=${encodeURIComponent(subject)}&date=${date}`),

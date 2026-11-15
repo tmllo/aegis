@@ -29,7 +29,7 @@ html { background: #0e1316; }
 .cx-mark span { position: relative; top: -0.75em; font-size: 0.55em; margin-left: 1px; }
 .cx-brand small { font-size: 12px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: rgb(var(--dim)); }
 .cx-tabs { display: flex; gap: 2px; padding: 4px; border-radius: 14px; background: rgb(var(--glass) / 0.72); border: 1px solid rgb(255 255 255 / 0.08); box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
-.cx-tabs a { position: relative; height: 52px; min-width: 104px; padding: 0 16px; display: flex; align-items: center; justify-content: center; gap: 8px; border-radius: 10px; font-size: 14px; font-weight: 400; color: rgb(var(--dim)); transition: color 150ms, background 150ms; }
+.cx-tabs a { position: relative; height: 56px; min-width: 76px; padding: 0 12px; display: flex; align-items: center; justify-content: center; gap: 8px; border-radius: 10px; font-size: 14px; font-weight: 400; color: rgb(var(--dim)); transition: color 150ms, background 150ms; }
 .cx-tabs a:hover { color: rgb(var(--ink)); background: rgb(255 255 255 / 0.04); }
 .cx-tabs a.on { color: rgb(var(--ink)); background: rgb(255 255 255 / 0.08); box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.08); }
 .cx-tabs a.on::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: rgb(var(--accent)); }
@@ -366,3 +366,25 @@ button.wg:hover { border-color: rgb(255 255 255 / 0.22); }
 .wg-alert[data-status='red'] .btn-alert { background: rgb(var(--crit)); color: #fff; }
 .dial-hit { fill: rgb(var(--glass) / 0.72); stroke: rgb(255 255 255 / 0.1); }
 .cb-dial .dial-hit:hover { stroke: rgb(255 255 255 / 0.35); }
+.tl-right { right: 28px; top: 96px; width: 420px; bottom: 40px; }
+.tl { position: relative; display: flex; flex-direction: column; gap: 6px; cursor: ew-resize; touch-action: none; user-select: none; }
+.tl-row { display: flex; align-items: stretch; gap: 8px; height: 30px; }
+.tl-l { width: 48px; font-size: 10.5px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: rgb(var(--dim)); align-self: center; }
+.tl-cells { flex: 1; display: flex; gap: 1px; align-items: stretch; }
+.tl-cells i { flex: 1; border-radius: 1px; }
+.tl-bars { align-items: flex-end; }
+.tl-bars i { background: rgb(var(--accent) / 0.5); max-height: 100%; }
+.tl-cursor { position: absolute; top: -4px; bottom: -4px; width: 2px; background: #fff; box-shadow: 0 0 0 1px rgb(0 0 0 / 0.4); pointer-events: none; }
+.sh-center { position: absolute; z-index: 10; left: 50%; top: 42%; translate: -50% -50%; display: flex; flex-direction: column; align-items: center; text-align: center; }
+.sh-count { font-size: 120px; font-weight: 200; line-height: 1; font-variant-numeric: tabular-nums; }
+.sh-center[data-phase='warning'] .sh-count { color: rgb(var(--crit)); }
+.sh-banner { margin-top: 12px; padding: 8px 14px; border-radius: 8px; background: rgb(var(--crit) / 0.16); border: 1px solid rgb(var(--crit) / 0.6); font-size: 12px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; }
+.sh-left { left: 28px; top: 96px; width: 380px; bottom: 40px; }
+.sh-right { right: 28px; top: 96px; width: 420px; bottom: 40px; }
+.cp-left { left: 28px; top: 96px; width: 320px; bottom: 40px; }
+.cp-cards { position: absolute; z-index: 10; left: 380px; right: 40px; bottom: 40px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.cp-card { gap: 8px; }
+.ho-mid { left: 28px; right: 476px; top: 96px; bottom: 40px; }
+.ho-right { right: 28px; top: 96px; width: 436px; bottom: 40px; }
+.ho-json { margin-top: 14px; flex: 1; overflow: auto; padding: 12px; border-radius: 10px; background: rgb(0 0 0 / 0.25); border: 1px solid rgb(255 255 255 / 0.06); font-family: var(--font-mono); font-size: 11.5px; line-height: 1.5; color: rgb(var(--dim)); white-space: pre; }
+.ho-path { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }

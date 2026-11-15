@@ -28,6 +28,12 @@ interface Hud {
   /** Bumped by reset (0 key, N on the dial): the camera returns to the view. */
   reset: number;
   doReset: () => void;
+  /** Replay day (Timeline): every screen shows the mission as of this date. null = today. */
+  asOf: string | null;
+  setAsOf: (d: string | null) => void;
+  /** Compare: per crew member, organ -> status for the metric being compared. */
+  compare: Partial<Record<TargetId, Status>>[];
+  setCompare: (c: Partial<Record<TargetId, Status>>[]) => void;
   /** Body model ready. */
   bodyReady: boolean;
   setYaw: (y: number) => void;
@@ -41,6 +47,10 @@ export const useHud = create<Hud>((set) => ({
   focus: null,
   tint: {},
   bodyReady: false,
+  asOf: null,
+  setAsOf: (asOf) => set({ asOf }),
+  compare: [],
+  setCompare: (compare) => set({ compare }),
   zoom: 1,
   setZoom: (zoom) => set({ zoom: Math.max(0.5, Math.min(2.2, zoom)) }),
   layers: { skin: true, muscle: true, organs: true, skeleton: true },

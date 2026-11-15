@@ -91,7 +91,7 @@ export default function MindPage() {
           <div key={s.key} className="scale">
             <span className="label">{s.label}</span>
             <div className="scale-row">
-              {s.words.map((w, i) => (
+              {(mind.words[s.key] ?? s.words).map((w, i) => (
                 <button key={w} type="button" aria-pressed={report[s.key] === i + 1} onClick={() => mind.setScore(id, today, s.key, i + 1)}>
                   {w}
                   <small>{i + 1}</small>
