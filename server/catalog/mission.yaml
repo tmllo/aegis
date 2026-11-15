@@ -1,0 +1,21 @@
+# Single source of truth. Edit here, rebuild with: python -m server.build
+# The simulated mission and the scoring constants of the contract rule.
+mission:
+  name: Artemis Base Camp (sim)
+  environment: moon
+  start_date: '2026-09-01'
+  today: '2026-11-14'
+  career_limit_mSv: 600
+  crew_note: Simulated crew from published ranges. Not real astronaut data.
+  scoring:
+    baseline_days: 14
+    rolling_days: 3
+    amber_z: 2
+    red_z: 3
+    report_last_days: 7
+  body_regions:
+  - brain
+  - heart
+  - blood
+  - bones
+  - whole_body

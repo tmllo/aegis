@@ -106,7 +106,7 @@ footer { margin-top: 48px; color: var(--faint); font-size: 13px; max-width: 80ch
 </head>
 <body>
 <header>
-  <div class="eyebrow">NASA Space Apps 2026 · Health monitoring for astronauts · repo tmllo/aegis · updated 15 Nov 02:45</div>
+  <div class="eyebrow">NASA Space Apps 2026 · Health monitoring for astronauts · repo tmllo/aegis · updated 15 Nov 03:15</div>
   <h1><b>e^x</b> system board: what exists, what we build next</h1>
   <p>Every part of the project and where its data comes from. Click any box to see what it is, its file, its source and its feeds. Use the switch to compare what is built today with the full design. Comment on this page to add to the board.</p>
 </header>
@@ -117,8 +117,8 @@ footer { margin-top: 48px; color: var(--faint); font-size: 13px; max-width: 80ch
   <div class="sec-head">
     <div>
       <div class="eyebrow">01 · Data map</div>
-      <h2>From NASA source to the astronaut's screen</h2>
-      <p>Left to right: where data comes from, the Python that turns it into numbers, the files and feeds that cross the wire, the browser logic, the screens, and what leaves the system.</p>
+      <h2>From NASA source to the astronaut's screen, through one clean backend</h2>
+      <p>Left to right: each source has exactly one adapter; every adapter writes into the same store, checked against the catalog; the engine scores; views produce what the app reads; Emile's app turns it into screens. Use <b>Our backend</b> and <b>Emile's frontend</b> to see each half.</p>
     </div>
     <div class="controls">
       <div class="seg" role="group" aria-label="Show">
@@ -139,16 +139,7 @@ footer { margin-top: 48px; color: var(--faint); font-size: 13px; max-width: 80ch
 
 <section>
   <div class="sec-head"><div>
-    <div class="eyebrow">02 · How the backend is organized</div>
-    <h2>Store each fact once, compute everything else</h2>
-    <p>Database normalization applied to the whole backend. Every source goes through its own adapter into four kinds of fact, checked against one catalog. One engine derives scores and forecasts. Views shape the output for each screen. Arrows only go right: a new source is one adapter, a new screen is at most one view. Full design: <span class="mono">docs/backend/DATA-CORE.md</span>.</p>
-  </div></div>
-  <div class="map"><svg id="core" role="img" aria-label="Normalized backend: sources feed adapters, adapters write observations, events, event links and fetch runs to one store validated against a catalog of metrics, subjects and sources; the engine derives assessments and forecasts; views produce the contract files, the generic API, the live bus and the offline export."></svg></div>
-  <div class="hz" style="margin-top:12px" id="corecards"></div>
-</section>
-<section>
-  <div class="sec-head"><div>
-    <div class="eyebrow">03 · Challenge scope</div>
+    <div class="eyebrow">02 · Challenge scope</div>
     <h2>Every ask from the official brief, and how we cover it</h2>
     <p>Data column: is the information already in our files. Screen column: is it visible to the astronaut yet. No screen is built yet, so the screen column is Emile's swarm's to-do list.</p>
   </div></div>
@@ -157,7 +148,7 @@ footer { margin-top: 48px; color: var(--faint); font-size: 13px; max-width: 80ch
 
 <section>
   <div class="sec-head"><div>
-    <div class="eyebrow">04 · NASA's five hazards</div>
+    <div class="eyebrow">03 · NASA's five hazards</div>
     <h2>One hazard is not covered yet: the closed environment</h2>
     <p>NASA's Human Research Program names five hazards. Four already have a metric in our crew file. The fifth, a hostile closed environment, gets real data once the ISS cabin feed is in.</p>
   </div></div>
@@ -166,7 +157,7 @@ footer { margin-top: 48px; color: var(--faint); font-size: 13px; max-width: 80ch
 
 <section>
   <div class="sec-head"><div>
-    <div class="eyebrow">05 · Ideas to agree on</div>
+    <div class="eyebrow">04 · Ideas to agree on</div>
     <h2>What takes this from a dashboard to a system</h2>
     <p>All proposals. The orange one is the strongest proof we have and its data is already built.</p>
   </div></div>
@@ -175,7 +166,7 @@ footer { margin-top: 48px; color: var(--faint); font-size: 13px; max-width: 80ch
 
 <section>
   <div class="sec-head"><div>
-    <div class="eyebrow">06 · Parallel build</div>
+    <div class="eyebrow">05 · Parallel build</div>
     <h2>Backend lanes: one terminal each, one folder each</h2>
     <p>The spine (S0) goes first because every other lane imports its record types and catalog. After that each lane owns its own files, so terminals never edit the same file. Emile's swarm stays in <span class="mono">web/</span>.</p>
   </div></div>
@@ -184,7 +175,7 @@ footer { margin-top: 48px; color: var(--faint); font-size: 13px; max-width: 80ch
 
 <section>
   <div class="sec-head"><div>
-    <div class="eyebrow">07 · Decisions</div>
+    <div class="eyebrow">06 · Decisions</div>
     <h2>Questions for Emile before the build starts</h2>
   </div></div>
   <div class="qs" id="qs"></div>
@@ -203,181 +194,111 @@ const STATUS = {
   stretch:  { label: 'Stretch',            color: 'var(--stretch)', dash: '2 4',   fill: 'transparent' },
 };
 
-const COLS = ['Sources', 'Python: ml/ + server/', 'Contract: what crosses the wire', 'Browser core', 'Screens', 'Leaves the system'];
+const COLS = ['Sources', 'Adapters: server/adapters', 'Store + engine: server/', 'Views: what the app reads', 'Browser core: web/src', 'Screens: web/'];
 
 const N = [
-  // col 0: sources
-  { id:'donki', c:0, t:'NASA DONKI', s:'flares · CMEs · SEP', st:'built', owner:'Tomas',
-    what:'NASA CCMC space-weather database. Every flare with its class, position on the Sun and linked CME, plus the proton storms (SEP) used as labels.',
-    path:'ml/fetch_donki.py → data/raw (not in git)', src:'CCMC DONKI API. The api.nasa.gov DONKI flare route returned HTTP 404 in our test, so use the CCMC host. Sample: docs/research/samples/donki_ccmc_FLR.json',
-    note:'History 2010 → Nov 2026 is pulled and modelled. Live polling every 15 min is the next step (server/live.py).' },
-  { id:'swpc', c:0, t:'NOAA SWPC + GOES', s:'protons · X-rays · Kp', st:'next', owner:'Tomas + Claude',
-    what:'Live JSON from NOAA: GOES proton flux above 10 MeV (the radiation that matters for crews), X-ray flares, planetary Kp, NOAA R/S/G scales and alerts.',
-    path:'server/live.py (to build)', src:'services.swpc.noaa.gov JSON, free, no key. Samples: docs/research/samples/swpc_goes_integral_protons_6hour.json and others',
-    note:'Gives the radiation screen a "right now" strip with the fetch time, and lets the model score today\'s flares.' },
-  { id:'isslive', c:0, t:'ISS Live! telemetry', s:'cabin air · water', st:'next', owner:'Tomas + Claude',
-    what:'Public subset of real ISS telemetry streamed from Mission Control: cabin pressure, ppCO2, ppO2, cabin temperature, water and urine tanks.',
-    path:'server/env.py (to build)', src:'Lightstreamer push.lightstreamer.com, adapter set ISSLIVE. Snapshot: docs/research/samples/isslive_lightstreamer_eclss_snapshot.json',
-    note:'Some items update rarely (our ppCO2 reading was last updated 2 to 3 Nov), so always show the last-update time. No crew biomedical items are public. NASA CO2 limit: 1-hour average of 3 mmHg or less.' },
-  { id:'hapi', c:0, t:'CCMC iSWA HAPI', s:'Mars + Moon dose', st:'next', owner:'Tomas + Claude',
-    what:'Measured radiation dose on Mars from Curiosity RAD (data to 12 Nov 2026) and in lunar orbit from LRO CRaTER (to 7 Oct 2026).',
-    path:'server/env.py (to build)', src:'iswa.gsfc.nasa.gov HAPI. Samples: docs/research/samples/iswa_hapi_msl_rad_dosimetry_2026-11.csv, iswa_hapi_crater_micro_2026-10.csv',
-    note:'Replaces the hand-set dose rates in crew_data.json environments, which lineage.json lists as an open point.' },
+  // col 0: sources (each row lines up with its adapter)
+  { id:'gen', c:0, t:'Simulated crew', s:'ml/make_sample_data.py', st:'built', owner:'Tomas',
+    what:'Ana, Kenji and Léa at Artemis Base Camp (sim) from 1 Sep 2026: 11 daily metrics drawn from published ranges, with day-to-day persistence and correlated metrics.',
+    path:'ml/make_sample_data.py → web/public/data/crew_data.json', src:'Published ranges (docs/research/3-health-science/03-health-indicators-thresholds.md)',
+    note:'Only the raw readings enter the store. Baselines, flags and status are recomputed by the engine.' },
+  { id:'ml_storm', c:0, t:'Storm model v1', s:'ml/ · trained on DONKI', st:'built', owner:'Tomas',
+    what:'Logistic regression on CME speed, flare longitude, flare flux and linked CME, 72 h horizon. Held out 2024 → Nov 2026: 16 of 17 storms, about 1 false alarm a month, median 3.8 h ahead.',
+    path:'ml/train_v1.py → ml/models/v1.pkl, ml/run_test_and_export.py', src:'NASA CCMC DONKI history 2010 → 2026',
+    note:'Card in server/catalog/models.yaml. The file label says trained 2010-2023: should read 2010-2021, tuned 2022-23.' },
   { id:'osdr', c:0, t:'Your Inspiration4 CSVs', s:'NASA OSDR · cmp + cbc', st:'built', owner:'Tomas',
-    what:'The two files Tomas uploaded: cmp.csv (blood chemistry: glucose, electrolytes, kidney, liver) and cbc.csv (complete blood count) for the four Inspiration4 crew, 3 draws before flight and 4 after.',
-    path:'ml/real_crew.py → real_crew.json', src:'NASA Open Science Data Repository: chemistry is study OSD-575, blood count is OSD-569. Both IDs are right, one per file (the contract credits only OSD-575: fix the credit)',
-    note:'25 post-flight values sit inside the lab\'s normal range yet at least 2 SD from that person\'s own pre-flight mean.' },
-  { id:'ranges', c:0, t:'Published ranges', s:'HRP · thresholds research', st:'built', owner:'Tomas',
-    what:'Physiological ranges, spaceflight effects and thresholds gathered from published sources. They shape the simulated crew.',
-    path:'docs/research/3-health-science/03-health-indicators-thresholds.md', src:'NASA HRP, CSA, peer-reviewed papers (cited in the file)',
-    note:'NASA does not publish crew self-check thresholds, so the app says so in the footer.' },
-  { id:'samples', c:0, t:'Recorded feed copies', s:'50 real responses · 14 Nov', st:'built', owner:'Tomas',
-    what:'Real responses saved from every live feed when the research tested them: DONKI, NOAA SWPC, ISS Live!, HAPI Mars and Moon dose, OSDR, people in space.',
-    path:'docs/research/samples/', src:'Each feed, fetched 14 Nov 2026 about 17:45-18:05 UTC',
-    note:'Each live adapter falls back to its copy when the network is down, marked recorded, so the demo never shows an empty panel.' },
-  { id:'bedrest', c:0, t:'Bed-rest daily vitals', s:'NASA NLSP · UTMB', st:'stretch', owner:'open',
-    what:'Real daily blood pressure, pulse, temperature, respiration and symptoms from 60 to 90 days of head-down bed rest, the standard ground stand-in for spaceflight.',
-    path:'not downloaded', src:'NASA Life Sciences Portal, UTMB Bed Rest Campaign 3 (see docs/research/2-data-sources/02-datasets.md)',
-    note:'Could calibrate the simulated crew against a real in-mission-like time series. File download only tested through the web portal.' },
-  { id:'people', c:0, t:'Who is in space now', s:'crew list · ISS position', st:'stretch', owner:'open',
-    what:'Live list of people in space and the ISS position, for header context.',
-    path:'server/env.py (stretch)', src:'corquaid people-in-space, Launch Library 2, wheretheiss.at. open-notify is stale: do not use',
-    note:'Flavour only. Last to build.' },
-  { id:'devices', c:0, t:'Devices + check-in', s:'Bluetooth HR · manual form', st:'planned', owner:'Emile',
-    what:'Real heart rate from any strap or watch that broadcasts the standard Bluetooth Heart Rate Service, the daily check-in form, and simulated Bio-Monitor and dosimeter adapters.',
-    path:'web/src/devices/ (planned)', src:'Web Bluetooth GATT service 0x180D, characteristic 0x2A37 (Chrome only)',
-    note:'A live strap on stage turns the demo from a replay into a reading.' },
+    what:'cmp.csv (chemistry, OSD-575) and cbc.csv (blood count, OSD-569) for the four Inspiration4 crew, 3 draws before flight and 4 after.',
+    path:'data/real/cmp.csv, data/real/cbc.csv (committed 15 Nov)', src:'NASA Open Science Data Repository', note:'25 post-flight values sit inside the lab range yet at least 2 SD from that person\'s own pre-flight mean.' },
+  { id:'isslive', c:0, t:'ISS Live! telemetry', s:'cabin air · water', st:'partial', owner:'Tomas + Claude',
+    what:'Public ISS telemetry from Mission Control: cabin pressure, ppCO2, ppO2, temperature, water and urine tanks.',
+    path:'server/probes/iss_cabin_probe.py (live check)', src:'Lightstreamer push.lightstreamer.com, adapter set ISSLIVE. Recorded copy: docs/research/samples/isslive_lightstreamer_eclss_snapshot.json',
+    note:'The recorded copy is in the store. The live stream waits for the probe to work on Tomas\'s laptop.' },
+  { id:'donki', c:0, t:'NASA DONKI (live)', s:'flares · CMEs · SEP', st:'next', owner:'Claude',
+    what:'Last 7 days of flares and linked CMEs, polled every 15 min, so the model scores today\'s Sun.', path:'—', src:'CCMC DONKI API. Recorded copy: docs/research/samples/donki_ccmc_FLR.json', note:'' },
+  { id:'swpc', c:0, t:'NOAA SWPC + GOES', s:'protons · X-rays · Kp', st:'next', owner:'Claude',
+    what:'GOES proton flux above 10 MeV, X-ray flares, planetary Kp, NOAA scales.', path:'—', src:'services.swpc.noaa.gov JSON. Recorded copies in docs/research/samples/', note:'' },
+  { id:'hapi', c:0, t:'CCMC iSWA HAPI', s:'Mars + Moon dose', st:'next', owner:'Tomas terminal',
+    what:'Measured dose on Mars (Curiosity RAD, to 12 Nov 2026) and in lunar orbit (LRO CRaTER, to 7 Oct 2026).', path:'—', src:'iswa.gsfc.nasa.gov HAPI. Recorded copies in docs/research/samples/', note:'Replaces the hand-set habitat dose rates.' },
+  { id:'devices', c:0, t:'Check-in + devices', s:'form · Bluetooth HR', st:'planned', owner:'Emile + Tomas',
+    what:'The daily check-in form and any Bluetooth heart-rate strap.', path:'web/ (input), server/adapters/checkin.py (storage)', src:'Astronaut input', note:'' },
 
-  // col 1: python
-  { id:'ml_storm', c:1, t:'Storm model v1', s:'logistic · 72 h horizon', st:'built', owner:'Tomas',
-    what:'Predicts the chance of a proton storm within 72 h of each flare from CME speed, flare longitude, flare flux and whether a CME is linked.',
-    path:'ml/train_v1.py → ml/models/v1.pkl, ml/run_test_and_export.py, ml/results/', src:'DONKI history',
-    note:'Held out 2024 → Nov 2026: caught 16 of 17 storms, about 1 false alarm a month, median 3.8 h ahead, Brier skill 0.41 vs climatology. The file label says trained 2010-2023: fix to 2010-2021 + tuned 2022-23.' },
-  { id:'gen', c:1, t:'Simulated crew', s:'3 crew · 75 days', st:'built', owner:'Tomas',
-    what:'Ana, Kenji and Léa at Artemis Base Camp (sim) from 1 Sep 2026: 11 daily metrics, personal baselines from the first 14 days, flags on the 3-day mean.',
-    path:'ml/make_sample_data.py, ml/crew_flags.py, docs/analysis/alert_testbench.py', src:'Published ranges',
-    note:'On 6,000 simulated missions the 3-day rule raised 1.7 alerts per astronaut-month against 4.8 for a one-day rule. Storm dose placed on 5 Sep 2026, the real GOES storm in the window.' },
-  { id:'realcrew', c:1, t:'Real-crew scorer', s:'pre-flight baselines', st:'built', owner:'Tomas',
-    what:'Scores each Inspiration4 post-flight value against that person\'s own pre-flight mean.',
-    path:'ml/real_crew.py → ml/results/real_crew.md', src:'OSDR',
-    note:'Reference only: never mixed with the simulated crew or the check-in scorer.' },
-  { id:'live', c:1, t:'Live space weather', s:'server/live.py · B2', st:'next', owner:'Claude',
-    what:'Every 15 min: pull the last 7 days of DONKI flares with linked CMEs, compute the v1 features with ml/ code, score with v1.pkl, plus the NOAA GOES feeds.',
-    path:'server/live.py', src:'DONKI + SWPC',
-    note:'Caches to disk and falls back to the cache or the repo samples when offline, flagged cached: true. Parity test: same p_storm as the export on a past flare.' },
-  { id:'env', c:1, t:'Environment feed', s:'server/env.py · B2b', st:'next', owner:'Tomas terminal',
-    what:'ISS cabin air and water from ISS Live!, measured Mars and Moon dose from HAPI, people in space.',
-    path:'server/env.py', src:'ISS Live!, HAPI, Launch Library 2',
-    note:'The Python Lightstreamer client is an extra dependency: agree first.' },
-  { id:'relay', c:1, t:'Bus relay', s:'server/relay.py · B3', st:'next', owner:'Tomas terminal',
-    what:'WebSocket that passes app events between devices, so a report sent from the crew laptop arrives on the flight surgeon\'s phone.',
-    path:'server/relay.py', src:'Browser bus events',
-    note:'The light delay stays in the browser (link.ts). The server only relays.' },
-  { id:'store', c:1, t:'Check-in store', s:'server/store.py · B4', st:'next', owner:'Tomas terminal',
-    what:'Saves check-ins and reports to SQLite and merges check-ins into the crew series on the next load.',
-    path:'server/store.py', src:'Check-in form',
-    note:'Invisible on stage. Last backend step.' },
-  { id:'app', c:1, t:'Server shell', s:'server/app.py · B1', st:'next', owner:'Tomas terminal',
-    what:'One FastAPI process: the built app at /, the contract files at /data, extras at /api, the relay at /ws/bus. Mounts each lane\'s router.',
-    path:'server/app.py, server/Containerfile, server/tests/', src:'—',
-    note:'Runs on a laptop, a USB stick or a container. With Wi-Fi off it serves the cached files and the app works as today.' },
+  // col 1: adapters
+  { id:'a_sim', c:1, t:'simcrew.py', s:'2,475 readings', st:'built', owner:'Claude',
+    what:'Turns each daily value of the simulated crew into one observation row.', path:'server/adapters/simcrew.py', src:'crew_data.json series', note:'' },
+  { id:'a_ml', c:1, t:'ml_forecast.py', s:'1,528 flares · 406 CMEs · 17 storms', st:'built', owner:'Claude',
+    what:'Splits the model export into flare, CME and storm events, the links between them, and one forecast row per flare.', path:'server/adapters/ml_forecast.py', src:'storm_forecast.json', note:'The live DONKI adapter emits the same shapes.' },
+  { id:'a_osdr', c:1, t:'osdr.py', s:'224 lab draws', st:'built', owner:'Claude',
+    what:'Reads the original CSVs: value, unit, the lab range printed on that draw, and the one excluded row (C003 L-92 blood count, shifted columns) with its evidence.', path:'server/adapters/osdr.py', src:'data/real/*.csv', note:'' },
+  { id:'a_iss', c:1, t:'isslive.py', s:'10 cabin readings', st:'partial', owner:'Claude → Tomas',
+    what:'Stores cabin readings on the ISS habitat with their real measurement time.', path:'server/adapters/isslive.py', src:'Recorded copy now, live stream next', note:'' },
+  { id:'a_donki', c:1, t:'donki.py', s:'S2', st:'next', owner:'Claude', what:'Live flares and CMEs as events and links.', path:'server/adapters/donki.py', src:'DONKI', note:'' },
+  { id:'a_swpc', c:1, t:'swpc.py', s:'S2', st:'next', owner:'Claude', what:'GOES protons and Kp as observations on the Sun and Earth environment.', path:'server/adapters/swpc.py', src:'NOAA', note:'' },
+  { id:'a_hapi', c:1, t:'hapi.py', s:'S3', st:'next', owner:'Tomas terminal', what:'Measured dose rate as observations on the Mars and Moon habitats.', path:'server/adapters/hapi.py', src:'HAPI', note:'' },
+  { id:'a_check', c:1, t:'checkin.py', s:'S5', st:'next', owner:'Tomas terminal', what:'Saves check-ins as observations.', path:'server/adapters/checkin.py', src:'App', note:'' },
 
-  // col 2: contract
-  { id:'crew_json', c:2, t:'crew_data.json', s:'contract v1', st:'built', owner:'Tomas',
-    what:'Mission, environments, 11 metric definitions (label, unit, body region, red limits, explanation, how to measure, amber and red actions) and each crew member\'s baseline, series, flags and status.',
-    path:'web/public/data/crew_data.json, contracts/DATA_CONTRACT.md', src:'Simulated crew', note:'Shape changes go through contracts/CHANGELOG.md first.' },
-  { id:'storm_json', c:2, t:'storm_forecast.json', s:'1,528 test flares', st:'built', owner:'Tomas',
-    what:'Every held-out flare with its probability, alert level, position and the storm it led to, plus model metadata and thresholds.',
-    path:'web/public/data/storm_forecast.json', src:'Storm model v1',
-    note:'Proposed: events may also carry split "live" for flares the server scores today. Headline metrics never include them.' },
-  { id:'real_json', c:2, t:'real_crew.json', s:'Inspiration4 · n = 4', st:'built', owner:'Tomas',
-    what:'Real bloodwork scored against each person\'s pre-flight mean, with sample-handling artefacts and exclusions marked.',
-    path:'web/public/data/real_crew.json', src:'OSDR', note:'Not loaded by any screen yet.' },
-  { id:'sw_json', c:2, t:'space_weather_now', s:'proposed file + /api', st:'next', owner:'Tomas',
-    what:'GOES protons, latest X-ray flares, Kp and NOAA scales, with fetched_at and cached.',
-    path:'/api/space-weather/now', src:'Live space weather', note:'Needs Emile\'s yes (CHANGELOG entry marked PROPOSED).' },
-  { id:'env_json', c:2, t:'environment_now', s:'proposed file + /api', st:'next', owner:'Tomas',
-    what:'ISS cabin ppCO2, ppO2, pressure, temperature and water with last-update times; measured Mars and Moon dose rates with their dates.',
-    path:'/api/environment/now', src:'Environment feed', note:'Needs Emile\'s yes.' },
-  { id:'ws', c:2, t:'/ws/bus', s:'one bus record per message', st:'next', owner:'Tomas',
-    what:'Each message is one record from core/bus.ts as JSON, plus the sending device id so a device ignores its own echo.',
-    path:'/ws/bus', src:'Bus relay', note:'Needs the small bridge on Emile\'s side.' },
+  // col 2: store + engine
+  { id:'catalog', c:2, t:'Catalog', s:'32 metrics · 12 subjects · 8 sources', st:'built', owner:'Tomas',
+    what:'The single source of truth: every metric (unit, NASA hazard, body region, rule, explanation, actions), every subject (crew, habitats, located_in), every source (credit, fallback), the mission rules and the model card.',
+    path:'server/catalog/*.yaml', src:'Generated from today\'s data, then edited by hand', note:'Every write to the store is checked against it.' },
+  { id:'obs', c:2, t:'observation', s:'2,709 rows · one per reading', st:'built', owner:'Tomas',
+    what:'Who, what, when, value, unit, source, quality. Crew vitals, lab draws and ISS cabin air live in the same table.',
+    path:'server/core/store.py', src:'All adapters', note:'Cabin CO2 is stored once on the ISS; crew see it through located_in.' },
+  { id:'events', c:2, t:'event + event_link', s:'1,951 events · 435 links', st:'built', owner:'Tomas',
+    what:'Flares, CMEs and proton storms as separate records, linked (flare → CME, flare → storm it caused).', path:'server/core/store.py', src:'ml_forecast, donki', note:'' },
+  { id:'scoring', c:2, t:'scoring.py', s:'crew alert rule, once', st:'built', owner:'Tomas',
+    what:'Personal baseline of the first 14 days, z of the 3-day mean, amber at 2, red at 3, hard limits. Constants come from the catalog.',
+    path:'server/engine/scoring.py', src:'observation + catalog', note:'Reproduces every baseline, flag and status in crew_data.json. The browser\'s scoring.ts is tested against the same file.' },
+  { id:'labs', c:2, t:'labs.py', s:'Inspiration4 baselines', st:'built', owner:'Tomas',
+    what:'Pre-flight mean per person, z, percent change, far-from-baseline, R+45 artefacts.', path:'server/engine/labs.py', src:'observation (osdr)', note:'' },
+  { id:'forecast', c:2, t:'forecast.py', s:'S2 · v1.pkl on new flares', st:'next', owner:'Claude', what:'Scores live flares with the same model and features.', path:'server/engine/forecast.py', src:'event', note:'' },
+  { id:'dose', c:2, t:'dose.py', s:'S3 · measured habitat dose', st:'next', owner:'Tomas terminal', what:'Cumulative dose from measured habitat rates.', path:'server/engine/dose.py', src:'observation (hapi)', note:'' },
 
-  // col 3: browser core
-  { id:'loader', c:3, t:'Data loader + store', s:'load.ts · store.ts', st:'built', owner:'Emile',
-    what:'Fetches the three contract files once per page load and keeps them in a shared store with the selected crew member, region and environment.',
-    path:'web/src/data/', src:'/data/*.json', note:'The only network call in the app today. Serve the same paths from the server and the app goes live with no code change.' },
-  { id:'scoring', c:3, t:'Scoring rule', s:'core/scoring.ts', st:'built', owner:'Emile',
-    what:'The contract\'s personal-baseline rule in TypeScript, for live check-ins.',
-    path:'web/src/core/scoring.ts + scoring.test.ts', src:'crew_data.json', note:'Golden test reproduces every status and flag in crew_data.json, so the browser and Tomas\'s Python agree.' },
-  { id:'bus', c:3, t:'Event bus', s:'core/bus.ts', st:'built', owner:'Emile',
-    what:'Typed event store: observation, flag, status, alert, report, device. The Systems screen can draw it live.',
-    path:'web/src/core/bus.ts + bus.test.ts', src:'—', note:'Lives in one browser tab until the bridge exists.' },
-  { id:'obs', c:3, t:'Observation model', s:'FHIR R4 shape', st:'built', owner:'Emile',
-    what:'Every reading in one shape, modelled on the hospital standard FHIR Observation, whatever device produced it.',
-    path:'web/src/core/observation.ts', src:'Devices, replay, check-in', note:'The hospital-at-home line in the pitch rests on this.' },
-  { id:'adapters', c:3, t:'Device adapters', s:'devices/', st:'planned', owner:'Emile',
-    what:'Replay of the crew file, manual check-in, Bluetooth HR, simulated Bio-Monitor and dosimeter, plus planned devices listed as not connected.',
-    path:'web/src/devices/', src:'Devices', note:'' },
-  { id:'logic', c:3, t:'Link · escalation · handoff', s:'core/ (planned)', st:'planned', owner:'Emile',
-    what:'Light delay by environment and blackout windows, who gets told, the case bundle for an onboard AI medic, the radiation timeline.',
-    path:'web/src/core/link.ts, escalation.ts, handoff.ts, radiation.ts', src:'Store + bus', note:'Delay examples: ISS about 0 s, Moon about 1.3 s, Mars 11 min (up to 22).' },
-  { id:'remote', c:3, t:'Bus bridge', s:'core/remote.ts · ~40 lines', st:'next', owner:'Tomas (handoff)',
-    what:'Mirrors bus events to /ws/bus and replays events from other devices, only when the page is served by our server.',
-    path:'docs/handoff/remote.ts → web/src/core/remote.ts', src:'Bus', note:'We write it, Emile\'s agent drops it in.' },
+  // col 3: views
+  { id:'crew_json', c:3, t:'crew_data.json', s:'rebuilt · identical', st:'built', owner:'Tomas',
+    what:'Rebuilt from catalog + store + scoring. Field by field equal to the file the app reads today.', path:'server/views/contract_v1.py', src:'store', note:'' },
+  { id:'storm_json', c:3, t:'storm_forecast.json', s:'rebuilt · identical', st:'built', owner:'Tomas',
+    what:'Rebuilt from events, links, forecasts and the model card.', path:'server/views/contract_v1.py', src:'store', note:'Emile\'s radiation screen reads this.' },
+  { id:'real_json', c:3, t:'real_crew.json', s:'rebuilt · identical', st:'built', owner:'Tomas',
+    what:'Rebuilt from the original CSVs and labs.py.', path:'server/views/contract_v1.py', src:'store', note:'' },
+  { id:'api', c:3, t:'Generic API', s:'S4 · /api/observations, events, catalog', st:'next', owner:'Tomas terminal',
+    what:'Any screen asks for any subject, metric or time range without new backend work.', path:'server/api/', src:'store', note:'' },
+  { id:'now', c:3, t:'Now feeds', s:'S4 · environment · space weather', st:'next', owner:'Tomas terminal',
+    what:'ISS cabin right now, measured Mars and Moon dose, GOES protons and today\'s flares, each with its age.', path:'server/views/now.py', src:'store', note:'Needs Emile\'s yes on the shape.' },
+  { id:'ws', c:3, t:'/ws/bus', s:'S4 · live events between devices', st:'next', owner:'Tomas terminal',
+    what:'Relays app events so the flight surgeon view can run on a second device.', path:'server/api/ws.py', src:'Browser bus', note:'' },
 
-  // col 4: screens
-  { id:'console', c:4, t:'Crew Console', s:'crew cards · environment', st:'planned', owner:'Emile',
-    what:'Main tablet or laptop screen: crew overview coloured by worst status, environment switch, entry to each astronaut.',
-    path:'web/src/ui or concepts/', src:'Store', note:'Demo opens here: Moon base, Ana amber, Kenji red, Léa green.' },
-  { id:'body', c:4, t:'3D body map', s:'5 clickable regions', st:'partial', owner:'Emile',
-    what:'Translucent body with brain, heart, blood, bones and whole-body regions coloured by status.',
-    path:'web/src/components/body/AegisBody.tsx, web/public/models/aegis-body.glb', src:'Store', note:'Model built from BodyParts3D (CC BY 4.0). The component exists; the screen around it does not.' },
-  { id:'panels', c:4, t:'Metric panel + check-in', s:'charts · actions · streak', st:'planned', owner:'Emile',
-    what:'For a region: each metric against the astronaut\'s own normal band, explanation, how to measure, action, re-measure, check-in with streak.',
-    path:'web/src/ui/body', src:'Store + scoring', note:'' },
-  { id:'radui', c:4, t:'Radiation + replay', s:'dose · forecast · May 2024', st:'planned', owner:'Emile',
-    what:'Dose against the 600 mSv career limit, forecast feed, model card, and the May 2024 replay with the shelter alarm.',
-    path:'web/src/ui/radiation', src:'storm_forecast.json', note:'Replay warned about 39 h before the 10 May particles, with one false warning shown honestly.' },
-  { id:'wrist', c:4, t:'Wrist', s:'urgency pulses', st:'planned', owner:'Emile',
-    what:'Simulated watch face: one pulse to check in, two for confirmed amber, continuous for red or radiation.',
-    path:'web/src/ui/wrist', src:'Bus', note:'' },
-  { id:'ground', c:4, t:'Ground view', s:'flight surgeon', st:'planned', owner:'Emile',
-    what:'Reports arriving after the one-way light delay, link status, what the crew already did.',
-    path:'web/src/ui/ground', src:'Bus (later: /ws/bus)', note:'On a second device once the relay exists.' },
-  { id:'systems', c:4, t:'Systems screen', s:'architecture · readiness', st:'planned', owner:'Emile',
-    what:'Animated data-flow diagram driven by real events, connected devices, offline and parity checks.',
-    path:'web/src/ui/systems, web/docs/lineage.json (53 nodes, 74 edges)', src:'Bus + lineage', note:'This board is a draft of it.' },
+  // col 4: browser core
+  { id:'loader', c:4, t:'Data loader + store', s:'load.ts · store.ts', st:'built', owner:'Emile',
+    what:'Fetches the three files once per page load.', path:'web/src/data/', src:'/data/*.json', note:'The only network call in the app today.' },
+  { id:'scoring_ts', c:4, t:'scoring.ts', s:'same rule in the browser', st:'built', owner:'Emile',
+    what:'The contract rule in TypeScript for live check-ins.', path:'web/src/core/scoring.ts', src:'crew_data.json', note:'Golden test against the same file as scoring.py.' },
+  { id:'bus', c:4, t:'Event bus', s:'core/bus.ts', st:'built', owner:'Emile',
+    what:'Observation, flag, status, alert, report and device events inside the app.', path:'web/src/core/bus.ts', src:'—', note:'' },
+  { id:'logic', c:4, t:'Link · escalation · handoff', s:'planned', st:'planned', owner:'Emile',
+    what:'Light delay by environment, who gets told, the case bundle for an onboard AI medic.', path:'web/src/core/', src:'store + bus', note:'' },
+  { id:'remote', c:4, t:'Bus bridge', s:'~40 lines', st:'next', owner:'Tomas (handoff)',
+    what:'Mirrors bus events to /ws/bus when the app is served by our server.', path:'docs/handoff/remote.ts', src:'bus', note:'' },
 
-  // col 5: outputs
-  { id:'cmoda', c:5, t:'Case bundle', s:'for an onboard AI medic', st:'planned', owner:'Emile',
-    what:'Who, what drifted, values against their own normal, days running, what was re-measured and done, radiation context. JSON plus a readable summary.',
-    path:'web/src/core/handoff.ts', src:'Panels', note:'Labelled "Prepared for an onboard AI medical assistant such as NASA\'s CMO-DA".' },
-  { id:'report', c:5, t:'Report to Earth', s:'queued · delayed', st:'planned', owner:'Emile',
-    what:'Red status queues a report to the flight surgeon; it arrives after the light delay for the environment.',
-    path:'web/src/core/link.ts', src:'Escalation', note:'' },
-  { id:'shelter', c:5, t:'Shelter alarm', s:'suspend EVA', st:'planned', owner:'Emile',
-    what:'Banner and sound when a flare crosses the warning threshold.',
-    path:'web/src/ui/radiation', src:'Forecast', note:'Wording: "SEP likely: suspend EVA, crew to shelter (mission rule)".' },
-  { id:'pitch', c:5, t:'Pitch + submission', s:'deck · video · form', st:'next', owner:'Tomas',
-    what:'Deck, 3-minute script, 30 s video, submission text, judge Q&A.',
-    path:'docs/pitch/ (to write), ml/results/pitch_outline.md', src:'ml/results', note:'Every number must trace to a file in ml/results or docs/analysis.' },
+  // col 5: screens
+  { id:'console', c:5, t:'Crew Console', s:'crew cards · environment', st:'planned', owner:'Emile', what:'Crew overview coloured by worst status, environment switch.', path:'web/', src:'store', note:'' },
+  { id:'body', c:5, t:'3D body map', s:'5 clickable regions', st:'partial', owner:'Emile', what:'Translucent body with brain, heart, blood, bones and whole-body regions.', path:'web/src/components/body/AegisBody.tsx', src:'store', note:'' },
+  { id:'panels', c:5, t:'Metric panel + check-in', s:'charts · actions · streak', st:'planned', owner:'Emile', what:'Each metric against the astronaut\'s own normal band, explanation, action, check-in.', path:'web/', src:'store + scoring.ts', note:'' },
+  { id:'radui', c:5, t:'Radiation + replay', s:'concept pushed 877dc9d', st:'partial', owner:'Emile', what:'May 2024 replay from the held-out forecast, dose, model card.', path:'web/src/concepts/radiation/', src:'storm_forecast.json', note:'Emile pushed a first version tonight.' },
+  { id:'ground', c:5, t:'Ground + Wrist', s:'flight surgeon · pulses', st:'planned', owner:'Emile', what:'Delayed reports on the ground; urgency pulses on the wrist.', path:'web/', src:'bus', note:'' },
+  { id:'systems', c:5, t:'Systems screen', s:'architecture · readiness', st:'planned', owner:'Emile', what:'This map, live, plus offline and parity checks.', path:'web/', src:'bus + catalog', note:'' },
 ];
 
 const E = [
-  ['donki','ml_storm','2010–2026 history'], ['donki','live','last 7 days, every 15 min'], ['swpc','live','GOES protons, X-rays, Kp'],
-  ['isslive','env','cabin air stream'], ['samples','live','offline fallback'], ['samples','env','offline fallback'], ['bedrest','gen','calibration (stretch)'], ['hapi','env','measured dose'], ['people','env','crew list'],
-  ['osdr','realcrew','pre/post-flight draws'], ['ranges','gen','ranges + effects'], ['devices','adapters','readings'],
-  ['ml_storm','storm_json','held-out predictions'], ['live','storm_json','split: live'], ['live','sw_json','now + cached flag'],
-  ['gen','crew_json','3 crew × 75 days'], ['realcrew','real_json','scored draws'], ['env','env_json','cabin + dose'],
-  ['relay','ws','relay'], ['store','crew_json','merged check-ins'], ['ml_storm','pitch','headline numbers'],
-  ['crew_json','loader','fetch once'], ['storm_json','loader','fetch once'], ['real_json','loader','fetch once'],
-  ['sw_json','loader','poll'], ['env_json','loader','poll'],
-  ['loader','scoring','series + baselines'], ['adapters','obs','normalize'], ['obs','bus','observation'], ['scoring','bus','flag, status'],
-  ['bus','remote','mirror'], ['remote','ws','WebSocket'], ['loader','logic','environment'],
-  ['loader','console','crew + status'], ['loader','body','region status'], ['scoring','panels','scores'], ['loader','radui','forecast'],
-  ['bus','wrist','alerts'], ['logic','ground','delayed reports'], ['bus','systems','live events'],
-  ['panels','cmoda','case'], ['logic','report','queue'], ['radui','shelter','warning'],
+  ['gen','a_sim','daily series'], ['ml_storm','a_ml','held-out predictions'], ['osdr','a_osdr','original CSVs'], ['isslive','a_iss','cabin readings'],
+  ['donki','a_donki','every 15 min'], ['swpc','a_swpc','every 5 min'], ['hapi','a_hapi','daily'], ['devices','a_check','check-ins'],
+  ['a_sim','obs','observations'], ['a_osdr','obs','observations'], ['a_iss','obs','observations'], ['a_swpc','obs','observations'], ['a_hapi','obs','observations'], ['a_check','obs','observations'],
+  ['a_ml','events','events + links'], ['a_donki','events','events + links'],
+  ['catalog','obs','validates'], ['obs','scoring','crew series'], ['obs','labs','lab draws'], ['events','forecast','new flares'], ['obs','dose','habitat rate'],
+  ['scoring','crew_json','baselines, flags, status'], ['labs','real_json','scored draws'], ['events','storm_json','events + forecasts'], ['forecast','storm_json','split: live'],
+  ['obs','api','any query'], ['obs','now','latest readings'], ['dose','crew_json','dose'],
+  ['crew_json','loader','fetch'], ['storm_json','loader','fetch'], ['real_json','loader','fetch'], ['api','loader','query'], ['now','loader','poll'],
+  ['loader','scoring_ts','series'], ['scoring_ts','bus','flags'], ['bus','remote','mirror'], ['remote','ws','WebSocket'], ['loader','logic','environment'],
+  ['loader','console','crew'], ['loader','body','status'], ['scoring_ts','panels','scores'], ['loader','radui','forecast'], ['logic','ground','delayed reports'], ['bus','systems','events'],
 ];
 
 const W = 1680, colX = c => 18 + c * 290, NW = 206, NH = 46, TOP = 64, PITCH = 58;
@@ -403,21 +324,22 @@ COLS.forEach((name, c) => {
 });
 
 // group box: everything in col 2 is served by server/app.py
-const c2 = N.filter(n => n.c === 2);
+const c2 = N.filter(n => n.c === 3);
 const g2y0 = Math.min(...c2.map(n => n.y)) - 10, g2y1 = Math.max(...c2.map(n => n.y)) + NH + 22;
-el('rect', { x: colX(2) - 9, y: g2y0, width: NW + 18, height: g2y1 - g2y0, rx: 10, fill: 'none', stroke: 'var(--next)', 'stroke-dasharray': '3 5', opacity: '.55' });
-const gl = el('text', { x: colX(2), y: g2y1 - 6, fill: 'var(--next)', 'font-family': 'var(--font-mono)', 'font-size': '10.5' });
-gl.textContent = 'served by server/app.py (B1)';
+el('rect', { x: colX(3) - 9, y: g2y0, width: NW + 18, height: g2y1 - g2y0, rx: 10, fill: 'none', stroke: 'var(--next)', 'stroke-dasharray': '3 5', opacity: '.55' });
+const gl = el('text', { x: colX(3), y: g2y1 - 6, fill: 'var(--next)', 'font-family': 'var(--font-mono)', 'font-size': '10.5' });
+gl.textContent = 'served at /data and /api by the server (S4)';
 
 const edgeLayer = el('g'), labelLayer = el('g'), nodeLayer = el('g');
 const edges = E.map(([a, b, label]) => {
   const A = byId[a], B = byId[b];
-  const fwd = B.c > A.c || (B.c === A.c);
-  const x1 = fwd ? A.x + NW : A.x, y1 = A.y + NH / 2;
+  const same = B.c === A.c, fwd = B.c > A.c;
+  const x1 = (fwd || same) ? A.x + NW : A.x, y1 = A.y + NH / 2;
   const x2 = fwd ? B.x : B.x + NW, y2 = B.y + NH / 2;
-  const dx = Math.max(40, Math.abs(x2 - x1) * 0.45) * (fwd ? 1 : -1);
-  const p = el('path', { d: `M${x1},${y1} C${x1 + dx},${y1} ${x2 - dx},${y2} ${x2},${y2}`, class: 'edge', 'marker-end': 'url(#arr)' }, edgeLayer);
-  const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
+  let d, mx, my;
+  if (same) { const bx = x1 + 22 + Math.min(18, Math.abs(y2 - y1) / 12); d = `M${x1},${y1} C${bx},${y1} ${bx},${y2} ${x2 + 4},${y2}`; mx = bx + 6; my = (y1 + y2) / 2; }
+  else { const dx = Math.max(40, Math.abs(x2 - x1) * 0.45) * (fwd ? 1 : -1); d = `M${x1},${y1} C${x1 + dx},${y1} ${x2 - dx},${y2} ${x2},${y2}`; mx = (x1 + x2) / 2; my = (y1 + y2) / 2; }
+  const p = el('path', { d, class: 'edge', 'marker-end': 'url(#arr)' }, edgeLayer);
   const bg = el('rect', { class: 'elabel-bg', x: mx - label.length * 3.2 - 4, y: my - 9, width: label.length * 6.4 + 8, height: 15, rx: 3 }, labelLayer);
   const lt = el('text', { class: 'elabel', x: mx, y: my + 2, 'text-anchor': 'middle' }, labelLayer);
   lt.textContent = label;
@@ -439,12 +361,12 @@ N.forEach(n => {
   nodeEls[n.id] = g;
 });
 
-let current = 'loader', mode = 'all';
+let current = 'catalog', mode = 'all';
 const MODES = {
   all: () => true,
   built: n => n.st === 'built' || n.st === 'partial',
-  backend: n => n.st === 'next' || n.c === 0,
-  frontend: n => n.st === 'planned' || n.st === 'partial' || n.id === 'remote',
+  backend: n => n.c <= 3,
+  frontend: n => n.c >= 3,
 };
 function applyMode() {
   const f = MODES[mode];
@@ -495,55 +417,12 @@ document.getElementById('strip').innerHTML = [
   [count(['next']), 'parts in our backend plan', 'var(--next)'],
   [count(['planned']), "parts in Emile's app plan", 'var(--planned)'],
   ['16 / 17', 'held-out proton storms caught, ~1 false alarm a month', 'var(--built)'],
-  ['0', 'screens built so far (web is a scaffold)', 'var(--planned)'],
+  ['3 / 3', 'app files rebuilt identical by the new backend', 'var(--built)'],
   ['1 of 5', 'NASA hazards with no data yet: closed environment', 'var(--gap)'],
 ].map(([n, l, c]) => `<div class="tile"><div class="n">${n}</div><div class="l">${l}</div><div class="bar" style="background:${c}"></div></div>`).join('');
 
 applyMode(); select(current);
 
-
-// backend core diagram
-(() => {
-  const sv = document.getElementById('core'); const CW = 1500, CH = 470;
-  sv.setAttribute('viewBox', `0 0 ${CW} ${CH}`);
-  const mk2 = el('defs', {}, sv); const m2 = el('marker', { id: 'arr2', viewBox: '0 0 10 10', refX: '9', refY: '5', markerWidth: '6', markerHeight: '6', orient: 'auto' }, mk2);
-  el('path', { d: 'M0,0 L10,5 L0,10 z', fill: 'currentColor' }, m2); sv.style.color = 'var(--faint)';
-  const cols = [['Sources', 20], ['Adapters (one per source)', 270], ['Store: facts', 560], ['Engine: derived', 860], ['Views: outputs', 1160]];
-  cols.forEach(([t, x]) => { const tt = el('text', { x, y: 28, fill: 'var(--faint)', 'font-family': 'var(--font-mono)', 'font-size': '11', 'letter-spacing': '1' }, sv); tt.textContent = t.toUpperCase(); });
-  const box = (x, y, w, h, title, sub, color, dash = '') => {
-    el('rect', { x, y, width: w, height: h, rx: 6, fill: 'rgba(255,255,255,.02)', stroke: color, 'stroke-dasharray': dash, 'stroke-width': 1.3 }, sv);
-    const a = el('text', { x: x + 12, y: y + 19, fill: 'var(--text)', 'font-size': '13', 'font-weight': '500' }, sv); a.textContent = title;
-    if (sub) { const b = el('text', { x: x + 12, y: y + 35, fill: 'var(--dim)', 'font-family': 'var(--font-mono)', 'font-size': '10.5' }, sv); b.textContent = sub; }
-  };
-  const arrow = (x1, y1, x2, y2, label) => {
-    const dx = (x2 - x1) * .5; el('path', { d: `M${x1},${y1} C${x1 + dx},${y1} ${x2 - dx},${y2} ${x2},${y2}`, fill: 'none', stroke: 'var(--faint)', 'stroke-width': 1.2, 'marker-end': 'url(#arr2)', opacity: .7 }, sv);
-    if (label) { const t = el('text', { x: (x1 + x2) / 2, y: (y1 + y2) / 2 - 5, 'text-anchor': 'middle', fill: 'var(--dim)', 'font-family': 'var(--font-mono)', 'font-size': '10' }, sv); t.textContent = label; }
-  };
-  const SRC = [['DONKI', 'flares · CMEs · SEP'], ['NOAA SWPC', 'GOES protons · Kp'], ['ISS Live!', 'cabin air · water'], ['CCMC HAPI', 'Mars + Moon dose'], ['OSDR CSVs', 'Inspiration4 labs'], ['Simulated crew', 'ml/ generator'], ['Check-in', 'astronaut input']];
-  const AD = ['donki.py', 'swpc.py', 'isslive.py', 'hapi.py', 'osdr.py', 'simcrew.py', 'checkin.py'];
-  SRC.forEach(([t, s2], i) => { const y = 44 + i * 50; box(20, y, 200, 40, t, s2, i < 5 ? 'var(--built)' : 'var(--planned)'); box(270, y, 200, 40, AD[i], i === 6 ? 'later' : 'emits canonical records', 'var(--next)', '6 4'); arrow(220, y + 20, 270, y + 20); });
-  const ST = [['observation', 'subject · metric · t · value · unit · source'], ['event', 'flare · CME · SEP · storm'], ['event_link', 'linked CME · caused SEP'], ['run', 'every fetch: when, ok, cached']];
-  ST.forEach(([t, s2], i) => box(560, 54 + i * 62, 240, 46, t, s2, 'var(--next)', '6 4'));
-  AD.forEach((_, i) => arrow(470, 64 + i * 50, 560, i < 2 ? 139 : 77));
-  const EN = [['scoring.py', 'the contract rule, once'], ['forecast.py', 'v1.pkl on new flares'], ['dose.py', 'measured habitat dose']];
-  EN.forEach(([t, s2], i) => box(860, 54 + i * 62, 230, 46, t, s2, 'var(--next)', '6 4'));
-  box(860, 254, 230, 46, 'assessment · forecast', 'derived, rebuildable', 'var(--next)', '6 4');
-  [77, 139, 201].forEach((y, i) => arrow(800, i === 1 ? 139 : 77, 860, y));
-  [77, 139, 201].forEach(y => arrow(1090, y, 1090, 277));
-  const VW = [['contract v1', 'the 3 JSON files, same shape'], ['generic API', '/api/observations, events, catalog'], ['now', 'environment · space weather'], ['/ws/bus', 'live events between devices'], ['export', 'offline demo files']];
-  VW.forEach(([t, s2], i) => { box(1160, 44 + i * 58, 260, 44, t, s2, 'var(--next)', '6 4'); arrow(1090, 277, 1160, 66 + i * 58); });
-  // catalog bar
-  el('rect', { x: 270, y: 404, width: 1150, height: 50, rx: 8, fill: 'rgba(255,184,107,.06)', stroke: 'var(--gap)', 'stroke-width': 1.3 }, sv);
-  const ct = el('text', { x: 286, y: 425, fill: 'var(--text)', 'font-size': '13', 'font-weight': '500' }, sv); ct.textContent = 'CATALOG: the single source of truth · every write is validated against it';
-  const cs = el('text', { x: 286, y: 443, fill: 'var(--dim)', 'font-family': 'var(--font-mono)', 'font-size': '10.5' }, sv); cs.textContent = 'metrics.yaml (unit, hazard, body region, rule, actions) · subjects.yaml (crew, habitats, located_in) · sources.yaml (licence, cadence, credit)';
-  [370, 680, 975, 1290].forEach(x => el('line', { x1: x, x2: x, y1: 404, y2: 392, stroke: 'var(--gap)', 'stroke-dasharray': '2 3', opacity: .7 }, sv));
-  document.getElementById('corecards').innerHTML = [
-    ['Mess today', 'Metric definitions live inside crew_data.json. The scoring rule exists in three places. Dose rates are typed by hand. Every feed would add its own file shape.'],
-    ['After', 'Metrics, subjects and sources are defined once in the catalog. Each reading is one row. The rule runs in one place and the browser is tested against it.'],
-    ['Cabin CO2 without copying', 'Stored once on the ISS habitat. Every crew member located there sees it on the brain region through located_in.'],
-    ['When Emile adds a screen', 'If the data exists, the screen queries the generic API. A new measurable thing is a catalog entry plus an adapter. A new summary is one view.'],
-  ].map(([t, p]) => `<div class="card"><h3>${t}</h3><p>${p}</p></div>`).join('');
-})();
 
 // scope
 const D = { yes: ['built', 'In our files'], part: ['partial', 'Partly'], no: ['planned', 'To build'], next: ['next', 'Backend next'] };
@@ -592,8 +471,8 @@ document.getElementById('ideas').innerHTML = IDEAS.map(([top, t, p, tags]) =>
 
 // lanes
 const LANES = [
-  ['S0', 'Claude (cloud copy)', 'The spine: record models, catalog loader and validation, SQLite store, adapter base, catalog filled from today\'s data', 'server/core/, server/adapters/base.py, server/catalog/', 'nothing (everyone imports it)'],
-  ['S1', 'Tomas, terminal 1', 'Simulated-crew and OSDR adapters, contract v1 view, golden test that rebuilt files equal today\'s', 'server/adapters/simcrew.py, osdr.py, server/views/contract_v1.py', 'S0'],
+  ['S0 ✓', 'Claude', 'Done: catalog, validated store, 4 adapters, engine, views; 3 files rebuilt identical, 7 tests pass', 'server/core/, adapters/, engine/, views/, catalog/', '—'],
+  ['S1', 'Tomas, terminal 1', 'Generator reads metric definitions from the catalog; ml/crew_flags.py calls server/engine/scoring.py (one rule)', 'ml/make_sample_data.py, ml/crew_flags.py', 'S0 ✓'],
   ['S2', 'Claude (cloud copy)', 'DONKI + NOAA adapters, forecast engine, live split, offline fallback', 'server/adapters/donki.py, swpc.py, server/engine/forecast.py', 'S0'],
   ['S3', 'Tomas, terminal 2', 'ISS cabin + HAPI dose adapters, dose engine', 'server/adapters/isslive.py, hapi.py, server/engine/dose.py', 'S0 + run the ISS probe first'],
   ['S4', 'Tomas, terminal 3', 'API (generic + now views + static app), WebSocket bus, scheduler, Containerfile', 'server/api/, server/jobs/, server/views/generic.py, now.py', 'S0'],

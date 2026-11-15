@@ -7,6 +7,7 @@ Project: AEGIS, a crew health monitor with radiation early-warning, for NASA Spa
 ## Workstreams
 - `/ml`: Tomas (data, ML, exports). See `ml/CLAUDE.md`.
 - `/web`: Emile (app, 3D, replay, sound). See `web/CLAUDE.md`.
+- `/server`: Tomas (the data core: catalog, store, adapters, engine, views). See `server/README.md` and `docs/backend/DATA-CORE.md`. Rebuild with `python -m server.build`.
 - `/contracts`: the ONLY interface between them. `DATA_CONTRACT.md` + sample JSON files.
 - `/docs`: shared thesis, research, analysis. Start at `docs/MAP.md` to see how every part connects.
 

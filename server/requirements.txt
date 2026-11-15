@@ -1,0 +1,3 @@
+pyyaml>=6
+pytest>=8
+lightstreamer-client-lib>=2.2  # only for probes/ and the live ISS adapter
