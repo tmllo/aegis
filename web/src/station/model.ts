@@ -3,6 +3,7 @@
 import { useMemo } from 'react';
 import { contextFor, dayIndex, scoreDay, regionStatus, type MetricScore } from '../core/scoring';
 import { doseSummary, sortedEvents } from '../core/radiation';
+import { alarmClass, type AlarmPhase } from '../core/alarm';
 import { useMissionData, useMissionStore } from '../data/store';
 import type { CrewData, CrewMember, EnvironmentId, FlareEvent, MetricKey, RegionStatus, Status, StormForecast } from '../data/types';
 import { useStation, type SystemId } from './state';
@@ -241,9 +242,12 @@ export interface QueueItem {
   to: string;
 }
 
-export function actionQueue(views: CrewView[], sw: SpaceWeather | null, stationAlarm: boolean): QueueItem[] {
+export function actionQueue(views: CrewView[], sw: SpaceWeather | null, phase: AlarmPhase): QueueItem[] {
   const out: QueueItem[] = [];
-  if (stationAlarm) out.push({ id: 'alarm', cw: 'emergency', tone: 'red', who: 'All crew', title: 'Solar storm warning', detail: 'Suspend EVA. Move to the storm shelter.', cta: 'Open radiation', to: '/radiation' });
+  // Safety rule (docs/ARCHITECTURE.md): the forecast raises Warning; only the measured arrival raises Emergency.
+  const cls = alarmClass(phase);
+  if (cls === 'warning') out.push({ id: 'alarm', cw: cls, tone: 'red', who: 'All crew', title: 'Storm forecast', detail: 'Suspend EVA. Move to the storm shelter as a precaution.', cta: 'Open radiation', to: '/radiation' });
+  if (cls === 'emergency') out.push({ id: 'alarm', cw: cls, tone: 'red', who: 'All crew', title: 'Storm in progress', detail: 'Particles have arrived. All crew stay in the shelter.', cta: 'Open radiation', to: '/radiation' });
   for (const v of views) {
     for (const r of v.issues) {
       out.push({
@@ -264,7 +268,7 @@ export function actionQueue(views: CrewView[], sw: SpaceWeather | null, stationA
   for (const v of views) {
     if (!v.checkedIn) out.push({ id: `${v.m.id}-checkin`, tone: 'info', who: `${seatOf(v.m)} · ${firstName(v.m)}`, title: 'Daily check-in due', detail: 'Sleep, mood and vitals: about a minute.', cta: 'Start check-in', to: `/checkin/${v.m.id}` });
   }
-  if (sw && sw.level !== 'none' && !stationAlarm)
+  if (sw && sw.level !== 'none' && !cls)
     out.push({ id: 'sw', tone: LEVEL_STATUS[sw.level], who: 'Space weather', title: `${LEVEL_WORD[sw.level]}: storm chance ${Math.round(sw.p * 100)}%`, detail: 'Keep EVA plans flexible and check the forecast again.', cta: 'Open radiation', to: '/radiation' });
   const order = { red: 0, amber: 1, info: 2, green: 3 } as const;
   return out.sort((a, b) => order[a.tone] - order[b.tone]);
@@ -301,7 +305,7 @@ export function useStationData() {
   const sw = useMemo(() => (data ? spaceWeather(data.storm) : null), [data]);
   const day = data ? Math.round((Date.parse(data.crew.mission.today) - Date.parse(data.crew.mission.start_date)) / 864e5) + 1 : 0;
   const doses = useMemo(() => (data ? views.map((v) => ({ v, d: doseSummary(v.m, data.crew, env) })) : []), [data, views, env]);
-  const queue = useMemo(() => actionQueue(views, sw, alarm.phase === 'warning' || alarm.phase === 'sheltered'), [views, sw, alarm.phase]);
+  const queue = useMemo(() => actionQueue(views, sw, alarm.phase), [views, sw, alarm.phase]);
   return { data, loadState, error, env, setEnv, views, sw, day, doses, queue };
 }
 

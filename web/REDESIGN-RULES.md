@@ -2,7 +2,7 @@
 
 For Emile and his Claude Code. Read `../docs/ARCHITECTURE.md` first: it is the system these rules protect.
 
-**The redesign is a restyle, not a restructure.** Change how screens look and are laid out. Do not change how data flows or how alerts are decided.
+**Your job tonight: make it pretty and make it flow.** One visual system, screens that lead into each other, a demo that tells one story. The logic underneath is finished and tested, so this is a restyle, not a restructure: change how screens look and connect, not how data flows or how alerts are decided.
 
 **Freeze at 21:30** (move it only if Tomas and Emile both agree). After the freeze: fixes only, no new screens, then merge into `main`.
 
@@ -38,20 +38,9 @@ Design references, in this order:
 2. `docs/REDESIGN.md`: the visual identity (warm black, Instrument Serif display, mono labels).
 3. Readable from the back of a room on a 1920×1080 projector.
 
-## 4. Task 1, before any restyling: fix the alarm class
+## 4. Already done for you: the alarm logic
 
-The storm model's warning currently raises **Emergency**, and the measured particle arrival raises nothing. Both break the safety rule. `src/core/alarm.ts` already has the correct mapping (`alarmClass`, `alarmActive`), locked by `alarm.test.ts`.
-
-1. `src/station/state.ts`: import `AlarmPhase` from `../core/alarm` instead of declaring it again.
-2. `src/station/model.ts`:
-   - `actionQueue(views, sw, stationAlarm: boolean)` becomes `actionQueue(views, sw, phase: AlarmPhase)`.
-   - At line 246, use `const cls = alarmClass(phase)`. If it is `'warning'`: title "Storm forecast", detail "Suspend EVA. Move to the storm shelter as a precaution." If it is `'emergency'`: title "Storm in progress", detail "Particles have arrived. All crew stay in the shelter." Set `cw: cls`.
-   - At line 304, pass `alarm.phase` instead of the boolean.
-3. `src/station/pages/Radiation.tsx`, replay effect around line 241: when `e.onset` is reached, also call `setAlarm({ ...alarm, phase: 'arrived' })` (keep `flare`, `p`, `firedAt`; set the lead hours if the state has a field for it). A storm that arrives with no warning (the "Storm missed" branch) also sets `phase: 'arrived'`: a measured storm is an Emergency whether or not we predicted it.
-4. Replace the `alarm.phase === 'warning' || alarm.phase === 'sheltered'` checks with `alarmActive(alarm.phase)` in `StationApp.tsx`, `Overview.tsx`, `CrewHealth.tsx` and `model.ts`, so the shelter overlay stays up after arrival. The Shelter overlay should show Warning wording before arrival and Emergency wording after.
-5. `src/station/Demo.tsx`, line 33: "Press play. The model never saw 2024. Watch the shelter warning go out hours ahead, then the emergency when the particles actually arrive."
-
-Done when `bash scripts/check-all.sh` is green. Its "Emergency only from a measured event" check fails until this task is finished; that is intended.
+The storm forecast now raises **Warning** (shelter as a precaution) and the measured particle arrival raises **Emergency** (`src/core/alarm.ts`, wired into `src/station/`). Keep that wording when you restyle the Shelter overlay and the radiation screen: "Warning · storm forecast" before arrival, "Emergency · storm in progress" after. Take the class from `alarmClass()`; never write `'emergency'` by hand.
 
 ## 5. Before every commit
 
@@ -67,5 +56,6 @@ Optional, if Playwright is installed: `node scripts/check-ui.mjs http://127.0.0.
 
 - The guided Demo runs all 7 beats with no dead end, on the offline build, in under 2 minutes.
 - `bash scripts/check-all.sh` is green.
+- Flow: every screen has one obvious next step, and the guided Demo moves through them without jumps or dead ends.
 - Every screen passes a 2-metre test: overall status readable in one second from across the room.
 - `mission-console` is merged into `main` and pushed. Judges open `main`.

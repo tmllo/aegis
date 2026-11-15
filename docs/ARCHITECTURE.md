@@ -60,7 +60,7 @@ After NASA-STD-3001 Vol 2. The class says **who acts**.
 
 Why: the storm model has 42% precision at the warning cut (about one false alarm a month). That is a good early warning and a bad emergency trigger. Real spacecraft caution & warning systems fire emergencies on measured thresholds.
 
-Code: `web/src/core/alarm.ts` (`alarmClass`) maps the radiation alarm phase to a class; `alarm.test.ts` locks the rule. Screens must take the class from `alarmClass`, never write `'emergency'` themselves. `web/scripts/check-all.sh` fails if they do.
+Code: `web/src/core/alarm.ts` (`alarmClass`) maps the radiation alarm phase to a class; `alarm.test.ts` locks the rule. `src/station/model.ts` (`actionQueue`), `StationApp.tsx` (Shelter overlay) and `pages/Radiation.tsx` (replay onset) use it. Screens never write `'emergency'` themselves. `web/scripts/check-all.sh` fails if they do.
 
 ## 4. Honest data
 

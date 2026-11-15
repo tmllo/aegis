@@ -1,6 +1,7 @@
 // "Today on board": the whole crew, the action queue, radiation and cabin air on one screen.
 // Every card is a door to the screen that handles it.
 import { useNavigate } from 'react-router-dom';
+import { alarmActive } from '../../core/alarm';
 import { useCabin } from '../../data/cabin';
 import type { Status } from '../../data/types';
 import { CW_LABEL, DUTY_LABEL, LEVEL_STATUS, LEVEL_WORD, SYSTEMS, WORD, dutyOf, firstName, fmtV, issueLine, seatOf, useStationData, worstOf } from '../model';
@@ -11,7 +12,7 @@ import { Card, Chip, Dot, Icon, Ring, Spark, STATUS_COLOR } from '../ui';
 export default function Overview() {
   const { data, views, sw, doses, queue, env } = useStationData();
   const alarm = useStation((s) => s.alarm);
-  const alarmOn = alarm.phase === 'warning' || alarm.phase === 'sheltered';
+  const alarmOn = alarmActive(alarm.phase);
   const xp = useStation((s) => s.xp);
   const streak = useStation((s) => s.streak);
   const { cabin } = useCabin();

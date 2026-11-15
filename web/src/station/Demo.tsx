@@ -30,7 +30,7 @@ export function useBeats(): Beat[] {
     beats.push({ to: `/checkin/${(red ?? byRank[0]).m.id}`, title: 'Daily health check', say: 'About a minute: sleep and mind, a camera pulse scan, vitals, and a 30-second reaction test. Saving re-scores everything and closes the countermeasure loop.' });
     if (data.real) beats.push({ to: `/crew/${(byRank[byRank.length - 1] ?? byRank[0]).m.id}?s=blood`, title: 'Proof on real NASA data', say: `On the published Inspiration4 blood panels, a personal baseline flags ${data.real.flags.filter((f) => f.kind === 'inside_lab_far_from_baseline').length} shifts that standard lab ranges call normal.` });
     beats.push({ to: '/radiation', title: 'Radiation early warning', say: `Radiation is the hazard that can't be felt. Trained on ${Number(data.storm.meta.train_period[1].slice(0, 4)) - Number(data.storm.meta.train_period[0].slice(0, 4)) + 1} years of NASA DONKI data, scored once on unseen 2024–2026: ${Math.round(mt.hit_rate * mt.n_storms)} of ${mt.n_storms} storms warned, about ${mt.false_alarms_per_month.toFixed(0)} false alarm a month.` });
-    beats.push({ to: '/radiation#replay', title: 'May 2024 superstorm', say: 'Press play. The model never saw 2024. Watch the emergency shelter order go out, then the particles arrive hours later.' });
+    beats.push({ to: '/radiation#replay', title: 'May 2024 superstorm', say: 'Press play. The model never saw 2024. Watch the shelter warning go out hours ahead, then the emergency when the particles actually arrive.' });
     return beats;
   }, [data, views]);
 }

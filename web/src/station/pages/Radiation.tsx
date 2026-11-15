@@ -242,6 +242,8 @@ function Replay({ storm }: { storm: StormForecast }) {
         landed.current.add(i);
         cue('arrive', sound);
         setArrived(e);
+        // measured onset: the forecast Warning becomes an Emergency (docs/ARCHITECTURE.md, safety rule)
+        if (fired.current.has(i)) setAlarm({ ...useStation.getState().alarm, phase: 'arrived', leadH: e.lead ?? undefined });
         window.setTimeout(() => setArrived((a) => (a === e ? null : a)), 5200);
       }
       if (t >= e.end && !cleared.current.has(i) && fired.current.has(i)) {
