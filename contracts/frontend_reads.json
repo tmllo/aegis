@@ -1,0 +1,287 @@
+{
+  "from": "origin/crew-station web/src, verified against the calls in getJson, postJson and fetch",
+  "covers": [
+    "api/health",
+    "api/cabin/catalog",
+    "api/observations",
+    "samples/cabin_catalog.json",
+    "samples/isslive_lightstreamer_eclss_snapshot.json",
+    "data/crew_data.json",
+    "data/storm_forecast.json",
+    "data/real_crew.json",
+    "api/checkin",
+    "api/tasks",
+    "api/progress",
+    "api/wellbeing",
+    "api/activities",
+    "api/notes",
+    "api/refresh",
+    "api/orbit",
+    "orbits/iss.tle",
+    "stars.bin",
+    "body-glb-gz.js",
+    "/models/body.glb",
+    "http://localhost:11434/api/chat"
+  ],
+  "calls": [
+    {
+      "id": "health",
+      "method": "GET",
+      "path": "/api/health",
+      "fields": ["ok", "sources.*.quality", "sources.*.rows", "sources.*.at"]
+    },
+    {
+      "id": "cabin_catalog",
+      "method": "GET",
+      "path": "/api/cabin/catalog",
+      "fields": ["stale_after_h", "metrics[].key", "metrics[].label", "metrics[].short", "metrics[].unit", "metrics[].item", "metrics[].digits", "metrics[].bands", "metrics[].source"]
+    },
+    {
+      "id": "cabin_obs",
+      "method": "GET",
+      "path": "/api/observations?subject=iss&kind=cabin",
+      "fields": ["[].metric", "[].t", "[].value", "[].quality"]
+    },
+    {
+      "id": "obs_hr",
+      "method": "POST",
+      "path": "/api/observations",
+      "status": 201,
+      "body": {"subject": "c1", "metric": "vital.hr", "t": "2026-11-14T12:00:00Z", "value": 72},
+      "fields": ["opened_tasks", "closed_tasks"],
+      "object_or_null": {"assessment": ["severity", "message", "action"]}
+    },
+    {
+      "id": "obs_bp_sys",
+      "method": "POST",
+      "path": "/api/observations",
+      "status": 201,
+      "body": {"subject": "c1", "metric": "vital.bp_sys", "t": "2026-11-14T12:00:00Z", "value": 110},
+      "fields": ["opened_tasks", "closed_tasks"],
+      "object_or_null": {"assessment": ["severity", "message", "action"]}
+    },
+    {
+      "id": "obs_bp_dia",
+      "method": "POST",
+      "path": "/api/observations",
+      "status": 201,
+      "body": {"subject": "c1", "metric": "vital.bp_dia", "t": "2026-11-14T12:00:00Z", "value": 70},
+      "fields": ["opened_tasks", "closed_tasks"],
+      "object_or_null": {"assessment": ["severity", "message", "action"]}
+    },
+    {
+      "id": "obs_glucose_alias",
+      "method": "POST",
+      "path": "/api/observations",
+      "status": 201,
+      "body": {"subject": "c1", "metric": "vital.glucose", "t": "2026-11-14T12:00:00Z", "value": 90},
+      "fields": ["opened_tasks", "closed_tasks"],
+      "object_or_null": {"assessment": ["severity", "message", "action"]}
+    },
+    {
+      "id": "obs_glucose",
+      "method": "POST",
+      "path": "/api/observations",
+      "status": 201,
+      "body": {"subject": "c1", "metric": "lab.glucose", "t": "2026-11-14T12:00:00Z", "value": 90},
+      "fields": ["opened_tasks", "closed_tasks"],
+      "object_or_null": {"assessment": ["severity", "message", "action"]}
+    },
+    {
+      "id": "obs_temp",
+      "method": "POST",
+      "path": "/api/observations",
+      "status": 201,
+      "body": {"subject": "c1", "metric": "vital.temp", "t": "2026-11-14T12:00:00Z", "value": 36.6},
+      "fields": ["opened_tasks", "closed_tasks"],
+      "object_or_null": {"assessment": ["severity", "message", "action"]}
+    },
+    {
+      "id": "obs_sleep",
+      "method": "POST",
+      "path": "/api/observations",
+      "status": 201,
+      "body": {"subject": "c1", "metric": "self.sleep_h", "t": "2026-11-14T12:00:00Z", "value": 7},
+      "fields": ["opened_tasks", "closed_tasks"],
+      "object_or_null": {"assessment": ["severity", "message", "action"]}
+    },
+    {
+      "id": "obs_mood",
+      "method": "POST",
+      "path": "/api/observations",
+      "status": 201,
+      "body": {"subject": "c1", "metric": "self.mood", "t": "2026-11-14T12:00:00Z", "value": 3},
+      "fields": ["opened_tasks", "closed_tasks"],
+      "object_or_null": {"assessment": ["severity", "message", "action"]}
+    },
+    {
+      "id": "obs_exercise",
+      "method": "POST",
+      "path": "/api/observations",
+      "status": 201,
+      "body": {"subject": "c1", "metric": "self.exercise_min", "t": "2026-11-14T12:00:00Z", "value": 60},
+      "fields": ["opened_tasks", "closed_tasks"],
+      "object_or_null": {"assessment": ["severity", "message", "action"]}
+    },
+    {
+      "id": "obs_stress",
+      "method": "POST",
+      "path": "/api/observations",
+      "status": 201,
+      "body": {"subject": "c1", "metric": "self.stress", "t": "2026-11-14T12:00:00Z", "value": 2},
+      "fields": ["opened_tasks", "closed_tasks"],
+      "object_or_null": {"assessment": ["severity", "message", "action"]}
+    },
+    {
+      "id": "obs_resp",
+      "method": "POST",
+      "path": "/api/observations",
+      "status": 201,
+      "body": {"subject": "c1", "metric": "vital.resp_rate", "t": "2026-11-14T12:00:00Z", "value": 14},
+      "fields": ["opened_tasks", "closed_tasks"],
+      "object_or_null": {"assessment": ["severity", "message", "action"]}
+    },
+    {
+      "id": "obs_pvt",
+      "method": "POST",
+      "path": "/api/observations",
+      "status": 201,
+      "body": {"subject": "c1", "metric": "cog.pvt_rt", "t": "2026-11-14T12:00:00Z", "value": 248},
+      "fields": ["opened_tasks", "closed_tasks"],
+      "object_or_null": {"assessment": ["severity", "message", "action"]}
+    },
+    {
+      "id": "checkin",
+      "method": "GET",
+      "path": "/api/checkin?subject=c1&date=2026-11-14",
+      "fields": ["metrics[].key", "metrics[].scale.words"],
+      "words_len": {"metrics[].scale.words": 5}
+    },
+    {
+      "id": "tasks",
+      "method": "GET",
+      "path": "/api/tasks?subject=c1&date=2026-11-14",
+      "fields": ["tasks[].id", "tasks[].kind", "tasks[].label", "tasks[].origin", "tasks[].metric", "tasks[].done", "tasks[].status", "tasks[].streak", "tasks[].attrs"]
+    },
+    {
+      "id": "post_task",
+      "method": "POST",
+      "path": "/api/tasks",
+      "status": 201,
+      "body": {"id": "integration-todo", "subject": "c1", "kind": "todo", "label": "Drink water", "origin": "self", "created": "2026-11-14"},
+      "fields": ["id"],
+      "save": {"task_id": "id"}
+    },
+    {
+      "id": "task_event",
+      "method": "POST",
+      "path": "/api/tasks/{task_id}/events",
+      "status": 201,
+      "body": {"subject": "c1", "t": "2026-11-14T12:00:00Z", "status": "done"}
+    },
+    {
+      "id": "progress",
+      "method": "GET",
+      "path": "/api/progress?subject=c1",
+      "fields": ["xp", "level", "checkin_streak", "best_habit_streak"]
+    },
+    {
+      "id": "wellbeing_7",
+      "method": "GET",
+      "path": "/api/wellbeing?subject=c1&days=7",
+      "fields": ["weeks[].from", "weeks[].to", "weeks[].checkin_days", "weeks[].scores.<self.*>.mean", "weeks[].scores.<self.*>.n", "trend.*.first", "trend.*.last", "trend.*.change", "checkin_streak", "alerts[].metric", "alerts[].t", "alerts[].severity", "alerts[].message"]
+    },
+    {
+      "id": "wellbeing_14",
+      "method": "GET",
+      "path": "/api/wellbeing?subject=c1&days=14",
+      "fields": ["weeks[].from", "weeks[].to", "weeks[].checkin_days", "weeks[].scores.<self.*>.mean", "weeks[].scores.<self.*>.n", "trend.*.first", "trend.*.last", "trend.*.change", "checkin_streak", "alerts[].metric", "alerts[].t", "alerts[].severity", "alerts[].message"]
+    },
+    {
+      "id": "activities",
+      "method": "GET",
+      "path": "/api/activities?subject=c1",
+      "fields": ["activities[].id", "activities[].label", "activities[].minutes", "activities[].steps", "activities[].source", "activities[].suggested", "activities[].because", "activities[].done_today"]
+    },
+    {
+      "id": "activities_date",
+      "method": "GET",
+      "path": "/api/activities?subject=c1&date=2026-11-14",
+      "fields": ["activities[].id", "activities[].label", "activities[].minutes", "activities[].steps", "activities[].source", "activities[].suggested", "activities[].because", "activities[].done_today"]
+    },
+    {
+      "id": "activity_event",
+      "method": "POST",
+      "path": "/api/activities/paced_breathing/events",
+      "status": 201,
+      "body": {"subject": "c1"}
+    },
+    {
+      "id": "activity_event_day",
+      "method": "POST",
+      "path": "/api/activities/paced_breathing/events",
+      "status": 201,
+      "body": {"subject": "c1", "t": "2026-11-14"}
+    },
+    {
+      "id": "post_note",
+      "method": "POST",
+      "path": "/api/notes?subject=c1",
+      "status": 201,
+      "headers": {"X-Crew-Member": "c1"},
+      "body": {"text": "private integration note 9f7b959"},
+      "fields": ["id", "t", "text"],
+      "remember_text": "note_text"
+    },
+    {
+      "id": "notes",
+      "method": "GET",
+      "path": "/api/notes?subject=c1",
+      "headers": {"X-Crew-Member": "c1"},
+      "fields": ["notes[].id", "notes[].t", "notes[].text"]
+    },
+    {
+      "id": "notes_without_header",
+      "method": "GET",
+      "path": "/api/notes?subject=c1",
+      "status": 403,
+      "absent": "note_text"
+    },
+    {
+      "id": "refresh",
+      "method": "POST",
+      "path": "/api/refresh",
+      "body": {}
+    },
+    {
+      "id": "orbit",
+      "method": "GET",
+      "path": "/api/orbit?subject=iss&minutes=100&step_s=20&at=2026-11-14T12:00:00Z",
+      "fields": ["points[].t", "points[].lat", "points[].lon", "points[].alt_km"]
+    },
+    {
+      "id": "tle",
+      "method": "GET",
+      "path": "/orbits/iss.tle",
+      "shape": "tle"
+    },
+    {
+      "id": "crew_data",
+      "method": "GET",
+      "path": "/data/crew_data.json",
+      "shape": "json"
+    },
+    {
+      "id": "storm_forecast",
+      "method": "GET",
+      "path": "/data/storm_forecast.json",
+      "shape": "json"
+    },
+    {
+      "id": "real_crew",
+      "method": "GET",
+      "path": "/data/real_crew.json",
+      "shape": "json"
+    }
+  ]
+}

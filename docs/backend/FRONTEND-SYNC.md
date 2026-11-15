@@ -20,6 +20,8 @@
 
 ## Log
 
+- 2026-11-15 08:35 Europe/Paris. `contracts/frontend_reads.json` lists every call the crew-station app makes, and `server/tests/test_frontend_contract.py` checks the fields it reads. `scripts/check_frontend_reads.py` fails if a new `getJson`, `postJson` or `fetch` path is not in that list.
+
 - 2026-11-15 06:18 Europe/Paris. Emile `3a65968` ("Use shared vitals sliders across crew and organ views"). `CrewPage` and `InfoSheet` now edit through `MetricSlider`, which posts catalog keys (`lab.glucose`, `vital.hr`, `vital.bp_sys`, `vital.bp_dia`, `vital.temp`, `self.sleep_h`, `self.mood`, `self.exercise_min`). The crew page's main button still posts `VITAL`, including `vital.glucose`, which the server already maps to `lab.glucose`. No new server change.
 
 - 2026-11-15 06:05 Europe/Paris. New commits `846b4db`..`501fcc9` (vitals slider, organ panel). `MetricSlider` posts catalog keys (`lab.glucose`, `vital.temp`, `self.sleep_h`, `self.mood`, `self.exercise_min`, and the blood-pressure and heart-rate keys). `entries.ts` still posts `vital.glucose`. Server now maps that one name to `lab.glucose` and stores the catalog key. Test `test_emiles_entries_posts_glucose_as_vital_glucose` replays the body. Sleep, mood and exercise from `saveEntry` are the For Emile note above.

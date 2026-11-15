@@ -16,4 +16,5 @@
 - 07:20 watch: no new crew-station commits (still 3a65968). main 0d4b3bc.
 - 07:30 watch: reached the 07:30 stop. crew-station still 3a65968. Gate identical, rejected=0, 128 passed. Morning summary written.
 - 08:10 integration task 1: SPA fallback and `AEGIS_WEB_DIST`. Deep links return index.html. `/api` stays JSON. Gate identical, rejected=0, 144 passed. Commit f30e6c6.
-- 08:20 integration task 2: checkup `vital.resp_rate` and `cog.pvt_rt` stored as `crew_spot`, quality estimated, no thresholds, contract files unchanged.
+- 08:20 integration task 2: checkup `vital.resp_rate` and `cog.pvt_rt` stored as `crew_spot`, quality estimated, no thresholds, contract files unchanged. Commit 9f7b959.
+- 08:35 integration task 3: frontend contract fixture and test. Every listed call returns the fields the app reads. `scripts/check_frontend_reads.py` guards new paths.
