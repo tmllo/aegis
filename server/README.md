@@ -11,6 +11,7 @@ engine/    derived            scoring.py (crew alert rule, once) · labs.py (Ins
 views/     records -> outputs contract_v1.py (the 3 JSON files the app reads, same shape)
 build.py   runs it all        adapters -> store -> engine -> views
 probes/    standalone checks  iss_cabin_probe.py (see the live ISS cabin feed)
+views/explorer.py         python -m server.views.explorer -> server/out/explorer.html (the backend, visually)
 tests/     golden + integrity
 ```
 

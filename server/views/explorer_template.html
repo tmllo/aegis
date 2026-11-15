@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>e^x Data Core</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* Cockpit navy, one world. Layout: totals strip -> clickable pipeline of layers -> the chosen layer's real contents. */
+:root {
+  --bg: #0a1426; --panel: #0f1d36; --panel-2: #142645; --line: #24395f;
+  --text: #e6edf8; --dim: #93a4c3; --faint: #5f7398;
+  --fact: #8ab4ff; --cat: #ffb86b; --ok: #7fd1b9; --amber: #f2c14e; --red: #ff6b6b; --sim: #c3a6ff;
+  --font-body: "IBM Plex Sans", system-ui, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--font-body); }
+body { padding: 28px clamp(16px, 3vw, 40px) 60px; line-height: 1.5; }
+h1, h2, h3 { margin: 0; font-weight: 300; text-wrap: balance; }
+h1 { font-size: clamp(28px, 3.4vw, 40px); } h1 b { font-weight: 500; }
+h2 { font-size: 22px; } h3 { font-size: 15px; font-weight: 500; }
+.eyebrow { font: 11px var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--faint); }
+.mono { font-family: var(--font-mono); }
+.dim { color: var(--dim); }
+header { display: grid; gap: 10px; margin-bottom: 22px; }
+header p { margin: 0; color: var(--dim); max-width: 78ch; }
+.strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; margin-bottom: 24px; }
+.tile { background: var(--panel); padding: 12px 14px; }
+.tile .n { font-size: 28px; font-weight: 300; font-variant-numeric: tabular-nums; }
+.tile .l { font-size: 12.5px; color: var(--dim); }
+.pipe { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 28px; position: relative; }
+@media (max-width: 900px) { .pipe { grid-template-columns: 1fr 1fr; } }
+.layer { position: relative; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px; text-align: left; color: var(--text); font: inherit; cursor: pointer; display: grid; gap: 6px; align-content: start; min-height: 150px; }
+.layer:hover { border-color: var(--dim); }
+.layer[aria-pressed="true"] { border-color: var(--fact); box-shadow: 0 0 0 1px var(--fact) inset; }
+.layer:focus-visible, .chip:focus-visible, .catbar:focus-visible { outline: 2px solid var(--fact); outline-offset: 2px; }
+.layer .big { font-size: 26px; font-weight: 300; font-variant-numeric: tabular-nums; }
+.layer ul { margin: 0; padding: 0; list-style: none; font: 11.5px var(--font-mono); color: var(--dim); display: grid; gap: 2px; }
+.layer:not(:last-child)::after { content: "→"; position: absolute; right: -22px; top: 50%; transform: translateY(-50%); color: var(--faint); font-size: 18px; }
+@media (max-width: 900px) { .layer::after { display: none; } }
+.catbar { margin-top: 14px; width: 100%; background: rgba(255,184,107,.06); border: 1px solid var(--cat); border-radius: 8px; padding: 12px 16px; text-align: left; color: var(--text); font: inherit; cursor: pointer; display: flex; flex-wrap: wrap; gap: 6px 20px; align-items: baseline; }
+.catbar[aria-pressed="true"] { box-shadow: 0 0 0 1px var(--cat) inset; }
+.catbar b { font-weight: 500; }
+.detail { margin-top: 30px; display: grid; gap: 18px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 16px; display: grid; gap: 10px; }
+.card > p { margin: 0; color: var(--dim); font-size: 14px; max-width: 80ch; }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 18px; }
+.tbl { overflow-x: auto; border: 1px solid var(--line); border-radius: 6px; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font: 500 10.5px var(--font-mono); text-transform: uppercase; letter-spacing: .07em; color: var(--faint); background: var(--panel-2); position: sticky; top: 0; }
+tr:last-child td { border-bottom: 0; }
+td.num { text-align: right; font-variant-numeric: tabular-nums; font-family: var(--font-mono); }
+td code, .k { font: 12px var(--font-mono); color: var(--fact); }
+.scroll { max-height: 420px; overflow: auto; }
+.pill { display: inline-block; font: 500 10.5px var(--font-mono); text-transform: uppercase; letter-spacing: .05em; padding: 2px 7px; border-radius: 99px; border: 1px solid; white-space: nowrap; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { background: transparent; color: var(--dim); border: 1px solid var(--line); border-radius: 99px; padding: 4px 10px; font: 12px var(--font-mono); cursor: pointer; }
+.chip[aria-pressed="true"] { color: var(--text); border-color: var(--fact); background: var(--panel-2); }
+.tree { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+.node { border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; display: grid; gap: 4px; font-size: 13px; }
+.node .k { font-size: 11.5px; }
+.rules { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; }
+.rule { border-left: 3px solid var(--fact); padding: 4px 12px; font-size: 13.5px; color: var(--dim); }
+.rule b { color: var(--text); font-weight: 500; display: block; }
+footer { margin-top: 40px; color: var(--faint); font-size: 13px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<header>
+  <div class="eyebrow">e^x · server/ · generated by python -m server.views.explorer</div>
+  <h1><b>e^x</b> data core</h1>
+  <p>The backend as it runs right now. Every number and row on this page comes from building the real store from the repo. Click a layer to open what's inside it.</p>
+</header>
+<div class="strip" id="strip"></div>
+<div class="pipe" id="pipe"></div>
+<button class="catbar" id="catbar" type="button" aria-pressed="false"></button>
+<div class="detail" id="detail"></div>
+<footer id="foot"></footer>
+
+<script>
+const D = /*__DATA__*/null;
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const fmt = n => typeof n === 'number' ? n.toLocaleString('en-US') : esc(n);
+const pill = (text, color) => `<span class="pill" style="color:${color};border-color:${color}">${esc(text)}</span>`;
+const sevColor = s => s === 'red' ? 'var(--red)' : s === 'amber' ? 'var(--amber)' : 'var(--ok)';
+const table = (cols, rows, opts = {}) => `<div class="tbl ${opts.scroll ? 'scroll' : ''}"><table><thead><tr>${cols.map(c => `<th>${c[0]}</th>`).join('')}</tr></thead><tbody>${rows.map(r => `<tr>${cols.map(c => { const v = c[1](r); return `<td class="${c[2] || ''}">${v}</td>`; }).join('')}</tr>`).join('')}</tbody></table></div>`;
+const T = D.totals, C = D.catalog;
+const identical = D.files.filter(f => f.identical).length;
+const loadedSources = new Set(D.runs.map(r => r.source));
+
+document.getElementById('strip').innerHTML = [
+  [T.observation, 'observations (one row per reading)'], [T.event, 'space-weather events'], [T.event_link, 'event links'],
+  [T.forecast, 'storm forecasts'], [T.assessment, 'crew alerts (derived)'], [C.metrics.length, 'metrics in the catalog'],
+  [`${identical} / ${D.files.length}`, 'app files rebuilt identical'],
+].map(([n, l]) => `<div class="tile"><div class="n">${fmt(n)}</div><div class="l">${l}</div></div>`).join('');
+
+const LAYERS = [
+  { id: 'sources', t: 'Sources', big: C.sources.length, sub: 'origins of data', li: [`${loadedSources.size} loaded now`, `${C.sources.length - loadedSources.size} planned`] },
+  { id: 'adapters', t: 'Adapters', big: D.runs.length, sub: 'one per source', li: D.runs.map(r => `${r.source}: ${fmt(r.n_rows)} rows`) },
+  { id: 'store', t: 'Store: facts', big: fmt(T.observation + T.event + T.event_link), sub: 'rows, validated on write', li: [`observation ${fmt(T.observation)}`, `event ${fmt(T.event)}`, `event_link ${fmt(T.event_link)}`, `run ${T.run}`] },
+  { id: 'engine', t: 'Engine: derived', big: fmt(T.forecast + T.assessment), sub: 'rebuildable rows', li: [`forecast ${fmt(T.forecast)}`, `assessment ${T.assessment}`, 'scoring.py · labs.py'] },
+  { id: 'views', t: 'Views: outputs', big: D.files.length, sub: 'files the app reads', li: D.files.map(f => `${f.identical ? '✓' : '✗'} ${f.name}`) },
+];
+const pipe = document.getElementById('pipe');
+pipe.innerHTML = LAYERS.map(l => `<button type="button" class="layer" data-id="${l.id}" aria-pressed="false"><span class="eyebrow">${l.t}</span><span class="big">${l.big}</span><span class="dim" style="font-size:13px">${l.sub}</span><ul>${l.li.map(x => `<li>${esc(x)}</li>`).join('')}</ul></button>`).join('');
+document.getElementById('catbar').innerHTML = `<b>Catalog</b><span class="dim">the single source of truth that every write is checked against</span><span class="mono dim" style="font-size:12px">${C.metrics.length} metrics · ${C.subjects.length} subjects · ${C.sources.length} sources · ${C.models.length} model · mission rules</span>`;
+
+const R = {};
+R.sources = () => `<div class="card"><h2>Sources</h2><p>Where data comes from. "Loaded" means an adapter ran in this build. Each planned source becomes one adapter file. Its catalog entry already exists.</p>${table(
+  [['Source', s => `<code>${esc(s.id)}</code><br>${esc(s.label)}`], ['Org', s => esc(s.org)], ['Real?', s => s.real ? pill('real', 'var(--ok)') : pill('simulated', 'var(--sim)')],
+   ['Cadence', s => esc(s.cadence)], ['State', s => loadedSources.has(s.id) ? pill('loaded', 'var(--fact)') : pill(s.status || 'planned', 'var(--faint)')],
+   ['Offline fallback', s => esc(s.fallback || s.input || '—')], ['Footer credit', s => esc(s.credit || '—')]], C.sources)}</div>`;
+
+R.adapters = () => `<div class="card"><h2>Adapters</h2><p>Each adapter turns one source into the same canonical records, and every load is logged as a run. A row with an unknown subject, an unknown metric or the wrong unit is rejected and counted here.</p>${table(
+  [['Run', r => r.id, 'num'], ['Source', r => `<code>${esc(r.source)}</code>`], ['Quality', r => pill(r.quality, 'var(--dim)')], ['Rows stored', r => fmt(r.n_rows), 'num'],
+   ['Rejected', r => r.rejected ? `<span style="color:var(--red)">${r.rejected}</span>` : '0', 'num'], ['Input', r => esc(r.note)]], D.runs)}
+  <h3>What an adapter emits: one Observation per reading</h3>
+  <div class="grid2">${Object.entries(D.obs_samples).map(([src, rows]) => `<div><div class="eyebrow" style="margin-bottom:6px">${src}</div>${obsTable(rows)}</div>`).join('')}</div></div>`;
+const obsTable = rows => table([['subject', o => `<code>${esc(o.subject)}</code>`], ['metric', o => `<code>${esc(o.metric)}</code>`], ['t', o => esc(o.t)],
+  ['value', o => fmt(o.value), 'num'], ['unit', o => esc(o.unit)], ['attrs', o => `<span class="mono dim" style="font-size:11px">${esc(Object.keys(o.attrs || {}).join(', ') || '—')}</span>`]], rows);
+
+R.store = () => `<div class="card"><h2>Store: facts</h2><p>Four kinds of fact, each stored once. Crew vitals, lab draws and ISS cabin air all live in the same observation table, told apart only by subject, metric and source.</p>
+  <div class="grid2">
+  <div><h3>observation by source</h3>${table([['Source', r => `<code>${esc(r.source)}</code>`], ['Quality', r => esc(r.quality)], ['Rows', r => fmt(r.n), 'num'], ['Subjects', r => r.subjects, 'num'], ['Metrics', r => r.metrics, 'num']], D.obs_by_source)}</div>
+  <div><h3>event · event_link · forecast</h3>${table([['Table', r => r[0]], ['Kind', r => `<code>${esc(r[1])}</code>`], ['Rows', r => fmt(r[2]), 'num']],
+    [...D.events.map(e => ['event', e.type, e.n]), ...D.links.map(l => ['event_link', l.relation, l.n]), ...D.forecasts.map(f => ['forecast', `${f.split} · ${f.level}`, f.n])])}</div>
+  </div>
+  <div class="grid2">
+  <div><h3>Real ISS cabin, stored once on the <code>iss</code> habitat</h3>${table([['metric', o => `<code>${esc(o.metric)}</code>`], ['value', o => fmt(o.value), 'num'], ['unit', o => esc(o.unit)], ['measured at (UTC)', o => esc(o.t)], ['quality', o => esc(o.quality)]], D.iss)}
+    <p class="dim" style="font-size:13px;margin:8px 0 0">Snapshot recorded 14 Nov 2026. CO2 limit in the catalog: 1-hour average at or below 3 mmHg (NASA OCHMO).</p></div>
+  <div><h3>Events around the May 2024 storm</h3>${table([['id', e => `<code>${esc(e.id)}</code>`], ['type', e => esc(e.type)], ['peak / onset', e => esc(e.t_peak || e.t_start)], ['attrs', e => `<span class="mono dim" style="font-size:11px">${esc(JSON.stringify(e.attrs))}</span>`]], D.event_samples)}</div>
+  </div></div>`;
+
+R.engine = () => { const sc = C.mission.scoring; return `<div class="card"><h2>Engine: derived</h2><p>Computed from facts plus catalog rules, then stored as rows you can throw away and rebuild. The crew rule runs in one place, with its constants read from the catalog.</p>
+  <div class="rules">
+    <div class="rule"><b>Personal baseline</b>first ${sc.baseline_days} mission days, sd raised to each metric's floor</div>
+    <div class="rule"><b>Live score</b>z of the ${sc.rolling_days}-day mean, amber at ${sc.amber_z}, red at ${sc.red_z}</div>
+    <div class="rule"><b>Hard limits</b>red at once outside absolute_red; dose and bone loss use absolute rules only</div>
+    <div class="rule"><b>Inspiration4</b>pre-flight mean, far = inside lab range and |z| ≥ 2, R+45 artefacts set aside</div>
+  </div>
+  <h3>Crew alerts produced (assessment table)</h3>${table([['Subject', a => `<code>${esc(a.subject)}</code>`], ['Date', a => esc(a.t)], ['Metric', a => `<code>${esc(a.metric)}</code>`],
+    ['Severity', a => pill(a.severity, sevColor(a.severity))], ['z', a => a.z ?? '—', 'num'], ['Rule', a => esc(a.rule)], ['Message', a => esc(a.message)]], D.assessments, { scroll: true })}</div>`; };
+
+R.views = () => `<div class="card"><h2>Views: outputs</h2><p>Views shape stored facts into what a screen needs. The contract view rebuilds the three files the app reads today, and each is compared field by field with the file in <span class="mono">web/public/data</span>.</p>
+  ${table([['File', f => `<code>${esc(f.name)}</code>`], ['Rebuilt equal to the app file', f => f.identical ? pill('identical', 'var(--ok)') : pill('differs', 'var(--red)')], ['Size', f => `${fmt(Math.round(f.bytes / 1024))} KB`, 'num'], ['Top-level keys', f => `<span class="mono dim" style="font-size:12px">${esc(f.top_keys.join(' · '))}</span>`]], D.files)}
+  <div class="rules">
+    <div class="rule"><b>New source</b>catalog entry + one adapter file + one line in build.py</div>
+    <div class="rule"><b>New metric</b>one catalog entry</div>
+    <div class="rule"><b>New screen</b>one view, or the generic API (next step)</div>
+    <div class="rule"><b>New JSON shape</b>contracts/CHANGELOG.md first, then the view</div>
+  </div></div>`;
+
+let kindF = 'all';
+R.catalog = () => {
+  const kinds = ['all', ...Object.keys(C.metric_kinds)];
+  const ms = C.metrics.filter(m => kindF === 'all' || m.kind === kindF);
+  const groups = {};
+  C.subjects.forEach(s => (groups[s.kind] = groups[s.kind] || []).push(s));
+  return `<div class="card"><h2>Catalog: metrics</h2><p>Every measurable thing, defined once: unit, which NASA hazard it belongs to, which body region it lights up and which rule judges it. <span class="mono">contract_key</span> is its old name in the app's JSON.</p>
+    <div class="chips">${kinds.map(k => `<button type="button" class="chip" data-kind="${k}" aria-pressed="${k === kindF}">${k}${k !== 'all' ? ' · ' + C.metric_kinds[k] : ''}</button>`).join('')}</div>
+    ${table([['key', m => `<code>${esc(m.key)}</code>`], ['label', m => esc(m.label)], ['unit', m => esc(m.unit)], ['kind', m => esc(m.kind)], ['hazard', m => esc(m.hazard)],
+      ['body region', m => esc(m.body_region || '—')], ['rule', m => esc(m.rule)], ['contract_key', m => m.contract_key ? `<code>${esc(m.contract_key)}</code>` : '—']], ms, { scroll: true })}</div>
+  <div class="card"><h2>Catalog: subjects</h2><p>Everything that gets measured. Crew inherit their habitat's data through <span class="mono">located_in</span>, so cabin air is stored once and reaches everyone on board.</p>
+    ${Object.entries(groups).map(([k, list]) => `<div><div class="eyebrow" style="margin-bottom:6px">${k}</div><div class="tree">${list.map(s => `<div class="node"><span class="k">${esc(s.id)}</span><span>${esc(s.label)}</span>${s.located_in ? `<span class="dim">located in <span class="k">${esc(s.located_in)}</span></span>` : ''}${s.assumed_dose_mSv_day != null ? `<span class="dim">dose ${s.assumed_dose_mSv_day} mSv/day (hand-set)</span>` : ''}${pill(s.real ? 'real' : 'simulated', s.real ? 'var(--ok)' : 'var(--sim)')}</div>`).join('')}</div></div>`).join('')}</div>
+  <div class="card"><h2>Catalog: model and mission</h2>${table([['Model', m => `<code>${esc(m.id)}</code> ${esc(m.name)}`], ['Horizon', m => `${m.horizon_hours} h`], ['Test period', m => esc(m.test_period.join(' → '))],
+    ['Held-out result', m => `${Math.round(m.metrics_test.hit_rate * m.metrics_test.n_storms)} of ${m.metrics_test.n_storms} storms · ${m.metrics_test.false_alarms_per_month} false alarm/month · ${m.metrics_test.median_lead_time_h} h median lead`]], C.models)}
+    <p>Mission: ${esc(C.mission.name)} · environment <span class="mono">${esc(C.mission.environment)}</span> · ${esc(C.mission.start_date)} → ${esc(C.mission.today)} · career limit ${C.mission.career_limit_mSv} mSv</p></div>`;
+};
+
+const detail = document.getElementById('detail');
+function show(id) {
+  document.querySelectorAll('.layer').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.id === id)));
+  document.getElementById('catbar').setAttribute('aria-pressed', String(id === 'catalog'));
+  detail.innerHTML = R[id]();
+  detail.querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => { kindF = c.dataset.kind; show('catalog'); }));
+}
+pipe.addEventListener('click', e => { const b = e.target.closest('.layer'); if (b) show(b.dataset.id); });
+document.getElementById('catbar').addEventListener('click', () => show('catalog'));
+document.getElementById('foot').textContent = 'Simulated crew data, not real astronaut records · Space weather data: NASA CCMC DONKI · Inspiration4 blood panels: NASA OSDR OSD-575 and OSD-569 · ISS telemetry: NASA ISS Live! · Not medical advice';
+show('store');
+</script>
+</body>
+</html>
