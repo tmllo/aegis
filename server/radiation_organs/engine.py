@@ -460,8 +460,8 @@ def _al_stages(spec, shield: str):
     stages = [_flux_stage(*s, suit_skin) for s in items]
     current_skin, current_bfo = _current_body(items, shield)
     stages.append(_flux_stage("skin", "Skin (first mm)", None, current_skin, current_bfo, suit_skin))
-    stages.append(_flux_stage("organ", "Deep organs (BFO)", None, current_skin, current_bfo, suit_skin))
-    note = "Aug 1972 solar protons in aluminium (Wilson 1997 Table 5). Particle count follows skin dose."
+    stages.append(_flux_stage("organ", "Deep organs (BFO)", None, current_skin, current_bfo, suit_skin, current_bfo))
+    note = "Aug 1972 solar protons in aluminium (Wilson 1997 Table 5). Particle count follows skin dose. The Orion point is a different model, not a step on that slab curve."
     return stages, {"S1", "S4", "S5"}, note, "SPE protons", "soft"
 
 
@@ -477,7 +477,7 @@ def _water_stages(spec, shield: str):
     stages = [_flux_stage(*s, suit_skin) for s in items]
     current = next(s for s in items if s[0] == "w10")
     stages.append(_flux_stage("skin", "Skin (first mm)", None, current[3], current[4], suit_skin))
-    stages.append(_flux_stage("organ", "Deep organs (BFO)", None, current[3], current[4], suit_skin))
+    stages.append(_flux_stage("organ", "Deep organs (BFO)", None, current[3], current[4], suit_skin, current[4]))
     note = "Oct 1989 absorbed dose behind water (Simonsen 1992). Shown as cGy times 10, not NASA dose equivalent."
     return stages, {"S1", "S9"}, note, "SPE protons", "soft"
 
@@ -488,11 +488,12 @@ def _current_body(items, shield: str):
     return row[3], row[4]
 
 
-def _flux_stage(sid, label, areal, skin, bfo, suit_skin):
-    if skin is None or not suit_skin:
+def _flux_stage(sid, label, areal, skin, bfo, suit_skin, flux_from=None):
+    basis = skin if flux_from is None else flux_from
+    if basis is None or not suit_skin:
         flux = 1.0
     else:
-        flux = round(skin / suit_skin, 3)
+        flux = round(basis / suit_skin, 3)
     return _stage(sid, label, areal, flux, skin, bfo)
 
 
