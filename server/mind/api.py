@@ -107,8 +107,10 @@ def post_observation(body: ObservationIn) -> dict:
     cat, store = deps.cat(), deps.store()
     _crew(cat, body.subject)
     t = body.t if body.t is not None else engine.today(cat)
+    # entries.ts saveEntry (CrewPage, InfoSheet) posts glucose as vital.glucose. The catalog key is lab.glucose.
+    metric = {"vital.glucose": "lab.glucose"}.get(body.metric, body.metric)
     try:
-        batch = records.checkin_batch(cat, body.subject, body.metric, t, body.value)
+        batch = records.checkin_batch(cat, body.subject, metric, t, body.value)
     except ValueError as e:
         raise HTTPException(422, str(e))
     run_id = store.write(batch)
@@ -117,7 +119,7 @@ def post_observation(body: ObservationIn) -> dict:
         raise HTTPException(422, "; ".join(json.loads(run["errors"] or "[]")) or "rejected")
     res = engine.sync(cat, store, body.subject)
     day = records.day_of(t)
-    same = [a for a in store.assessments(body.subject) if a.metric == body.metric and records.day_of(a.t) == day]
+    same = [a for a in store.assessments(body.subject) if a.metric == metric and records.day_of(a.t) == day]
     latest = max(same, key=lambda a: a.t) if same else None
     o = batch.observations[0]
     return {

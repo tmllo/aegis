@@ -35,3 +35,13 @@ def test_emiles_routine_names_tick_the_servers_habits():
 
 def test_bad_client_id_rejected():
     assert c.post("/api/tasks", json={**TASK, "id": "../etc"}).status_code == 422
+
+
+def test_emiles_entries_posts_glucose_as_vital_glucose():
+    """CrewPage and InfoSheet call saveEntry, which posts metric vital.glucose (web/src/console/entries.ts)."""
+    body = {"subject": "c1", "metric": "vital.glucose", "t": "2026-11-15T06:10:00Z", "value": 95}
+    r = c.post("/api/observations", json=body)
+    assert r.status_code == 201, r.text
+    assert r.json()["stored"] == {"metric": "lab.glucose", "t": "2026-11-15T06:10:00Z", "value": 95.0, "quality": "live"}
+    rows = c.get("/api/observations", params={"subject": "c1", "metric": "lab.glucose"}).json()
+    assert r.json()["stored"] in rows
