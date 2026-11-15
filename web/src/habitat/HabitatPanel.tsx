@@ -1,12 +1,12 @@
 import { useState } from "react";
 import type { Anomaly, ChannelKey, HabitatData, Metrics } from "./types";
-import { HONEST_FOOTER, STATUS_COLOR, anomalyTag, fmtDate, latestValue, leadTimeText } from "./logic";
+import { HONEST_FOOTER, STATUS_COLOR, anomalyTag, fmtDate, fmtDayRange, latestValue, leadTimeText, type CrewResolver } from "./logic";
 import { Sparkline } from "./Sparkline";
 
-interface Props { data: HabitatData; focusAnomalyId?: string | null }
+interface Props { data: HabitatData; focusAnomalyId?: string | null; resolveCrew?: CrewResolver }
 
-/** The Habitat tab. Everything comes from habitat_telemetry.json. */
-export function HabitatPanel({ data, focusAnomalyId = null }: Props) {
+/** The Habitat tab. Everything comes from habitat_telemetry.json (+ crew labels via resolveCrew). */
+export function HabitatPanel({ data, focusAnomalyId = null, resolveCrew }: Props) {
   const [days, setDays] = useState<number | "all">(14);
   const keys = Object.keys(data.channels) as ChannelKey[];
   const anomalies = [...data.anomalies].sort((a, b) => Date.parse(b.start) - Date.parse(a.start));
@@ -32,7 +32,7 @@ export function HabitatPanel({ data, focusAnomalyId = null }: Props) {
         </div>
       </header>
 
-      {focus && <AnomalyCard a={focus} data={data} focused />}
+      {focus && <AnomalyCard a={focus} data={data} resolveCrew={resolveCrew} focused />}
 
       <div className="flex flex-col divide-y divide-slate-800 rounded-2xl border border-slate-800 bg-slate-900/60">
         {keys.map((k) => {
@@ -62,7 +62,7 @@ export function HabitatPanel({ data, focusAnomalyId = null }: Props) {
       <Legend />
 
       <div className="grid gap-4 md:grid-cols-2">
-        {anomalies.filter((a) => a.id !== focus?.id).map((a) => <AnomalyCard key={a.id} a={a} data={data} />)}
+        {anomalies.filter((a) => a.id !== focus?.id).map((a) => <AnomalyCard key={a.id} a={a} data={data} resolveCrew={resolveCrew} />)}
       </div>
 
       <ValidationCard data={data} />
@@ -78,7 +78,7 @@ function StatusDot({ status, big = false }: { status: keyof typeof STATUS_COLOR;
                style={{ width: s, height: s, background: STATUS_COLOR[status], boxShadow: `0 0 12px ${STATUS_COLOR[status]}88` }} />;
 }
 
-function AnomalyCard({ a, data, focused = false }: { a: Anomaly; data: HabitatData; focused?: boolean }) {
+function AnomalyCard({ a, data, resolveCrew, focused = false }: { a: Anomaly; data: HabitatData; resolveCrew?: CrewResolver; focused?: boolean }) {
   const tag = anomalyTag(a);
   const lead = leadTimeText(a);
   const ch = data.channels[a.channel];
@@ -97,11 +97,14 @@ function AnomalyCard({ a, data, focused = false }: { a: Anomaly; data: HabitatDa
         <dt>Limit crossed</dt><dd className="text-slate-200">{fmtDate(a.limit_crossed_at)}</dd>
       </dl>
       {lead && <p className="mt-2 text-sm font-medium text-slate-200">{lead}</p>}
-      {a.linked_crew_flags.map((l) => (
-        <p key={l.crew_id + l.metric} className="mt-2 rounded-lg bg-slate-800/70 px-3 py-2 text-sm text-slate-300">
-          Possible environmental cause for crew {l.crew_id} ({l.metric}, {l.from} → {l.to}). {l.note}
-        </p>
-      ))}
+      {a.linked_crew_flags.map((l) => {
+        const r = resolveCrew?.(l.crew_id, l.metric) ?? { name: l.crew_id, metric: l.metric };
+        return (
+          <p key={l.crew_id + l.metric} className="mt-2 rounded-lg bg-slate-800/70 px-3 py-2 text-sm text-slate-300">
+            Possible environmental cause for <span className="text-slate-100">{r.name} · {r.metric}, {fmtDayRange(l.from, l.to)}</span>. {l.note}
+          </p>
+        );
+      })}
       {a.detected && <p className="mt-3 text-sm"><span className="text-slate-400">Action: </span>{a.action}</p>}
     </article>
   );

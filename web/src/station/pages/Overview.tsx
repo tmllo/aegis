@@ -7,6 +7,7 @@ import { CW_LABEL, DUTY_LABEL, LEVEL_STATUS, LEVEL_WORD, SYSTEMS, WORD, dutyOf, 
 import { CWChip } from '../health';
 import { useStation } from '../state';
 import { Card, Chip, Dot, Icon, Ring, Spark, STATUS_COLOR } from '../ui';
+import { useHabitatData } from '../habitat';
 
 export default function Overview() {
   const { data, views, sw, doses, queue, env } = useStationData();
@@ -15,6 +16,7 @@ export default function Overview() {
   const xp = useStation((s) => s.xp);
   const streak = useStation((s) => s.streak);
   const { cabin } = useCabin();
+  const habitat = useHabitatData().data; // the mission habitat (simulated); its status drives the headline
   const nav = useNavigate();
   if (!data) return null;
 
@@ -42,7 +44,7 @@ export default function Overview() {
               {cleared}/{views.length}
             </span>
             <span className="st-hero-line">
-              crew cleared for EVA. {summary}. Space weather {sw ? LEVEL_WORD[sw.level].toLowerCase() : '—'}, cabin air {cabinStatus === 'green' ? 'in range' : WORD[cabinStatus].toLowerCase()}.
+              crew cleared for EVA. {summary}. Space weather {sw ? LEVEL_WORD[sw.level].toLowerCase() : '—'}{habitat ? `, habitat ${habitat.status.overall === 'green' ? 'in range' : WORD[habitat.status.overall].toLowerCase()}` : ''}.
             </span>
           </h2>
           <div className="st-cwcount">
@@ -203,7 +205,16 @@ export default function Overview() {
           </p>
         </Card>
 
-        <Card title="Cabin air · feeds Neuro & sleep" right={<Chip s={cabinStatus}>{cabinStatus === 'green' ? 'In range' : WORD[cabinStatus]}</Chip>} className="st-cabcard">
+        <Card
+          title="ISS today (live reference)"
+          right={
+            <span className="flex items-center gap-2">
+              <span className="rounded-full border border-line px-2 py-0.5 text-xs text-dim">real ISS telemetry</span>
+              <Chip s={cabinStatus}>{cabinStatus === 'green' ? 'In range' : WORD[cabinStatus]}</Chip>
+            </span>
+          }
+          className="st-cabcard"
+        >
           <div className="st-cab">
             {(cabin?.readings ?? [])
               .filter((r) => r.value != null)

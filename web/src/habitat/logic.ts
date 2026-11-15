@@ -40,5 +40,20 @@ export function latestValue(d: HabitatData, key: keyof HabitatData["channels"]):
   return null;
 }
 
+/** "8 Nov" (UTC). Accepts an ISO timestamp or a YYYY-MM-DD date. */
+export const fmtDay = (iso: string) =>
+  new Date(iso.length === 10 ? `${iso}T00:00:00Z` : iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "UTC" });
+
+/** "11 → 14 Nov" (same month) or "30 Oct → 2 Nov". */
+export const fmtDayRange = (from: string, to: string) => {
+  const [a, b] = [fmtDay(from), fmtDay(to)];
+  if (a === b) return a;
+  const [da, ma] = a.split(" "), [db, mb] = b.split(" ");
+  return ma === mb ? `${da} → ${db} ${mb}` : `${a} → ${b}`;
+};
+
+/** Turns crew_id + metric key into display labels; supplied by the host app from crew_data.json. */
+export type CrewResolver = (crewId: string, metric: string) => { name: string; metric: string };
+
 export const fmtDate = (iso: string | null) =>
   iso == null ? "—" : new Date(iso).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "UTC" }) + " UTC";
