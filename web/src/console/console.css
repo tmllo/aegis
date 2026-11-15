@@ -851,3 +851,37 @@ html { background: #101a3d; }
 .sys-one .one-do { margin-bottom: 26px; }
 .sys-src { background: rgb(16 26 61 / 0.82); border: 1px solid rgb(255 255 255 / 0.16); top: 130px; width: 480px; }
 .sys-src .tbl td { font-size: 15px; padding: 12px 8px; }
+/* organ panel: name, one word, one reading per value pair, range bars, steppers */
+.sheet { width: 460px; gap: 12px; padding: 8px 22px 22px; right: 40px; top: 96px; bottom: 64px; }
+.sheet .sheet-title { font-size: 40px; font-weight: 300; margin-top: -8px; }
+.sheet-word { font-size: 22px; font-weight: 500; color: rgb(var(--calm)); }
+.sheet[data-status='amber'] .sheet-word { color: rgb(var(--watch)); }
+.sheet[data-status='red'] .sheet-word { color: rgb(var(--act)); }
+.sheet h3 { font-size: 15px; font-weight: 500; color: #fff; margin-top: 6px; }
+.rd { display: flex; flex-direction: column; gap: 8px; padding: 14px 0 6px; border-top: 1px solid rgb(255 255 255 / 0.2); }
+.rd-name { font-size: 16px; color: rgb(214 226 255 / 0.9); }
+.rd-name small { font-size: 14px; color: rgb(214 226 255 / 0.8); }
+.rd-num { align-self: flex-start; min-height: 72px; padding: 0 6px 0 0; font-size: 60px; font-weight: 200; line-height: 1; font-variant-numeric: tabular-nums; color: #fff; text-align: left; border-bottom: 1px dashed rgb(255 255 255 / 0.35); }
+.rd-num:hover { border-bottom-color: #fff; }
+.rd-num small { font-size: 18px; margin-left: 8px; color: rgb(214 226 255 / 0.85); }
+.rd[data-status='amber'] .rd-num { color: rgb(var(--watch)); }
+.rd[data-status='red'] .rd-num { color: rgb(var(--act)); }
+.rd-bars { display: flex; flex-direction: column; gap: 5px; }
+.rbar { position: relative; display: block; height: 8px; background: rgb(255 255 255 / 0.1); }
+.rbar-band { position: absolute; top: 0; bottom: 0; background: rgb(var(--calm) / 0.4); }
+.rbar-dot { position: absolute; top: 50%; width: 14px; height: 14px; border-radius: 50%; translate: -50% -50%; background: #fff; box-shadow: 0 0 0 2px #101a3d; }
+.rbar[data-status='amber'] .rbar-dot { background: rgb(var(--watch)); }
+.rbar[data-status='red'] .rbar-dot { background: rgb(var(--act)); }
+.rd-usual { font-size: 15px; color: rgb(214 226 255 / 0.85); }
+.rd-edit { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.rd-step { display: flex; align-items: center; gap: 6px; }
+.rd-step .ghost { width: 72px; padding: 0; font-size: 30px; font-weight: 300; }
+.rd-step input { width: 104px; height: 72px; padding: 0 8px; text-align: center; background: transparent; border: 1px solid rgb(255 255 255 / 0.6); border-radius: 0; color: #fff; font-size: 30px; font-weight: 300; font-variant-numeric: tabular-nums; }
+.rd-step input:focus { outline: none; border-color: #fff; }
+.rd-unit { font-size: 16px; color: rgb(214 226 255 / 0.85); }
+.rd-acts { display: flex; gap: 10px; width: 100%; }
+.rd-acts .solid, .rd-acts .ghost { flex: 1; }
+.sheet-do { display: flex; flex-direction: column; gap: 6px; }
+.sheet .sheet-chart { height: auto; gap: 6px; }
+.cx-top { background: linear-gradient(180deg, rgb(16 26 61 / 0.92) 0, rgb(16 26 61 / 0.7) 70%, rgb(16 26 61 / 0) 100%); }
+.rd-name:empty { display: none; }

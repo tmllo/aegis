@@ -151,7 +151,7 @@ export default function CrewPage() {
 
   const flagged = all.filter((r) => r.status !== 'green').sort((a, b) => RANK[b.status] - RANK[a.status] || Math.abs(b.z ?? 0) - Math.abs(a.z ?? 0));
   const organRow = target ? all.find((r) => r.k === TARGET_METRICS[target][0]) : null;
-  const one = organRow ?? flagged[0] ?? null;
+  const one = flagged[0] ?? organRow ?? null;
   const red = one?.status === 'red';
   const top = flagged[0] ?? null;
   const typed = entries[cv.m.id]?.[cd.mission.today] ?? {};
