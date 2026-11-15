@@ -1,33 +1,56 @@
-# AEGIS: NASA Space Apps 2026 starter kit
+# AEGIS
 
-Crew health monitor with a radiation storm early-warning. **Start with `PROJECT_CONTEXT.md`.**
+A crew health monitor with a solar-radiation early warning, for NASA Space Apps 2026.
 
-**Project map (how research, ML, contract and web connect): `docs/MAP.md`.** Thesis and research: `docs/`.
+**Challenge:** Create Health Monitoring Software for Astronauts on Space Missions.
 
-## What's in here
-| File | For | What |
-|---|---|---|
-| `PROJECT_CONTEXT.md` | both (humans + agents) | product, demo script, split, timeline, done criteria, rules, facts to verify |
-| `CLAUDE.md` | both agents | shared rules (Claude Code reads it automatically) |
-| `contracts/DATA_CONTRACT.md` | both | the exact shape of the two JSON files: the only interface between you |
-| `contracts/*.sample.json` | Emile | realistic sample data to build against right now |
-| `ml/CLAUDE.md`, `ml/PROMPTS.md` | Tomas | context for your Claude Code + prompts P0–P8 in order |
-| `ml/fetch_donki.py` | Tomas | pulls NASA DONKI flares/CMEs/radiation storms → `data/processed/flares.csv` (tested on mock data; first real run tonight) |
-| `ml/make_sample_data.py` | Tomas | simulated crew (planted demo scenarios) + FAKE forecast in the right shape |
-| `ml/validate_contracts.py` | Tomas | run before every export: catches shape errors before Emile's app breaks |
-| `web/CLAUDE.md`, `web/PROMPTS.md` | Emile | context for his Claude Code + prompts E0–E7 in order |
-| `web/public/data/*.json` | both | the files the app reads. Sample now, real after Tomas exports |
+Astronauts check their own vitals against their own baseline, and the app warns before a solar particle storm using a model trained on NASA space-weather data. Crew vitals in the demo are simulated. The Inspiration4 lab panels are published NASA OSDR data (OSD-575 and OSD-569). This is not medical advice.
 
-## First 15 minutes
-1. Tomas: create a GitHub repo, push this folder, invite Emile. Add Emile to the team on spaceappschallenge.org.
-2. Both: read `PROJECT_CONTEXT.md` (5 min).
-3. Tomas: `cd` to the repo, open Claude Code, paste `ml/PROMPTS.md` → P0.
-4. Emile: `cd web`, open Claude Code, paste `web/PROMPTS.md` → E0.
-5. Agree a check-in time (suggested 21:00, when the real `storm_forecast.json` lands).
+## Run the demo
+
+From the repo root, with Python 3.12 and Node.js installed.
 
 ```bash
-pip install requests pandas numpy scikit-learn matplotlib
-python ml/fetch_donki.py --start 2010-01-01     # ~15-20 min, cached so reruns are instant
-python ml/make_sample_data.py                    # regenerate samples
-python ml/validate_contracts.py                  # check web/public/data/*.json
+pip install -r server/requirements.txt
+uvicorn server.api.app:app --port 8000
 ```
+
+The API is at <http://127.0.0.1:8000> (`/api/health`, `/data/crew_data.json`, `/data/storm_forecast.json`).
+
+The app:
+
+```bash
+cd web
+npm ci
+npm run dev
+```
+
+That serves the app at <http://127.0.0.1:5630>.
+
+To serve the built app from the API instead, stay in `web`, run `npm run build`, then start uvicorn as above. It serves `web/dist` at <http://127.0.0.1:8000>.
+
+## Credits
+
+Official challenge resources:
+
+- [NASA Human Research Program: 5 Hazards of Human Spaceflight](https://www.nasa.gov/hrp/hazards/)
+- [Risks of Human Spaceflight](https://www.nasa.gov/hrp/risks/)
+- [Ongoing HRP research](https://www.nasa.gov/hrp/ongoing-hrp-research/)
+- [Canadian Space Agency: Monitoring radiation for astronaut health](https://www.asc-csa.gc.ca/eng/news/articles/2026/2026-02-26-monitoring-radiation-astronaut-health.asp)
+
+Data:
+
+- NASA CCMC DONKI (flares, CMEs and solar energetic particle events)
+- NASA Open Science Data Repository, OSD-575 and OSD-569 (Inspiration4 blood panels)
+- NASA ISS Live! (cabin telemetry)
+- CelesTrak (orbital elements; celestrak.org, Dr. T.S. Kelso)
+
+Where each number on screen comes from: [docs/DATA-SOURCES.md](docs/DATA-SOURCES.md).
+
+## AI disclosure
+
+Claude Code, Cursor (Grok) and Grok Bot were used.
+
+## For the team
+
+Product, demo script and split: [PROJECT_CONTEXT.md](PROJECT_CONTEXT.md). How the research, model, contract and app connect: [docs/MAP.md](docs/MAP.md).
