@@ -203,6 +203,7 @@ export function SuitFigure({
                   markers.current[p.id] = el;
                 }}
                 className="suit-marker-wrap"
+                data-dim={(selected && p.id !== selected) || undefined}
               >
                 <button
                   type="button"

@@ -49,7 +49,7 @@ export default function SuitCupola() {
               marker={(id, active) => (
                 <span className="sa-pin" data-status={s?.sensors[id].status ?? 'none'} data-active={active || undefined}>
                   <span className="sa-pin-ring" />
-                  <span className="sa-pin-label">{SENSOR_NAME[id]}</span>
+                  <span className="sa-pin-label suit-label">{SENSOR_NAME[id]}</span>
                 </span>
               )}
             />

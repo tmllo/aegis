@@ -188,7 +188,7 @@ export default function SuitCockpit() {
                   marker={(id, active) => (
                     <span className="sb-pin" data-status={s?.sensors[id].status ?? 'none'} data-active={active || undefined}>
                       <span className="sb-pin-box" />
-                      <span className="sb-pin-label">{SENSOR_NAME[id]}</span>
+                      <span className="sb-pin-label suit-label">{SENSOR_NAME[id]}</span>
                     </span>
                   )}
                 />

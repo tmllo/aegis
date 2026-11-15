@@ -41,6 +41,8 @@
 .sa-switch button:active, .sa-dock-btn:active, .sa-action:active, .sa-close:active { transform: scale(0.97); }
 
 /* sensor pins on Ana */
+.suit-marker-wrap[data-dim] .suit-label { opacity: 0; }
+.suit-marker-wrap[data-dim] { filter: saturate(0.4); }
 .suit-marker-wrap { transition: opacity 250ms var(--ease-out); }
 [data-concept='suit-a'] .suit-marker { width: 64px; height: 64px; display: grid; place-items: center; position: relative; cursor: pointer; border-radius: 50%; }
 .sa-pin { position: relative; width: 64px; height: 64px; display: grid; place-items: center; }
@@ -61,20 +63,21 @@
 
 /* reading panel */
 .sa-panel { position: absolute; right: 48px; top: 136px; bottom: 210px; width: 440px; border-radius: 28px; padding: 28px 32px; z-index: 40; display: flex; flex-direction: column; overflow: auto; }
+.sa-panel > * { flex-shrink: 0; }
 .sa-panel-head { display: flex; justify-content: space-between; align-items: center; }
 .sa-eyebrow { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: rgb(var(--sa-dim)); }
 .sa-close { height: 56px; min-width: 96px; border-radius: 28px; border: 1px solid rgb(var(--sa-line) / 0.25); font-size: 16px; color: rgb(var(--sa-ink)); }
 .sa-panel-title { font-size: 40px; font-weight: 500; letter-spacing: -0.02em; margin-top: 4px; }
-.sa-big { font-size: 104px; font-weight: 200; letter-spacing: -0.04em; line-height: 1; margin-top: 16px; font-variant-numeric: tabular-nums; }
+.sa-big { font-size: 104px; font-weight: 200; letter-spacing: -0.04em; line-height: 1; margin-top: 8px; font-variant-numeric: tabular-nums; }
 .sa-big small { font-size: 22px; font-weight: 400; letter-spacing: 0; margin-left: 10px; color: rgb(var(--sa-dim)); }
 .sa-state { display: flex; align-items: center; gap: 10px; margin-top: 14px; font-size: 18px; }
 .sa-state span { color: rgb(var(--sa-dim)); }
 .sa-bar { height: 36px; margin-top: 20px; color: rgb(var(--accent)); }
 .sa-delta { font-family: var(--font-mono); font-size: 14px; color: rgb(var(--sa-dim)); margin-top: 6px; }
-.sa-spark { margin-top: 18px; color: rgb(var(--accent)); }
+.sa-spark { margin-top: 12px; color: rgb(var(--accent)); }
 .sa-spark svg { height: 56px; margin-top: 6px; }
 .sa-rows { margin-top: 18px; border-top: 1px solid rgb(var(--sa-line) / 0.14); }
-.sa-rows li { display: flex; align-items: center; gap: 10px; min-height: 52px; border-bottom: 1px solid rgb(var(--sa-line) / 0.1); font-size: 16px; }
+.sa-rows li { display: flex; align-items: center; gap: 10px; min-height: 48px; border-bottom: 1px solid rgb(var(--sa-line) / 0.1); font-size: 16px; }
 .sa-rows li span { flex: 1; color: rgb(var(--sa-dim)); }
 .sa-rows b { font-weight: 400; font-size: 22px; font-variant-numeric: tabular-nums; }
 .sa-rows small { font-size: 13px; color: rgb(var(--sa-dim)); }

@@ -90,7 +90,7 @@ export function Flow({
   const packets = (d: string, color: string, i: number, n = 2) =>
     Array.from({ length: n }, (_, k) => (
       <circle key={k} r="5" fill={color} className="flow-packet">
-        <animateMotion dur="2.6s" repeatCount="indefinite" begin={`${(i * 0.45 + k * 1.3).toFixed(2)}s`} path={d} />
+        <animateMotion dur="2.6s" repeatCount="indefinite" begin={`-${(i * 0.45 + k * 1.3).toFixed(2)}s`} path={d} />
       </circle>
     ));
 

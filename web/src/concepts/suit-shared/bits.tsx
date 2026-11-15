@@ -31,7 +31,7 @@ export function BaselineBar({ r, className = '' }: { r: Reading; className?: str
   if (!b) return null;
   const col = r.status ? STATUS_VAR[r.status] : 'currentColor';
   return (
-    <svg viewBox="0 0 300 36" className={`w-full ${className}`} preserveAspectRatio="none" aria-hidden>
+    <svg viewBox="0 0 300 36" className={`w-full ${className}`} preserveAspectRatio="none" style={{ overflow: 'visible' }} aria-hidden>
       <line x1="0" x2="300" y1="18" y2="18" stroke="currentColor" strokeOpacity="0.25" strokeWidth="1" />
       <rect x={b.lo * 300} width={Math.max(2, (b.hi - b.lo) * 300)} y="12" height="12" fill="currentColor" fillOpacity="0.16" rx="2" />
       {b.mean != null && <line x1={b.mean * 300} x2={b.mean * 300} y1="8" y2="28" stroke="currentColor" strokeOpacity="0.6" strokeWidth="1.5" />}
@@ -56,7 +56,7 @@ export function Spark({ r, className = '' }: { r: Reading; className?: string })
     .join(' ');
   const last = r.history[n - 1];
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className={`w-full ${className}`} preserveAspectRatio="none" aria-hidden>
+    <svg viewBox={`0 0 ${W} ${H}`} className={`w-full ${className}`} preserveAspectRatio="none" style={{ overflow: 'visible' }} aria-hidden>
       {r.lo != null && r.hi != null && (
         <rect x="0" width={W} y={y(r.hi)} height={Math.max(1, y(r.lo) - y(r.hi))} fill="currentColor" fillOpacity="0.1" />
       )}

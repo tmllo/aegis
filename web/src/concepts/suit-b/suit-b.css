@@ -66,6 +66,8 @@
 .sb-flow .flow-core-sub { fill: rgb(var(--sb-dim)); font-size: 17px; }
 
 /* pins on Ana: square instrument boxes */
+.suit-marker-wrap[data-dim] .suit-label { opacity: 0; }
+.suit-marker-wrap[data-dim] { filter: saturate(0.4); }
 .suit-marker-wrap { transition: opacity 220ms var(--ease-out); }
 [data-concept='suit-b'] .suit-marker { width: 60px; height: 60px; display: grid; place-items: center; cursor: pointer; }
 .sb-pin { position: relative; width: 60px; height: 60px; display: grid; place-items: center; }
@@ -94,6 +96,7 @@
 .sb-others dd { font-size: 22px; font-weight: 300; font-variant-numeric: tabular-nums; }
 .sb-others small { font-size: 12px; color: rgb(var(--sb-dim)); }
 .sb-note { margin-top: auto; padding-top: 14px; font-size: 15px; line-height: 1.45; color: rgb(var(--sb-dim)); }
+.sb-reading > * { flex-shrink: 0; }
 .sb-action { margin-top: 12px; height: 64px; border-radius: 10px; background: rgb(var(--accent)); color: rgb(4 10 24); font-size: 19px; font-weight: 600; transition: transform 100ms var(--ease-out), background 160ms; }
 .sb-action[data-done] { background: transparent; color: rgb(var(--accent)); border: 1.5px solid rgb(var(--accent)); }
 
