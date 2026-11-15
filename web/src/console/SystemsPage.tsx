@@ -1,12 +1,12 @@
-// Systems HUD over the orbit network: one line of five nodes, Sensors -> e^x -> Crew -> Wrist
-// -> Ground. Tap a node for what it does and its live counts; its sources (docs/lineage.json)
-// are one tap deeper. Server live or offline comes from data/http.
+// Systems HUD over the orbit network: one line, Sensors -> Cabin -> e^x -> Crew HUD ->
+// Escalation. Tap a node for what it does and its live counts; its sources (docs/lineage.json)
+// are one tap deeper. Sensors are simulated; the cabin is the recorded ISS snapshot.
 import { useEffect, useState } from 'react';
 import lineage from '../../docs/lineage.json';
 import { useCabin } from '../data/cabin';
 import { hasServer } from '../data/http';
 import type { Status } from '../data/types';
-import { fmt, rowOf, STATUS_WORD } from './model';
+import { LINK_DELAY, PLACEMENTS, STATUS_WORD } from './model';
 import { Icon, KV, Mark, Panel } from './ui';
 import { useConsole } from './useConsole';
 
@@ -15,23 +15,20 @@ interface LNode {
   label: string;
   kind: string;
   status: string;
-  layer: number;
-  source?: string;
 }
 const NODES = (lineage as { nodes: LNode[] }).nodes;
-
-const GROUPS: { id: string; name: string; does: string; pick: (n: LNode) => boolean }[] = [
-  { id: 'sensors', name: 'Sensors', does: 'Read the crew and the cabin', pick: (n) => n.kind === 'device' || n.id === 'crew' },
-  { id: 'core', name: 'e^x', does: 'Score each reading against her own baseline', pick: (n) => n.kind === 'core' && !['core_handoff', 'core_link'].includes(n.id) },
-  { id: 'crew', name: 'Crew', does: 'Show status, issue and the one action', pick: (n) => n.id === 'sf_console' || n.id === 'sf_radiation' || n.id === 'sf_systems' },
-  { id: 'wrist', name: 'Wrist', does: 'A glance and a buzz on the wrist', pick: (n) => n.id === 'sf_wrist' },
-  { id: 'ground', name: 'Ground', does: 'Queue and send to the flight surgeon', pick: (n) => ['sf_ground', 'core_link', 'core_handoff', 'person_surgeon', 'ext_cmo_da', 'person_cmo'].includes(n.id) },
-];
-
 const ST: Record<string, Status | null> = { live: 'green', simulated: 'amber', 'offline-sample': 'amber', planned: null };
 
+const GROUPS: { id: string; name: string; does: string; pick: (n: LNode) => boolean }[] = [
+  { id: 'sensors', name: 'Sensors', does: 'Suit, head, wrist, pocket, lab and self-report readings (simulated)', pick: (n) => n.kind === 'device' || n.id === 'crew' || n.id === 'ad_manual' },
+  { id: 'cabin', name: 'Cabin', does: 'ISS cabin air and tanks, recorded on 14 Nov', pick: (n) => n.id === 'api_isslive' },
+  { id: 'core', name: 'e^x', does: 'Score each reading against her own baseline', pick: (n) => n.kind === 'core' && !['core_handoff', 'core_link'].includes(n.id) },
+  { id: 'hud', name: 'Crew HUD', does: 'Show status, the issue and the one action', pick: (n) => ['sf_console', 'sf_radiation', 'sf_systems', 'sf_wrist'].includes(n.id) },
+  { id: 'esc', name: 'Escalation', does: 'Queue a report for the flight surgeon', pick: (n) => ['core_escalation', 'core_link', 'core_handoff', 'person_surgeon', 'ext_cmo_da', 'person_cmo'].includes(n.id) },
+];
+
 export default function SystemsPage() {
-  const { cd, views, cv, seat } = useConsole();
+  const { cd, views } = useConsole();
   const { cabin } = useCabin();
   const [server, setServer] = useState<boolean | null>(null);
   const [sel, setSel] = useState('core');
@@ -39,18 +36,18 @@ export default function SystemsPage() {
   useEffect(() => {
     void hasServer().then(setServer);
   }, []);
-  if (!cd || !cv) return <p className="cx-error cx-wait">Loading</p>;
+  if (!cd) return <p className="cx-error cx-wait">Loading</p>;
 
-  const hr = rowOf(cd, cv.m, cv.scores, 'hr');
   const checks = views.reduce((n, v) => n + v.scores.length, 0);
   const flagged = views.reduce((n, v) => n + v.scores.filter((s) => s.status !== 'green').length, 0);
-  const devices = NODES.filter((n) => n.kind === 'device');
+  const worst = views.reduce<Status>((w, v) => (v.overall === 'red' || w === 'red' ? 'red' : v.overall === 'amber' || w === 'amber' ? 'amber' : 'green'), 'green');
+  const delay = LINK_DELAY[cd.mission.environment] ?? 'unknown';
   const value: Record<string, { big: string; sub: string; status: Status | null; kv: [string, string][] }> = {
-    sensors: { big: String(devices.length), sub: 'devices', status: 'green', kv: [['Live', String(devices.filter((d) => d.status === 'live').length)], ['Planned', String(devices.filter((d) => d.status === 'planned').length)], ['Cabin feed', cabin ? (cabin.origin === 'server' ? 'Live' : 'Recorded') : 'None']] },
-    core: { big: String(checks), sub: 'checks today', status: flagged ? 'amber' : 'green', kv: [['Flagged', String(flagged)], ['Crew scored', String(views.length)], ['Rule', 'Own baseline, 3-day mean']] },
-    crew: { big: String(views.length), sub: 'aboard', status: views.reduce<Status>((w, v) => (v.overall === 'red' || w === 'red' ? 'red' : v.overall === 'amber' || w === 'amber' ? 'amber' : 'green'), 'green'), kv: views.map((v) => [seat[v.m.id], STATUS_WORD[v.overall]]) },
-    wrist: { big: fmt(hr.value, hr.digits), sub: `${hr.unit} · ${seat[cv.m.id]}`, status: hr.status, kv: [['Pulse', `${fmt(hr.value, hr.digits)} ${hr.unit}`], ['Usual', `${fmt(hr.mean, hr.digits)} ${hr.unit}`]] },
-    ground: { big: cabin ? (cabin.signal ? 'Up' : 'Down') : '--', sub: 'link', status: cabin?.signal ? 'green' : 'amber', kv: [['Link', cabin ? (cabin.signal ? 'Up' : 'Down') : 'No data'], ['Server', server == null ? 'Checking' : server ? 'Live' : 'Offline'], ['Queue', 'Offline safe']] },
+    sensors: { big: String(PLACEMENTS.length - 1), sub: 'placements', status: 'green', kv: PLACEMENTS.filter((p) => p.id !== 'cabin').map((p) => [p.name, p.reads]) },
+    cabin: { big: String(cabin?.readings.filter((r) => r.value != null).length ?? 0), sub: 'readings', status: cabin ? 'green' : null, kv: [['Source', 'ISS Live, recorded'], ['Not connected', String(cabin?.readings.filter((r) => r.value == null).length ?? 0)]] },
+    core: { big: String(checks), sub: 'checks today', status: flagged ? 'amber' : 'green', kv: [['Flagged', String(flagged)], ['Crew scored', String(views.length)], ['Rule', 'Own baseline, 3-day mean'], ['Server', server == null ? 'Checking' : server ? 'Live' : 'Offline']] },
+    hud: { big: String(views.length), sub: 'crew', status: worst, kv: views.map((v) => [v.m.role, STATUS_WORD[v.overall]]) },
+    esc: { big: String(flagged), sub: 'in queue', status: flagged ? 'amber' : 'green', kv: [['Report arrives in', `~${delay}`], ['Site', cd.environments[cd.mission.environment]?.label ?? '']] },
   };
   const g = GROUPS.find((x) => x.id === sel)!;
   const v = value[sel];
@@ -58,17 +55,19 @@ export default function SystemsPage() {
 
   return (
     <>
-      <Panel label="Nodes" icon="systems" aside={server == null ? '' : server ? 'Server live' : 'Server offline'} className="sy-left">
+      <Panel label="Sensors" icon="systems" aside="Simulated" className="sy-left">
         <div className="steps">
-          {GROUPS.map((x, i) => (
-            <button key={x.id} type="button" className="step" data-status={value[x.id].status ?? undefined} aria-pressed={sel === x.id} onClick={() => { setSel(x.id); setDeep(false); }}>
+          {PLACEMENTS.map((p, i) => (
+            <button key={p.id} type="button" className="step" aria-pressed={(sel === 'cabin' && p.id === 'cabin') || (sel === 'sensors' && p.id !== 'cabin')} onClick={() => { setSel(p.id === 'cabin' ? 'cabin' : 'sensors'); setDeep(false); }}>
               <span className="step-n">{String(i + 1).padStart(2, '0')}</span>
-              <Mark s={value[x.id].status} />
+              <Mark s={p.id === 'cabin' ? (cabin ? 'green' : null) : 'green'} />
               <span className="step-t">
-                {x.name}
-                <small>{value[x.id].sub}</small>
+                {p.name}
+                <small>{p.cls}</small>
               </span>
-              <span className="step-v">{value[x.id].big}</span>
+              <span className="step-v" style={{ fontSize: 12, whiteSpace: 'normal', maxWidth: 150 }}>
+                {p.reads}
+              </span>
             </button>
           ))}
         </div>
@@ -123,7 +122,7 @@ export default function SystemsPage() {
       </Panel>
 
       <div className="strip" style={{ gridTemplateColumns: '1fr', left: 396, right: 476, height: 230 }}>
-        <Panel label="Data flow" icon="flow" aside="Sensors to ground">
+        <Panel label="Data flow" icon="flow" aside={`Report arrives in ~${delay}`}>
           <div className="flow" style={{ marginTop: 14 }}>
             <i className="flow-line" />
             {GROUPS.map((x) => (

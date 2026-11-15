@@ -7,6 +7,7 @@ import * as THREE from 'three';
 import { bodyGeometries, useBody } from '../components/body3d/BodyScene';
 import { pickTarget, TARGETS, type TargetId } from '../components/body3d/targets';
 import type { Status } from '../data/types';
+import { useHud, type Layer } from './hud';
 
 /** The node that carries a target's status tint. */
 export const TINT_NODE: Partial<Record<TargetId, string>> = {
@@ -25,6 +26,14 @@ const TINT: Record<Status, THREE.Color> = {
 };
 const WHITE = new THREE.Color('#f2f4fa');
 const NO_PICK = new Set(['skin', 'muscles', 'lung_left', 'lung_right', 'airways']);
+const LAYER_OF: Record<string, Layer> = {
+  skin: 'skin',
+  muscles: 'muscle',
+  muscle_antigravity: 'muscle',
+  bones: 'skeleton',
+  bones_loadbearing: 'skeleton',
+};
+const HOVER = new THREE.Color('#5fd3d6');
 
 /** Resting opacity of each layer in the whole-body view. */
 const BASE: Record<string, number> = {
@@ -50,7 +59,9 @@ export function Porcelain({
   tint,
   onPick,
   onReady,
+  near = false,
 }: {
+  near?: boolean;
   focus: TargetId | null;
   /** target -> status; tinted only when not green, plus the focused one. */
   tint: Partial<Record<TargetId, Status>>;
@@ -58,6 +69,9 @@ export function Porcelain({
   onReady?: () => void;
 }) {
   const scene = useBody();
+  const layers = useHud((s) => s.layers);
+  const hover = useHud((s) => s.hover);
+  const setHover = useHud((s) => s.setHover);
   const geo = useMemo(() => bodyGeometries(scene), [scene]);
   const mats = useMemo(() => {
     const out: Record<string, THREE.MeshStandardMaterial> = {};
@@ -77,6 +91,7 @@ export function Porcelain({
     const inFocus = new Set(focus ? TARGETS[focus].nodes : []);
     for (const n of Object.keys(geo)) {
       let o = BASE[n] ?? 0.3;
+      if (near && !focus && n === 'skin') o = 0.04;
       if (focus) o = inFocus.has(n) ? 0.96 : n === 'skin' ? 0.05 : n.startsWith('bones') ? 0.22 : Math.min(o, 0.1);
       g[n] = { o, c: WHITE };
     }
@@ -85,8 +100,12 @@ export function Porcelain({
       if (!n || !g[n] || (s === 'green' && t !== focus)) continue;
       g[n] = { o: Math.max(g[n].o, 0.9), c: WHITE.clone().lerp(TINT[s], 0.55) };
     }
+    for (const n of Object.keys(g)) {
+      if (!layers[LAYER_OF[n] ?? 'organs']) g[n] = { ...g[n], o: 0 };
+    }
+    if (hover && g[hover.node] && g[hover.node].o > 0.05) g[hover.node] = { o: Math.max(g[hover.node].o, 0.75), c: g[hover.node].c.clone().lerp(HOVER, 0.35) };
     return g;
-  }, [geo, focus, tint]);
+  }, [geo, focus, tint, layers, hover, near]);
 
   const reduced = useRef(typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches);
   useFrame((_, dt) => {
@@ -115,7 +134,20 @@ export function Porcelain({
   };
 
   return (
-    <group ref={group} onClick={click}>
+    <group
+      ref={group}
+      onClick={click}
+      onDoubleClick={click}
+      onPointerMove={(e) => {
+        const hit = e.intersections.find((h) => {
+          const n = h.object.userData.node as string | undefined;
+          return n && !NO_PICK.has(n) && (mats[n]?.opacity ?? 0) > 0.3;
+        });
+        const n = hit?.object.userData.node as string | undefined;
+        if ((n ?? null) !== (hover?.node ?? null) || n) setHover(n ? { node: n, x: e.nativeEvent.clientX, y: e.nativeEvent.clientY } : null);
+      }}
+      onPointerOut={() => setHover(null)}
+    >
       {Object.entries(geo).map(([n, g]) => (
         <mesh key={n} geometry={g} material={mats[n]} userData={{ node: n }} renderOrder={n === 'skin' ? 10 : n.startsWith('lung') ? 5 : 0} frustumCulled={false} />
       ))}

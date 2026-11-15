@@ -3,7 +3,7 @@
 // server will take are also queued as API calls in the exact shapes of NEXT.md 2.4 and flushed
 // when /api/health answers. Journal text is private: it is never queued for the server.
 import { create } from 'zustand';
-import { hasServer, postJson } from './http';
+import { getJson, hasServer, postJson } from './http';
 
 export type ScaleKey = 'mood' | 'stress' | 'energy' | 'sleep_quality' | 'social';
 
@@ -45,9 +45,43 @@ export interface TaskEvent {
 }
 
 /** A call for Tomas's server, kept until it answers (NEXT.md 2.4). */
-interface Pending {
+export interface Pending {
   path: string;
   body: unknown;
+}
+
+/** A task as the server returns it (GET /api/tasks, docs/backend/MIND-API.md). */
+export interface ServerTask {
+  id: string;
+  kind: 'habit' | 'todo';
+  label: string;
+  origin: 'self' | 'routine' | 'system';
+  metric: string | null;
+  done: boolean;
+  status: string | null;
+  streak: number;
+}
+
+/** GET /api/progress (subset we show). */
+export interface Progress {
+  xp: number;
+  level: number;
+  checkin_streak: number;
+  best_habit_streak: number;
+}
+
+/**
+ * The server ignores a client id on POST /api/tasks and returns its own ("self-c1-..."):
+ * replace the local id everywhere it is used, including queued event paths.
+ */
+export function swapTaskId<S extends { tasks: Task[]; events: TaskEvent[]; queue: Pending[] }>(s: S, oldId: string, newId: string): S {
+  if (oldId === newId) return s;
+  return {
+    ...s,
+    tasks: s.tasks.map((t) => (t.id === oldId ? { ...t, id: newId } : t)),
+    events: s.events.map((e) => (e.task_id === oldId ? { ...e, task_id: newId } : e)),
+    queue: s.queue.map((q) => (q.path === `api/tasks/${oldId}/events` ? { ...q, path: `api/tasks/${newId}/events` } : q)),
+  };
 }
 
 /** Default habits until the server's routines.yaml exists (labels only, no numbers). */
@@ -60,6 +94,9 @@ interface MindState {
   tasks: Task[];
   events: TaskEvent[];
   queue: Pending[];
+  /** What the server said for subject|date (tasks with system tasks and real streaks, progress). */
+  server: Record<string, { tasks: ServerTask[]; progress: Progress | null }>;
+  pull: (subject: string, date: string) => Promise<void>;
   setScore: (subject: string, date: string, key: ScaleKey, value: number) => void;
   addNote: (subject: string, text: string) => void;
   addTodo: (subject: string, label: string) => void;
@@ -93,6 +130,19 @@ const routineId = (subject: string, label: string) => `routine-${subject}-${labe
 
 export const useMind = create<MindState>((set, get) => ({
   ...load(),
+  server: {},
+  pull: async (subject, date) => {
+    if (!(await hasServer())) return;
+    try {
+      const [tasks, progress] = await Promise.all([
+        getJson<{ tasks: ServerTask[] }>(`api/tasks?subject=${encodeURIComponent(subject)}&date=${date}`),
+        getJson<Progress>(`api/progress?subject=${encodeURIComponent(subject)}&date=${date}`).catch(() => null),
+      ]);
+      set((s) => ({ server: { ...s.server, [`${subject}|${date}`]: { tasks: tasks.tasks ?? [], progress } } }));
+    } catch {
+      /* server answered health but not tasks: stay local */
+    }
+  },
   setScore: (subject, date, key, value) => {
     set((s) => ({
       reports: { ...s.reports, [subject]: { ...s.reports[subject], [date]: { ...s.reports[subject]?.[date], [key]: value } } },
@@ -126,16 +176,22 @@ export const useMind = create<MindState>((set, get) => ({
   flush: async () => {
     const q = get().queue;
     if (!q.length || !(await hasServer())) return;
-    const left: Pending[] = [];
-    for (const p of q) {
+    let sent = 0;
+    // walk the live queue: a created task can rename queued event paths further down
+    for (let i = 0; i < get().queue.length; ) {
+      const p = get().queue[i];
       try {
-        await postJson(p.path, p.body);
+        const res = await postJson<{ id?: string } | null>(p.path, p.body);
+        sent++;
+        const local = (p.body as { id?: string } | null)?.id;
+        set((s) => ({ queue: s.queue.filter((x) => x !== p) }));
+        // a created task comes back with the server's id: use it from now on
+        if (p.path === 'api/tasks' && local && res?.id && res.id !== local) set((s) => swapTaskId(s, local, res.id!));
       } catch {
-        left.push(p);
+        i++; // keep it queued
       }
     }
-    set({ queue: left });
-    save(get());
+    if (sent) save(get());
   },
 }));
 

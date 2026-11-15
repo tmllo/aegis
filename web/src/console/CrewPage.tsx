@@ -1,161 +1,140 @@
-// Crew (home): the Earth hero with its orbit track and network mesh, the selected crew member
-// on the right, and a strip of cards: lead vital, today's actions, today's flags, storm risk.
+// Crew (home): the Earth stays free in the centre. Safe zones round it: cabin consumables on
+// the left rail, the selected crew member's vitals on the right rail, active alerts and the one
+// action in the bottom dock. Nominal readings stay quiet; a reading that crosses expands.
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { sortedEvents, doseSummary } from '../core/radiation';
-import { StormChart } from './StormChart';
-import { fmt, METRIC_TARGET, rowOf, SHORT, STATUS_WORD } from './model';
-import { Arc, Band, Icon, KV, Mark, Num, Panel, RotateDial, statusWord } from './ui';
+import { useCabin } from '../data/cabin';
+import { sortedEvents } from '../core/radiation';
+import type { CabinReading } from '../core/cabin';
+import type { MetricKey } from '../data/types';
+import { METRIC_TARGET, rowOf, SHORT, STATUS_WORD, type Row } from './model';
+import { Confirm, Mark, Panel, statusWord } from './ui';
+import { Widget, type WidgetData } from './Widget';
+import { ViewControls } from './Controls';
 import { useConsole } from './useConsole';
-import { useHud } from './hud';
 
-const PAGE = 3;
+const CABIN_KEYS = ['cabin.pressure', 'cabin.ppo2', 'cabin.ppco2', 'cabin.water_clean'];
+const VITALS: MetricKey[] = ['hr', 'bp_sys', 'sleep_h', 'temp', 'glucose', 'mood'];
+
+export const cabinWidget = (r: CabinReading): WidgetData => ({
+  id: r.metric.key,
+  label: r.metric.short,
+  value: r.value,
+  digits: r.metric.digits,
+  unit: r.metric.unit,
+  status: r.status,
+  lo: r.metric.bands.amber_low ?? r.metric.bands.red_low ?? null,
+  hi: r.metric.bands.amber_high ?? r.metric.bands.red_high ?? null,
+  meta: `${r.metric.source} limit`,
+});
+
+export const rowWidget = (r: Row, action?: WidgetData['action']): WidgetData => ({
+  id: r.k,
+  label: r.label,
+  value: r.value,
+  digits: r.digits,
+  unit: r.unit,
+  status: r.status,
+  lo: r.lo,
+  hi: r.hi,
+  mean: r.mean,
+  history: r.history,
+  dates: r.dates,
+  flagged: r.flagged,
+  meta: r.mean != null ? `usual ${r.mean.toFixed(r.digits)}` : '',
+  action,
+});
 
 export default function CrewPage() {
-  const { data, cd, views, seat, cv, setCrew, day } = useConsole();
+  const { data, cd, views, seat, cv, setCrew } = useConsole();
+  const { cabin } = useCabin();
   const nav = useNavigate();
-  const { yaw, setYaw } = useHud();
-  const [page, setPage] = useState(0);
-
+  const [ask, setAsk] = useState<MetricKey | null>(null);
+  const [done, setDone] = useState<Record<string, boolean>>({});
   const flags = useMemo(
-    () =>
-      cd
-        ? views.flatMap((v) =>
-            v.scores
-              .filter((s) => s.status !== 'green')
-              .map((s) => ({ v, s, r: rowOf(cd, v.m, v.scores, s.metric) })),
-          )
-        : [],
+    () => (cd ? views.flatMap((v) => v.scores.filter((s) => s.status !== 'green').map((s) => ({ v, s, r: rowOf(cd, v.m, v.scores, s.metric) }))) : []),
     [cd, views],
   );
-  const events = useMemo(() => (data ? sortedEvents(data.storm).slice(-48) : []), [data]);
-
   if (!data || !cd || !cv) return <p className="cx-error cx-wait">Loading</p>;
 
+  const latest = sortedEvents(data.storm).at(-1);
+  const rows = VITALS.map((k) => rowOf(cd, cv.m, cv.scores, k));
   const issue = cv.issue ? rowOf(cd, cv.m, cv.scores, cv.issue.metric) : null;
-  const lead = issue ?? rowOf(cd, cv.m, cv.scores, 'hr');
-  const dose = doseSummary(cv.m, cd, cd.mission.environment);
-  const latest = events.at(-1);
-  const pages = Math.max(1, Math.ceil(flags.length / PAGE));
-  const shown = flags.slice(page * PAGE, page * PAGE + PAGE);
+  const act = (r: Row) => ({ label: done[`${cv.m.id}-${r.k}`] ? 'Logged' : r.status === 'red' ? 'Call surgeon' : 'Re-measure', onClick: () => setAsk(r.k) });
+  const open = (k: MetricKey) => nav(METRIC_TARGET[k] ? `/vitals?t=${METRIC_TARGET[k]}&k=${k}` : '/vitals');
+  const asked = ask ? rowOf(cd, cv.m, cv.scores, ask) : null;
 
   return (
     <>
-      {/* selected crew member */}
-      <Panel label={`${seat[cv.m.id]} · ${cv.m.role}`} icon="crew" aside={`Day ${day}`} className="crew-card">
-        <div className="state" data-status={cv.overall} style={{ marginTop: 0 }}>
-          <Mark s={cv.overall} size={14} />
-          <b style={{ fontSize: 26, fontWeight: 300 }}>{STATUS_WORD[cv.overall]}</b>
-        </div>
-        {issue ? (
-          <>
-            <span className="label gap">Top issue · {issue.label}</span>
-            <div className="big" style={{ marginTop: 6 }}>
-              <b>
-                <Num v={issue.value} d={issue.digits} />
-              </b>
-              <small>{issue.unit}</small>
-            </div>
-            <Band g={issue} />
-          </>
-        ) : (
-          <span className="label gap">All readings in range</span>
+      {/* left rail: cabin consumables */}
+      <div className="rail rail-left">
+        <span className="label">Cabin</span>
+        {CABIN_KEYS.map((k) => {
+          const r = cabin?.readings.find((x) => x.metric.key === k);
+          return r ? <Widget key={k} w={cabinWidget(r)} onClick={() => nav('/cabin')} /> : null;
+        })}
+        {latest && (
+          <Widget
+            mode="compact"
+            w={{ id: 'storm', label: 'Storm', icon: 'storm', value: Math.round(latest.p_storm * 100), digits: 0, unit: '%', status: latest.alert_level === 'none' ? 'green' : latest.alert_level === 'watch' ? 'amber' : 'red', lo: null, hi: null }}
+            onClick={() => nav('/storm')}
+          />
         )}
-        <dl className="kvs gap">
-          <KV k="Usual" v={issue?.mean != null ? `${fmt(issue.mean, issue.digits)} ${issue.unit}` : '--'} />
-          <KV k="Days running" v={issue ? issue.running : 0} status={issue?.status} />
-          <KV k="Dose today" v={dose.daily_mSv != null ? `${dose.daily_mSv.toFixed(2)} mSv` : '--'} />
-          <KV k="Mission dose" v={dose.cumulative_mSv != null ? `${dose.cumulative_mSv.toFixed(1)} mSv` : '--'} />
-          <KV k="Of career limit" v={dose.fraction != null ? `${(dose.fraction * 100).toFixed(1)} %` : '--'} />
-        </dl>
-        <button type="button" className="btn btn-primary mt-auto" onClick={() => nav(issue && METRIC_TARGET[issue.k] ? `/vitals?t=${METRIC_TARGET[issue.k]}&k=${issue.k}` : '/vitals')}>
-          Open vitals
-        </button>
-      </Panel>
+      </div>
 
-      <RotateDial deg={(yaw * 180) / Math.PI} onChange={(d) => setYaw((d * Math.PI) / 180)} style={{ right: 470, top: 560 }} />
+      {/* right rail: the selected crew member's vitals, alerts first */}
+      <div className="rail rail-right">
+        <span className="label">
+          {seat[cv.m.id]} · {cv.m.role} · {STATUS_WORD[cv.overall]}
+        </span>
+        {rows
+          .slice()
+          .sort((a, b) => (b.status !== 'green' ? 1 : 0) - (a.status !== 'green' ? 1 : 0))
+          .map((r) => (
+            <Widget key={r.k} w={rowWidget(r, r.status !== 'green' ? act(r) : undefined)} onClick={() => open(r.k)} />
+          ))}
+      </div>
 
-      <div className="strip" style={{ gridTemplateColumns: '300px 340px 520px 1fr' }}>
-        <Panel label="Lead vital" icon="dial" aside={seat[cv.m.id]}>
-          <div className="row2" style={{ alignItems: 'center' }}>
-            <Arc g={lead} size={150} label={lead.label} />
-            <dl className="kvs" style={{ flex: 1 }}>
-              {(['hr', 'bp_sys', 'sleep_h'] as const).map((k) => {
-                const r = rowOf(cd, cv.m, cv.scores, k);
-                return <KV key={k} k={SHORT[k]} v={`${fmt(r.value, r.digits)}`} status={r.status} />;
-              })}
-            </dl>
-          </div>
-        </Panel>
+      <ViewControls style={{ left: 'calc(50% + 250px)', bottom: 200 }} />
 
-        <Panel label="Today" icon="list" aside={`${flags.length} actions`}>
-          <div className="steps">
-            {flags.slice(0, 3).map((f, i) => (
-              <button key={`${f.v.m.id}-${f.s.metric}`} type="button" className="step" data-status={f.s.status} onClick={() => setCrew(f.v.m.id)}>
-                <span className="step-n">{String(i + 1).padStart(2, '0')}</span>
-                <Mark s={f.s.status} />
-                <span className="step-t">
-                  {f.s.status === 'red' ? 'Call surgeon' : 'Re-measure'}
-                  <small>
-                    {seat[f.v.m.id]} · {SHORT[f.s.metric]}
-                  </small>
-                </span>
-                <span className="step-v">
-                  <em>{STATUS_WORD[f.s.status]}</em>
+      {/* bottom dock: active alerts and the one action */}
+      <div className="dock">
+        <Panel label="Active alerts" icon="alert" aside={`${flags.length} open`} className="dock-alerts">
+          <div className="chips">
+            {flags.map((f) => (
+              <button key={`${f.v.m.id}-${f.s.metric}`} type="button" className="chip" data-status={f.s.status} aria-pressed={f.v.m.id === cv.m.id} onClick={() => setCrew(f.v.m.id)}>
+                <Mark s={f.s.status} size={10} />
+                <span>{seat[f.v.m.id]}</span>
+                <b>{SHORT[f.s.metric]}</b>
+                <span className="mono">
+                  {f.r.value?.toFixed(f.r.digits)} {f.r.unit}
                 </span>
               </button>
             ))}
-            {!flags.length && <p className="note">Nothing due</p>}
+            {!flags.length && <span className="note">All crew nominal</span>}
           </div>
         </Panel>
-
-        <Panel label="Flags" icon="alert" aside={`${flags.length} open`}>
-          <table className="tbl">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Crew</th>
-                <th>Metric</th>
-                <th className="num">Value</th>
-                <th className="num">z</th>
-              </tr>
-            </thead>
-            <tbody>
-              {shown.map((f, i) => (
-                <tr key={`${f.v.m.id}-${f.s.metric}`} data-status={f.s.status} onClick={() => setCrew(f.v.m.id)}>
-                  <td className="sc">
-                    <Mark s={f.s.status} size={10} /> F-{String(page * PAGE + i + 1).padStart(3, '0')}
-                  </td>
-                  <td>{seat[f.v.m.id]}</td>
-                  <td>{SHORT[f.s.metric]}</td>
-                  <td className="num sc">
-                    {fmt(f.r.value, f.r.digits)} {f.r.unit}
-                  </td>
-                  <td className="num">{f.s.z == null ? '--' : f.s.z.toFixed(1)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          <div className="pager">
-            <span>
-              {flags.length ? page * PAGE + 1 : 0}-{Math.min(flags.length, page * PAGE + PAGE)} of {flags.length}
-            </span>
-            <span style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-              Page {String(page + 1).padStart(2, '0')} of {pages}
-              <button type="button" aria-label="Previous page" onClick={() => setPage((p) => Math.max(0, p - 1))}>
-                <Icon name="back" size={14} />
-              </button>
-              <button type="button" aria-label="Next page" style={{ transform: 'scaleX(-1)' }} onClick={() => setPage((p) => Math.min(pages - 1, p + 1))}>
-                <Icon name="back" size={14} />
-              </button>
-            </span>
-          </div>
-        </Panel>
-
-        <Panel label="Storm probability" icon="chart" aside={latest ? `${latest.flare_class} · ${statusWord(latest.alert_level === 'none' ? 'green' : latest.alert_level === 'watch' ? 'amber' : 'red')}` : ''}>
-          <StormChart events={events} meta={data.storm.meta} height={150} />
-        </Panel>
+        <button type="button" className="btn btn-primary dock-act" disabled={!issue} onClick={() => issue && setAsk(issue.k)}>
+          {issue ? `${issue.status === 'red' ? 'Call surgeon' : 'Re-measure'} · ${seat[cv.m.id]} ${SHORT[issue.k]}` : 'No action due'}
+        </button>
       </div>
+
+      {asked && (
+        <Confirm
+          open
+          code={`2.${String(VITALS.indexOf(asked.k) + 1).padStart(3, '0')}`}
+          title={`${asked.status === 'red' ? 'Call surgeon' : 'Re-measure'} ${SHORT[asked.k].toLowerCase()}`}
+          tag="Vitals"
+          status={`${seat[cv.m.id]} ${statusWord(asked.status)}`}
+          body={asked.action}
+          danger={asked.status === 'red'}
+          onDone={() => {
+            setDone((d) => ({ ...d, [`${cv.m.id}-${asked.k}`]: true }));
+            setAsk(null);
+          }}
+          onCancel={() => setAsk(null)}
+        />
+      )}
     </>
   );
 }

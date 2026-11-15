@@ -135,3 +135,17 @@ export function crewView(cd: CrewData, m: CrewMember): CrewView {
 }
 
 export const shortName = (name: string) => name.replace(/^\S+\.\s/, '');
+
+/** Where each reading comes from (simulated sensors; the cabin is a recorded ISS snapshot). */
+export const PLACEMENTS: { id: string; name: string; cls: string; reads: string; method?: string }[] = [
+  { id: 'suit', name: 'Suit', cls: 'Bio-Monitor class', reads: 'HR, BP, breathing, skin temp, SpO2, activity' },
+  { id: 'head', name: 'Head', cls: 'T-Mini class', reads: 'Core temp' },
+  { id: 'wrist', name: 'Wrist', cls: 'Actiwatch class', reads: 'Sleep, activity, light' },
+  { id: 'pocket', name: 'Pocket', cls: 'Dosimeter', reads: 'Dose' },
+  { id: 'cabin', name: 'Cabin', cls: 'ISS ECLSS, recorded 14 Nov', reads: 'Pressure, ppO2, ppCO2, temp, tanks' },
+  { id: 'lab', name: 'Lab', cls: 'Finger prick (method assumed)', reads: 'Glucose' },
+  { id: 'self', name: 'Self-report', cls: 'Check-in', reads: 'Mood, symptoms, exercise' },
+];
+
+/** One-way signal delay to the ground for the mission site (physics, not data). */
+export const LINK_DELAY: Record<string, string> = { iss: 'seconds', moon: '1.3 s', transit: '3-20 min', mars: '4-24 min' };

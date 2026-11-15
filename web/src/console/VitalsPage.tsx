@@ -11,7 +11,9 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { TARGETS, type TargetId } from '../components/body3d/targets';
 import type { MetricKey, Status } from '../data/types';
 import { fmt, GAUGES, METRIC_TARGET, RANK, rowOf, SHORT, STATUS_WORD, TARGET_METRICS, type Row } from './model';
-import { Arc, Band, Chart, Confirm, Icon, KV, Mark, Num, Panel, RotateDial } from './ui';
+import { Arc, Band, Chart, Confirm, Icon, KV, Mark, Num, Panel } from './ui';
+import { ViewControls } from './Controls';
+import { TINT_NODE } from './Porcelain';
 import { useConsole } from './useConsole';
 import { useHud } from './hud';
 
@@ -47,7 +49,7 @@ function Meter({ r, onClick }: { r: Row; onClick: () => void }) {
 export default function VitalsPage() {
   const { cd, cv, seat } = useConsole();
   const [params, setParams] = useSearchParams();
-  const { yaw, setYaw, setFocus, setTint, setBodyTips, bodyReady } = useHud();
+  const { setFocus, setTint, setBodyTips, bodyReady, hover } = useHud();
   const [asking, setAsking] = useState(false);
   const [done, setDone] = useState<Record<string, boolean>>({});
 
@@ -101,6 +103,9 @@ export default function VitalsPage() {
   const T = target ? TARGETS[target] : null;
   const rows = target ? TARGET_METRICS[target].map((k) => rowOf(cd, cv.m, cv.scores, k)) : [];
   const lead = rows.find((r) => r.k === focusK) ?? rows.slice().sort((a, b) => RANK[b.status] - RANK[a.status] || Math.abs(b.z ?? 0) - Math.abs(a.z ?? 0))[0];
+  const hoverT = hover ? (Object.entries(TINT_NODE).find(([, n]) => n === hover.node)?.[0] as TargetId | undefined) : undefined;
+  const hoverRow = hoverT ? all.find((r) => r.k === TARGET_METRICS[hoverT][0]) : undefined;
+  const hoverLabel = hoverT ? TARGETS[hoverT].label : hover?.node.replace(/_/g, ' ');
   const gauges = GAUGES.map((g) => ({ ...g, r: rowOf(cd, cv.m, cv.scores, g.k) }));
   const actKey = lead ? `${cv.m.id}-${lead.k}` : '';
   const actLabel = lead ? (lead.status === 'red' ? 'Call surgeon' : lead.status === 'amber' ? 'Re-measure' : 'Log check') : '';
@@ -139,7 +144,15 @@ export default function VitalsPage() {
             </motion.button>
           ))}
       </AnimatePresence>
-      {level < 3 && <RotateDial deg={(yaw * 180) / Math.PI} onChange={(d) => setYaw((d * Math.PI) / 180)} style={{ right: 500, bottom: 56 }} />}
+      {level < 3 && <ViewControls layers style={{ left: 396, bottom: 44 }} />}
+      {hover && hoverRow && (
+        <div className="hover-read" style={{ left: hover.x + 16, top: hover.y + 16 }}>
+          {hoverLabel}
+          <b>
+            {fmt(hoverRow.value, hoverRow.digits)} {hoverRow.unit}
+          </b>
+        </div>
+      )}
       {!bodyReady && <p className="cx-wait" style={{ position: 'absolute', left: '50%', top: '50%', translate: '-50% -50%' }}>Loading body</p>}
 
       {/* level 3: the large trend */}

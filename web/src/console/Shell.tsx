@@ -6,9 +6,10 @@ import { useCabin } from '../data/cabin';
 import { hasServer } from '../data/http';
 import { DISCLAIMERS } from '../components/Footer';
 import { Confirm, Icon, Mark, statusWord } from './ui';
-import { rowOf, SHORT } from './model';
+import { LINK_DELAY, rowOf, SHORT } from './model';
 import { useConsole } from './useConsole';
 import { World } from './World';
+import { useHud } from './hud';
 import './console.css';
 
 export const SECTIONS = [
@@ -38,7 +39,14 @@ export function Shell() {
       const el = e.target as HTMLElement;
       if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA')) return;
       const i = Number(e.key) - 1;
-      if (i >= 0 && i < SECTIONS.length) nav(SECTIONS[i].to);
+      const h = useHud.getState();
+      if (e.key === '0') h.doReset();
+      else if (i >= 0 && i < SECTIONS.length) nav(SECTIONS[i].to);
+      else if (e.key === 'ArrowLeft') h.setYaw(h.yaw - 0.15);
+      else if (e.key === 'ArrowRight') h.setYaw(h.yaw + 0.15);
+      else if (e.key === '+' || e.key === '=') h.setZoom(h.zoom * 1.15);
+      else if (e.key === '-') h.setZoom(h.zoom / 1.15);
+      else if (e.key === 'Escape' && h.focus) nav('/vitals');
     };
     addEventListener('keydown', k);
     return () => removeEventListener('keydown', k);
@@ -77,7 +85,14 @@ export function Shell() {
           <span className="cx-mark">
             e<span>x</span>
           </span>
-          <small>Crew Station</small>
+          <nav className="cx-crew" aria-label="Crew member">
+            {views.map((v) => (
+              <button key={v.m.id} type="button" className="sq" aria-pressed={v.m.id === cv?.m.id} title={statusWord(v.overall)} onClick={() => setCrew(v.m.id)}>
+                <span>{seat[v.m.id]}</span>
+                <Mark s={v.overall} size={8} />
+              </button>
+            ))}
+          </nav>
         </div>
         <nav className="cx-tabs" aria-label="Sections">
           {SECTIONS.map((s, i) => (
@@ -98,8 +113,8 @@ export function Shell() {
               <dd>{ppco2?.value != null ? ppco2.value.toFixed(ppco2.metric.digits) : '--'}</dd>
             </div>
             <div>
-              <dt>Link</dt>
-              <dd>{cabin ? (cabin.signal ? 'UP' : 'DOWN') : '--'}</dd>
+              <dt>Cabin</dt>
+              <dd>REC</dd>
             </div>
             <div>
               <dt>Server</dt>
@@ -112,29 +127,12 @@ export function Shell() {
           <button type="button" className="sq" aria-label="Re-measure" title="Re-measure" disabled={!issue} aria-pressed={!!sent.measure} onClick={() => setAsk('measure')}>
             <Icon name="measure" size={20} />
           </button>
-          <button type="button" className="sq" aria-label="Call ground" title="Call ground" aria-pressed={!!sent.ground} onClick={() => setAsk('ground')}>
+          <button type="button" className="sq" aria-label="Escalate" title="Escalate" aria-pressed={!!sent.ground} onClick={() => setAsk('ground')}>
             <Icon name="ground" size={20} />
           </button>
         </div>
       </header>
 
-      <aside className="cx-side" aria-label="Crew member">
-        <span className="label">Crew</span>
-        {views.map((v) => (
-          <button key={v.m.id} type="button" className="side-btn" onClick={() => setCrew(v.m.id)}>
-            <span className="sq" aria-pressed={v.m.id === cv?.m.id}>
-              {seat[v.m.id]}
-            </span>
-            <span>
-              <span style={{ display: 'flex', alignItems: 'center', gap: 6, flexDirection: 'row' }}>
-                <Mark s={v.overall} size={10} />
-                {statusWord(v.overall)}
-              </span>
-              <small>{v.issue ? SHORT[v.issue.metric] : 'All normal'}</small>
-            </span>
-          </button>
-        ))}
-      </aside>
 
       <footer className="cx-credits">
         {[...DISCLAIMERS, data ? `Space weather data: ${data.storm.meta.data_credit}` : ''].filter(Boolean).join('  ·  ')}
@@ -159,11 +157,11 @@ export function Shell() {
       <Confirm
         open={ask === 'ground'}
         code="1.001"
-        title="Call ground"
-        tag="Link"
-        status={cabin ? (cabin.signal ? 'Link up' : 'Link down, queued') : 'No link data'}
+        title="Escalate"
+        tag="Escalation"
+        status={cd ? `Report arrives in ~${LINK_DELAY[cd.mission.environment] ?? 'unknown'}` : ''}
         body={cv ? `${seat[cv.m.id]} status goes to the flight surgeon.` : ''}
-        go="Call"
+        go="Send"
         onDone={() => {
           setSent((s) => ({ ...s, ground: true }));
           setAsk(null);

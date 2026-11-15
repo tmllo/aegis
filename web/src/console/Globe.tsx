@@ -2,7 +2,8 @@
 // Solar System Scope clouds (CC BY 4.0), a fresnel atmosphere, an orbit track, a fine dotted
 // network mesh, and tooltips anchored to points with a leader line. Still: it only turns
 // when the crew uses the rotate dial.
-import { Suspense, useMemo, type ReactNode } from 'react';
+import { Suspense, useMemo, useRef, type ReactNode } from 'react';
+import { useFrame } from '@react-three/fiber';
 import { Html, useTexture } from '@react-three/drei';
 import * as THREE from 'three';
 
@@ -62,20 +63,53 @@ function Mesh() {
   );
 }
 
-function Earth({ yaw }: { yaw: number }) {
+/** Sub-solar point now (declination and hour angle; accurate to about a degree). */
+export function subsolar(date = new Date()): { lat: number; lon: number } {
+  const start = Date.UTC(date.getUTCFullYear(), 0, 0);
+  const day = (date.getTime() - start) / 86400000;
+  const decl = -23.44 * Math.cos(((2 * Math.PI) / 365) * (day + 10));
+  const hours = date.getUTCHours() + date.getUTCMinutes() / 60;
+  return { lat: decl, lon: -(hours - 12) * 15 };
+}
+
+/** Earth-local direction to the Sun. */
+export const sunLocal = (d = new Date()) => {
+  const s = subsolar(d);
+  return new THREE.Vector3(...ll(s.lat, s.lon)).normalize();
+};
+
+/** Shared uniform: the Sun direction in view space, set each frame by the world. */
+export const SUN_VIEW = { value: new THREE.Vector3(0, 0, 1) };
+
+function Earth({ yaw, onDouble }: { yaw: number; onDouble?: (p: THREE.Vector3) => void }) {
   const [day, night, clouds] = useTexture([`${base}blue-marble-4k.jpg`, `${base}black-marble-2k.jpg`, `${base}clouds-2k.jpg`]);
   useMemo(() => {
     day.colorSpace = THREE.SRGBColorSpace;
     night.colorSpace = THREE.SRGBColorSpace;
     day.anisotropy = 8;
   }, [day, night]);
+  // city lights only on the night side, fading across the terminator
+  const surface = useMemo(() => {
+    const m = new THREE.MeshStandardMaterial({ map: day, emissiveMap: night, emissive: new THREE.Color('#ffc98a'), emissiveIntensity: 1.1, roughness: 0.9, metalness: 0 });
+    m.onBeforeCompile = (sh) => {
+      sh.uniforms.uSunView = SUN_VIEW;
+      sh.fragmentShader = 'uniform vec3 uSunView;\n' + sh.fragmentShader.replace(
+        '#include <emissivemap_fragment>',
+        '#include <emissivemap_fragment>\n totalEmissiveRadiance *= smoothstep(0.08, -0.18, dot(normalize(normal), normalize(uSunView)));',
+      );
+    };
+    return m;
+  }, [day, night]);
+  const cloud = useRef<THREE.Mesh>(null);
+  useFrame((_, dt) => {
+    if (cloud.current) cloud.current.rotation.y += Math.min(dt, 0.05) * 0.004; // slow drift
+  });
   return (
     <group rotation={[0.32, yaw, 0]}>
-      <mesh>
+      <mesh material={surface} onDoubleClick={(e) => { e.stopPropagation(); onDouble?.(e.point.clone()); }}>
         <sphereGeometry args={[1, 128, 128]} />
-        <meshStandardMaterial map={day} emissiveMap={night} emissive="#ffc98a" emissiveIntensity={0.9} roughness={0.9} metalness={0} />
       </mesh>
-      <mesh scale={1.008}>
+      <mesh ref={cloud} scale={1.008} raycast={() => null}>
         <sphereGeometry args={[1, 96, 96]} />
         <meshStandardMaterial alphaMap={clouds} transparent depthWrite={false} color="#ffffff" opacity={0.7} />
       </mesh>
@@ -115,7 +149,7 @@ export const ORBIT_TILT: [number, number, number] = [1.2, 0.2, -0.35];
 export const onOrbit = (a: number): [number, number, number] => [Math.cos(a) * ORBIT_R, Math.sin(a) * ORBIT_R, 0];
 
 /** Earth, atmosphere, network mesh and orbit track, at the origin (no canvas). */
-export function EarthGroup({ yaw = 0, tips = [], orbitTips = [] }: { yaw?: number; tips?: Tip[]; orbitTips?: Tip[] }) {
+export function EarthGroup({ yaw = 0, tips = [], orbitTips = [], onDouble, orbit = true }: { yaw?: number; tips?: Tip[]; orbitTips?: Tip[]; onDouble?: (p: THREE.Vector3) => void; orbit?: boolean }) {
   const atmo = useMemo(
     () =>
       new THREE.ShaderMaterial({
@@ -132,12 +166,12 @@ export function EarthGroup({ yaw = 0, tips = [], orbitTips = [] }: { yaw?: numbe
   return (
     <group>
       <Suspense fallback={null}>
-        <Earth yaw={yaw} />
+        <Earth yaw={yaw} onDouble={onDouble} />
       </Suspense>
       <mesh scale={1.035} material={atmo}>
         <sphereGeometry args={[1, 64, 64]} />
       </mesh>
-      <group rotation={ORBIT_TILT}>
+      <group rotation={ORBIT_TILT} visible={orbit}>
         <mesh>
           <torusGeometry args={[ORBIT_R, 0.0022, 8, 256]} />
           <meshBasicMaterial color="#e6f4f4" transparent opacity={0.45} />

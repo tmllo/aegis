@@ -28,7 +28,8 @@ interface ApiObservation {
   quality?: Quality;
 }
 
-async function fromServer(catalog: CabinCatalog): Promise<CabinData | null> {
+/** Live cabin from the server. Not used for the demo: the cabin is the recorded 14 Nov snapshot. */
+export async function cabinFromServer(catalog: CabinCatalog): Promise<CabinData | null> {
   if (!(await hasServer())) return null;
   const rows = await getJson<ApiObservation[]>('api/observations?subject=iss&kind=cabin');
   if (!Array.isArray(rows) || !rows.length) return null;
@@ -52,8 +53,6 @@ let cache: Promise<CabinData> | null = null;
 export function loadCabin(): Promise<CabinData> {
   cache ??= (async () => {
     const catalog = await getJson<CabinCatalog>('samples/cabin_catalog.json');
-    const live = await fromServer(catalog).catch(() => null);
-    if (live) return live;
     const snap = await getJson<LsSnapshot>('samples/isslive_lightstreamer_eclss_snapshot.json');
     return { ...readingsFromSnapshot(catalog, snap), origin: 'sample' as const };
   })();

@@ -100,7 +100,7 @@ export default function CabinPage() {
 
   return (
     <>
-      <Panel label="Air" icon="cabin" aside={cabin.origin === 'server' ? 'Live' : 'Recorded'} className="cb-left">
+      <Panel label="Air" icon="cabin" aside="Recorded 14 Nov" className="cb-left">
         <div className="steps">
           {r
             .filter((x) => !x.metric.tank)
