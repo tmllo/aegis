@@ -25,6 +25,7 @@ const Surgeon = lazy(() => import('./pages/Surgeon'));
 const Environment = lazy(() => import('./pages/Radiation'));
 const Mind = lazy(() => import('./pages/Mind'));
 const Cabin = lazy(() => import('./pages/Cabin'));
+const Built = lazy(() => import('./pages/Built'));
 
 const KEYS = ['/check', '/', '/mind', '/care', '/radiation', '/cabin'];
 
@@ -100,6 +101,10 @@ function Shell() {
             <button type="button" className="ds-menu-row" onClick={() => { setMenu(false); setDemo(0); }}>
               <span>Guided demo</span>
               <b>Start</b>
+            </button>
+            <button type="button" className="ds-menu-row" onClick={() => { setMenu(false); nav('/built'); }}>
+              <span>What we built</span>
+              <b>Open</b>
             </button>
           </div>
         )}
@@ -222,6 +227,7 @@ export function StationApp() {
           <Route path="/radiation" element={<Environment />} />
           <Route path="/mind" element={<Mind />} />
           <Route path="/cabin" element={<Cabin />} />
+          <Route path="/built" element={<Built />} />
           <Route path="/environment" element={<Navigate to="/radiation" replace />} />
           <Route path="/crew/:id" element={<Moved to="/body" />} />
           <Route path="/checkin" element={<Moved to="/check" />} />

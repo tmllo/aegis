@@ -12,6 +12,7 @@ import { RowVital } from '../vitals';
 import { useStation, type Extras } from '../state';
 import { cue } from '../ui';
 import { CameraScanCard, ReactionCard } from '../sensors';
+import '../checkin.css';
 
 const Backdrop = lazy(() => import('../Backdrop'));
 
@@ -220,12 +221,23 @@ export default function Checkin() {
     if (e.key === 'Enter') {
       e.preventDefault();
       if (last) finish();
+      else if (confirm) confirm();
       else go(i + 1);
     } else if (cur?.kind === 'scale' && /^[1-5]$/.test(e.key)) {
       e.stopPropagation();
       document.querySelectorAll<HTMLButtonElement>('.ck .ds-scale button')[Number(e.key) - 1]?.click();
     }
   };
+
+  // a number step shows the usual value already: one tap takes it and moves on
+  const confirm =
+    cur && !answered(cur) && (cur.kind === 'number' || cur.kind === 'bp')
+      ? () => {
+          if (cur.kind === 'number') set(cur.k, start(cur.k));
+          else (set(BP.sys.k, start(BP.sys.k)), set(BP.dia.k, start(BP.dia.k)));
+          go(i + 1);
+        }
+      : null;
 
   const metric = cur?.kind === 'number' ? cur.k : cur?.kind === 'scale' && cur.k ? cur.k : cur?.kind === 'bp' ? 'bp_sys' : null;
 
@@ -234,7 +246,7 @@ export default function Checkin() {
       className="is-check"
       title={`Daily check · ${roleOf(v.m)}`}
       left={[...steps, { id: 'review', title: 'Review', ask: '', kind: 'text' as const }].map((s, n) => (
-        <Check key={s.id} s="green" mark={n === i || !seen.has(n) || n === steps.length ? n + 1 : undefined} title={s.title} word={n === i ? 'Now' : seen.has(n) ? (answered(s) ? 'Done' : 'Skipped') : ''} on={n === i} onClick={() => go(n)} />
+        <Check key={s.id} s="green" mark={n === i || !seen.has(n) || n === steps.length ? n + 1 : undefined} title={s.title} word={n === i ? '' : seen.has(n) ? (answered(s) ? 'Done' : 'Skipped') : ''} on={n === i} onClick={() => go(n)} />
       ))}
       object={
         <div className="fr-panel ck">
@@ -265,7 +277,15 @@ export default function Checkin() {
           {i ? 'Back' : 'Cancel'}
         </Btn>
       }
-      footRight={last ? <Btn onClick={finish}>Save</Btn> : <Btn onClick={() => go(i + 1)}>{answered(cur) ? 'Next' : 'Skip'}</Btn>}
+      footRight={
+        last ? (
+          <Btn onClick={finish}>Save</Btn>
+        ) : confirm ? (
+          <Btn onClick={confirm}>Confirm</Btn>
+        ) : (
+          <Btn onClick={() => go(i + 1)}>{answered(cur) ? 'Next' : 'Skip'}</Btn>
+        )
+      }
     />
   );
 }
