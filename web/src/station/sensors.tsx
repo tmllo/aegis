@@ -29,7 +29,7 @@ export function CameraScanCard({ onResult }: { onResult: (bpm: number, breathing
         )}
       </div>
       <div className="st-scan-r">
-        <p className="st-cap">Camera pulse scan · rPPG</p>
+        <p className="st-cap">Camera pulse scan · estimate</p>
         <p className="st-scan-msg">{scan.message}</p>
         {scan.bpm != null && (
           <p className="st-scan-out">
@@ -84,7 +84,7 @@ export function ReactionCard({ subject, onResult }: { subject: string; onResult:
         )}
       </button>
       <div className="st-pvt-side">
-        <p className="st-cap">Reaction time · PVT</p>
+        <p className="st-cap">Reaction test</p>
         <p>The psychomotor vigilance test ISS crews use to track fatigue. Tap (or press Space) the moment the dot appears.</p>
         {rt.last != null && <p className="st-pvt-last">Last: {rt.last} ms</p>}
         {rt.result && (
