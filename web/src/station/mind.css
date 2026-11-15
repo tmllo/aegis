@@ -101,3 +101,198 @@
 .mi-q:has(.mt) { gap: 12px; }
 .mi-q:has(.mt) .mi-q-cap, .mi-q:has(.mt) .mi-q-sub { display: none; }
 .mi-q:has(.mt) .mi-q-word { font-size: 28px; }
+
+/* ================================================================ xAI view (/mind?v=xai, 16 Nov)
+   The assistant owns the centre: header, a conversation that fills the height, the composer at the
+   bottom. Same hairline and card language as the rest of the app; no gradients, no sparkle. */
+:root .st.ds .fr.is-xai .fr-object {
+  display: flex;
+  justify-content: center;
+  min-height: 0;
+}
+:root .st.ds .mt.is-full {
+  width: min(760px, 100%);
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 0;
+  background: var(--card, #fff);
+  border: 1px solid var(--line, rgb(22 26 43 / 0.1));
+  border-radius: 16px;
+  box-shadow: var(--shadow-1, none);
+  overflow: hidden;
+}
+:root .st.ds .mt.is-full .mt-head {
+  gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--line, rgb(22 26 43 / 0.1));
+}
+.mt-who {
+  display: grid;
+  gap: 2px;
+}
+.mt-who b {
+  font-size: 16px;
+  font-weight: 600;
+}
+.mt-who span {
+  font-size: 13px;
+  color: var(--ink-3, #636a82);
+}
+:root .st.ds .mt-av {
+  border-radius: 50%;
+  border-color: var(--line-2, rgb(22 26 43 / 0.22));
+  background: var(--card-2, #eceef2);
+  color: var(--ink, #161a2b);
+}
+:root .st.ds .mt-av.is-big {
+  width: 56px;
+  height: 56px;
+  font-size: 26px;
+}
+:root .st.ds .mt-av.is-big sup {
+  font-size: 13px;
+}
+.mt-new {
+  min-height: 36px;
+  padding: 0 12px;
+  font-size: 14px;
+  color: var(--ink-2, #474e66);
+  border: 1px solid var(--line-2, rgb(22 26 43 / 0.22));
+  border-radius: 8px;
+  transition: background-color 160ms ease-out;
+}
+.mt-new:hover {
+  background: var(--card-2, #eceef2);
+}
+:root .st.ds .mt.is-full .mt-log {
+  flex: 1;
+  min-height: 0;
+  max-height: none;
+  padding: 24px 20px;
+  gap: 16px;
+}
+.mt-empty {
+  margin: auto;
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  max-width: 460px;
+  text-align: center;
+}
+.mt-empty h3 {
+  margin: 8px 0 0;
+  font-size: 24px;
+  font-weight: 500;
+}
+.mt-empty p {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--ink-2, #474e66);
+}
+:root .st.ds .mt-empty .mt-sugg {
+  justify-content: center;
+  padding: 8px 0 0;
+}
+:root .st.ds .mt-sugg button {
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: 20px;
+  color: var(--ink, #161a2b);
+  border-color: var(--line-2, rgb(22 26 43 / 0.22));
+}
+:root .st.ds .mt-sugg button:hover {
+  background: var(--card-2, #eceef2);
+}
+:root .st.ds .mt.is-full .mt-row {
+  font-size: 16px;
+  line-height: 1.55;
+}
+:root .st.ds .mt.is-full .mt-row.is-user {
+  max-width: 75%;
+  padding: 10px 14px;
+  border-radius: 16px 16px 4px 16px;
+  background: var(--accent-soft, rgb(37 99 235 / 0.1));
+  color: var(--ink, #161a2b);
+}
+:root .st.ds .mt.is-full .mt-in {
+  margin: 0 20px;
+  padding: 6px 6px 6px 16px;
+  border-radius: 14px;
+  border-color: var(--line-2, rgb(22 26 43 / 0.22));
+  background: var(--canvas, #f3f4f7);
+}
+:root .st.ds .mt.is-full .mt-in:focus-within {
+  border-color: var(--accent, #2563eb);
+}
+:root .st.ds .mt-in textarea {
+  flex: 1;
+  min-height: 40px;
+  max-height: 120px;
+  padding: 10px 0;
+  resize: none;
+  font: inherit;
+  font-size: 16px;
+  line-height: 1.4;
+  color: var(--ink, #161a2b);
+  background: transparent;
+  border: 0;
+  outline: none;
+}
+:root .st.ds .mt.is-full .mt-send {
+  border-radius: 10px;
+  background: var(--accent, #2563eb);
+  color: #fff;
+}
+:root .st.ds .mt.is-full .mt-foot {
+  padding: 10px 20px 14px;
+  font-size: 13px;
+  color: var(--ink-3, #636a82);
+  opacity: 1;
+}
+.mi-know {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 8px;
+  font-size: 15px;
+  color: var(--ink-2, #474e66);
+}
+.mi-know li::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin: 0 10px 2px 0;
+  border-radius: 50%;
+  background: var(--calm, #15803d);
+}
+.mi-note {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--ink-2, #474e66);
+}
+@media (max-width: 1100px) {
+  :root .st.ds .mt.is-full {
+    height: 70dvh;
+  }
+}
+/* the e^x mark: e with a raised x on one line (it was stacking as two grid rows) */
+:root .st.ds .mt-av {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+:root .st.ds .mt-av sup {
+  align-self: center;
+  margin-left: 1px;
+  line-height: 1;
+  vertical-align: baseline;
+  transform: translateY(-0.45em);
+}

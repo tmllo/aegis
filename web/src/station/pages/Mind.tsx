@@ -4,11 +4,11 @@
 // Offline: answers stay on this device (data/mind.ts) and are sent when the server answers;
 // the week falls back to this device's answers, the suggestion to a fixed list.
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { SCALES, useMind, type ScaleKey, type SelfReport } from '../../data/mind';
 import { getActivity, getWeek, logActivity, type Activity } from '../../data/live';
 import type { Status } from '../../data/types';
-import { useStationData } from '../model';
+import { firstName, useStationData } from '../model';
 import { useStation } from '../state';
 import { Btn } from '../ds';
 import { Bar, Check, Page, SideCap } from '../frame';
@@ -50,6 +50,13 @@ export default function Mind() {
   const [week, setWeek] = useState<Record<string, number> | null>(null);
   const [act, setAct] = useState<Activity | null>(null);
   const [done, setDone] = useState(false);
+  // two views with one address each: /mind (check-in) and /mind?v=xai (the assistant)
+  const [qs, setQs] = useSearchParams();
+  const view: 'check' | 'xai' = qs.get('v') === 'xai' ? 'xai' : 'check';
+  const go = (v: 'check' | 'xai') => {
+    cue('tick', sound);
+    setQs(v === 'xai' ? { v: 'xai' } : {}, { replace: true });
+  };
 
   useEffect(() => {
     if (!subject || !today) return;
@@ -70,6 +77,55 @@ export default function Mind() {
   const q = SCALES[Math.min(step, SCALES.length - 1)];
   const qWords = words[q.key] ?? q.words;
 
+  const todayLine = SCALES.map((s) => `${s.label} ${report[s.key] != null ? (words[s.key] ?? s.words)[report[s.key]! - 1] : 'not answered'}`).join(', ');
+  const member = data.crew.crew.find((c) => c.id === subject);
+  const seg = (
+    <div className="fr-seg" role="tablist" aria-label="Mind view">
+      {(
+        [
+          ['check', 'Check-in'],
+          ['xai', 'xAI'],
+        ] as const
+      ).map(([k, label]) => (
+        <button key={k} type="button" role="tab" aria-selected={view === k} className={view === k ? 'is-on' : ''} onClick={() => go(k)}>
+          {label}
+        </button>
+      ))}
+    </div>
+  );
+
+  if (view === 'xai')
+    return (
+      <Page
+        className="is-xai"
+        title="xAI"
+        sub="Your private assistant. It reads today's check-in and stays on this device."
+        left={SCALES.map((s, i) => (
+          <Check key={s.key} s={statuses[i]} title={s.label} word={report[s.key] != null ? (words[s.key] ?? s.words)[report[s.key]! - 1] : 'Not yet'} />
+        ))}
+        object={<MindTalk today={todayLine} day={today} name={member ? firstName(member) : 'there'} />}
+        right={
+          <>
+            <SideCap>What xAI knows</SideCap>
+            <ul className="mi-know">
+              <li>Today's five answers, on the left</li>
+              <li>Nothing from your vitals or the crew</li>
+              <li>The chat stays on this device</li>
+            </ul>
+            <SideCap>When it is serious</SideCap>
+            <p className="mi-note">Words about harm or a crisis always get the same reply: contact the flight surgeon now. The model never decides that.</p>
+            {SCALES.some((s) => report[s.key] == null) && (
+              <Btn kind="secondary" onClick={() => go('check')}>
+                Finish check-in
+              </Btn>
+            )}
+          </>
+        }
+        footLeft={seg}
+        footRight={<Btn kind="danger" onClick={() => nav(`/surgeon?c=${subject}`)}>Contact surgeon</Btn>}
+      />
+    );
+
   const answer = (v: number) => {
     cue('tick', sound);
     setScore(subject, today, q.key, v);
@@ -89,7 +145,9 @@ export default function Mind() {
             <p className="mi-q-cap">Today</p>
             <h2 className={`mi-q-word is-${overall}`}>{word}</h2>
             <p className="mi-q-sub">{overall === 'red' ? 'Talk to the crew medic or the flight surgeon today.' : overall === 'amber' ? 'Try the suggestion on the right. It comes up at your next private conference.' : 'Nothing to do. See you tomorrow.'}</p>
-            <MindTalk today={SCALES.map((s) => `${s.label} ${report[s.key] != null ? (words[s.key] ?? s.words)[report[s.key]! - 1] : 'not answered'}`).join(', ')} />
+            <Btn kind="secondary" onClick={() => go('xai')}>
+              Talk it through with xAI
+            </Btn>
           </div>
         ) : (
           <div className="mi-q">
@@ -134,6 +192,7 @@ export default function Mind() {
           </div>
         </>
       }
+      footLeft={seg}
       footRight={overall === 'red' ? <Btn onClick={() => nav(`/surgeon?c=${subject}`)}>Contact surgeon</Btn> : undefined}
     />
   );
