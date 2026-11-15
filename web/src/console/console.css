@@ -734,3 +734,4 @@ button.wg:hover { border-color: rgb(255 255 255 / 0.22); }
   .vrow-edit { padding-left: 6px; flex-wrap: wrap; }
 }
 .vrow-v { width: 116px; }
+@media (max-width: 760px) { .tip, .pin { display: none; } }
