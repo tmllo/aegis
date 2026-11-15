@@ -2,6 +2,13 @@
 
 You are helping **Emile** build the app half of AEGIS (see `../PROJECT_CONTEXT.md`). Emile is a strong web/3D builder (React, three.js / React Three Fiber, TypeScript, Tailwind) and does sound design. Move fast; he knows what he's doing.
 
+## READ FIRST (15 Nov): the redesign rules override the older sections below
+1. `../docs/ARCHITECTURE.md`: layers, what may import what, the caution & warning ladder and the safety rule.
+2. `REDESIGN-RULES.md`: tonight's job is visual polish and flow. Restyle, don't restructure. Frozen vs free, scope (the `src/station/` app), freeze time, definition of done.
+3. Run `bash scripts/check-all.sh` before every commit and push. Do not commit while it is red.
+
+Where this file and those two disagree, those two win. The "Screens" section below describes the first MVP, not the current `src/station/` app.
+
 ## Hard constraints
 - **Data comes only from** `public/data/storm_forecast.json` and `public/data/crew_data.json`, shaped per `../contracts/DATA_CONTRACT.md`. They currently hold sample/fake data; Tomas overwrites them with real outputs around 21:00. **No code changes should be needed when the real files land.** Never hardcode values that live in the JSON.
 - Don't edit `/ml` or the contract. Need a field? Write it in `../contracts/CHANGELOG.md` and tell Tomas.
