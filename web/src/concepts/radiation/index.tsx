@@ -122,7 +122,7 @@ function hoursAhead(leadHours: number): number {
   return Math.floor(leadHours);
 }
 
-function falseAlarmFigure(n: number): { figure: string; label: string } {
+export function falseAlarmFigure(n: number): { figure: string; label: string } {
   const rounded = Math.round(n * 10) / 10;
   const figure = Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
   const noun = rounded === 1 ? 'false alarm a month' : 'false alarms a month';
@@ -131,7 +131,7 @@ function falseAlarmFigure(n: number): { figure: string; label: string } {
 }
 
 /** Log flare class → disc radius. M1 is small, X-class is large. */
-function flareRadius(flareClass: string): number {
+export function flareRadius(flareClass: string): number {
   const letter = flareClass.charAt(0).toUpperCase();
   const mag = Number.parseFloat(flareClass.slice(1));
   const decade = letter === 'X' ? 1 : letter === 'M' ? 0 : letter === 'C' ? -1 : -2;
