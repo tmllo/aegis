@@ -35,6 +35,6 @@ python -m pytest server/tests -q
 Arrows only go right: an adapter never scores, a view never fetches, the engine never formats output.
 
 ## Known gaps
-- The Inspiration4 adapter reads the raw values out of `real_crew.json` until `data/real/cmp.csv` and `cbc.csv` are committed. With the CSVs present it reads them directly (same output).
+- The Inspiration4 adapter reads the original `data/real/cmp.csv` and `cbc.csv` (committed 15 Nov); `real_crew.json` is only a fallback.
 - `sources.yaml` `osdr.synthetic_comparison` (simulated glucose day-to-day sd) is copied from `ml/results/synthetic_crew.md`, not recomputed.
 - Habitat dose rates are still the hand-set working values (`subjects.yaml`, `assumed_dose_mSv_day`) until the HAPI adapter lands (S3).
