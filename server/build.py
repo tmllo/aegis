@@ -32,22 +32,32 @@ def plugins() -> list:
     return [importlib.import_module(f"server.{p.parent.name}.plugin") for p in sorted(PKG.glob("*/plugin.py"))]
 
 
+def derive(cat: Catalog, store: Store) -> dict[str, dict]:
+    """Recompute everything derived from the facts in the store: assessments, labs, plugin rows, contract views.
+
+    Run once by build() and again by the API after each live refresh or check-in (server/api/refresh.py),
+    so it must be safe to repeat: plugin after_build(cat, store) hooks must be idempotent.
+    Holds store.lock so a concurrent write never lands between a wipe and its rebuild.
+    """
+    with store.lock:
+        crew_results = score_all(store, cat)
+        labs = score_labs(store, cat)
+        for plugin in plugins():               # every server/<feature>/plugin.py
+            if hasattr(plugin, "after_build"):
+                plugin.after_build(cat, store)
+        return {
+            "crew_data.json": contract_v1.crew_data(cat, store, crew_results),
+            "storm_forecast.json": contract_v1.storm_forecast(cat, store),
+            "real_crew.json": contract_v1.real_crew(cat, store, labs),
+        }
+
+
 def build(db: str = ":memory:") -> tuple[Catalog, Store, dict[str, dict]]:
     cat = Catalog.load()
     store = Store(db, cat)
     for adapter in discover():                 # every server/adapters/*.py with ADAPTER
         store.write(adapter.load(cat))
-    crew_results = score_all(store, cat)
-    labs = score_labs(store, cat)
-    for plugin in plugins():                   # every server/<feature>/plugin.py
-        if hasattr(plugin, "after_build"):
-            plugin.after_build(cat, store)
-    files = {
-        "crew_data.json": contract_v1.crew_data(cat, store, crew_results),
-        "storm_forecast.json": contract_v1.storm_forecast(cat, store),
-        "real_crew.json": contract_v1.real_crew(cat, store, labs),
-    }
-    return cat, store, files
+    return cat, store, derive(cat, store)
 
 
 def strip_generated(doc: dict) -> dict:
