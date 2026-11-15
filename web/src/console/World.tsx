@@ -153,7 +153,7 @@ export function World() {
       <MilkyWay />
       <ambientLight intensity={0.04} />
       <directionalLight position={sun.clone().multiplyScalar(5)} intensity={3.4} color="#fff6ea" />
-      <Sun dir={sun} />
+      {!body && <Sun dir={sun} />}
       <EarthGroup
         yaw={body ? 0 : yaw}
         tips={[]}

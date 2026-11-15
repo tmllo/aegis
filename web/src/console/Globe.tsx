@@ -99,11 +99,19 @@ function Earth({ yaw, onDouble }: { yaw: number; onDouble?: (p: THREE.Vector3) =
       ).replace(
         '#include <roughnessmap_fragment>',
         // the specular map is white over water: oceans get a sun glint, land stays matte
-        'float roughnessFactor = roughness; vec4 texelRoughness = texture2D( roughnessMap, vRoughnessMapUv ); roughnessFactor *= 1.0 - 0.72 * texelRoughness.r;',
+        'float roughnessFactor = roughness; vec4 texelRoughness = texture2D( roughnessMap, vRoughnessMapUv ); roughnessFactor *= 1.0 - 0.32 * texelRoughness.r;',
       );
     };
     return m;
   }, [day, night, spec]);
+  // clouds fade out toward the poles, where a sphere's texture pinches
+  const cloudMat = useMemo(() => {
+    const m = new THREE.MeshStandardMaterial({ alphaMap: clouds, transparent: true, depthWrite: false, color: '#ffffff', opacity: 0.9 });
+    m.onBeforeCompile = (sh) => {
+      sh.fragmentShader = sh.fragmentShader.replace('#include <alphamap_fragment>', '#include <alphamap_fragment>\n diffuseColor.a *= 1.0 - smoothstep(0.36, 0.47, abs(vAlphaMapUv.y - 0.5));');
+    };
+    return m;
+  }, [clouds]);
   const cloud = useRef<THREE.Mesh>(null);
   useFrame((_, dt) => {
     if (cloud.current) cloud.current.rotation.y += Math.min(dt, 0.05) * 0.004; // slow drift
@@ -113,9 +121,8 @@ function Earth({ yaw, onDouble }: { yaw: number; onDouble?: (p: THREE.Vector3) =
       <mesh material={surface} onDoubleClick={(e) => { e.stopPropagation(); onDouble?.(e.point.clone()); }}>
         <sphereGeometry args={[1, 128, 128]} />
       </mesh>
-      <mesh ref={cloud} scale={1.008} raycast={() => null}>
+      <mesh ref={cloud} scale={1.008} raycast={() => null} material={cloudMat}>
         <sphereGeometry args={[1, 96, 96]} />
-        <meshStandardMaterial alphaMap={clouds} transparent depthWrite={false} color="#ffffff" opacity={0.9} />
       </mesh>
       <Mesh />
     </group>

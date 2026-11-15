@@ -10,7 +10,7 @@ export const SCATTER_UNIFORMS = () => ({
   uSunDir: { value: new THREE.Vector3(1, 0, 0) },
   uCamPos: { value: new THREE.Vector3(0, 0, 3) },
   uExag: { value: 1.6 },
-  uSunI: { value: 22 },
+  uSunI: { value: 10 },
 });
 
 export const SCATTER_GLSL = /* glsl */ `

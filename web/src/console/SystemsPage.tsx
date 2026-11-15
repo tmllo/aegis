@@ -25,7 +25,7 @@ export default function SystemsPage() {
   const caught = Math.round(m.hit_rate * m.n_storms);
   const steps = [
     { name: 'Sensors', n: PLACEMENTS.length, sub: 'sources' },
-    { name: 'e^x', n: checks, sub: 'checks' },
+    { name: 'ex', n: checks, sub: 'checks' },
     { name: 'Crew', n: views.length, sub: 'aboard' },
     { name: 'Ground', n: flagged, sub: 'to report' },
   ];
@@ -43,7 +43,15 @@ export default function SystemsPage() {
               <span className="flow-dot">
                 <b>{s.n}</b>
               </span>
-              <span className="flow-name">{s.name}</span>
+              <span className="flow-name">
+                {s.name === 'ex' ? (
+                  <>
+                    e<sup>x</sup>
+                  </>
+                ) : (
+                  s.name
+                )}
+              </span>
               <span className="flow-sub">{s.sub}</span>
             </div>
           ))}
