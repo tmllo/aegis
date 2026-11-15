@@ -2,6 +2,16 @@
 // streams once a second. It starts from the crew member's own baseline (crew_data.json), so a "normal"
 // member reads normal and the numbers agree with the rest of the app. No DOM; tested in wristSim.test.ts.
 
+/** Where each band channel comes from. Only heart rate is modelled from the member's own baseline in
+ *  crew_data.json; SpO2, skin temperature and steps are demo values with no measured source, and the UI
+ *  must label them so ("demo value") and never store them as readings. */
+export const CHANNEL_SOURCE = {
+  hr: 'simulated from her baseline',
+  spo2: 'demo value',
+  skinTemp: 'demo value',
+  steps: 'demo value',
+} as const;
+
 export interface WristReading {
   /** ms since the stream started */
   t: number;

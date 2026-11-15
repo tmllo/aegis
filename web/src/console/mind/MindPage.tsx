@@ -3,13 +3,14 @@
 // things to try, the private journal, Ask eˣ, and the care plan with its sources.
 // Data: Tomas's Mind API through ./api.ts and data/mind.ts (check-in queue), offline fallbacks throughout.
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
-import { SCALES, useMind, type ScaleKey } from '../../data/mind';
+import { useMind } from '../../data/mind';
 import { LINK_DELAY } from '../model';
 import { Mark } from '../ui';
 import { useConsole } from '../useConsole';
 import { askModel, SUGGESTED_QUESTIONS, type Answer } from './advisor';
 import { useMindData } from './api';
 import { CARE, sourceById } from './care';
+import { CheckinScales } from './CheckinScales';
 import { assess, routeText, type ScoreKey, type Today } from './rules';
 import './mind.css';
 
@@ -62,8 +63,6 @@ export default function MindPage() {
 
   if (!cd || !cv || !m || !today) return <p className="cx-error cx-wait">Loading</p>;
 
-  const answered = SCALES.filter((s) => report[s.key] != null).length;
-  const words = (k: ScaleKey) => mind.words[k] ?? SCALES.find((s) => s.key === k)!.words;
 
   const ask = async (text: string) => {
     if (!text.trim()) return;
@@ -110,29 +109,9 @@ export default function MindPage() {
         </div>
 
         {view === 'check' && (
-          <div className="mi-view mi-check" role="tabpanel" aria-label="Today's check-in">
-          <span className="cap">Check-in · {answered} of 5{data.online === false ? ' · saved on this device' : ''}</span>
-          {SCALES.map((s) => (
-            <div key={s.key} className="mi-scale">
-              <span className="mi-scale-l">{s.label}</span>
-              <span className="mi-steps">
-                {words(s.key).map((w, i) => (
-                  <button
-                    key={w}
-                    type="button"
-                    aria-pressed={report[s.key] === i + 1}
-                    aria-label={`${s.label}: ${w}`}
-                    title={w}
-                    onClick={() => mind.setScore(m.id, today, s.key, i + 1)}
-                  >
-                    {i + 1}
-                  </button>
-                ))}
-              </span>
-              <span className="cap mi-scale-w">{report[s.key] != null ? words(s.key)[report[s.key]! - 1] : ''}</span>
-            </div>
-          ))}
-        </div>
+          <div className="mi-view" role="tabpanel">
+            <CheckinScales subject={m.id} date={today} note={data.online === false ? 'saved on this device' : undefined} />
+          </div>
         )}
 
         {view === 'week' && (
