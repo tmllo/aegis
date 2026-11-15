@@ -188,6 +188,12 @@ def simulate(cat, *, subject: str, site: str, profile: str, minutes: int, step_s
             },
             "alerts": alerts,
             "status": status,
+            "metrics": {
+                "eva.hr": state["hr_bpm"],
+                "eva.ppco2": state["ppco2_mmHg"],
+                "eva.o2": state["o2_pct"],
+                "eva.dose_rate": state["dose_uSv_h"],
+            },
         })
         if t + step > duration_s:
             break

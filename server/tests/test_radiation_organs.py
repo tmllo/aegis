@@ -121,6 +121,18 @@ def test_path_flux_and_forecast_headline():
     assert "v2" not in str(explained).lower()
 
 
+def test_organ_target_matches_the_body_the_app_draws():
+    body = client.get("/api/radiation/organs", params={"scenario": "gcr", "env": "moon"}).json()
+    target = {o["id"]: o["target"] for o in body["organs"]}
+    assert target["red_marrow"] == "bone" and target["bone_surface"] == "bone"
+    assert target["heart"] == "heart"
+    assert target["brain"] == "brain" and target["eye_lens"] == "brain"
+    for organ_id in ("stomach", "liver", "pancreas", "colon", "kidney", "spleen"):
+        assert target[organ_id] == "metabolic"
+    for organ_id in ("skin", "lung", "breast", "thyroid", "remainder"):
+        assert target[organ_id] is None
+
+
 def test_endpoints_are_mounted_and_reject_a_bad_subject():
     assert client.get("/api/radiation/organs/compare", params={"event": "oct1989"}).status_code == 200
     assert client.get("/api/radiation/organs", params={"subject": "nope"}).status_code == 404

@@ -53,6 +53,8 @@ def _has(node, parts: list[str]) -> bool:
         if not isinstance(node, dict) or key not in node or not isinstance(node[key], list):
             return False
         return all(_has(item, rest) for item in node[key])
+    if part.startswith("<") and part.endswith(">") and "*" not in part:
+        part = part[1:-1]
     if part in ("*", "<self.*>"):
         if not isinstance(node, dict) or not node:
             return False

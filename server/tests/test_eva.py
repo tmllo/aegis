@@ -9,7 +9,7 @@ from server.eva import engine
 
 client = TestClient(create_app())
 
-FRAME = {"t_s", "activity", "distance_m", "waypoint_id", "nav", "bio", "suit", "env", "alerts", "status"}
+FRAME = {"t_s", "activity", "distance_m", "waypoint_id", "nav", "bio", "suit", "env", "alerts", "status", "metrics"}
 NAV = {"target", "distance_m", "bearing_deg"}
 BIO = {"hr_bpm", "spo2_pct", "resp_rate_bpm", "core_temp_c", "metabolic_w"}
 SUIT = {"o2_pct", "o2_time_left_min", "ppco2_mmHg", "pressure_psi", "coolant_c",
@@ -138,6 +138,18 @@ def test_assess_flags_high_ppco2_and_low_o2():
     assert body["status"] == "abort"
     rested = client.post("/api/eva/assess", json={"subject": "c1", "site": "moon"}).json()
     assert rested["status"] == "nominal" and rested["alerts"] == []
+
+
+def test_frames_use_catalog_keys_and_a_hour_answers_quickly():
+    import time
+    started = time.perf_counter()
+    body = _sim(subject="c1", site="mars", profile="traverse", minutes=60, step_s=5, storm=1)
+    assert time.perf_counter() - started < 1
+    frame = body["frames"][0]
+    assert frame["metrics"]["eva.hr"] == frame["bio"]["hr_bpm"]
+    assert frame["metrics"]["eva.ppco2"] == frame["suit"]["ppco2_mmHg"]
+    assert frame["metrics"]["eva.o2"] == frame["suit"]["o2_pct"]
+    assert frame["metrics"]["eva.dose_rate"] == frame["env"]["dose_uSv_h"]
 
 
 def test_unknown_subject_site_and_bad_field():

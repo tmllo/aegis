@@ -316,6 +316,16 @@ def _risk_shares(spec, by_id: dict, sex: str) -> dict[str, float]:
     return {i: w / whole for i, w in parts.items()}
 
 
+# crew-station body3d TargetId. Organs the model does not draw stay null.
+BODY_TARGET = {
+    "red_marrow": "bone", "bone_surface": "bone",
+    "heart": "heart",
+    "brain": "brain", "eye_lens": "brain",
+    "stomach": "metabolic", "liver": "metabolic", "pancreas": "metabolic",
+    "colon": "metabolic", "kidney": "metabolic", "spleen": "metabolic",
+}
+
+
 def _row(spec, built, shares, effective, reid, scenario, days, rate, sex) -> dict:
     organ = built["organ"]
     share = shares.get(organ["id"], 0.0)
@@ -327,6 +337,7 @@ def _row(spec, built, shares, effective, reid, scenario, days, rate, sex) -> dic
     return {
         "id": organ["id"], "label": organ["label"],
         "mesh": organ["mesh"], "pos": val(organ["pos"]), "r": val(organ["r"]), "approx": organ["approx"],
+        "target": BODY_TARGET.get(organ["id"]),
         "dose_mSv": _r(built["total"], 1),
         "dose_bg_mSv": _r(built["bg"], 1),
         "dose_event_mSv": _r(built["event"], 1),
@@ -365,6 +376,7 @@ def _remainder_row(spec, by_id, shares, effective, reid, scenario, chance) -> di
     share = shares.get("remainder", 0.0)
     return {
         "id": "remainder", "label": "Remainder", "mesh": None, "pos": None, "r": None, "approx": True,
+        "target": None,
         "dose_mSv": _r(mean6, 1), "dose_bg_mSv": _r(mean6_bg, 1), "dose_event_mSv": _r(mean6_ev, 1),
         "w_T": w, "d_rel": float(val(spec["remainder_d_rel"])),
         "share_of_effective": 0.0 if not effective else round(w * mean4 / effective, 3),

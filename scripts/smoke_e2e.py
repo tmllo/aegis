@@ -31,10 +31,12 @@ from scripts.frontend_contract import check_body, fill, load_fixture, missing_fi
 LANES = [
     ("GET", "/api/eva/sites", None, ["sites[].gravity_g", "quality"]),
     ("GET", "/api/eva/sim?subject=c1&site=mars&profile=traverse&minutes=10&step_s=5&storm=1", None,
-     ["quality", "frames[].t_s", "frames[].bio.hr_bpm"]),
+     ["quality", "frames[].t_s", "frames[].bio.hr_bpm", "frames[].metrics.<eva.hr>"]),
+    ("GET", "/api/eva/sim?subject=c1&site=mars&profile=traverse&minutes=60&step_s=5&storm=0", None,
+     ["frames[].metrics.<eva.hr>", "frames[].metrics.<eva.ppco2>", "frames[].metrics.<eva.o2>", "frames[].metrics.<eva.dose_rate>"]),
     ("POST", "/api/eva/assess", {"subject": "c1", "site": "mars"}, ["status", "alerts", "quality"]),
     ("GET", "/api/radiation/organs?subject=c1&env=moon&scenario=storm&event=oct1989&shield=hull", None,
-     ["quality", "organs[].id", "organs[].dose_mSv"]),
+     ["quality", "organs[].id", "organs[].dose_mSv", "organs[].target"]),
     ("GET", "/api/radiation/organs/compare?subject=c1&event=oct1989", None, ["quality", "organs[].id"]),
     ("GET", "/api/radiation/path?scenario=spe&event=aug1972&shield=hull", None,
      ["quality", "stages[].id", "stages[].rel_flux"]),
@@ -180,6 +182,8 @@ def main() -> int:
                 problems = [] if status == 200 else [f"status {status}"]
                 if status == 200:
                     problems += missing_fields(payload, fields)
+                if status == 200 and "minutes=60" in path and ms >= 1000:
+                    problems.append("slower than 1 s")
                 print(_row(not problems, ms, f"{method} {path}", ", ".join(problems)))
                 failed = failed or bool(problems)
     finally:
