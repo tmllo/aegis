@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef } from "react";
 import { useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
 import { Html, OrbitControls } from "@react-three/drei";
-import { GLTFLoader } from "three-stdlib";
+import { GLTFLoader, MeshoptDecoder } from "three-stdlib";
 import { suspend } from "suspend-react";
 import * as THREE from "three";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
@@ -46,7 +46,41 @@ async function loadBody(): Promise<THREE.Group> {
   } else {
     buf = await (await fetch(import.meta.env.VITE_MODEL_URL ?? "/models/body.glb")).arrayBuffer();
   }
-  return (await new GLTFLoader().parseAsync(buf, "")).scene;
+  const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder());
+  return bakeQuantized((await loader.parseAsync(buf, "")).scene);
+}
+
+/** The GLB ships meshopt-compressed with quantized positions/normals (19 MB -> 3.7 MB); each node then
+ *  carries a dequantization transform. Callers use mesh geometry directly, so bake that transform back
+ *  into float attributes and reset the nodes: the result equals the uncompressed model. */
+function bakeQuantized(scene: THREE.Group): THREE.Group {
+  scene.updateMatrixWorld(true);
+  scene.traverse((o) => {
+    const m = o as THREE.Mesh;
+    if (!m.isMesh) return;
+    const g = m.geometry;
+    for (const name of ["position", "normal"]) {
+      const a = g.getAttribute(name);
+      if (!a || a.array instanceof Float32Array) continue;
+      const f = new Float32Array(a.count * a.itemSize);
+      for (let i = 0; i < a.count; i++) {
+        f[i * 3] = a.getX(i);
+        f[i * 3 + 1] = a.getY(i);
+        f[i * 3 + 2] = a.getZ(i);
+      }
+      g.setAttribute(name, new THREE.BufferAttribute(f, 3));
+    }
+    g.applyMatrix4(m.matrixWorld);
+    g.computeBoundingBox();
+    g.computeBoundingSphere();
+  });
+  scene.traverse((o) => {
+    o.position.set(0, 0, 0);
+    o.quaternion.identity();
+    o.scale.set(1, 1, 1);
+  });
+  scene.updateMatrixWorld(true);
+  return scene;
 }
 export const useBody = () => suspend(loadBody, ["aegis-body"]);
 
