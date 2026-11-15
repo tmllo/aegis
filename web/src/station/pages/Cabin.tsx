@@ -1,21 +1,19 @@
 // Cabin tab: Tomas's habitat watch (habitat_telemetry.json, HABITAT_CONTRACT v2.2) drawn
 // in the One Look frame. Amber/red come from meta.thresholds; every planted fault shows as caught, missed
 // or false alarm; crew links say "Possible environmental cause", never a diagnosis.
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
+import { Shape } from '../ds';
+import { WORD } from '../model';
+import { cue } from '../ui';
+import { useStation } from '../state';
+import '../cabin.css';
 import { useHabitat } from '../../habitat';
 import { HONEST_FOOTER, anomalyTag, fmtDate, latestValue, leadTimeText, scoreStatus } from '../../habitat/logic';
 import type { ChannelKey, HabitatData } from '../../habitat/types';
-import { Bar, Check, Page, SideCap, Vital, VITAL_ICON } from '../frame';
+import { Bar, Check, Page, SideCap } from '../frame';
 
-const ICON: Record<ChannelKey, keyof typeof VITAL_ICON> = {
-  ppco2_mmhg: 'pressure',
-  ppo2_kpa: 'pressure',
-  cabin_pressure_kpa: 'pressure',
-  temp_c: 'temp',
-  rh_pct: 'temp',
-};
 const DAYS = 14;
-const POINTS = 28;
+const POINTS = 84;
 
 /** POINTS evenly spaced samples over the last DAYS days, flagged by the detector score. */
 function history(d: HabitatData, k: ChannelKey) {
@@ -38,14 +36,62 @@ export interface CabinParts {
   right: ReactNode;
 }
 
+const digits = (k: ChannelKey) => (k === 'rh_pct' ? 0 : k === 'ppco2_mmhg' ? 2 : 1);
+
+/** The one big reading: value, status word, its limit and 14 days as a line against that limit. */
+function Hero({ d, k }: { d: HabitatData; k: ChannelKey }) {
+  const ch = d.channels[k];
+  const s = d.status.by_channel[k];
+  const val = latestValue(d, k);
+  const h = history(d, k);
+  const vals = h.map((p) => p.v).filter((x): x is number => x != null);
+  const lim = ch.limits.max ?? ch.limits.min;
+  let lo = Math.min(...vals, lim ?? Infinity);
+  let hi = Math.max(...vals, lim ?? -Infinity);
+  const pad = (hi - lo || 1) * 0.15;
+  lo -= pad;
+  hi += pad;
+  const W = 640;
+  const H = 120;
+  const x = (i: number) => (i / Math.max(1, h.length - 1)) * W;
+  const y = (v: number) => H - ((v - lo) / (hi - lo)) * H;
+  const pts = h.map((p, i) => (p.v == null ? null : `${x(i).toFixed(1)},${y(p.v).toFixed(1)}`)).filter(Boolean).join(' ');
+  const live = d.anomalies.find((a) => a.channel === k && a.status === 'active');
+  const action = live ? live.action : s === 'green' ? null : ch.actions[s];
+  return (
+    <div className={`cb-hero is-${s}`} key={k}>
+      <p className="cb-hero-l">{ch.label}</p>
+      <p className="cb-hero-v">
+        {val == null ? '–' : val.toFixed(digits(k))}
+        <small>{ch.unit}</small>
+      </p>
+      <p className="cb-hero-s">
+        <Shape s={s} size={12} />
+        {WORD[s]}
+        {lim != null && <span>Limit {lim} {ch.unit}</span>}
+      </p>
+      <svg className="cb-hero-chart" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" aria-label={`${ch.label}, last ${DAYS} days`}>
+        {lim != null && <line x1="0" x2={W} y1={y(lim)} y2={y(lim)} className="cb-lim" />}
+        <polyline points={pts} className="cb-line" />
+        {h.map((p, i) => (p.v != null && p.flag ? <circle key={i} cx={x(i)} cy={y(p.v)} r="3" className={`cb-dot is-${p.flag}`} /> : null))}
+      </svg>
+      <p className="cb-hero-n">{action ? `${action}${live?.linked_crew_flags.length ? ' Possible environmental cause for crew flags.' : ''}` : ch.health_link}</p>
+    </div>
+  );
+}
+
 export function useCabin(): CabinParts {
   const { data, error } = useHabitat();
+  const [pick, setPick] = useState<ChannelKey | null>(null);
+  const sound = useStation((st) => st.sound);
   if (error) return { sub: 'Cabin telemetry could not be loaded', left: null, object: <p className="ds-note">{error}</p>, right: null };
   if (!data) return { sub: HONEST_FOOTER, left: null, object: null, right: null };
 
   const keys = Object.keys(data.channels) as ChannelKey[];
   const events = [...data.anomalies].sort((a, b) => Date.parse(b.start) - Date.parse(a.start));
   const v = data.meta.validation?.model;
+  const rank = { green: 0, amber: 1, red: 2 } as const;
+  const hero = pick ?? [...keys].sort((a, b) => rank[data.status.by_channel[b]] - rank[data.status.by_channel[a]])[0];
 
   return {
     sub: HONEST_FOOTER,
@@ -58,25 +104,26 @@ export function useCabin(): CabinParts {
       </>
     ),
     object: (
-      <div className="fr-panel cb">
-        {keys.map((k) => {
-          const ch = data.channels[k];
-          const val = latestValue(data, k);
-          const s = data.status.by_channel[k];
-          const live = events.find((a) => a.channel === k && a.status === 'active');
-          return (
-            <Vital
-              key={k}
-              icon={ICON[k]}
-              label={ch.label}
-              value={val == null ? '–' : val.toFixed(k === 'rh_pct' ? 0 : 1)}
-              unit={ch.unit}
-              s={s}
-              history={history(data, k)}
-              note={live ? `${live.action}${live.linked_crew_flags.length ? ' Possible environmental cause for crew flags.' : ''}` : s === 'green' ? undefined : ch.actions[s]}
-            />
-          );
-        })}
+      <div className="cb">
+        <Hero d={data} k={hero} />
+        <div className="cb-row" role="tablist" aria-label="Cabin readings">
+          {keys.map((k) => {
+            const val = latestValue(data, k);
+            const st = data.status.by_channel[k];
+            return (
+              <button key={k} type="button" role="tab" aria-selected={k === hero} className={`cb-chip is-${st}${k === hero ? ' is-on' : ''}`} onClick={() => (cue('tick', sound), setPick(k))}>
+                <span>
+                  {st !== 'green' && <Shape s={st} size={10} />}
+                  {data.channels[k].label.replace(' (partial pressure)', '')}
+                </span>
+                <b>
+                  {val == null ? '–' : val.toFixed(digits(k))}
+                  <small>{data.channels[k].unit}</small>
+                </b>
+              </button>
+            );
+          })}
+        </div>
       </div>
     ),
     right: (
