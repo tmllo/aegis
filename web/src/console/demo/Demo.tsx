@@ -181,7 +181,7 @@ function Player() {
           </button>
         </div>
       </div>
-      <span className="demo-sim">Simulated crew data · real solar flares (NASA DONKI) · warnings from the e^x model, not an official forecast</span>
+      <span className="demo-sim">Simulated crew data · real solar flares (NASA DONKI) · warnings from the eˣ model, not an official forecast</span>
     </section>,
     document.body,
   );

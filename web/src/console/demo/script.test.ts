@@ -31,7 +31,7 @@ describe('guided demo script', () => {
     expect(beats[3].caption).toContain(String(cd.environments.transit.dose_mSv_day));
     expect(beats[5].caption).toContain(`${cd.career_limit_mSv} mSv`);
     const firstWarning = storm.events.filter((e) => e.split === 'test' && e.alert_level === 'warning' && e.actual_storm && e.peak_time.startsWith('2024-05')).sort((a, b) => a.peak_time.localeCompare(b.peak_time))[0];
-    expect(beats[4].caption).toContain(`${Math.round(firstWarning.lead_time_h!)} hours`);
+    expect(beats[4].caption).toContain(`${Math.floor(firstWarning.lead_time_h!)} hours`);
     expect(beats[4].to).toContain('mode=replay&at=2024-05-08T');
   });
 

@@ -36,6 +36,10 @@ export interface CameraScan {
   /** whether a real face detector is used (else a fixed guide box the user lines up with) */
   faceTracking: boolean;
   error: string | null;
+  /** one plain status line for the user at every step: "Allow camera", "Face the camera", "Hold still 18 s", "Done · 72 bpm" */
+  message: string;
+  /** seconds left in the scan while scanning */
+  secondsLeft: number | null;
   videoRef: React.RefObject<HTMLVideoElement>;
   start: () => void;
   cancel: () => void;
@@ -83,6 +87,8 @@ export function useCameraScan({ durationS = 25 }: Options = {}): CameraScan {
   const [box, setBox] = useState<Box | null>(null);
   const [faceTracking, setFaceTracking] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [t0State, setT0] = useState<number | null>(null);
+  const [, setTick] = useState(0);
 
   const run = useRef<{ stop: () => void } | null>(null);
 
@@ -91,7 +97,22 @@ export function useCameraScan({ durationS = 25 }: Options = {}): CameraScan {
     run.current = null;
   }, []);
 
-  useEffect(() => stopAll, [stopAll]); // camera off on unmount
+  // Camera off on unmount. React StrictMode (dev) unmounts and remounts once: if a scan was running,
+  // remember it and restart on the remount, so a caller that starts once from an effect still works.
+  const resume = useRef(false);
+  const startRef = useRef<() => void>(() => undefined);
+  useEffect(() => {
+    if (resume.current) {
+      resume.current = false;
+      startRef.current();
+    }
+    return () => {
+      if (run.current) {
+        resume.current = true;
+        stopAll();
+      }
+    };
+  }, [stopAll]);
 
   const cancel = useCallback(() => {
     stopAll();
@@ -121,6 +142,7 @@ export function useCameraScan({ durationS = 25 }: Options = {}): CameraScan {
       if (v) v.srcObject = null;
     };
     run.current = { stop };
+    startRef.current = () => start();
 
     void (async () => {
       try {
@@ -160,12 +182,21 @@ export function useCameraScan({ durationS = 25 }: Options = {}): CameraScan {
       let detecting = false;
       const t0 = performance.now();
       setStatus('scanning');
+      setT0(t0);
 
       const tick = () => {
         if (stopped) return;
+        // a preview <video> that mounted after the stream started gets the stream too
+        const pv = videoRef.current;
+        if (pv && pv !== video && pv.srcObject !== stream) {
+          pv.muted = true;
+          pv.playsInline = true;
+          pv.srcObject = stream;
+          void pv.play().catch(() => undefined);
+        }
         const w = video.videoWidth;
         const h = video.videoHeight;
-        if (w && h) {
+        if (w && h && video.readyState >= 2) {
           if (canvas.width !== w) { canvas.width = w; canvas.height = h; }
           ctx.drawImage(video, 0, 0, w, h);
           const now = performance.now();
@@ -196,6 +227,7 @@ export function useCameraScan({ durationS = 25 }: Options = {}): CameraScan {
 
           const elapsed = (now - t0) / 1000;
           setProgress(Math.min(1, elapsed / durationS));
+          setTick(Math.floor(elapsed));
 
           // live readout every second after 8 s, and one short instruction
           if (now - lastEstimate > 1000) {
@@ -225,5 +257,16 @@ export function useCameraScan({ durationS = 25 }: Options = {}): CameraScan {
     })();
   }, [durationS, stopAll]);
 
-  return { status, progress, bpm, breathing, confidence, hint, box, faceTracking, error, videoRef, start, cancel, label: SCAN_LABEL };
+  const secondsLeft = status === 'scanning' && t0State != null ? Math.max(0, Math.ceil(durationS - (performance.now() - t0State) / 1000)) : null;
+  const message =
+    status === 'idle' ? 'Ready to scan'
+    : status === 'starting' ? 'Allow camera'
+    : status === 'scanning' ? (hint ?? `Hold still · ${secondsLeft ?? durationS} s`)
+    : status === 'done' ? (bpm != null ? `Done · ${bpm} bpm${breathing != null ? ` · ${breathing} breaths/min` : ''}` : 'Done · no clear pulse, try more light and stay still')
+    : status === 'denied' ? 'Camera blocked: allow it in the address bar and try again'
+    : status === 'unsupported' ? 'This browser cannot use the camera'
+    : status === 'cancelled' ? 'Scan stopped'
+    : (error ?? 'Camera error');
+
+  return { status, progress, bpm, breathing, confidence, hint, box, faceTracking, error, message, secondsLeft, videoRef, start, cancel, label: SCAN_LABEL };
 }

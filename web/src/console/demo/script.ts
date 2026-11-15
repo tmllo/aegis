@@ -174,7 +174,7 @@ export function buildBeats(cd0: CrewData, storm: StormForecast, seat: Record<str
     id: 'storm',
     title: 'A solar storm',
     caption: hit
-      ? `A real storm, ${day}: the e^x model warned ${Math.round(hit.lead_time_h!)} hours before its radiation arrived. The crew gets one instruction: go to the shelter.`
+      ? `A real storm, ${day}: the eˣ model warned ${Math.floor(hit.lead_time_h!)} hours before its radiation arrived. The crew gets one instruction: go to the shelter.`
       : 'The forecast watches every solar flare and warns before a radiation storm arrives.',
     to: `/environment?mode=replay${at ? `&at=${at}&play=1` : ''}`,
     crew: lead.m.id,
