@@ -89,7 +89,12 @@ export const SHORT: Record<MetricKey, string> = {
 export const digits = (k: MetricKey): number =>
   k === 'temp' || k === 'sleep_h' || k === 'bone_loss_pct' ? 1 : k === 'dose_mSv_day' ? 2 : k === 'dose_mSv_cum' ? 1 : 0;
 
-export const fmtV = (k: MetricKey, v: number | null | undefined): string => (v == null ? '—' : v.toFixed(digits(k)));
+// sleep reads as hours:minutes everywhere (5.4 h -> 5:24 h), never as a decimal
+const hmm = (h: number) => {
+  const m = Math.round(h * 60);
+  return `${Math.floor(m / 60)}:${String(m % 60).padStart(2, '0')}`;
+};
+export const fmtV = (k: MetricKey, v: number | null | undefined): string => (v == null ? '—' : k === 'sleep_h' ? hmm(v) : v.toFixed(digits(k)));
 
 export const MOOD_WORD = ['', 'Very low', 'Low', 'Okay', 'Good', 'Great'];
 

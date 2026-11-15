@@ -34,8 +34,14 @@ const dig = (r: MetricRow) => (r.k === 'sleep_h' || r.k === 'temp' ? 1 : r.k ===
 /** Lower-case the first letter only (keeps BP, CO2). */
 export const lc = (s: string) => s.charAt(0).toLowerCase() + s.slice(1);
 export const unitOf = (r: MetricRow) => (r.unit === '1-5' ? '/ 5' : r.unit);
-export const valOf = (r: MetricRow) => (r.value == null ? '—' : r.value.toFixed(dig(r)));
-export const usualOf = (r: MetricRow) => (r.lo == null || r.hi == null ? null : `${r.lo.toFixed(dig(r))}–${r.hi.toFixed(dig(r))}`);
+// sleep reads as hours:minutes (5:24), never a decimal (5.4)
+const hmm = (h: number) => {
+  const m = Math.round(h * 60);
+  return `${Math.floor(m / 60)}:${String(m % 60).padStart(2, '0')}`;
+};
+const num = (r: MetricRow, v: number) => (r.k === 'sleep_h' ? hmm(v) : v.toFixed(dig(r)));
+export const valOf = (r: MetricRow) => (r.value == null ? '—' : num(r, r.value));
+export const usualOf = (r: MetricRow) => (r.lo == null || r.hi == null ? null : `${num(r, r.lo)}–${num(r, r.hi)}`);
 
 type BtnKind = 'primary' | 'secondary' | 'danger' | 'quiet';
 export function Btn({ kind = 'primary', onClick, children, disabled, label, wide }: { kind?: BtnKind; onClick?: () => void; children: ReactNode; disabled?: boolean; label?: string; wide?: boolean }) {

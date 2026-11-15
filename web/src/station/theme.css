@@ -516,3 +516,31 @@ html:has(.st[data-theme='dark']) body {
     animation: none;
   }
 }
+
+/* ================================================================ Test pass fixes (16 Nov)
+   sleep reads "7 h 20 min" with air between the parts; phone: answers wrap, all 6 tabs fit */
+.ds-field-v output small + span {
+  margin-left: 16px;
+}
+@media (max-width: 600px) {
+  :root .st.ds .mi-q-opts {
+    flex-wrap: wrap;
+  }
+  :root .st.ds .mi-q-opts button {
+    min-width: calc(33.333% - 8px);
+    flex: 1 1 calc(33.333% - 8px);
+  }
+  :root .st.ds .fr-dock {
+    justify-content: stretch;
+    overflow-x: visible;
+  }
+  :root .st.ds .fr-dock a {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 6px 0 8px;
+    font-size: 12px;
+  }
+  .ds-field-v output {
+    font-size: 52px;
+  }
+}

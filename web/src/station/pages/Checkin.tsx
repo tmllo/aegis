@@ -14,6 +14,16 @@ import { cue } from '../ui';
 import { CameraScanCard, ReactionCard } from '../sensors';
 import '../checkin.css';
 
+/** 7.3333 h -> [7, 20]; rounds to 5 minutes so the display never shows 7 h 60 min. */
+const hmParts = (h: number): [number, number] => {
+  const m = Math.round((h * 60) / 5) * 5;
+  return [Math.floor(m / 60), m % 60];
+};
+const hm = (h: number) => {
+  const [a, b] = hmParts(h);
+  return b ? `${a} h ${String(b).padStart(2, '0')} min` : `${a} h`;
+};
+
 const Backdrop = lazy(() => import('../Backdrop'));
 
 type Step =
@@ -22,7 +32,7 @@ type Step =
   | { id: string; title: string; ask: string; kind: 'pvt' | 'bp' | 'text' };
 
 const ALL: Step[] = [
-  { id: 'sleep', title: 'Sleep', ask: 'How many hours did you sleep?', kind: 'number', k: 'sleep_h', step: 0.25, min: 2, max: 11 },
+  { id: 'sleep', title: 'Sleep', ask: 'How many hours did you sleep?', kind: 'number', k: 'sleep_h', step: 1 / 6, min: 2, max: 11 },
   { id: 'sq', title: 'Sleep quality', ask: 'How well did you sleep?', kind: 'scale', ex: 'sleepQuality', words: ['', 'Very poor', 'Poor', 'Fair', 'Good', 'Great'] },
   { id: 'mood', title: 'Mood', ask: 'How do you feel right now?', kind: 'scale', k: 'mood', words: MOOD_WORD },
   { id: 'energy', title: 'Energy', ask: 'How much energy do you have?', kind: 'scale', ex: 'energy', words: ['', 'Drained', 'Low', 'Okay', 'Good', 'Full'] },
@@ -117,25 +127,37 @@ export default function Checkin() {
     const r = preview.rows[k];
     const val = draft[k];
     const d = st < 1 ? 1 : 0;
+    // sleep is read as hours and minutes (7 h 20 min), not a decimal (7.3)
+    const isHM = k === 'sleep_h';
+    const range = r.mean != null ? (isHM ? `Your usual ${hm(r.lo!)} – ${hm(r.hi!)}` : `Your usual ${r.lo!.toFixed(d)}–${r.hi!.toFixed(d)} ${r.unit}`) : '';
     return (
       <div key={k} className="ds-field" data-s={val == null ? undefined : r.status}>
         <div className="ds-field-h">
           {label && <b>{label}</b>}
-          <span>{r.mean != null ? `Your usual ${r.lo!.toFixed(d)}–${r.hi!.toFixed(d)} ${r.unit}` : ''}</span>
+          <span>{range}</span>
         </div>
         <div className="ds-field-v">
           <button type="button" className="ds-step" onClick={() => (cue('tick', sound), set(k, Math.max(min, start(k) - (draft[k] == null ? 0 : st))))} aria-label={`Less ${label}`}>
             −
           </button>
-          <output>
-            <span className={val == null ? 'ck-ghost' : undefined}>{fmtV(k, val ?? start(k))}</span>
-            <small>{r.unit}</small>
-          </output>
+          {isHM ? (
+            <output aria-label={hm(val ?? start(k))}>
+              <span className={val == null ? 'ck-ghost' : undefined}>{hmParts(val ?? start(k))[0]}</span>
+              <small>h</small>
+              <span className={val == null ? 'ck-ghost' : undefined}>{String(hmParts(val ?? start(k))[1]).padStart(2, '0')}</span>
+              <small>min</small>
+            </output>
+          ) : (
+            <output>
+              <span className={val == null ? 'ck-ghost' : undefined}>{fmtV(k, val ?? start(k))}</span>
+              <small>{r.unit}</small>
+            </output>
+          )}
           <button type="button" className="ds-step" onClick={() => (cue('tick', sound), set(k, Math.min(max, start(k) + (draft[k] == null ? 0 : st))))} aria-label={`More ${label}`}>
             +
           </button>
         </div>
-        <input className="ds-range" type="range" min={min} max={max} step={st} value={val ?? start(k)} onChange={(e) => set(k, Number(e.target.value))} aria-label={label} />
+        <input className="ds-range" type="range" min={min} max={max} step={isHM ? 5 / 60 : st} value={val ?? start(k)} onChange={(e) => set(k, Number(e.target.value))} aria-label={label} />
         {val != null && r.status !== 'green' && r.action && (
           <p className="ds-hint">
             <em>{r.action}</em>

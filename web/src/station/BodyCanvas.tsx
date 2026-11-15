@@ -1,8 +1,9 @@
 // The 3D body: matte porcelain layers, white skeleton, the five systems tinted by status.
 // Click an organ or a label to open that system. Camera glides to the selected system.
-import { Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { Canvas, useFrame, useThree, type ThreeEvent } from '@react-three/fiber';
 import { ContactShadows, Environment, Html, Lightformer, OrbitControls } from '@react-three/drei';
+import { Bloom, EffectComposer, N8AO } from '@react-three/postprocessing';
 import * as THREE from 'three';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import { bodyGeometries, useBody } from '../components/body3d/BodyScene';
@@ -11,32 +12,36 @@ import A from '../components/body3d/anchors.json';
 import type { Status } from '../data/types';
 import type { SystemId } from './state';
 
+// Emile: parts that need care light up in soft red (amber and red both); healthy parts stay bone.
+const CARE = new THREE.Color('#ff6f6f');
 const TINT: Record<Status, THREE.Color> = {
-  green: new THREE.Color('#5eead4'),
-  amber: new THREE.Color('#fbbf24'),
-  red: new THREE.Color('#f87171'),
+  green: new THREE.Color('#9fe3d0'),
+  amber: CARE,
+  red: CARE,
 };
 const WHITE = new THREE.Color('#eef1f7');
+const BONE = new THREE.Color('#e6d9bf');
 const BLACK = new THREE.Color(0, 0, 0);
+const UP = new THREE.Vector3(0, 1, 0);
 const REDUCE = typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 const NO_PICK = new Set(['skin', 'muscles', 'lung_left', 'lung_right', 'airways']);
 
 const BASE: Record<string, number> = {
-  skin: 0.13,
+  skin: 0.06,
   muscles: 0,
   muscle_antigravity: 0.0,
-  bones: 0.7,
-  bones_loadbearing: 0.7,
-  arteries: 0.12,
-  artery_lad: 0.12,
-  veins: 0.07,
-  heart: 0.6,
-  brain: 0.6,
-  eyes: 0.4,
-  airways: 0.18,
-  organs: 0.4,
-  lung_left: 0.16,
-  lung_right: 0.16,
+  bones: 1,
+  bones_loadbearing: 1,
+  arteries: 0.1,
+  artery_lad: 0.1,
+  veins: 0.05,
+  heart: 0.55,
+  brain: 0.55,
+  eyes: 0.35,
+  airways: 0.12,
+  organs: 0.3,
+  lung_left: 0.1,
+  lung_right: 0.1,
 };
 
 /** Nodes that carry each system's tint. */
@@ -73,7 +78,10 @@ function Model({ tint, focus, onPick }: { tint: Record<SystemId, Status>; focus:
   const mats = useMemo(() => {
     const out: Record<string, THREE.MeshStandardMaterial> = {};
     for (const n of Object.keys(geo))
-      out[n] = new THREE.MeshStandardMaterial({ color: WHITE.clone(), roughness: n.startsWith('bones') ? 0.6 : 0.5, transparent: true, opacity: BASE[n] ?? 0.3, depthWrite: false });
+      out[n] = n.startsWith('bones')
+        ? // bone: warm ivory, matte with a faint waxy sheen, like a museum specimen under studio light
+          new THREE.MeshPhysicalMaterial({ color: BONE.clone(), roughness: 0.62, sheen: 0.5, sheenRoughness: 0.6, sheenColor: new THREE.Color('#fff4e0'), clearcoat: 0.08, clearcoatRoughness: 0.5, transparent: true, opacity: BASE[n] ?? 1, depthWrite: true })
+        : new THREE.MeshStandardMaterial({ color: WHITE.clone(), roughness: 0.5, transparent: true, opacity: BASE[n] ?? 0.3, depthWrite: false });
     return out;
   }, [geo]);
   useEffect(() => () => Object.values(mats).forEach((m) => m.dispose()), [mats]);
@@ -90,7 +98,7 @@ function Model({ tint, focus, onPick }: { tint: Record<SystemId, Status>; focus:
     for (const n of Object.keys(geo)) {
       let o = BASE[n] ?? 0.3;
       if (focus && focus !== 'whole_body') o = focusNodes.has(n) ? 0.95 : n === 'skin' ? 0.05 : n.startsWith('bones') ? 0.25 : Math.min(o, 0.12);
-      g[n] = { o, c: WHITE };
+      g[n] = { o, c: n.startsWith('bones') ? BONE : WHITE };
     }
     for (const sys of Object.keys(SYSTEM_NODES) as SystemId[]) {
       const s = tint[sys];
@@ -102,7 +110,7 @@ function Model({ tint, focus, onPick }: { tint: Record<SystemId, Status>; focus:
           g[n] = { o: s === 'green' ? 0.18 : 0.28, c: WHITE.clone().lerp(TINT[s], 0.7), e: TINT[s].clone().multiplyScalar(0.25) };
           continue;
         }
-        g[n] = { o: n === 'muscle_antigravity' ? 0.45 : 0.95, c: WHITE.clone().lerp(TINT[s], 0.82), top: s !== 'green', e: TINT[s].clone().multiplyScalar(s === 'green' ? 0.15 : 0.4) };
+        g[n] = { o: n === 'muscle_antigravity' ? 0.45 : 0.95, c: (n.startsWith('bones') ? BONE : WHITE).clone().lerp(TINT[s], s === 'green' ? 0.5 : 0.55), top: s !== 'green', e: TINT[s].clone().multiplyScalar(s === 'green' ? 0.12 : 0.55) };
       }
     }
     if (hover && hover !== focus)
@@ -128,7 +136,7 @@ function Model({ tint, focus, onPick }: { tint: Record<SystemId, Status>; focus:
       heart.position.copy(c).multiplyScalar(1 - s);
     }
     const k = 1 - Math.exp(-Math.min(dt, 0.05) / 0.09);
-    const pulse = REDUCE ? 1 : 0.75 + 0.25 * Math.sin(t * 3);
+    const pulse = REDUCE ? 1 : 0.7 + 0.3 * Math.sin(t * 1.8);
     for (const [n, m] of Object.entries(mats)) {
       const goal = goals[n];
       if (!goal) continue;
@@ -232,23 +240,31 @@ function Rig({ focus }: { focus: SystemId | null }) {
     c.update();
     if (camera.position.distanceTo(g.p) < 0.002 && c.target.distanceTo(g.t) < 0.002) g.on = false;
   });
-  return <OrbitControls ref={ctl} target={viewFor(focus).target} makeDefault enablePan={false} minDistance={0.4} maxDistance={4.5} enableDamping dampingFactor={0.08} minPolarAngle={0.5} maxPolarAngle={2.4} />;
-}
-
-/** A slow idle sway (about 14 degrees each way) so the body reads as 3D; it settles to front when a
- * system is open or the user drags, and stays still under prefers-reduced-motion. */
-function Sway({ still, children }: { still: boolean; children: ReactNode }) {
-  const ref = useRef<THREE.Group>(null);
-  const reduce = REDUCE;
-  const t0 = useRef(0);
+  // time-based idle orbit (one turn in about 50 s, same speed at any frame rate)
+  const idleRef = useRef(true);
+  const off = useRef(new THREE.Vector3());
   useFrame((_, dt) => {
-    const g = ref.current;
-    if (!g) return;
-    if (!still && !reduce) t0.current += dt;
-    const goal = still || reduce ? 0 : 0.25 * Math.sin(t0.current * 0.35);
-    g.rotation.y += (goal - g.rotation.y) * (1 - Math.exp(-dt * 4));
+    const c = ctl.current;
+    if (!c || !idleRef.current || REDUCE || goal.current.on) return;
+    off.current.copy(camera.position).sub(c.target).applyAxisAngle(UP, Math.min(dt, 0.1) * 0.125);
+    camera.position.copy(c.target).add(off.current);
+    c.update();
   });
-  return <group ref={ref}>{children}</group>;
+  // idle: the camera circles the body slowly so every side (and every part in soft red) comes into view;
+  // it stops while someone drags or a system is open, and resumes 4 s after the last touch
+  const [idle, setIdle] = useState(true);
+  useEffect(() => void (idleRef.current = idle), [idle]);
+  useEffect(() => {
+    const c = ctl.current;
+    if (!c) return;
+    let tm = 0;
+    const start = () => (window.clearTimeout(tm), setIdle(false));
+    const end = () => (tm = window.setTimeout(() => setIdle(true), 4000));
+    c.addEventListener('start', start);
+    c.addEventListener('end', end);
+    return () => (window.clearTimeout(tm), c.removeEventListener('start', start), c.removeEventListener('end', end));
+  }, []);
+  return <OrbitControls ref={ctl} target={viewFor(focus).target} makeDefault enablePan={false} minDistance={0.4} maxDistance={4.5} enableDamping dampingFactor={0.08} minPolarAngle={0.5} maxPolarAngle={2.4} />;
 }
 
 /** Radiation streaks across the body when the station is under a storm warning. */
@@ -304,11 +320,11 @@ export default function BodyCanvas({
   storm?: boolean;
 }) {
   const v0 = viewFor(focus);
-  const [held, setHeld] = useState(false);
   return (
-    <Canvas onPointerDown={() => setHeld(true)} onPointerUp={() => setHeld(false)} onPointerLeave={() => setHeld(false)} dpr={[1, 1.6]} camera={{ position: v0.pos, fov: 34, near: 0.01, far: 50 }} gl={{ antialias: true, alpha: true }}>
-      <ambientLight intensity={0.35} />
-      <directionalLight position={[-2, 4, 3]} intensity={2.2} />
+    <Canvas dpr={[1, 1.6]} camera={{ position: v0.pos, fov: 34, near: 0.01, far: 50 }} gl={{ antialias: true, alpha: true }}>
+      <hemisphereLight args={['#f4efe6', '#1a1f3a', 0.45]} />
+      <directionalLight position={[-2, 4, 3]} intensity={2.4} color="#fff3e2" />
+      <directionalLight position={[2.5, 2, -3]} intensity={1.6} color="#c9dcff" />
       <Environment resolution={128}>
         <Lightformer form="rect" intensity={3} position={[-2.5, 3.5, 3]} rotation={[-0.7, -0.5, 0]} scale={[6, 4, 1]} color="#ffffff" />
         <Lightformer form="rect" intensity={0.8} position={[3, 1, 2.5]} rotation={[0, 0.9, 0]} scale={[3, 5, 1]} color="#dfe8ff" />
@@ -321,14 +337,17 @@ export default function BodyCanvas({
           </Html>
         }
       >
-        <Sway still={focus != null || held}>
-          <Model tint={tint} focus={focus} onPick={onPick} />
-          <Labels tint={tint} focus={focus} values={values} onPick={onPick} />
-        </Sway>
+        <Model tint={tint} focus={focus} onPick={onPick} />
+        <Labels tint={tint} focus={focus} values={values} onPick={onPick} />
       </Suspense>
       <Particles on={storm} />
       <ContactShadows position={[0, 0.002, 0]} opacity={0.45} scale={2.2} blur={2.4} far={1.2} frames={1} />
       <Rig focus={focus} />
+      {/* contact shading between bones (ambient occlusion) and a soft bloom only on the red glow */}
+      <EffectComposer multisampling={0}>
+        <N8AO aoRadius={0.06} distanceFalloff={0.6} intensity={2.2} quality="medium" />
+        <Bloom intensity={0.55} luminanceThreshold={0.85} luminanceSmoothing={0.2} mipmapBlur />
+      </EffectComposer>
     </Canvas>
   );
 }
