@@ -1,6 +1,7 @@
 // The station: one frame (rail, status strip, alert bar, footer) around four screens that hand off to
 // each other. Overview -> Crew health -> Check-in -> back to Crew health; Radiation -> replay -> alarm.
 import { lazy, Suspense, useEffect } from 'react';
+import { alarmActive } from '../core/alarm';
 import { BrowserRouter, Navigate, NavLink, Outlet, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { ANATOMY_CREDIT, DISCLAIMERS } from '../components/Footer';
 import type { EnvironmentId } from '../data/types';
@@ -65,7 +66,7 @@ function Shell() {
 
   const red = views.filter((v) => v.overall === 'red');
   const top = queue.find((q) => q.tone === 'red');
-  const alarmOn = alarm.phase === 'warning' || alarm.phase === 'sheltered';
+  const alarmOn = alarmActive(alarm.phase);
 
   return (
     <div className={`st ${alarmOn ? 'is-alarm' : ''}`}>
@@ -178,6 +179,15 @@ function Shell() {
 }
 
 function Shelter({ phase, flare, p, onAck, onOpen, here }: { phase: string; flare?: string; p?: number; onAck: () => void; onOpen: () => void; here: boolean }) {
+  if (phase === 'arrived')
+    return (
+      <div className="st-shelterbar">
+        <Dot s="red" pulse />
+        <b>Emergency · storm in progress</b>
+        <span>Particles have arrived. All crew stay in the shelter. Dose monitored every 5 min.</span>
+        {!here && <button onClick={onOpen}>Open radiation</button>}
+      </div>
+    );
   if (phase === 'sheltered')
     return (
       <div className="st-shelterbar">
@@ -190,10 +200,10 @@ function Shelter({ phase, flare, p, onAck, onOpen, here }: { phase: string; flar
   return (
     <div className="st-shelter" role="alertdialog" aria-label="Solar storm warning">
       <div className="st-shelter-box">
-        <p className="st-cap">Emergency · solar radiation storm · NASA-STD-3001 class</p>
+        <p className="st-cap">Warning · solar storm forecast · NASA-STD-3001 class</p>
         <h2>All crew to the storm shelter</h2>
         <p className="st-shelter-sub">
-          Flare {flare} · storm chance {p != null ? Math.round(p * 100) : '—'}% in the next 72 h. Suspend EVA, move to the shielded area, wear dosimeters.
+          Flare {flare} · storm chance {p != null ? Math.round(p * 100) : '—'}% in the next 72 h. A forecast, not yet measured: suspend EVA and shelter as a precaution, wear dosimeters.
         </p>
         <div className="st-shelter-steps">
           <span>1 · Stop EVA and outside work</span>

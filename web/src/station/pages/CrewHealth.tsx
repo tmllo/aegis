@@ -1,6 +1,7 @@
 // One astronaut: five body systems on the left, the 3D body in the middle, the selected system on the
 // right with each reading against their own baseline, the trend, what it means and what to do.
 import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
+import { alarmActive } from '../../core/alarm';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import type { MetricKey, Status } from '../../data/types';
 import { CW_LABEL, CW_RANK, DUTY_LABEL, HAZARD_LABEL, MOOD_WORD, SYSTEMS, SYSTEM_BY_ID, WORD, dutyOf, firstName, fmtV, issueLine, seatOf, useStationData, type CrewView, type MetricRow } from '../model';
@@ -23,7 +24,7 @@ export default function CrewHealth() {
   const v = views.find((x) => x.m.id === id) ?? [...views].sort((a, b) => rank(b.overall) - rank(a.overall))[0];
   const worstSys = v ? (SYSTEMS.map((s) => s.id).sort((a, b) => CW_RANK[v.sys[b]] - CW_RANK[v.sys[a]])[0] as SystemId) : 'heart';
   const sel = (qs.get('s') as SystemId | null) ?? (v && v.overall !== 'green' ? worstSys : null);
-  const alarmOn = alarm.phase === 'warning' || alarm.phase === 'sheltered';
+  const alarmOn = alarmActive(alarm.phase);
   const [surgeon, setSurgeon] = useState(false);
 
   useEffect(() => setSurgeon(false), [id]);

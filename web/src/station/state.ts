@@ -35,7 +35,8 @@ export interface Extras {
   scanConf?: number;
 }
 
-export type AlarmPhase = 'off' | 'warning' | 'sheltered' | 'arrived';
+import type { AlarmPhase } from '../core/alarm';
+export type { AlarmPhase };
 
 export interface Alarm {
   phase: AlarmPhase;
