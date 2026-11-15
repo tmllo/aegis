@@ -106,9 +106,10 @@ export interface MarginNoteProps {
   environment: EnvironmentId;
   remeasure: boolean;
   onMetric: (m: MetricKey) => void;
+  onClose: () => void;
 }
 
-export function MarginNote({ plate, metric, member, data, environment, remeasure, onMetric }: MarginNoteProps) {
+export function MarginNote({ plate, metric, member, data, environment, remeasure, onMetric, onClose }: MarginNoteProps) {
   const meta = data.metrics[metric];
   const score = plate.scores.find((s) => s.metric === metric);
   if (!score) return null;
@@ -138,6 +139,11 @@ export function MarginNote({ plate, metric, member, data, environment, remeasure
       <p className="fr-line fr-note-head">
         <span className="fr-mono">{plate.no}</span>
         <span className="fr-label">{plate.scores.length > 1 ? `${plate.name} / ${names[metric]}` : meta.label}</span>
+        <button className="fr-close" aria-label="Close, back to the body" onClick={onClose}>
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
+            <path d="M4 4l14 14M18 4L4 18" />
+          </svg>
+        </button>
       </p>
       <p className="fr-line fr-hero">
         <span className="fr-hero-num"><Tween value={score.value} format={fmt} /></span>

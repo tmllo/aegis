@@ -17,6 +17,26 @@ export const INK: Record<Status | 'paper', string> = {
   red: '#F0564A',
 };
 
+/** The haze field behind the body: ember on the left, violet on the right (body.css .fr-haze). */
+const RIM = { warm: '#E08A52', cool: '#9C86E8' };
+
+/** Soft round glow, drawn once and shared by every halo and the floor. */
+function glowTexture(): THREE.CanvasTexture {
+  const c = document.createElement('canvas');
+  c.width = c.height = 128;
+  const g = c.getContext('2d')!;
+  const r = g.createRadialGradient(64, 64, 0, 64, 64, 64);
+  r.addColorStop(0, 'rgba(255,255,255,1)');
+  r.addColorStop(0.25, 'rgba(255,255,255,0.55)');
+  r.addColorStop(0.6, 'rgba(255,255,255,0.12)');
+  r.addColorStop(1, 'rgba(255,255,255,0)');
+  g.fillStyle = r;
+  g.fillRect(0, 0, 128, 128);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+
 /** Selected-but-nominal structures lift to this mid grey; full-strength ink is kept for amber and red. */
 const LIFT = '#827E74';
 /** Stand-off of the dose contour from the skin, metres: a readable minimum plus a share that grows with dose. */
@@ -55,6 +75,9 @@ const FRAG = /* glsl */ `
   uniform float uDim;
   uniform float uPulse;
   uniform vec3 uLight;
+  uniform vec3 uRimWarm;
+  uniform vec3 uRimCool;
+  uniform float uRim;
   varying vec3 vN;
   varying vec3 vV;
   varying vec3 vP;
@@ -71,7 +94,10 @@ const FRAG = /* glsl */ `
     vec3 inked = uInk * (0.5 + 0.55 * ndl) * uPulse;
     col = mix(col, inked, ink);
     col += uInk * fr * 0.45 * ink;
-    float a = uAlpha + uFresnel * fr;
+    // Glass rim: the haze field lights the edges, ember from the left, violet from the right.
+    vec3 rim = mix(uRimWarm, uRimCool, smoothstep(-0.55, 0.55, n.x));
+    col += rim * fr * uRim * (1.0 - ink);
+    float a = uAlpha + uFresnel * fr + uRim * 0.35 * fr * fr;
     a = mix(a, 1.0, ink * uSolid);
     a += ink * (1.0 - uSolid) * fr * 0.35;
     col *= mix(0.42, 1.0, uDim);
@@ -92,6 +118,8 @@ interface LayerDef {
   shade: number;
   solid: number;
   order: number;
+  /** Strength of the two-tone glass rim. */
+  rim?: number;
   prepass?: boolean;
   offset?: boolean;
 }
@@ -100,10 +128,10 @@ const LAYERS: LayerDef[] = [
   { node: 'brain', plate: 'brain', base: '#8E8A7F', opaque: true, alpha: 1, fresnel: 0, power: 2, shade: 1, solid: 1, order: 0 },
   { node: 'heart', plate: 'heart', base: '#A6A195', opaque: true, alpha: 1, fresnel: 0, power: 2, shade: 1, solid: 1, order: 0 },
   { node: 'blood', plate: 'blood', base: '#6E6B63', opaque: true, alpha: 1, fresnel: 0, power: 2, shade: 1, solid: 1, order: 0 },
-  { node: 'bones', plate: null, base: '#D8D3C6', opaque: false, alpha: 0.27, fresnel: 0.55, power: 1.6, shade: 0.9, solid: 1, order: 2, prepass: true },
+  { node: 'bones', plate: null, base: '#D8D3C6', opaque: false, alpha: 0.27, fresnel: 0.55, power: 1.6, shade: 0.9, solid: 1, order: 2, prepass: true, rim: 0.35 },
   { node: 'bones_loadbearing', plate: 'bone', base: '#D8D3C6', opaque: false, alpha: 0, fresnel: 0, power: 2, shade: 1, solid: 1, order: 3, offset: true },
   { node: 'muscle_antigravity', plate: 'muscle', base: '#A39A8E', opaque: false, alpha: 0.05, fresnel: 0.2, power: 2, shade: 0.8, solid: 0.92, order: 3 },
-  { node: 'whole_body', plate: 'temp', base: INK.paper, opaque: false, alpha: 0.015, fresnel: 0.5, power: 2.4, shade: 0, solid: 0, order: 5 },
+  { node: 'whole_body', plate: 'temp', base: INK.paper, opaque: false, alpha: 0.015, fresnel: 0.5, power: 2.4, shade: 0, solid: 0, order: 5, rim: 1.1 },
 ];
 
 function makeMaterial(def: LayerDef): THREE.ShaderMaterial {
@@ -128,6 +156,9 @@ function makeMaterial(def: LayerDef): THREE.ShaderMaterial {
       uDim: { value: 1 },
       uPulse: { value: 1 },
       uInflate: { value: 0 },
+      uRimWarm: { value: new THREE.Color(RIM.warm) },
+      uRimCool: { value: new THREE.Color(RIM.cool) },
+      uRim: { value: def.rim ?? 0 },
       // One light, from the upper left of the plate (view space).
       uLight: { value: new THREE.Vector3(-0.75, 0.55, 0.6) },
     },
@@ -177,6 +208,10 @@ export interface BodyFrame {
   scale: number;
   /** Canvas x of the body's centre line. */
   cx: number;
+  /** Canvas y of the body's centre (mid height). */
+  cy: number;
+  /** Current body turn, radians (damped, as drawn). */
+  turn: number;
 }
 
 const CENTER = new THREE.Vector3(0, 0.875, 0);
@@ -223,6 +258,47 @@ export function PlateBody({ plates, selected, metric, dose, turnDeg, reducedMoti
         },
       }),
     [],
+  );
+
+  // Halos: a soft additive glow on each structure that carries a status, and on the selected one.
+  const glow = useMemo(glowTexture, []);
+  const halos = useMemo(
+    () =>
+      plates
+        .filter((p) => p.node && p.node !== 'whole_body')
+        .map((p) => ({
+          id: p.id,
+          mat: new THREE.SpriteMaterial({ map: glow, color: INK.paper, transparent: true, opacity: 0, depthTest: false, depthWrite: false, blending: THREE.AdditiveBlending }),
+        })),
+    [plates, glow],
+  );
+  const haloRefs = useRef(new Map<PlateId, THREE.Sprite>());
+  const floor = useMemo(
+    () => ({
+      disc: new THREE.MeshBasicMaterial({ map: glow, color: INK.paper, transparent: true, opacity: 0.16, depthWrite: false, blending: THREE.AdditiveBlending }),
+      ring: new THREE.MeshBasicMaterial({ color: INK.paper, transparent: true, opacity: 0.55, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide }),
+      ringGeo: new THREE.RingGeometry(0.44, 0.447, 160),
+      outerGeo: new THREE.RingGeometry(0.62, 0.623, 160),
+      discGeo: new THREE.PlaneGeometry(1.5, 1.5),
+    }),
+    [glow],
+  );
+  useEffect(
+    () => () => {
+      halos.forEach((h) => h.mat.dispose());
+    },
+    [halos],
+  );
+  useEffect(
+    () => () => {
+      glow.dispose();
+      floor.disc.dispose();
+      floor.ring.dispose();
+      floor.ringGeo.dispose();
+      floor.outerGeo.dispose();
+      floor.discGeo.dispose();
+    },
+    [glow, floor],
   );
 
   useEffect(
@@ -296,6 +372,23 @@ export function PlateBody({ plates, selected, metric, dose, turnDeg, reducedMoti
       u.uPulse.value = period && !reducedMotion ? 0.86 + 0.14 * Math.sin((t / period) * Math.PI * 2) : 1;
     }
 
+    // Halos follow the status breathing; the selected structure glows, the rest dim with the body.
+    for (const h of halos) {
+      const plate = byId.get(h.id);
+      const sprite = haloRefs.current.get(h.id);
+      if (!plate || !sprite) continue;
+      const isSel = plate.id === selected;
+      const flagged = !neutral && plate.status !== 'green';
+      const period = flagged && !reducedMotion ? (plate.status === 'red' ? 1 : 2) : 0;
+      const breathe = period ? 0.8 + 0.2 * Math.sin((t / period) * Math.PI * 2) : 1;
+      const target = (flagged ? (sel && !isSel ? 0.25 : 0.85) : isSel ? 0.35 : 0) * breathe;
+      h.mat.opacity = THREE.MathUtils.damp(h.mat.opacity, target, reducedMotion ? 1000 : 8, dt);
+      h.mat.color.set(flagged ? INK[plate.status] : INK.paper);
+      const m = isSel && metric ? metric : plate.primary;
+      sprite.position.fromArray(plateAnchor(plate, m, 0));
+    }
+    floor.ring.opacity = THREE.MathUtils.damp(floor.ring.opacity, sel ? 0.2 : 0.55, k, dt);
+
     // Dose contour: stands further off the skin as the mission dose nears the career limit.
     const doseSel = selected === 'dose';
     const standoff = doseStandoff(dose);
@@ -336,11 +429,21 @@ export function PlateBody({ plates, selected, metric, dose, turnDeg, reducedMoti
         out[p.id] = { x: (v.x * 0.5 + 0.5) * state.size.width, y: (-v.y * 0.5 + 0.5) * state.size.height };
       }
       v.copy(CENTER).project(state.camera);
-      onProject(out, { scale: 1 / perPx, cx: (v.x * 0.5 + 0.5) * state.size.width });
+      onProject(out, {
+        scale: 1 / perPx,
+        cx: (v.x * 0.5 + 0.5) * state.size.width,
+        cy: (-v.y * 0.5 + 0.5) * state.size.height,
+        turn: group.current.rotation.y,
+      });
     }
   });
 
   return (
+    <>
+    {/* Floor: a lit disc and two thin rings under the feet, like a seat on its pad. */}
+    <mesh geometry={floor.discGeo} material={floor.disc} rotation-x={-Math.PI / 2} position-y={0.001} renderOrder={-1} />
+    <mesh geometry={floor.ringGeo} material={floor.ring} rotation-x={-Math.PI / 2} position-y={0.002} renderOrder={-1} />
+    <mesh geometry={floor.outerGeo} material={floor.disc} rotation-x={-Math.PI / 2} position-y={0.002} renderOrder={-1} />
     <group ref={group}>
       {layers.map((def) => (
         <group key={def.node}>
@@ -349,7 +452,17 @@ export function PlateBody({ plates, selected, metric, dose, turnDeg, reducedMoti
         </group>
       ))}
       {geoms.whole_body && <mesh geometry={geoms.whole_body} material={contour} renderOrder={6} />}
+      {halos.map((h) => (
+        <sprite
+          key={h.id}
+          material={h.mat}
+          scale={h.id === 'bone' || h.id === 'muscle' ? 0.62 : 0.46}
+          renderOrder={7}
+          ref={(el) => void (el ? haloRefs.current.set(h.id, el) : haloRefs.current.delete(h.id))}
+        />
+      ))}
     </group>
+    </>
   );
 }
 

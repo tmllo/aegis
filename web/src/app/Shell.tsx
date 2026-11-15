@@ -1,5 +1,7 @@
-// App shell: top nav (01 Body, 02 Cabin), crew switcher, mission facts, footer.
-import { NavLink, Outlet } from 'react-router-dom';
+// App shell: editorial top bar (01 Body, 02 Cabin), crew switcher, mission facts,
+// a vertical caption on the right edge, and the footer with every disclaimer.
+import { motion, useReducedMotion } from 'framer-motion';
+import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { ANATOMY_CREDIT, DISCLAIMERS } from '../components/Footer';
 import { useMissionData, useMissionStore } from '../data/store';
 import { Shape } from '../ui/status';
@@ -15,8 +17,12 @@ export function Shell() {
   const crewId = useMissionStore((s) => s.selectedCrewId);
   const setCrew = useMissionStore((s) => s.setSelectedCrewId);
   const environment = useMissionStore((s) => s.environment);
+  const still = useReducedMotion();
+  const { pathname } = useLocation();
   const crew = data?.crew;
   const day = crew ? Math.round((Date.parse(crew.mission.today) - Date.parse(crew.mission.start_date)) / 86_400_000) + 1 : null;
+  // One key per section, so switching crew or opening a plate does not replay the entrance.
+  const section = pathname.startsWith('/cabin/replay') ? 'replay' : pathname.split('/')[1] || 'body';
 
   return (
     <div className="app">
@@ -28,7 +34,7 @@ export function Shell() {
         <nav className="app-sections" aria-label="Sections">
           {SECTIONS.map((s) => (
             <NavLink key={s.to} to={s.to} className={({ isActive }) => `app-section fx-press${isActive ? ' is-active' : ''}`}>
-              <span className="fx-mono">{s.no}</span>
+              <span className="app-section-no">{s.no}</span>
               {s.name}
             </NavLink>
           ))}
@@ -57,7 +63,24 @@ export function Shell() {
           </p>
         )}
       </header>
-      <main className="app-main">{loadState === 'error' ? <p className="app-error">{error}</p> : <Outlet />}</main>
+      <main className="app-main">
+        {loadState === 'error' ? (
+          <p className="app-error">{error}</p>
+        ) : (
+          <motion.div
+            key={section}
+            className="app-page"
+            initial={still ? false : { opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <Outlet />
+          </motion.div>
+        )}
+        <p className="app-edge" aria-hidden="true">
+          {DISCLAIMERS[0]} <span>/</span> {DISCLAIMERS[1]}
+        </p>
+      </main>
       <footer className="app-foot">
         <p>{[...DISCLAIMERS, ...(data ? [`Space weather data: ${data.storm.meta.data_credit}`, `Model: ${data.storm.meta.model}`] : [])].join('  /  ')}</p>
         <p>{ANATOMY_CREDIT}</p>
