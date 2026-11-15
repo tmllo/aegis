@@ -227,13 +227,14 @@ def story_chart(out: dict, dbg: dict, path) -> None:
     ax2.text(df.index[m][2], fz["thresholds"]["amber"] * 1.08, f"amber {fz['thresholds']['amber']:g}", fontsize=8, color=ink2)
     ax2.text(df.index[m][2], fz["thresholds"]["red"] * 1.04, f"red {fz['thresholds']['red']:g}", fontsize=8, color=ink2)
     for a_ in axes[:2]:
-        for key, lbl, col in (("start", "fault starts", ink2), ("detected_at", "model flags", amber_c), ("limit_crossed_at", "crosses 3.0", red_c)):
-            if an.get(key):
-                tt = pd.Timestamp(an[key])
-                a_.axvline(tt, color=col, lw=1.4)
-                if a_ is axes[0]:
-                    a_.annotate(f"{lbl}\n{tt.strftime('%d %b %H:%M')}Z", (tt, a_.get_ylim()[1]), xytext=(4, -26),
-                                textcoords="offset points", fontsize=8.5, color=ink)
+        marks = [("start", "fault starts", ink2), ("detected_at", "model flags", amber_c), ("limit_crossed_at", "crosses 3.0", red_c)]
+        marks = sorted([m_ for m_ in marks if an.get(m_[0])], key=lambda m_: an[m_[0]])
+        for j, (key, lbl, col) in enumerate(marks):
+            tt = pd.Timestamp(an[key])
+            a_.axvline(tt, color=col, lw=1.4)
+            if a_ is axes[0]:  # left-aligned label to the right of the line, stacked so neighbours never collide
+                a_.annotate(f"{lbl}  {tt.strftime('%d %b %H:%M')}Z", (tt, a_.get_ylim()[1]), xytext=(-4, -14 - 14 * j),
+                            textcoords="offset points", fontsize=8.5, color=ink, ha="right")
     c2 = next(c for c in crew["crew"] if c["id"] == "c2")
     sd = pd.DataFrame(c2["series"])
     sd["t"] = pd.to_datetime(sd["date"]).dt.tz_localize("UTC") + pd.Timedelta(hours=12)
@@ -263,8 +264,30 @@ def story_chart(out: dict, dbg: dict, path) -> None:
     plt.close(fig)
 
 
+def shadow_baseline(dbg: dict) -> list[str]:
+    """Information only (not shipped): the static 3σ baseline with ITS frozen MSL config on the same stream."""
+    if not C.VALIDATION_JSON.exists():
+        return []
+    st = json.loads(C.VALIDATION_JSON.read_text(encoding="utf-8"))["detectors"]["static"]
+    df, faults, nb = dbg["df"], dbg["faults"], C.BASELINE_DAYS * 24
+    lines = [f"shadow static 3σ (thr={st['amber']}, min_dur={st['min_duration_steps']}, gap={st['gap']}), not shipped:"]
+    for k in C.CHANNEL_KEYS:
+        x = df[k].ffill().bfill().to_numpy()
+        ev = to_events(StaticThreshold().fit(x[:nb]).score(x), st["amber"], st["min_duration_steps"], st["gap"])
+        fk = [f for f in faults if f["channel"] == k]
+        fa = [e for e in ev if not any(e[0] <= f["i1"] and f["i0"] <= e[1] for f in fk)]
+        msg = [f"{k}: {len(fa)} false alarm events"]
+        for f in fk:
+            hit = [e for e in ev if e[0] <= f["i1"] and f["i0"] <= e[1]]
+            msg.append(f"{f['id']} " + (f"flagged at {df.index[hit[0][0]]:%d %b %H:%M}" if hit else "missed"))
+        lines.append("  " + "; ".join(msg))
+    return lines
+
+
 def main():
     out, dbg = build()
+    for line in shadow_baseline(dbg):
+        print(line)
     C.HABITAT_JSON.write_text(json.dumps(out, ensure_ascii=False, separators=(",", ":"), allow_nan=False), encoding="utf-8")
     story_chart(out, dbg, C.RESULTS / "habitat_co2_story.png")
     print(f"wrote {C.HABITAT_JSON} ({len(out['series'])} rows, {len(out['anomalies'])} anomalies), status {out['status']}")
