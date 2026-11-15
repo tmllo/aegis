@@ -120,7 +120,6 @@ function Shell() {
                   { to: '/', label: 'Me', icon: 'body', alert: mine?.overall, end: true },
                   { to: '/care', label: 'Care', icon: 'care', alert: careS },
                   { to: '/radiation', label: 'Radiation', icon: 'environment', alert: envS },
-                  { to: '/surgeon', label: 'Surgeon', icon: 'surgeon' },
                 ]
           }
         />

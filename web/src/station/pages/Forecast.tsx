@@ -5,7 +5,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import type { AlertLevel, FlareEvent } from '../../data/types';
-import { classOf, pathOf, PATH_WORD, scan, SHIELD, utc, whatIf, frontHours } from '../forecast';
+import { classOf, pathOf, scan, SHIELD, utc, whatIf } from '../forecast';
 import type { Status } from '../../data/types';
 import { useStationData } from '../model';
 import type { ReactNode } from 'react';
@@ -39,6 +39,8 @@ export default function Forecast({ replay }: { replay: ReactNode }) {
   const setAlarm = useStation((s) => s.setAlarm);
   const alarm = useStation((s) => s.alarm);
   const sound = useStation((s) => s.sound);
+  const me = useStation((s) => s.me);
+  const medic = me === 'medic';
   const [mode, setMode] = useState<'forecast' | 'test' | 'replay'>('forecast');
   const test = mode === 'test';
   const { hash } = useLocation();
@@ -62,7 +64,7 @@ export default function Forecast({ replay }: { replay: ReactNode }) {
   const focus: { lat: number; lon: number; label: string; level: AlertLevel } | null = test
     ? { lat: 12, lon: q.lon, label: `Test ${classOf(q.flux)} · ${Math.round((wi?.p ?? 0) * 100)}%`, level: wi?.level ?? 'none' }
     : s.top && s.top.latitude_deg != null && s.top.longitude_deg != null
-      ? { lat: s.top.latitude_deg, lon: s.top.longitude_deg, label: `${s.top.flare_class} · ${s.top.source_location ?? ''} · ${(s.top.p_storm * 100).toFixed(1)}%`, level: s.top.alert_level }
+      ? { lat: s.top.latitude_deg, lon: s.top.longitude_deg, label: `${s.top.flare_class} flare · ${(s.top.p_storm * 100).toFixed(1)}% storm chance`, level: s.top.alert_level }
       : null;
   const flowLevel: AlertLevel = test ? (wi?.level ?? 'none') : s.level;
   const foot = (test ? tPath : s.path)?.foot ?? 60;
@@ -85,9 +87,6 @@ export default function Forecast({ replay }: { replay: ReactNode }) {
   const left = (
     <>
       <Check s={alarm.phase !== 'off' ? 'red' : st(lvl)} title={test ? `Test flare ${classOf(q.flux)}` : 'Storm forecast'} word={alarm.phase !== 'off' ? 'Alarm active' : `${LEVEL_TITLE[lvl]} · ${pctTxt(p)}% in ${meta.horizon_hours} h`} />
-      <Check s={(test ? tPath : s.path)?.path === 'direct' && lvl !== 'none' ? 'amber' : 'green'} title="Magnetic path" word={(test ? tPath : s.path) ? PATH_WORD[(test ? tPath : s.path)!.path] : 'No open flare'} />
-      <Check s={(test ? q.cme : !!s.front) ? 'amber' : 'green'} title="Eruption front" word={test ? (q.cme ? `Reaches the crew in ~${Math.round(frontHours(q.kms, env))} h` : 'None') : s.front ? `Reaches the crew ~${utc(s.front.at)}` : 'None linked'} />
-      <Check s="green" title="Particles would arrive" word={`${Math.round(s.arrival.p25)}–${Math.round(s.arrival.p75)} h after a flare (${s.arrival.n} real storms)`} />
       <Check s={shield.word === 'Strong' ? 'green' : 'amber'} title={`Shielding · ${place}`} word={shield.word} />
       <Check s={st(lvl)} title="What to do" word={alarm.phase !== 'off' ? 'Follow the shelter steps' : LEVEL_DO[lvl]} />
     </>
@@ -127,8 +126,8 @@ export default function Forecast({ replay }: { replay: ReactNode }) {
         <SideCap>Radiation now</SideCap>
         <Vital icon="sun" label={`Storm chance, next ${meta.horizon_hours} h`} value={pctTxt(p)} unit="%" s={st(lvl)} history={s.month.map((e) => ({ v: e.p_storm, flag: e.alert_level === 'none' ? null : st(e.alert_level) }))} note={`Each bar is a flare in the last 30 days, scored by the model`} />
         <Vital icon="dose" label={`Dose rate · ${place}`} value={rate} unit="mSv/day" s={rate > 1 ? 'amber' : 'green'} range={{ min: 0, max: 2, v: rate }} note={`Shielding: ${shield.word.toLowerCase()}`} />
-        <SideCap>Career dose · limit {limit} mSv</SideCap>
-        {doses.map(({ v, d }) => (
+        <SideCap>{medic ? 'Career dose' : 'My career dose'} · limit {limit} mSv</SideCap>
+        {doses.filter(({ v }) => medic || v.m.id === me).map(({ v, d }) => (
           <Bar key={v.m.id} label={roleOf(v.m)} value={`${(((d.cumulative_mSv ?? 0) / limit) * 100).toFixed(1)}%`} frac={(d.cumulative_mSv ?? 0) / limit} s={(d.cumulative_mSv ?? 0) / limit > 0.5 ? 'amber' : 'green'} />
         ))}
         <SideCap>Model on unseen {meta.test_period[0].slice(0, 4)}–{meta.test_period[1].slice(0, 4)}</SideCap>
@@ -185,9 +184,6 @@ export default function Forecast({ replay }: { replay: ReactNode }) {
             const side = (l: number) => (l >= 0 ? 1 : 0);
             return <path className="fc-band" d={`M ${SUN.x} ${SUN.y - SUN.r} A ${rx(a)} ${SUN.r} 0 0 ${side(a)} ${SUN.x} ${SUN.y + SUN.r} A ${rx(b)} ${SUN.r} 0 0 ${1 - side(b)} ${SUN.x} ${SUN.y - SUN.r} Z`} />;
           })()}
-          <text x={SUN.x + SUN.r * 0.62} y={SUN.y - SUN.r - 14} className="fc-svg-cap">
-            wired to the crew
-          </text>
 
           {/* flares of the last 30 days; open ones pulse */}
           {s.month.map((e: FlareEvent) => {
@@ -203,12 +199,6 @@ export default function Forecast({ replay }: { replay: ReactNode }) {
             );
           })}
 
-          {/* scan sweep */}
-          <g className="fc-sweep" style={{ transformOrigin: `${SUN.x}px ${SUN.y}px` }}>
-            <path d={`M ${SUN.x} ${SUN.y} L ${SUN.x + SUN.r + 26} ${SUN.y} A ${SUN.r + 26} ${SUN.r + 26} 0 0 0 ${SUN.x + (SUN.r + 26) * Math.cos(28 * D)} ${SUN.y - (SUN.r + 26) * Math.sin(28 * D)} Z`} fill="url(#fc-sweep)" opacity="0.16" />
-          </g>
-          <circle cx={SUN.x} cy={SUN.y} r={SUN.r + 26} className="fc-ring" />
-          <circle cx={SUN.x} cy={SUN.y} r={SUN.r + 40} className="fc-ring is-ticks" />
 
           {/* focus reticle */}
           {focus &&
@@ -247,32 +237,14 @@ export default function Forecast({ replay }: { replay: ReactNode }) {
             </text>
           </g>
 
-          {/* HUD readouts */}
-          <g className="fc-hud">
-            <text x="24" y="34">
-              SCAN {utc(s.at).toUpperCase()}
-            </text>
-            <text x="24" y="58">
-              FLARES 30 D · {s.month.length}
-            </text>
-            <text x="24" y="82">
-              OPEN {meta.horizon_hours} H WINDOW · {s.open.length}
-            </text>
-            <text x={W - 24} y="34" textAnchor="end">
-              NASA DONKI · RECORDED
-            </text>
-            <text x={W - 24} y="58" textAnchor="end">
-              MODEL {meta.model.replace('_', ' ').toUpperCase()}
-            </text>
-          </g>
         </svg>
   );
 
   return (
     <Page
       className={mode === 'replay' ? 'is-replay' : ''}
-      title="Environment"
-      sub={mode === 'replay' ? 'May 2024 superstorm · the model never saw 2024' : `Radiation · scan ${utc(s.at)} · NASA DONKI, recorded`}
+      title="Radiation"
+      sub={mode === 'replay' ? 'May 2024 superstorm · the model never saw 2024' : `Solar storm forecast · NASA DONKI data, recorded ${utc(s.at)}`}
       left={left}
       object={mode === 'replay' ? <div className="fr-replay">{replay}</div> : sun}
       right={mode === 'replay' ? undefined : right}

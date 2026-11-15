@@ -21,9 +21,8 @@ export function useBeats(): Beat[] {
     const amber = byRank.find((v) => v.overall === 'amber');
     const mt = data.storm.meta.metrics_test;
     const sysOfCW = (v: (typeof views)[number]) => SYSTEMS.map((s) => s.id).sort((a, b) => CW_RANK[v.sys[b]] - CW_RANK[v.sys[a]])[0];
-    const cleared = views.filter((v) => v.cw === 'nominal' || v.cw === 'advisory').length;
     const beats: Beat[] = [
-      { to: '/', title: 'Crew health today', say: `${cleared} of ${views.length} crew cleared for EVA. Every reading is judged against that astronaut's own baseline, and every alert uses NASA's caution & warning classes, which say who has to act.` },
+      { to: '/', title: 'My health today', say: `Each astronaut sees their own status first; only the medic sees the crew. Every reading is judged against that astronaut's own baseline, and every alert uses NASA's caution & warning classes, which say who has to act.` },
     ];
     if (amber) beats.push({ to: `/body/${amber.m.id}?s=${sysOfCW(amber)}`, title: `${roleOf(amber.m)} · caution`, say: `${amber.issue ? issueLine(amber.issue) : ''}. Fine by textbook ranges, flagged because it is not normal for this astronaut. Countermeasure loop: act, re-measure, close.` });
     if (red) beats.push({ to: `/body/${red.m.id}?s=${sysOfCW(red)}`, title: `${roleOf(red.m)} · warning`, say: `${red.issue ? issueLine(red.issue) : ''}. A warning puts them on hold for safety-critical tasks and opens a line to the flight surgeon.` });
