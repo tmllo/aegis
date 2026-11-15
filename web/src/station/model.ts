@@ -1,0 +1,255 @@
+// Everything the station screens show, derived from the data files (data/) with the
+// contract scoring rule (core/scoring) plus what the crew entered this session (state).
+import { useMemo } from 'react';
+import { contextFor, dayIndex, scoreDay, regionStatus, type MetricScore } from '../core/scoring';
+import { doseSummary, sortedEvents } from '../core/radiation';
+import { useMissionData, useMissionStore } from '../data/store';
+import type { CrewData, CrewMember, EnvironmentId, FlareEvent, MetricKey, RegionStatus, Status, StormForecast } from '../data/types';
+import { useStation, type SystemId } from './state';
+
+export const BRAND = 'AEGIS';
+export const TAGLINE = 'Crew health & radiation early warning';
+
+export const WORD: Record<Status, string> = { green: 'Nominal', amber: 'Watch', red: 'Act now' };
+export const RANK: Record<Status, number> = { green: 0, amber: 1, red: 2 };
+export const worstOf = (...s: Status[]): Status => s.reduce<Status>((a, b) => (RANK[b] > RANK[a] ? b : a), 'green');
+
+export interface SystemDef {
+  id: SystemId;
+  name: string;
+  sub: string;
+  metrics: MetricKey[];
+}
+
+export const SYSTEMS: SystemDef[] = [
+  { id: 'brain', name: 'Brain & sleep', sub: 'Sleep, mood', metrics: ['sleep_h', 'mood'] },
+  { id: 'heart', name: 'Heart', sub: 'Heart rate, blood pressure', metrics: ['hr', 'bp_sys', 'bp_dia'] },
+  { id: 'blood', name: 'Blood', sub: 'Blood sugar', metrics: ['glucose'] },
+  { id: 'bones', name: 'Bones & muscle', sub: 'Exercise, bone loss', metrics: ['exercise_min', 'bone_loss_pct'] },
+  { id: 'whole_body', name: 'Whole body', sub: 'Temperature, radiation', metrics: ['temp', 'dose_mSv_day', 'dose_mSv_cum'] },
+];
+export const SYSTEM_BY_ID = Object.fromEntries(SYSTEMS.map((s) => [s.id, s])) as Record<SystemId, SystemDef>;
+
+export const SHORT: Record<MetricKey, string> = {
+  hr: 'Heart rate',
+  bp_sys: 'Systolic BP',
+  bp_dia: 'Diastolic BP',
+  glucose: 'Blood sugar',
+  temp: 'Body temp',
+  sleep_h: 'Sleep',
+  mood: 'Mood',
+  exercise_min: 'Exercise',
+  bone_loss_pct: 'Est. bone loss',
+  dose_mSv_day: 'Dose today',
+  dose_mSv_cum: 'Mission dose',
+};
+
+export const digits = (k: MetricKey): number =>
+  k === 'temp' || k === 'sleep_h' || k === 'bone_loss_pct' ? 1 : k === 'dose_mSv_day' ? 2 : k === 'dose_mSv_cum' ? 1 : 0;
+
+export const fmtV = (k: MetricKey, v: number | null | undefined): string => (v == null ? '—' : v.toFixed(digits(k)));
+
+export const MOOD_WORD = ['', 'Very low', 'Low', 'Okay', 'Good', 'Great'];
+
+export const ROLE_SHORT: Record<string, string> = { Commander: 'CDR', 'Flight Engineer': 'FE', 'Mission Scientist': 'MS' };
+export const seatOf = (m: CrewMember) => ROLE_SHORT[m.role] ?? m.role.slice(0, 3).toUpperCase();
+export const surname = (m: CrewMember) => m.name.split(' ').slice(-1)[0];
+export const firstName = (m: CrewMember) => m.name.replace(/^\S+\.\s/, '').split(' ')[0];
+export const initials = (m: CrewMember) =>
+  m.name
+    .replace(/^\S+\.\s/, '')
+    .split(' ')
+    .map((p) => p[0])
+    .join('')
+    .slice(0, 2);
+
+export interface MetricRow {
+  k: MetricKey;
+  label: string;
+  unit: string;
+  value: number | null;
+  status: Status;
+  z: number | null;
+  mean: number | null;
+  lo: number | null;
+  hi: number | null;
+  /** last 28 days, oldest first */
+  history: { date: string; v: number | null; flag: Status | null }[];
+  /** consecutive flagged days up to today */
+  running: number;
+  action: string | null;
+  entered: boolean;
+}
+
+export interface CrewView {
+  m: CrewMember;
+  status: RegionStatus;
+  overall: Status;
+  scores: MetricScore[];
+  rows: Record<MetricKey, MetricRow>;
+  /** the single most important issue */
+  issue: MetricRow | null;
+  issues: MetricRow[];
+  checkedIn: boolean;
+}
+
+/** Values typed in today replace the series value, so they are scored like any reading. */
+export function withEntries(cd: CrewData, m: CrewMember, day: Partial<Record<MetricKey, number>> | undefined): CrewMember {
+  if (!day || !Object.keys(day).length) return m;
+  return { ...m, series: m.series.map((r) => (r.date === cd.mission.today ? { ...r, ...day } : r)) };
+}
+
+export function buildView(cd: CrewData, raw: CrewMember, entries: Partial<Record<MetricKey, number>> | undefined, env: EnvironmentId, checkedIn: boolean): CrewView {
+  const m = withEntries(cd, raw, entries);
+  const i = dayIndex(m, cd.mission.today);
+  const scores = i < 0 ? [] : scoreDay(m, cd.metrics, i, contextFor(cd, env));
+  const status = regionStatus(scores, cd.metrics);
+  const rows = {} as Record<MetricKey, MetricRow>;
+  for (const k of Object.keys(cd.metrics) as MetricKey[]) {
+    const meta = cd.metrics[k];
+    const s = scores.find((x) => x.metric === k);
+    const b = m.baseline[k];
+    const st: Status = s?.status ?? 'green';
+    const flagBy = new Map(m.flags.filter((f) => f.metric === k).map((f) => [f.date, f.severity as Status]));
+    // a check-in today overrides the file's flag for today
+    if (entries && k in entries) flagBy.set(cd.mission.today, st === 'green' ? (null as unknown as Status) : st);
+    let running = 0;
+    for (let j = i; j >= 0 && flagBy.get(m.series[j].date); j--) running++;
+    const hist = i >= 0 ? m.series.slice(Math.max(0, i - 27), i + 1) : [];
+    rows[k] = {
+      k,
+      label: SHORT[k],
+      unit: meta.unit,
+      value: i >= 0 ? m.series[i][k] : null,
+      status: st,
+      z: s?.z ?? null,
+      mean: b?.mean ?? null,
+      lo: b ? b.mean - 2 * b.sd : null,
+      hi: b ? b.mean + 2 * b.sd : null,
+      history: hist.map((r) => ({ date: r.date, v: r[k], flag: flagBy.get(r.date) ?? null })),
+      running,
+      action: st === 'green' ? null : meta.actions[st],
+      entered: !!entries && k in entries,
+    };
+  }
+  const issues = Object.values(rows)
+    .filter((r) => r.status !== 'green')
+    .sort((a, b) => RANK[b.status] - RANK[a.status] || Math.abs(b.z ?? 0) - Math.abs(a.z ?? 0));
+  // the paired BP reading counts once
+  const dedup = issues.filter((r, idx) => !(r.k === 'bp_dia' && issues.slice(0, idx).some((x) => x.k === 'bp_sys')));
+  return { m, status, overall: status.overall, scores, rows, issue: dedup[0] ?? null, issues: dedup, checkedIn };
+}
+
+/** One sentence for a row in trouble: "Sleep 5.4 h, 3.1σ below her usual for 4 days". */
+export function issueLine(r: MetricRow): string {
+  const val = `${r.label} ${fmtV(r.k, r.value)}${r.unit === '1-5' ? '/5' : ` ${r.unit}`}`;
+  if (r.z == null) return `${val}, outside the safe range`;
+  const dir = r.z >= 0 ? 'above' : 'below';
+  const days = r.running > 1 ? ` for ${r.running} days` : '';
+  return `${val} · ${Math.abs(r.z).toFixed(1)}σ ${dir} own baseline${days}`;
+}
+
+export function systemStatus(v: CrewView, s: SystemId): Status {
+  return v.status[s];
+}
+
+/* ------------------------------------------------------------------ space weather */
+
+export interface SpaceWeather {
+  latest: FlareEvent | null;
+  /** highest alert among flares in the last horizon hours before the newest flare */
+  level: 'none' | 'watch' | 'warning';
+  p: number;
+  recent: FlareEvent[];
+}
+
+export function spaceWeather(storm: StormForecast): SpaceWeather {
+  const ev = sortedEvents(storm);
+  const latest = ev[ev.length - 1] ?? null;
+  if (!latest) return { latest: null, level: 'none', p: 0, recent: [] };
+  const cutoff = Date.parse(latest.peak_time) - storm.meta.horizon_hours * 3600e3;
+  const win = ev.filter((e) => Date.parse(e.peak_time) >= cutoff);
+  const top = win.reduce((a, b) => (b.p_storm > a.p_storm ? b : a), latest);
+  return { latest, level: top.alert_level, p: top.p_storm, recent: ev.slice(-12).reverse() };
+}
+
+export const LEVEL_WORD = { none: 'Quiet', watch: 'Watch', warning: 'Warning' } as const;
+export const LEVEL_STATUS: Record<'none' | 'watch' | 'warning', Status> = { none: 'green', watch: 'amber', warning: 'red' };
+
+/* ------------------------------------------------------------------ action queue */
+
+export interface QueueItem {
+  id: string;
+  tone: Status | 'info';
+  who: string;
+  title: string;
+  detail: string;
+  cta: string;
+  to: string;
+}
+
+export function actionQueue(views: CrewView[], sw: SpaceWeather | null, stationAlarm: boolean): QueueItem[] {
+  const out: QueueItem[] = [];
+  if (stationAlarm) out.push({ id: 'alarm', tone: 'red', who: 'All crew', title: 'Solar storm warning', detail: 'Suspend EVA. Move to the storm shelter.', cta: 'Open radiation', to: '/radiation' });
+  for (const v of views) {
+    for (const r of v.issues) {
+      out.push({
+        id: `${v.m.id}-${r.k}`,
+        tone: r.status,
+        who: `${seatOf(v.m)} · ${firstName(v.m)}`,
+        title: issueLine(r),
+        detail: r.action ?? '',
+        cta: r.status === 'red' ? 'Review & call surgeon' : 'Review',
+        to: `/crew/${v.m.id}?s=${metricSystem(r.k)}`,
+      });
+    }
+  }
+  for (const v of views) {
+    if (!v.checkedIn) out.push({ id: `${v.m.id}-checkin`, tone: 'info', who: `${seatOf(v.m)} · ${firstName(v.m)}`, title: 'Daily check-in due', detail: 'Sleep, mood and vitals: about a minute.', cta: 'Start check-in', to: `/checkin/${v.m.id}` });
+  }
+  if (sw && sw.level !== 'none' && !stationAlarm)
+    out.push({ id: 'sw', tone: LEVEL_STATUS[sw.level], who: 'Space weather', title: `${LEVEL_WORD[sw.level]}: storm chance ${Math.round(sw.p * 100)}%`, detail: 'Keep EVA plans flexible and check the forecast again.', cta: 'Open radiation', to: '/radiation' });
+  const order = { red: 0, amber: 1, info: 2, green: 3 } as const;
+  return out.sort((a, b) => order[a.tone] - order[b.tone]);
+}
+
+export const METRIC_SYSTEM: Record<MetricKey, SystemId> = {
+  hr: 'heart',
+  bp_sys: 'heart',
+  bp_dia: 'heart',
+  glucose: 'blood',
+  temp: 'whole_body',
+  sleep_h: 'brain',
+  mood: 'brain',
+  exercise_min: 'bones',
+  bone_loss_pct: 'bones',
+  dose_mSv_day: 'whole_body',
+  dose_mSv_cum: 'whole_body',
+};
+export const metricSystem = (k: MetricKey) => METRIC_SYSTEM[k];
+
+/* ------------------------------------------------------------------ the hook */
+
+export function useStationData() {
+  const { data, loadState, error } = useMissionData();
+  const env = useMissionStore((s) => s.environment) ?? data?.crew.mission.environment ?? 'iss';
+  const setEnv = useMissionStore((s) => s.setEnvironment);
+  const entries = useStation((s) => s.entries);
+  const checkins = useStation((s) => s.checkins);
+  const alarm = useStation((s) => s.alarm);
+  const views = useMemo(
+    () => (data ? data.crew.crew.map((m) => buildView(data.crew, m, entries[m.id], env, !!checkins[m.id])) : []),
+    [data, entries, env, checkins],
+  );
+  const sw = useMemo(() => (data ? spaceWeather(data.storm) : null), [data]);
+  const day = data ? Math.round((Date.parse(data.crew.mission.today) - Date.parse(data.crew.mission.start_date)) / 864e5) + 1 : 0;
+  const doses = useMemo(() => (data ? views.map((v) => ({ v, d: doseSummary(v.m, data.crew, env) })) : []), [data, views, env]);
+  const queue = useMemo(() => actionQueue(views, sw, alarm.phase === 'warning' || alarm.phase === 'sheltered'), [views, sw, alarm.phase]);
+  return { data, loadState, error, env, setEnv, views, sw, day, doses, queue };
+}
+
+export const fmtDay = (d: string) =>
+  new Date(`${d.slice(0, 10)}T00:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
+
+export const PLACE: Record<EnvironmentId, string> = { iss: 'Low Earth orbit', moon: 'Lunar surface', transit: 'Deep space', mars: 'Mars surface' };
+export const LINK_DELAY: Record<EnvironmentId, string> = { iss: '< 1 s', moon: '1.3 s', transit: '3–20 min', mars: '4–24 min' };
