@@ -132,6 +132,8 @@ class IssLiveSnapshot:
             try:
                 value = float(fields.get("CalibratedData"))
                 t = iss_time(fields.get("TimeStamp"), year)
+                if t > (datetime.now(timezone.utc) + timedelta(days=1)).strftime("%Y-%m-%dT%H:%M:%SZ"):
+                    t = iss_time(fields.get("TimeStamp"), year - 1)   # stamped last year, read just after 1 Jan
             except (TypeError, ValueError):
                 return
             obs = Observation("iss", m["key"], t, value, m["unit"], self.source, "live",
@@ -162,9 +164,14 @@ class IssLiveSnapshot:
             got = [rows[i] for i in by_item if i in rows]
         if not got:
             return self.load_recorded(cat, f"no usable update from {self.server} within {self.timeout:g} s")
-        batch = Batch(self.source, "live",
-                      note=f"{self.server} adapter set {self.adapter_set}: {len(got)} of {len(by_item)} items arrived")
-        batch.observations.extend(got)
+        live_keys = {o.metric for o in got}
+        filled = [o for o in self.load_recorded(cat).observations
+                  if o.metric not in live_keys and o.metric.startswith("cabin.")]
+        note = f"{self.server} adapter set {self.adapter_set}: {len(got)} of {len(by_item)} items arrived"
+        if filled:
+            note += f"; {len(filled)} filled from the recorded snapshot (quality recorded)"
+        batch = Batch(self.source, "live", note=note)
+        batch.observations.extend(got + filled)
         return batch
 
 

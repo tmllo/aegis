@@ -330,6 +330,7 @@ metrics:
       amber_high: 790
       red_high: 800
     source: Team
+    basis: team band, no NASA source
     emergency_below: 690
   display:
     order: 1
@@ -351,6 +352,7 @@ metrics:
       amber_high: 26.7
       red_high: 30
     source: Team
+    basis: team band, no NASA source
   display:
     order: 5
     label: Cabin temperature
@@ -370,6 +372,7 @@ metrics:
       red_low: 122
       amber_low: 127
     source: NASA
+    basis: 'NASA-STD-3001 V2 inspired ppO2 floors (see ref)'
     ref: 'NASA-STD-3001 V2: inspired ppO2 floor 127 mmHg with monitoring, 1-hour floor 122 mmHg'
   display:
     order: 2
@@ -389,6 +392,7 @@ metrics:
       amber_high: 2.5
       red_high: 3.0
     source: NASA
+    basis: 'NASA limit: 1-hour average at or below 3 mmHg (NASA OCHMO CO2 technical brief)'
     ref: 'NASA-STD-3001 V2 6004: 1-hour average at or below 3 mmHg. Headaches reported from 2.8 mmHg, fatigue and nausea above 4.5 mmHg'
   display:
     order: 3
@@ -408,6 +412,7 @@ metrics:
       red_low: 122
       amber_low: 127
     source: NASA
+    basis: 'NASA-STD-3001 V2 inspired ppO2 floors (see ref)'
     ref: 'NASA-STD-3001 V2: inspired ppO2 floor 127 mmHg with monitoring, 1-hour floor 122 mmHg'
 - key: cabin.ppn2_node3
   label: Nitrogen partial pressure (Node 3)
@@ -432,6 +437,7 @@ metrics:
       amber_high: 2.5
       red_high: 3.0
     source: NASA
+    basis: 'NASA limit: 1-hour average at or below 3 mmHg (NASA OCHMO CO2 technical brief)'
     ref: 'NASA-STD-3001 V2 6004: 1-hour average at or below 3 mmHg. Headaches reported from 2.8 mmHg, fatigue and nausea above 4.5 mmHg'
 - key: cabin.urine_tank
   label: Urine tank
@@ -446,6 +452,7 @@ metrics:
       amber_high: 80
       red_high: 95
     source: Team
+    basis: team band, no NASA source
   display:
     order: 9
     label: Urine tank
@@ -465,6 +472,7 @@ metrics:
       amber_high: 80
       red_high: 95
     source: Team
+    basis: team band, no NASA source
   display:
     order: 8
     label: Waste water tank
@@ -484,6 +492,7 @@ metrics:
       red_low: 10
       amber_low: 25
     source: Team
+    basis: team band, no NASA source
   display:
     order: 7
     label: Clean water tank

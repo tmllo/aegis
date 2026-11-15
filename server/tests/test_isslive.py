@@ -71,6 +71,20 @@ def test_live_mode_returns_live_rows(cat, monkeypatch):
     assert sessions[0].closed
 
 
+def test_live_mode_partial_fills_missing_from_recorded(cat):
+    items = cabin_items(cat)
+    first = next(iter(items))
+    updates = [(first, {"TimeStamp": "7372.5", "Status.Class": "24", "CalibratedData": "1.5"})]
+    b = IssLiveSnapshot(mode="live", timeout=0.2,
+                        client_factory=lambda s, a, its, f, on_update: FakeSession(updates, on_update)).load(cat)
+    assert b.quality == "live" and "filled from the recorded snapshot" in b.note
+    live = [o for o in b.observations if o.quality == "live"]
+    assert [o.metric for o in live] == [items[first]["key"]]
+    recorded = {o.metric for o in b.observations if o.quality == "recorded"}
+    assert recorded and items[first]["key"] not in recorded
+    assert len({o.metric for o in b.observations}) == len(b.observations)
+
+
 def test_live_mode_nothing_arrives_falls_back(cat):
     s = {}
 
