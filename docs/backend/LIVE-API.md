@@ -14,7 +14,7 @@ When the API starts, it builds once and then starts one background thread. Every
 
 Each pass works like this. `adapter.load()` runs with no lock held, so a slow feed blocks no request. Then `store.write()` takes `store.lock`, and `build.derive()` rebuilds assessments, plugin rows and the three contract views under the same lock. The new `/data/*.json` set is swapped in as a whole. If an adapter fails, its previous rows stay and it is retried on its next cadence. The space-weather adapters (`donki` 15 min, `swpc` 5 min, `hapi` daily) are picked up automatically when they land.
 
-Environment: `AEGIS_DB` is a SQLite path (default in memory; on disk, check-ins survive restarts). `AEGIS_REFRESH=0` turns the thread off.
+The store is the same SQLite file the whole time. The default is `server/data/aegis.db` (gitignored); set `AEGIS_DB` to change it, or `:memory:` for a throwaway store. At startup every adapter is loaded into that file again with INSERT OR REPLACE on the same keys. A refresh only adds a run. Neither recreates the store or deletes from a fact table (observation, event, forecast, or a plugin's note, task, task_event or sleep_session), so check-ins and notes survive both a refresh and a restart. The only table that is wiped and rebuilt is the derived `assessment` table. `AEGIS_REFRESH=0` turns the thread off. `server/tests/conftest.py` makes tests use `:memory:` with no thread.
 
 ```
 GET /api/refresh
@@ -56,7 +56,7 @@ POST /api/observations
 
 ## Run
 ```
-powershell -ExecutionPolicy Bypass -File server/run.ps1                    # http://127.0.0.1:8000
-powershell -ExecutionPolicy Bypass -File server/run.ps1 -Db server/out/aegis.db -Port 8001
+powershell -ExecutionPolicy Bypass -File server/run.ps1                    # http://127.0.0.1:8000, store server/data/aegis.db
+powershell -ExecutionPolicy Bypass -File server/run.ps1 -Db server/data/demo.db -Port 8001
 podman build -f server/Containerfile -t aegis-api .  ;  podman run -p 8000:8000 aegis-api
 ```

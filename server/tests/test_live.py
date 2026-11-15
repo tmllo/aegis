@@ -13,8 +13,39 @@ from server.core.records import Batch, Observation
 @pytest.fixture()
 def client(monkeypatch):
     monkeypatch.setenv("AEGIS_REFRESH", "0")   # tests drive tick() themselves
-    monkeypatch.delenv("AEGIS_DB", raising=False)
+    monkeypatch.setenv("AEGIS_DB", ":memory:")
     return TestClient(create_app())
+
+
+PLUGIN_TABLES = ("note", "task", "task_event", "sleep_session")   # Mind / sleep lanes; stand-ins until they land
+FACT_TABLES = ("run", "observation", "event", "event_link", "forecast") + PLUGIN_TABLES
+
+
+def _seed_plugin_tables(store):
+    with store.lock:
+        for name in PLUGIN_TABLES:
+            store.db.execute(f"CREATE TABLE IF NOT EXISTS {name} (id INTEGER PRIMARY KEY, body TEXT)")
+            store.db.execute(f"INSERT INTO {name} (body) VALUES ('kept')")
+        store.db.commit()
+
+
+def _snapshot(store, tables=FACT_TABLES):
+    """The facts in each table, as a set. run_id is left out: a re-loaded row keeps its key and value but
+    points at the latest run that wrote it (INSERT OR REPLACE)."""
+    out = {}
+    for t in tables:
+        cur = store.db.execute(f"SELECT * FROM {t}")
+        keep = [i for i, d in enumerate(cur.description) if d[0] != "run_id"]
+        out[t] = {tuple(r[i] for i in keep) for r in cur}
+    return out
+
+
+MOOD = {"subject": "c1", "metric": "self.mood", "t": "2026-11-15", "value": 4}
+MOOD_ROW = {"metric": "self.mood", "t": "2026-11-15", "value": 4.0, "quality": "live"}
+
+
+def _mood_rows(client):
+    return client.get("/api/observations", params={"subject": "c1", "metric": "self.mood", "since": "2026-11-15"}).json()
 
 
 class Clock:
@@ -171,3 +202,70 @@ def test_checkin_rejected(client, payload, why):
     res = client.post("/api/observations", json=payload)
     assert res.status_code == 422 and why in res.text
     assert len(deps.store().runs()) == n_runs                   # refused before the store: no run, no row
+
+
+# ---- same store, nothing wiped, survives restart ----------------------------------
+def test_checkin_survives_refresh(client):
+    assert client.post("/api/observations", json=MOOD).status_code == 200
+    assert client.post("/api/refresh").json()["refreshed"] == ["isslive"]
+    assert MOOD_ROW in _mood_rows(client)
+
+
+def test_refresh_reuses_store_and_wipes_no_fact_table(client, monkeypatch):
+    import server.core.store as store_mod
+    store = deps.store()
+    _seed_plugin_tables(store)
+    client.post("/api/observations", json=MOOD)
+    before = _snapshot(store)
+
+    def no_new_store(*a, **k):
+        raise AssertionError("refresh must not create a Store")
+    monkeypatch.setattr(store_mod.Store, "__init__", no_new_store)
+
+    clock = Clock()
+    r = Refresher(deps.cat(), store, [FakeIss()], deps._set_files, clock=clock)
+    clock.t += 61
+    assert r.tick() == ["isslive"]
+    assert client.post("/api/refresh").status_code == 200       # the real isslive adapter too
+    assert deps.store() is store
+    after = _snapshot(store)
+    for table, rows in before.items():                          # every old row still there, unchanged
+        assert set(rows) <= set(after[table]), table
+    for table in PLUGIN_TABLES + ("event", "event_link", "forecast"):
+        assert after[table] == before[table], table             # refresh of isslive adds nothing here
+    assert len(after["observation"]) == len(before["observation"]) + 1   # one new FakeIss reading, no duplicates
+    assert MOOD_ROW in _mood_rows(client)
+
+
+def test_file_store_survives_restart(tmp_path, monkeypatch):
+    db = tmp_path / "aegis.db"
+    monkeypatch.setenv("AEGIS_DB", str(db))
+    first = TestClient(create_app())
+    _seed_plugin_tables(deps.store())
+    assert first.post("/api/observations", json=MOOD).status_code == 200
+    sleep = {"subject": "c2", "metric": "self.sleep_h", "t": "2026-11-15T07:00:00Z", "value": 6.5}
+    assert first.post("/api/observations", json=sleep).status_code == 200
+    first.post("/api/refresh")
+    before = _snapshot(deps.store(), ("observation",) + PLUGIN_TABLES)
+    deps.store().db.close()                                     # the old process is gone
+
+    second = TestClient(create_app())                           # restart: rebuild into the same file
+    assert db.is_file() and str(db) in [r[2] for r in deps.store().db.execute("PRAGMA database_list")]
+    assert MOOD_ROW in _mood_rows(second)
+    assert {"metric": "self.sleep_h", "t": "2026-11-15T07:00:00Z", "value": 6.5, "quality": "live"} in \
+        second.get("/api/observations", params={"subject": "c2", "metric": "self.sleep_h"}).json()
+    after = _snapshot(deps.store(), ("observation",) + PLUGIN_TABLES)
+    assert after == before                                      # startup re-load replaced rows in place, wiped none
+    assert client_health_sources(second) >= {"checkin", "isslive", "sim_crew"}
+    deps.store().db.close()
+
+
+def client_health_sources(c):
+    return set(c.get("/api/health").json()["sources"])
+
+
+def test_default_db_is_under_server_data(monkeypatch):
+    monkeypatch.delenv("AEGIS_DB", raising=False)
+    path = deps.db_path()
+    assert path.replace("\\", "/").endswith("server/data/aegis.db")
+    assert deps.db_path(":memory:") == ":memory:"

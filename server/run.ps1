@@ -14,8 +14,8 @@
     Interface to bind. Default 127.0.0.1. Use 0.0.0.0 to expose it on the network.
 
 .PARAMETER Db
-    Optional SQLite path for the store (sets AEGIS_DB). Without it the store is in memory
-    and check-ins are lost on restart.
+    Optional SQLite path for the store (sets AEGIS_DB). Default server\data\aegis.db (gitignored),
+    so check-ins survive a restart. Pass :memory: for a throwaway store.
 
 .PARAMETER NoRefresh
     Turn off the background refresh of live adapters (sets AEGIS_REFRESH=0).
@@ -28,7 +28,7 @@
 
 .EXAMPLE
     .\server\run.ps1
-    Start on http://127.0.0.1:8000 with an in-memory store.
+    Start on http://127.0.0.1:8000 with the store in server\data\aegis.db.
 
 .EXAMPLE
     .\server\run.ps1 -Install -Db server\data\aegis.db
@@ -102,7 +102,7 @@ try {
     if ($Db) {
         Write-Host "Store: $Db"
     } else {
-        Write-Host "Store: in memory"
+        Write-Host "Store: server\data\aegis.db (default)"
     }
     if ($NoRefresh) {
         Write-Host "Live refresh: off"
