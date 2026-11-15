@@ -215,7 +215,8 @@ def simulate(member, latent, own_baseline):
         if d == STORM_DAY:
             dose += 6.0 if member["id"] != "c3" else 9.5  # c3 was on EVA prep
         cum += dose
-        bone += 0.045 * (1.25 - min(1.25, r["exercise_min"] / 120))  # ~1%/month baseline, less if exercising
+        # No exercise (0 min) adds 0.027 * 1.25 per day, about 1% per 30 days. More exercise lowers that.
+        bone += 0.027 * (1.25 - min(1.25, r["exercise_min"] / 120))
         r["dose_mSv_day"], r["dose_mSv_cum"] = round(dose, 2), round(cum, 1)
         r["bone_loss_pct"] = round(bone, 2)
         if random.random() < 0.03:  # occasional missed measurement

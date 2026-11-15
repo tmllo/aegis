@@ -7,7 +7,7 @@ Copied from GitHub issue [#3](https://github.com/tmllo/aegis/issues/3), "Data so
 | On screen | Real or simulated | Where it comes from |
 |---|---|---|
 | Crew vitals (HR, BP, glucose, temperature, sleep, mood, exercise) | Simulated | ml/make_sample_data.py: AR(1) process plus correlated shocks, seed 7, written to web/public/data/crew_data.json. Labelled "not real astronaut data". |
-| Estimated bone loss % | Simulated | make_sample_data.py:218 adds `0.045 * (1.25 - min(1.25, exercise_min/120))` per day. That works out to about 1.7%/month with no exercise and about 0.34%/month at 2 h/day. On screen it's the cumulative total after 75 days (0.70–1.00%). The intended rate is NASA's ~1%/month without countermeasures (nasa.gov ISS bone/muscle page; Stavnichuk 2020, npj Microgravity), but the code overshoots it. Amber at 3% is a team rule. Red at 5% follows NASA-STD-3001 (bone density must stay at or above 95% of preflight). |
+| Estimated bone loss % | Simulated | make_sample_data.py adds `0.027 * (1.25 - min(1.25, exercise_min/120))` per day. With no exercise that is about 1%/month (NASA's figure for weight-bearing sites without countermeasures). At 2 h/day it is about 0.2%/month. On screen it is the cumulative total after 75 days (Ana 0.46%, Kenji 0.42%, Léa 0.60%). Amber at 3% is a team rule. Red at 5% follows NASA-STD-3001 (bone density must stay at or above 95% of preflight). |
 | "18%" radiation | Simulated dose divided by a real limit | Cumulative mission dose divided by the 600 mSv career limit (NASA-STD-3001), computed in web/src/core/radiation.ts. The dose series is a simulated Moon mission: 1.4 mSv/day ±10%, plus a planted storm spike on 5 Sep (+6 or +9.5 mSv). Ana is at 18.2%, Kenji 18.5%, Léa 18.7%. |
 | Storm chance % | Real inputs, our model's output | Logistic model trained on NASA CCMC DONKI flares and CMEs (2010–2023) and tested on 2024–2026. It caught 16 of 17 storms, with 1 false alarm a month, a 3.8 h median lead, Brier skill 0.41, and a 72 h horizon. This is not an official NASA forecast. Don't quote v2, which wasn't accepted. |
 | Cabin air (CO2, O2, pressure, temperature, water tanks) | Real | NASA ISS Live! telemetry. The app normally shows a recorded snapshot from 14 Nov; live data needs AEGIS_ISSLIVE=live. CO and humidity aren't connected. |
@@ -32,6 +32,6 @@ Copied from GitHub issue [#3](https://github.com/tmllo/aegis/issues/3), "Data so
 
 ## Quick fixes, if there's time
 
-- Change the bone constant from 0.045 to about 0.027. That gives roughly 1%/month with no exercise, so the model matches NASA's figure.
+- Bone constant is now 0.027 (about 1%/month with no exercise). Done 2026-11-15.
 - Remove the SpO2 chip or label it "demo".
 - Show the Inspiration4 card.
