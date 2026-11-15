@@ -1,0 +1,52 @@
+/*
+ * Design tokens: neutral, deliberately plain placeholders.
+ * Concept builders override these under their own scope, for example
+ *   [data-concept="my-concept"] { --bg: 8 14 30; --font-sans: 'Space Grotesk', sans-serif; }
+ * (the concept route wraps every concept in <div data-concept="<folder>">).
+ * Colours are space-separated RGB channels so Tailwind alpha works: bg-surface/60.
+ */
+:root {
+  /* surfaces */
+  --bg: 14 17 23;
+  --surface: 22 26 34;
+  --surface-2: 31 36 46;
+  --line: 52 59 72;
+
+  /* text */
+  --text: 236 239 244;
+  --text-dim: 160 168 182;
+  --text-faint: 104 112 128;
+
+  /* one accent per status, plus one neutral interactive accent */
+  --ok: 52 199 123;
+  --warn: 245 166 35;
+  --crit: 239 68 68;
+  --accent: 120 162 255;
+
+  /* type: every family below is bundled locally (src/styles/fonts.css) */
+  --font-sans: 'Inter Tight', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --font-display: 'Inter Tight', system-ui, sans-serif;
+
+  /* shape and space */
+  --radius-sm: 4px;
+  --radius: 8px;
+  --radius-lg: 14px;
+  --grid: 8px;
+  --touch: 56px; /* minimum touch target, sized for gloved hands */
+
+  /* motion */
+  --dur-fast: 120ms;
+  --dur-base: 220ms;
+  --dur-slow: 480ms;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-fast: 0ms;
+    --dur-base: 0ms;
+    --dur-slow: 0ms;
+  }
+}

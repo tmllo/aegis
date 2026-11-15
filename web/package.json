@@ -1,0 +1,44 @@
+{
+  "name": "ex-crew-station",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --port 5620 --strictPort",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --port 5621 --strictPort",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "shot": "node scripts/shot.mjs"
+  },
+  "dependencies": {
+    "@fontsource/ibm-plex-sans": "5.3.0",
+    "@fontsource/instrument-serif": "5.3.0",
+    "@fontsource/inter-tight": "5.3.0",
+    "@fontsource/jetbrains-mono": "5.3.0",
+    "@fontsource/space-grotesk": "5.3.0",
+    "@react-three/drei": "9.122.0",
+    "@react-three/fiber": "8.18.0",
+    "framer-motion": "11.18.2",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "react-router-dom": "6.30.6",
+    "recharts": "2.15.4",
+    "three": "0.169.0",
+    "zustand": "4.5.7"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.65.1",
+    "@types/node": "22.20.5",
+    "@types/react": "18.3.31",
+    "@types/react-dom": "18.3.7",
+    "@types/three": "0.169.0",
+    "@vitejs/plugin-react": "4.7.0",
+    "autoprefixer": "10.6.2",
+    "postcss": "8.5.33",
+    "tailwindcss": "3.4.19",
+    "typescript": "5.6.3",
+    "vite": "5.4.21",
+    "vitest": "2.1.9"
+  }
+}

@@ -1,0 +1,1923 @@
+{
+ "schema_version": 1,
+ "product": "e^x",
+ "generated": "2026-11-15",
+ "purpose": "Which metric and which issue lights up where in the body, finer than the five contract regions. Research spec for the body map; read by UI code as static reference data. No value from crew_data.json is copied here.",
+ "rules": [
+  "Status colour comes only from crew_data.json status and core/scoring. This file only says where to draw it.",
+  "A metric fills its own contract region (structures, parts). Parts listed under context belong to another region: draw them as a neutral outline or leader target, never in a status colour.",
+  "Panel copy comes from crew_data.json metrics[key].explain. The why lines here are for tooltips and the Systems screen; quote as a claim only when claim_ok is true.",
+  "Patterns with triggerable false or \"context\" must not raise an alert: the file has no metric for them."
+ ],
+ "model": {
+  "file": "docs/body-kit/aegis-body.glb",
+  "sha256": "95ac511189948f441bb1a0053bdb9e4197577ef873fcb22c567a2135dba12393",
+  "units": "metres",
+  "up": "+y",
+  "front": "+z",
+  "body_left": "+x",
+  "note": "Seen from the front (camera on +z), +x is on the right of the screen. The body stands on y = 0, centred on x = z = 0.",
+  "height_m": 1.72,
+  "nodes": {
+   "whole_body": {
+    "contract_region": "whole_body",
+    "meshes": 1,
+    "triangles": 22372,
+    "vertices": 11492,
+    "bbox": [
+     [-0.333,0,-0.146],
+     [0.333,1.72,0.146]
+    ],
+    "structures": 1,
+    "structures_with_verified_tri_range": 1,
+    "triangles_covered_by_verified_ranges": 22372
+   },
+   "brain": {
+    "contract_region": "brain",
+    "meshes": 1,
+    "triangles": 39679,
+    "vertices": 25753,
+    "bbox": [
+     [-0.071,1.537,-0.111],
+     [0.071,1.709,0.07]
+    ],
+    "structures": 110,
+    "structures_with_verified_tri_range": 108,
+    "triangles_covered_by_verified_ranges": 39327
+   },
+   "heart": {
+    "contract_region": "heart",
+    "meshes": 1,
+    "triangles": 19389,
+    "vertices": 12337,
+    "bbox": [
+     [-0.036,1.252,-0.03],
+     [0.08,1.358,0.076]
+    ],
+    "structures": 18,
+    "structures_with_verified_tri_range": 18,
+    "triangles_covered_by_verified_ranges": 19389
+   },
+   "blood": {
+    "contract_region": "blood",
+    "meshes": 1,
+    "triangles": 35352,
+    "vertices": 22923,
+    "bbox": [
+     [-0.262,0.361,-0.056],
+     [0.263,1.46,0.058]
+    ],
+    "structures": 109,
+    "structures_with_verified_tri_range": 105,
+    "triangles_covered_by_verified_ranges": 34451
+   },
+   "bones": {
+    "contract_region": "bones",
+    "meshes": 1,
+    "triangles": 79843,
+    "vertices": 64329,
+    "bbox": [
+     [-0.323,0.008,-0.118],
+     [0.325,1.714,0.135]
+    ],
+    "structures": 246,
+    "structures_with_verified_tri_range": 239,
+    "triangles_covered_by_verified_ranges": 77277
+   },
+   "bones_loadbearing": {
+    "contract_region": "bones",
+    "meshes": 1,
+    "triangles": 23760,
+    "vertices": 16971,
+    "bbox": [
+     [-0.162,0.01,-0.108],
+     [0.163,1.15,0.049]
+    ],
+    "structures": 20,
+    "structures_with_verified_tri_range": 20,
+    "triangles_covered_by_verified_ranges": 23760
+   },
+   "muscle_antigravity": {
+    "contract_region": "bones",
+    "meshes": 1,
+    "triangles": 22726,
+    "vertices": 23593,
+    "bbox": [
+     [-0.159,0.111,-0.12],
+     [0.16,1.448,0.052]
+    ],
+    "structures": 24,
+    "structures_with_verified_tri_range": 24,
+    "triangles_covered_by_verified_ranges": 22726
+   }
+  },
+  "known_defects": [
+   {
+    "node": "bones_loadbearing",
+    "parts": [
+     "Right iliotibial tract",
+     "Left iliotibial tract",
+     "Right tibialis anterior",
+     "Left tibialis anterior",
+     "Right tibialis posterior",
+     "Left tibialis posterior"
+    ],
+    "issue": "Six of the 20 structures are not bones. The build filter matches \"tibia\" inside \"iliotibial tract\", \"tibialis anterior\" and \"tibialis posterior\". Leave them out of any bone highlight (use metrics.bone_loss_pct.parts), or fix the filter and rebuild."
+   },
+   {
+    "node": "bones",
+    "parts": [
+     "Right fibularis brevis",
+     "Left fibularis brevis",
+     "Right fibularis longus",
+     "Left fibularis longus",
+     "Right fibularis tertius",
+     "Left fibularis tertius",
+     "Right subscapularis",
+     "Left subscapularis",
+     "Right levator scapulae",
+     "Left levator scapulae"
+    ],
+    "issue": "Muscles tagged \"skeletal\" in the atlas ended up in the bones node."
+   },
+   {
+    "node": "bones",
+    "parts": "25 cartilage parts",
+    "issue": "Laryngeal, nasal and costal cartilages are in the bones node. Harmless for a skeleton look."
+   },
+   {
+    "node": "brain",
+    "parts": [
+     "Left ciliary ganglion",
+     "Right ciliary ganglion",
+     "Central canal of spinal cord",
+     "Tentorium cerebelli"
+    ],
+    "issue": "Not brain tissue (a ganglion behind each eye, a dura fold, the top of the spinal canal). Cosmetic."
+   }
+  ]
+ },
+ "highlight": {
+  "finding": "The GLB has 7 nodes and 7 meshes, one merged mesh per node. No per-structure nodes or names exist inside it. The triangle order of the source atlas survived the merge and simplification, so a structure is one contiguous triangle range: 515 of 528 structures verified. Names come from the BodyParts3D part index (atlas.json) that the build script reads.",
+  "method": "structure_index[node] gives each structure as t = [first_triangle, triangle_count]. In three.js: geometry.addGroup(t[0] * 3, t[1] * 3, materialIndex) on the node mesh, or write a per-vertex attribute for those triangles and tint in the shader (one draw call per node).",
+  "fallback": "Where t is null (range not verified) use the bounding box b = [min, max] as a shader mask.",
+  "verification": "A range is kept only if every triangle in it lies within 3 mm of the atlas bounds of that part, the range reaches those bounds within 4 mm, and it overlaps no other range.",
+  "validity": "Ranges are valid only for the GLB with the sha256 above. If the GLB is rebuilt, regenerate this file."
+ },
+ "contract_regions": {
+  "brain": {
+   "nodes": [
+    "brain"
+   ],
+   "metrics": [
+    "sleep_h",
+    "mood"
+   ]
+  },
+  "heart": {
+   "nodes": [
+    "heart"
+   ],
+   "metrics": [
+    "hr",
+    "bp_sys",
+    "bp_dia"
+   ]
+  },
+  "blood": {
+   "nodes": [
+    "blood"
+   ],
+   "metrics": [
+    "glucose"
+   ]
+  },
+  "bones": {
+   "nodes": [
+    "bones",
+    "bones_loadbearing",
+    "muscle_antigravity"
+   ],
+   "metrics": [
+    "exercise_min",
+    "bone_loss_pct"
+   ]
+  },
+  "whole_body": {
+   "nodes": [
+    "whole_body"
+   ],
+   "metrics": [
+    "temp",
+    "dose_mSv_day",
+    "dose_mSv_cum"
+   ]
+  }
+ },
+ "field_notes": {
+  "structures": "Exact GLB node (mesh) names to highlight.",
+  "parts": "Atlas structure names inside each node; \"all\" means the whole node. Look each name up in structure_index for its triangle range.",
+  "focus": "Subset of parts to brighten when this metric is the selected one.",
+  "context": "Parts in another contract region; outline only.",
+  "anchor": "Callout leader end point, model space, metres. A real vertex of the mesh unless stated.",
+  "label_side": "Side of the screen for the callout in the front view.",
+  "view_deg": "Suggested orbit angle: 0 front, 90 body-left side, 180 back.",
+  "measure_site": "Where the reading is taken, from how_to_measure in crew_data.json. null when the file names no body site.",
+  "localisation": "target_organ, whole_body, or illustrative (a team choice, not a sourced anatomical claim).",
+  "claim_ok": "true when the why line uses wording from THESIS-DETAILS section 11."
+ },
+ "metrics": {
+  "hr": {
+   "region": "heart",
+   "structures": [
+    "heart"
+   ],
+   "parts": {
+    "heart": "all"
+   },
+   "focus": {
+    "heart": [
+     "Wall of ventricle"
+    ]
+   },
+   "anchor": [0.036,1.299,0.035],
+   "label_side": "screen_right",
+   "view_deg": 0,
+   "measure_site": {
+    "label": "Wrist",
+    "anchor": [0.262,0.89,0.018],
+    "basis": "CREW-JSON"
+   },
+   "localisation": "target_organ",
+   "why": "In flight the heart pumps more per beat (stroke volume +35%) at an unchanged resting rate; the rate rises on standing after landing.",
+   "spaceflight_risk": "Cardiovascular deconditioning",
+   "source_ref": [
+    "NORSK",
+    "TB-019",
+    "R03"
+   ],
+   "claim_ok": false
+  },
+  "bp_sys": {
+   "region": "heart",
+   "structures": [
+    "heart"
+   ],
+   "parts": {
+    "heart": "all"
+   },
+   "focus": {
+    "heart": [
+     "Wall of ventricle"
+    ]
+   },
+   "context": {
+    "blood": [
+     "Arch of aorta",
+     "Ascending aorta",
+     "Left brachial artery"
+    ]
+   },
+   "anchor": [0.016,1.372,-0.006],
+   "label_side": "screen_right",
+   "view_deg": 0,
+   "measure_site": {
+    "label": "Upper arm cuff",
+    "anchor": [0.179,1.238,-0.022],
+    "basis": "CREW-JSON"
+   },
+   "localisation": "target_organ",
+   "why": "24-hour blood pressure runs 8-10 mmHg lower in flight and plasma volume falls about 15% within 2 days.",
+   "spaceflight_risk": "Cardiovascular deconditioning, fluid shift",
+   "source_ref": [
+    "NORSK",
+    "TB-019",
+    "R03"
+   ],
+   "claim_ok": false
+  },
+  "bp_dia": {
+   "region": "heart",
+   "structures": [
+    "heart"
+   ],
+   "parts": {
+    "heart": "all"
+   },
+   "context": {
+    "blood": [
+     "Descending thoracic aorta",
+     "Abdominal aorta",
+     "Descending aorta"
+    ]
+   },
+   "anchor": [0.007,1.225,-0.006],
+   "label_side": "screen_right",
+   "view_deg": 0,
+   "measure_site": {
+    "label": "Upper arm cuff",
+    "anchor": [0.179,1.238,-0.022],
+    "basis": "CREW-JSON"
+   },
+   "localisation": "target_organ",
+   "why": "Pressure in the arteries between beats; systemic vascular resistance falls 39% in flight.",
+   "spaceflight_risk": "Cardiovascular deconditioning",
+   "source_ref": [
+    "NORSK",
+    "CREW-JSON",
+    "R03"
+   ],
+   "claim_ok": false
+  },
+  "glucose": {
+   "region": "blood",
+   "structures": [
+    "blood"
+   ],
+   "parts": {
+    "blood": "all"
+   },
+   "focus": {
+    "blood": [
+     "Abdominal aorta",
+     "Inferior vena cava #1",
+     "Inferior vena cava #2"
+    ]
+   },
+   "anchor": [0.012,1.119,0.018],
+   "label_side": "screen_left",
+   "view_deg": 0,
+   "measure_site": {
+    "label": "Fingertip",
+    "anchor": [0.309,0.749,0.077],
+    "basis": "CREW-JSON"
+   },
+   "localisation": "target_organ",
+   "missing": [
+    "pancreas"
+   ],
+   "why": "Insulin resistance rose in flight in all 8 crew of a 6-month ISS study.",
+   "spaceflight_risk": "Metabolic change (insulin resistance)",
+   "source_ref": [
+    "HUGHSON",
+    "R03"
+   ],
+   "claim_ok": false
+  },
+  "temp": {
+   "region": "whole_body",
+   "structures": [
+    "whole_body"
+   ],
+   "parts": {
+    "whole_body": "all"
+   },
+   "anchor": [0.006,1.669,0.073],
+   "label_side": "screen_left",
+   "view_deg": 0,
+   "measure_site": {
+    "label": "Mouth or ear",
+    "anchor": [0.001,1.534,0.087],
+    "basis": "CREW-JSON"
+   },
+   "localisation": "whole_body",
+   "why": "Resting core temperature runs about 1.0 C higher after 2.5 months in orbit.",
+   "spaceflight_risk": "Thermoregulation shift, infection signal",
+   "source_ref": [
+    "STAHN",
+    "R03"
+   ],
+   "claim_ok": false
+  },
+  "sleep_h": {
+   "region": "brain",
+   "structures": [
+    "brain"
+   ],
+   "parts": {
+    "brain": "all"
+   },
+   "focus": {
+    "brain": [
+     "Hypothalamus #1",
+     "Mammillary body #1",
+     "Tuber cinereum #1",
+     "Hypothalamus #2",
+     "Mammillary body #2",
+     "Tuber cinereum #2",
+     "Left thalamus",
+     "Right thalamus"
+    ]
+   },
+   "anchor": [0,1.622,0],
+   "label_side": "screen_left",
+   "view_deg": 0,
+   "measure_site": {
+    "label": "Wrist wearable",
+    "anchor": [0.262,0.89,0.018],
+    "basis": "CREW-JSON"
+   },
+   "localisation": "illustrative",
+   "localisation_note": "The body clock sits in the hypothalamus (general anatomy, team choice). The pineal body is in the atlas but not in the GLB.",
+   "missing": [
+    "pineal body"
+   ],
+   "why": "ISS crews average 6.1 h/night vs 8.5 h scheduled.",
+   "spaceflight_risk": "Sleep loss, circadian misalignment",
+   "source_ref": [
+    "THESIS-11",
+    "BARGER",
+    "MTB-009"
+   ],
+   "claim_ok": true
+  },
+  "mood": {
+   "region": "brain",
+   "structures": [
+    "brain"
+   ],
+   "parts": {
+    "brain": "all"
+   },
+   "focus": {
+    "brain": [
+     "Left inferior frontal gyrus",
+     "Right inferior frontal gyrus",
+     "Left middle frontal gyrus",
+     "Right middle frontal gyrus",
+     "Orbital gyrus #1",
+     "Orbital gyrus #2",
+     "Left superior frontal gyrus",
+     "Right superior frontal gyrus",
+     "Left cingulate gyrus",
+     "Right cingulate gyrus",
+     "Left amygdala",
+     "Left hippocampus",
+     "Right hippocampus",
+     "Right amygdala"
+    ]
+   },
+   "anchor": [0.009,1.659,0.051],
+   "label_side": "screen_right",
+   "view_deg": 0,
+   "measure_site": null,
+   "localisation": "illustrative",
+   "localisation_note": "Frontal and limbic areas stand for mood (general anatomy, team choice). Mood is a self-report, not a brain measurement.",
+   "why": "Isolation and confinement: stress, low mood and anxiety are common in flight.",
+   "spaceflight_risk": "Behavioural health (isolation, confinement)",
+   "source_ref": [
+    "TB-016",
+    "CREW-JSON",
+    "R03"
+   ],
+   "claim_ok": false
+  },
+  "exercise_min": {
+   "region": "bones",
+   "structures": [
+    "muscle_antigravity",
+    "bones_loadbearing"
+   ],
+   "parts": {
+    "muscle_antigravity": "all",
+    "bones_loadbearing": [
+     "Right hip bone",
+     "First lumbar vertebra",
+     "Second lumbar vertebra",
+     "Third lumbar vertebra",
+     "Fourth lumbar vertebra",
+     "Fifth lumbar vertebra",
+     "Left calcaneus",
+     "Left femur",
+     "Left tibia",
+     "Left hip bone",
+     "Right calcaneus",
+     "Right femur",
+     "Right tibia",
+     "Sacrum"
+    ]
+   },
+   "focus": {
+    "muscle_antigravity": [
+     "Right rectus femoris",
+     "Left rectus femoris",
+     "Right vastus intermedius",
+     "Left vastus intermedius",
+     "Right vastus lateralis",
+     "Left vastus lateralis",
+     "Right vastus medialis",
+     "Left vastus medialis",
+     "Lateral head of right gastrocnemius",
+     "Lateral head of left gastrocnemius",
+     "Medial head of right gastrocnemius",
+     "Medial head of left gastrocnemius",
+     "Right soleus",
+     "Left soleus"
+    ]
+   },
+   "anchor": [0.123,0.621,-0.002],
+   "label_side": "screen_right",
+   "view_deg": 0,
+   "measure_site": null,
+   "localisation": "target_organ",
+   "why": "Exercise is the main countermeasure against bone and muscle loss: about 2 h a day on the station.",
+   "spaceflight_risk": "Muscle atrophy, reduced fitness",
+   "source_ref": [
+    "EX-NASA",
+    "R03"
+   ],
+   "claim_ok": false
+  },
+  "bone_loss_pct": {
+   "region": "bones",
+   "structures": [
+    "bones_loadbearing"
+   ],
+   "parts": {
+    "bones_loadbearing": [
+     "Right hip bone",
+     "First lumbar vertebra",
+     "Second lumbar vertebra",
+     "Third lumbar vertebra",
+     "Fourth lumbar vertebra",
+     "Fifth lumbar vertebra",
+     "Left calcaneus",
+     "Left femur",
+     "Left tibia",
+     "Left hip bone",
+     "Right calcaneus",
+     "Right femur",
+     "Right tibia",
+     "Sacrum"
+    ]
+   },
+   "focus": {
+    "bones_loadbearing": [
+     "Right hip bone",
+     "Left femur",
+     "Left hip bone",
+     "Right femur",
+     "First lumbar vertebra",
+     "Second lumbar vertebra",
+     "Third lumbar vertebra",
+     "Fourth lumbar vertebra",
+     "Fifth lumbar vertebra"
+    ]
+   },
+   "anchor": [-0.109,0.887,-0.03],
+   "label_side": "screen_left",
+   "view_deg": 0,
+   "measure_site": null,
+   "localisation": "target_organ",
+   "localisation_note": "Anchor is the proximal right femur (hip). The femoral neck is not a separate part; the femur is one structure.",
+   "why": "About 1% per month at weight-bearing sites without exercise.",
+   "spaceflight_risk": "Bone loss",
+   "source_ref": [
+    "THESIS-11",
+    "MTB-013",
+    "STAV"
+   ],
+   "claim_ok": true,
+   "caution": "Do not derive a monthly rate from the app series (THESIS-DETAILS section 12, bone coefficient)."
+  },
+  "dose_mSv_day": {
+   "region": "whole_body",
+   "structures": [
+    "whole_body"
+   ],
+   "parts": {
+    "whole_body": "all"
+   },
+   "anchor": [0.208,1.411,-0.027],
+   "label_side": "screen_right",
+   "view_deg": 0,
+   "measure_site": {
+    "label": "Personal dosimeter",
+    "anchor": [0.082,1.344,0.095],
+    "basis": "CREW-JSON",
+    "note": "Wear position is not stated in any source; chest is a placeholder."
+   },
+   "localisation": "whole_body",
+   "why": "Dose rate jumps when solar particles arrive; crew dose from the reference storm (Oct 1989) must stay below 250 mSv.",
+   "spaceflight_risk": "Radiation (solar particle event)",
+   "source_ref": [
+    "THESIS-11",
+    "TB-020",
+    "SRAG"
+   ],
+   "claim_ok": true
+  },
+  "dose_mSv_cum": {
+   "region": "whole_body",
+   "structures": [
+    "whole_body"
+   ],
+   "parts": {
+    "whole_body": "all"
+   },
+   "anchor": [-0.212,1.409,-0.032],
+   "label_side": "screen_left",
+   "view_deg": 0,
+   "measure_site": {
+    "label": "Personal dosimeter",
+    "anchor": [0.082,1.344,0.095],
+    "basis": "CREW-JSON",
+    "note": "Wear position is not stated in any source; chest is a placeholder."
+   },
+   "localisation": "whole_body",
+   "why": "Mission total against the NASA-STD-3001 career effective dose limit (value: career_limit_mSv in crew_data.json).",
+   "spaceflight_risk": "Radiation (career limit)",
+   "source_ref": [
+    "THESIS-11",
+    "V1"
+   ],
+   "claim_ok": true
+  }
+ },
+ "issue_patterns": [
+  {
+   "id": "fluid_shift",
+   "label": "Fluid shift",
+   "structures": [
+    "blood",
+    "heart"
+   ],
+   "parts": {
+    "blood": [
+     "Left brachiocephalic vein",
+     "Left common carotid artery",
+     "Left internal jugular vein",
+     "Right common carotid artery",
+     "Right brachiocephalic vein",
+     "Right internal jugular vein",
+     "Superior vena cava",
+     "Left deep femoral vein",
+     "Left femoral vein",
+     "Left popliteal vein",
+     "Right deep femoral vein",
+     "Right femoral vein",
+     "Right popliteal vein"
+    ],
+    "heart": "all"
+   },
+   "anchor": [0.019,1.419,0.004],
+   "view_deg": 0,
+   "driven_by": [
+    "bp_sys",
+    "bp_dia",
+    "hr"
+   ],
+   "triggerable": "context",
+   "note": "No fluid or face-swelling metric in the file. Show as context on a heart or blood-pressure flag, never as its own alert.",
+   "why": "Fluid moves toward the head in microgravity; plasma volume falls about 15% within 2 days.",
+   "spaceflight_risk": "Headward fluid shift",
+   "source_ref": [
+    "TB-019",
+    "NORSK",
+    "CREW-JSON"
+   ]
+  },
+  {
+   "id": "sans",
+   "label": "Eye (SANS)",
+   "structures": [],
+   "parts": {
+    "brain": [
+     "Left lateral geniculate body",
+     "Optic chiasm #1",
+     "Left optic tract",
+     "Left occipital lobe",
+     "Right occipital lobe",
+     "Right lateral geniculate body",
+     "Optic chiasm #2",
+     "Right optic tract"
+    ],
+    "bones": [
+     "Ethmoid",
+     "Frontal bone",
+     "Left maxilla",
+     "Left zygomatic bone",
+     "Right maxilla",
+     "Right zygomatic bone",
+     "Sphenoid bone"
+    ]
+   },
+   "anchor": [0.03,1.596,0.05],
+   "anchors": [
+    [0.03,1.596,0.05],
+    [-0.03,1.596,0.05]
+   ],
+   "view_deg": 0,
+   "driven_by": [],
+   "triggerable": false,
+   "missing": [
+    "eyes"
+   ],
+   "note": "No vision metric in the file and no eye mesh in the GLB. The anchors are the eyeball centres (vitreous body) from the atlas. Nearby parts that do exist: optic chiasm, optic tracts, occipital lobes, orbit bones.",
+   "why": "About 70% of long-duration crew show at least one sign of SANS.",
+   "spaceflight_risk": "SANS (spaceflight associated neuro-ocular syndrome)",
+   "source_ref": [
+    "MTB-001",
+    "R03"
+   ]
+  },
+  {
+   "id": "sleep_debt",
+   "label": "Sleep debt",
+   "structures": [
+    "brain"
+   ],
+   "parts": {
+    "brain": [
+     "Hypothalamus #1",
+     "Mammillary body #1",
+     "Tuber cinereum #1",
+     "Hypothalamus #2",
+     "Mammillary body #2",
+     "Tuber cinereum #2",
+     "Left thalamus",
+     "Right thalamus",
+     "Medulla oblongata #1",
+     "Midbrain #1",
+     "Pons #1",
+     "Midbrain #2",
+     "Pons #2",
+     "Medulla oblongata #2"
+    ]
+   },
+   "anchor": [0,1.622,0],
+   "view_deg": 0,
+   "driven_by": [
+    "sleep_h",
+    "mood",
+    "hr"
+   ],
+   "triggerable": true,
+   "note": "Primary driver sleep_h. The simulated crew links sleep to mood (+0.4) and to heart rate (-0.3), so a sleep flag may travel with those.",
+   "why": "ISS crews average 6.1 h/night vs 8.5 h scheduled.",
+   "spaceflight_risk": "Sleep loss, circadian misalignment",
+   "source_ref": [
+    "THESIS-11",
+    "THESIS-5",
+    "BARGER"
+   ]
+  },
+  {
+   "id": "isolation_strain",
+   "label": "Isolation strain",
+   "structures": [
+    "brain"
+   ],
+   "parts": {
+    "brain": [
+     "Left inferior frontal gyrus",
+     "Right inferior frontal gyrus",
+     "Left middle frontal gyrus",
+     "Right middle frontal gyrus",
+     "Orbital gyrus #1",
+     "Orbital gyrus #2",
+     "Left superior frontal gyrus",
+     "Right superior frontal gyrus",
+     "Left cingulate gyrus",
+     "Right cingulate gyrus",
+     "Left amygdala",
+     "Left hippocampus",
+     "Right hippocampus",
+     "Right amygdala"
+    ]
+   },
+   "anchor": [0.009,1.659,0.051],
+   "view_deg": 0,
+   "driven_by": [
+    "mood",
+    "sleep_h"
+   ],
+   "triggerable": true,
+   "note": "Localisation is illustrative.",
+   "why": "Isolation and confinement: stress, low mood and anxiety are common in flight.",
+   "spaceflight_risk": "Behavioural health (isolation, confinement)",
+   "source_ref": [
+    "TB-016",
+    "R03"
+   ]
+  },
+  {
+   "id": "cardio_deconditioning",
+   "label": "Heart deconditioning",
+   "structures": [
+    "heart"
+   ],
+   "parts": {
+    "heart": "all",
+    "blood": [
+     "Arch of aorta",
+     "Ascending aorta",
+     "Descending thoracic aorta",
+     "Abdominal aorta",
+     "Descending aorta"
+    ]
+   },
+   "anchor": [0.036,1.299,0.035],
+   "view_deg": 0,
+   "driven_by": [
+    "hr",
+    "bp_sys",
+    "bp_dia",
+    "exercise_min"
+   ],
+   "triggerable": true,
+   "note": "Aorta is context only (it belongs to the blood region).",
+   "why": "The heart and vessels adapt to weightlessness: stroke volume +35%, vascular resistance -39%.",
+   "spaceflight_risk": "Cardiovascular deconditioning",
+   "source_ref": [
+    "NORSK",
+    "R03"
+   ]
+  },
+  {
+   "id": "orthostatic",
+   "label": "Standing tolerance",
+   "structures": [
+    "heart"
+   ],
+   "parts": {
+    "heart": "all",
+    "blood": [
+     "Left deep femoral vein",
+     "Left femoral vein",
+     "Left popliteal vein",
+     "Right deep femoral vein",
+     "Right femoral vein",
+     "Right popliteal vein"
+    ]
+   },
+   "anchor": [0.081,0.497,-0.03],
+   "view_deg": 180,
+   "driven_by": [
+    "hr",
+    "bp_sys",
+    "bp_dia"
+   ],
+   "triggerable": "context",
+   "note": "Needs a stand test (lying vs standing), which is not in the file. Relevant on the Moon and Mars surface environments.",
+   "why": "Blood volume is about 15% lower, so blood pools in the legs on return to gravity.",
+   "spaceflight_risk": "Orthostatic intolerance",
+   "source_ref": [
+    "TB-019",
+    "R03"
+   ]
+  },
+  {
+   "id": "bone_loss",
+   "label": "Bone loss",
+   "structures": [
+    "bones_loadbearing"
+   ],
+   "parts": {
+    "bones_loadbearing": [
+     "Right hip bone",
+     "First lumbar vertebra",
+     "Second lumbar vertebra",
+     "Third lumbar vertebra",
+     "Fourth lumbar vertebra",
+     "Fifth lumbar vertebra",
+     "Left calcaneus",
+     "Left femur",
+     "Left tibia",
+     "Left hip bone",
+     "Right calcaneus",
+     "Right femur",
+     "Right tibia",
+     "Sacrum"
+    ]
+   },
+   "anchor": [-0.109,0.887,-0.03],
+   "anchors": [
+    [-0.109,0.887,-0.03],
+    [-0.003,1.072,-0.037]
+   ],
+   "view_deg": 0,
+   "driven_by": [
+    "bone_loss_pct",
+    "exercise_min"
+   ],
+   "triggerable": true,
+   "note": "Highlight the 14 true bones only (see model.known_defects).",
+   "why": "About 1% per month at weight-bearing sites without exercise.",
+   "spaceflight_risk": "Bone loss",
+   "source_ref": [
+    "THESIS-11",
+    "MTB-013"
+   ]
+  },
+  {
+   "id": "muscle_loss",
+   "label": "Muscle loss",
+   "structures": [
+    "muscle_antigravity"
+   ],
+   "parts": {
+    "muscle_antigravity": "all"
+   },
+   "anchor": [0.079,0.312,-0.04],
+   "anchors": [
+    [0.123,0.621,-0.002],
+    [0.079,0.312,-0.04],
+    [0.03,1.214,-0.079]
+   ],
+   "view_deg": 180,
+   "driven_by": [
+    "exercise_min"
+   ],
+   "triggerable": true,
+   "note": "Exercise minutes are a proxy; the file has no strength or muscle-mass metric.",
+   "why": "Without gravity, bones and muscles weaken quickly; exercise is the main countermeasure.",
+   "spaceflight_risk": "Muscle atrophy",
+   "source_ref": [
+    "CREW-JSON",
+    "EX-NASA"
+   ]
+  },
+  {
+   "id": "radiation_storm",
+   "label": "Radiation storm",
+   "structures": [
+    "whole_body"
+   ],
+   "parts": {
+    "whole_body": "all"
+   },
+   "anchor": [0.208,1.411,-0.027],
+   "view_deg": 0,
+   "driven_by": [
+    "dose_mSv_day"
+   ],
+   "triggerable": true,
+   "note": "Also driven by the warning level from storm_forecast.json. Whole-body aura; no single organ.",
+   "why": "Crew dose from the reference storm (Oct 1989) must stay below 250 mSv.",
+   "spaceflight_risk": "Radiation (solar particle event)",
+   "source_ref": [
+    "THESIS-11",
+    "TB-020"
+   ]
+  },
+  {
+   "id": "radiation_career",
+   "label": "Career dose",
+   "structures": [
+    "whole_body"
+   ],
+   "parts": {
+    "whole_body": "all"
+   },
+   "anchor": [-0.212,1.409,-0.032],
+   "view_deg": 0,
+   "driven_by": [
+    "dose_mSv_cum"
+   ],
+   "triggerable": true,
+   "note": "Fill the silhouette as a gauge: dose_mSv_cum over career_limit_mSv, both read from the file.",
+   "why": "NASA-STD-3001 sets a career effective dose limit.",
+   "spaceflight_risk": "Radiation (career limit)",
+   "source_ref": [
+    "THESIS-11",
+    "V1"
+   ]
+  },
+  {
+   "id": "insulin_resistance",
+   "label": "Glucose drift",
+   "structures": [
+    "blood"
+   ],
+   "parts": {
+    "blood": [
+     "Abdominal aorta",
+     "Inferior vena cava #1",
+     "Inferior vena cava #2"
+    ]
+   },
+   "anchor": [0.012,1.119,0.018],
+   "view_deg": 0,
+   "driven_by": [
+    "glucose",
+    "exercise_min"
+   ],
+   "triggerable": true,
+   "missing": [
+    "pancreas"
+   ],
+   "note": "Anchor is the vessel point nearest the pancreas centre from the atlas.",
+   "why": "Insulin resistance rose in flight in all 8 crew of a 6-month ISS study.",
+   "spaceflight_risk": "Metabolic change (insulin resistance)",
+   "source_ref": [
+    "HUGHSON",
+    "R03"
+   ]
+  },
+  {
+   "id": "fever",
+   "label": "Fever signal",
+   "structures": [
+    "whole_body"
+   ],
+   "parts": {
+    "whole_body": "all"
+   },
+   "anchor": [0.006,1.669,0.073],
+   "view_deg": 0,
+   "driven_by": [
+    "temp"
+   ],
+   "triggerable": true,
+   "note": "Whole-body aura, warm side of the status colour only.",
+   "why": "Resting core temperature runs about 1.0 C higher in orbit, so a jump above the personal band matters more than the absolute value.",
+   "spaceflight_risk": "Thermoregulation shift, infection signal",
+   "source_ref": [
+    "STAHN",
+    "R03"
+   ]
+  },
+  {
+   "id": "kidney_stone",
+   "label": "Kidney stone risk",
+   "structures": [],
+   "parts": {
+    "blood": [
+     "Right renal artery",
+     "Left renal artery",
+     "Trunk of left renal artery",
+     "Left renal vein #1",
+     "Left renal vein #2",
+     "Trunk of right renal artery",
+     "Right renal vein #1",
+     "Right renal vein #2"
+    ]
+   },
+   "anchor": [0.062,1.116,-0.021],
+   "anchors": [
+    [0.062,1.116,-0.021],
+    [-0.058,1.097,-0.012]
+   ],
+   "view_deg": 180,
+   "driven_by": [],
+   "triggerable": false,
+   "missing": [
+    "kidneys",
+    "ureters",
+    "bladder"
+   ],
+   "note": "No hydration metric in the file and no kidney mesh in the GLB. The renal arteries and veins in the blood node mark the site.",
+   "why": "Urine volume falls by up to 47% early in flight; stones are a leading modelled cause of medical evacuation.",
+   "spaceflight_risk": "Renal stone formation",
+   "source_ref": [
+    "MTB-003",
+    "R03"
+   ]
+  },
+  {
+   "id": "back_pain",
+   "label": "Back pain",
+   "structures": [],
+   "parts": {
+    "bones_loadbearing": [
+     "First lumbar vertebra",
+     "Second lumbar vertebra",
+     "Third lumbar vertebra",
+     "Fourth lumbar vertebra",
+     "Fifth lumbar vertebra"
+    ],
+    "bones": [
+     "Intervertebral disk",
+     "Intervertebral disk of first lumbar vertebra",
+     "Intervertebral disk of second lumbar vertebra",
+     "Intervertebral disk of third lumbar vertebra",
+     "Intervertebral disk of fourth lumbar vertebra",
+     "Intervertebral disk of fifth lumbar vertebra"
+    ],
+    "muscle_antigravity": [
+     "Right iliocostalis lumborum",
+     "Left iliocostalis lumborum",
+     "Right longissimus thoracis",
+     "Left longissimus thoracis"
+    ]
+   },
+   "anchor": [-0.003,1.072,-0.037],
+   "view_deg": 180,
+   "driven_by": [],
+   "triggerable": false,
+   "note": "No symptom metric in the file. Geometry is complete (lumbar vertebrae, disks, back extensors).",
+   "why": "Back pain is reported by 52% of crew in flight days 2-5.",
+   "spaceflight_risk": "Space adaptation back pain",
+   "source_ref": [
+    "MTB-004",
+    "R03"
+   ]
+  },
+  {
+   "id": "adaptation_sickness",
+   "label": "Motion sickness",
+   "structures": [],
+   "parts": {
+    "brain": [
+     "Cerebellum #1",
+     "Cerebellum #2"
+    ],
+    "bones": [
+     "Left temporal bone",
+     "Right temporal bone"
+    ]
+   },
+   "anchor": [0.024,1.6,-0.058],
+   "view_deg": 90,
+   "driven_by": [],
+   "triggerable": false,
+   "missing": [
+    "inner ear"
+   ],
+   "note": "No symptom metric in the file. The inner ear is not in the atlas; the temporal bones that house it are in the bones node.",
+   "why": "Space adaptation sickness affects 70-90% of crew in the first days.",
+   "spaceflight_risk": "Space adaptation sickness",
+   "source_ref": [
+    "MTB-004",
+    "R03"
+   ]
+  },
+  {
+   "id": "co2_headache",
+   "label": "CO2 headache",
+   "structures": [],
+   "parts": {
+    "bones": [
+     "Frontal bone",
+     "Left parietal bone",
+     "Left temporal bone",
+     "Occipital bone",
+     "Right parietal bone",
+     "Right temporal bone"
+    ]
+   },
+   "anchor": [0.006,1.669,0.073],
+   "view_deg": 0,
+   "driven_by": [],
+   "triggerable": false,
+   "note": "Needs a cabin CO2 channel and a symptom report; neither is in the file.",
+   "why": "Headaches appear at cabin CO2 of 2.8-4.5 mmHg; 19 of 49 astronauts reported them.",
+   "spaceflight_risk": "Cabin CO2 exposure",
+   "source_ref": [
+    "TB-004",
+    "R03"
+   ]
+  }
+ ],
+ "gaps": [
+  {
+   "organ": "Eyes",
+   "needed_for": "SANS",
+   "in_glb": false,
+   "in_atlas": true,
+   "atlas_parts": "sclera, cornea, lens, vitreous body, optic part of retina, choroid, iris (each left and right)",
+   "anchors": [
+    [0.03,1.596,0.05],
+    [-0.03,1.596,0.05]
+   ],
+   "fix": "Add an \"eyes\" node in build_aegis_body.py (system \"sensory\"). Check the right sclera and right cornea first: their bounds in the atlas index reach across the midline (x = +0.031), which points to stray geometry."
+  },
+  {
+   "organ": "Kidneys, ureters, bladder",
+   "needed_for": "Kidney stone risk, hydration",
+   "in_glb": false,
+   "in_atlas": true,
+   "atlas_parts": "Left kidney, Right kidney, Left ureter, Right ureter, Urinary bladder",
+   "anchors": [
+    [0.062,1.116,-0.021],
+    [-0.058,1.097,-0.012]
+   ],
+   "fix": "Add a \"kidneys\" node (system \"urinary\")."
+  },
+  {
+   "organ": "Pancreas",
+   "needed_for": "Glucose",
+   "in_glb": false,
+   "in_atlas": true,
+   "atlas_parts": "Pancreas",
+   "anchors": [
+    [0.013,1.119,0.02]
+   ],
+   "fix": "Add to the blood region as its own node."
+  },
+  {
+   "organ": "Pineal body, pituitary gland",
+   "needed_for": "Sleep, circadian",
+   "in_glb": false,
+   "in_atlas": true,
+   "atlas_parts": "Pineal body, Pituitary gland (system \"endocrine\", so the brain filter skipped them)",
+   "anchors": [
+    [0,1.622,-0.036],
+    [0,1.607,0.005]
+   ],
+   "fix": "Add to the brain node."
+  },
+  {
+   "organ": "Optic nerves",
+   "needed_for": "SANS",
+   "in_glb": false,
+   "in_atlas": true,
+   "atlas_parts": "optic nerve (the brain filter drops every name containing \"nerve\")",
+   "fix": "Whitelist \"optic nerve\" in the brain filter."
+  },
+  {
+   "organ": "Lungs",
+   "needed_for": "SpO2, cabin CO2 (not in the file today)",
+   "in_glb": false,
+   "in_atlas": "partial",
+   "atlas_parts": "Trachea and bronchial tree only; no lung surface",
+   "fix": "Bronchial tree is enough for a clinical look; a lung surface would need modelling."
+  },
+  {
+   "organ": "Inner ear",
+   "needed_for": "Space adaptation sickness",
+   "in_glb": false,
+   "in_atlas": false,
+   "atlas_parts": "none; temporal bones only",
+   "fix": "Anchor on the temporal bone."
+  },
+  {
+   "organ": "Bone marrow, lymph nodes, thyroid gland",
+   "needed_for": "Radiation-sensitive tissue",
+   "in_glb": false,
+   "in_atlas": false,
+   "atlas_parts": "none",
+   "fix": "Keep radiation as a whole-body aura."
+  },
+  {
+   "organ": "Liver",
+   "needed_for": "none in the file",
+   "in_glb": false,
+   "in_atlas": "partial",
+   "atlas_parts": "Caudate lobe only",
+   "fix": "Not needed."
+  },
+  {
+   "organ": "Femoral neck",
+   "needed_for": "Bone loss focus",
+   "in_glb": "as part of the femur",
+   "in_atlas": "as part of the femur",
+   "atlas_parts": "Left femur, Right femur",
+   "fix": "Use the proximal-femur anchor; a box mask on the top 7 cm of the femur isolates it."
+  }
+ ],
+ "blender": {
+  "needed_for_mapping": false,
+  "reason": "Every structure this spec needs either exists in the GLB as a triangle range or exists in the atlas and can be added by extending build_aegis_body.py (Python, trimesh). That is a rebuild, not modelling.",
+  "recommended_rebuild": [
+   "Export one named node per structure (or keep 7 nodes and write the triangle ranges to a manifest) so names survive without this index.",
+   "Fix the load-bearing filter so \"tibia\" does not match tibialis or iliotibial.",
+   "Add nodes: eyes, kidneys (with ureters and bladder), pancreas; add pineal body, pituitary gland and optic nerves to brain."
+  ],
+  "where_blender_would_help": [
+   "Look only: a smoother, watertight skin shell and a softer silhouette for the glass effect.",
+   "Baked ambient occlusion or vertex colours so organs read at projector distance.",
+   "A lung surface, which the atlas does not have.",
+   "Draco or meshopt compression of the 7.2 MB file."
+  ]
+ },
+ "sources": {
+  "THESIS-11": {
+   "title": "docs/THESIS-DETAILS.md section 11, claims we can make",
+   "path": "../../../THESIS-DETAILS.md"
+  },
+  "THESIS-5": {
+   "title": "docs/THESIS-DETAILS.md section 5, synthetic crew correlations",
+   "path": "../../../THESIS-DETAILS.md"
+  },
+  "THESIS-8": {
+   "title": "docs/THESIS-DETAILS.md section 8, indicator rules",
+   "path": "../../../THESIS-DETAILS.md"
+  },
+  "CREW-JSON": {
+   "title": "crew_data.json metrics[key].explain / how_to_measure",
+   "path": "../public/data/crew_data.json"
+  },
+  "R03": {
+   "title": "docs/research/3-health-science/03-health-indicators-thresholds.md",
+   "path": "../../../research/3-health-science/03-health-indicators-thresholds.md"
+  },
+  "V1": {
+   "title": "NASA-STD-3001 Volume 1 Rev C",
+   "url": "https://www.nasa.gov/wp-content/uploads/2023/11/nasa-std-3001-vol-1-rev-c-with-signature.pdf"
+  },
+  "NORSK": {
+   "title": "Norsk et al. 2015, J Physiol",
+   "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4324706/"
+  },
+  "TB-019": {
+   "title": "OCHMO TB-019 Orthostatic Intolerance",
+   "url": "https://www.nasa.gov/wp-content/uploads/2023/12/ochmo-tb-019-orthostatic-intolerance.pdf"
+  },
+  "HUGHSON": {
+   "title": "Hughson et al. 2016, Am J Physiol",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/26747504/"
+  },
+  "STAHN": {
+   "title": "Stahn et al. 2017, Sci Rep",
+   "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5701078/"
+  },
+  "BARGER": {
+   "title": "Barger et al. 2014, Lancet Neurol",
+   "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4188436/"
+  },
+  "MTB-009": {
+   "title": "OCHMO MTB-009 Circadian Desynchrony",
+   "url": "https://www.nasa.gov/wp-content/uploads/2026/03/ochmo-mtb-009-circadian-desynchrony.pdf"
+  },
+  "TB-016": {
+   "title": "OCHMO TB-016 Behavioral Health and Performance",
+   "url": "https://www.nasa.gov/wp-content/uploads/2023/12/ochmo-tb-016-behavioral-health.pdf"
+  },
+  "EX-NASA": {
+   "title": "NASA: Counteracting Bone and Muscle Loss in Microgravity",
+   "url": "https://www.nasa.gov/missions/station/iss-research/counteracting-bone-and-muscle-loss-in-microgravity/"
+  },
+  "MTB-013": {
+   "title": "OCHMO MTB-013 Bone Loss",
+   "url": "https://www.nasa.gov/wp-content/uploads/2026/02/ochmo-mtb-013-bone-loss.pdf"
+  },
+  "STAV": {
+   "title": "Stavnichuk et al. 2020, npj Microgravity",
+   "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7200725/"
+  },
+  "TB-020": {
+   "title": "OCHMO TB-020 Radiation Protection",
+   "url": "https://www.nasa.gov/wp-content/uploads/2023/12/ochmo-tb-020-radiation-protection.pdf"
+  },
+  "SRAG": {
+   "title": "NASA Space Radiation Analysis Group",
+   "url": "https://srag.jsc.nasa.gov/spaceradiation/how/how.cfm"
+  },
+  "MTB-001": {
+   "title": "OCHMO MTB-001 SANS",
+   "url": "https://www.nasa.gov/wp-content/uploads/2024/02/ochmo-mtb-001-sans.pdf"
+  },
+  "MTB-003": {
+   "title": "OCHMO MTB-003 Urinary Health",
+   "url": "https://www.nasa.gov/wp-content/uploads/2025/01/ochmo-mtb-003-urinary-health.pdf"
+  },
+  "MTB-004": {
+   "title": "OCHMO MTB-004 Space Adaptation Sickness",
+   "url": "https://www.nasa.gov/wp-content/uploads/2025/09/ochmo-mtb-004-space-adaptation-sickness-sas.pdf"
+  },
+  "TB-004": {
+   "title": "OCHMO TB-004 Carbon Dioxide",
+   "url": "https://www.nasa.gov/wp-content/uploads/2023/12/ochmo-tb-004-carbon-dioxide.pdf"
+  },
+  "BP3D": {
+   "title": "BodyParts3D 4.0 part index (atlas.json) via ashemag/human-atlas, CC BY 4.0",
+   "url": "https://github.com/ashemag/human-atlas"
+  }
+ },
+ "structure_index": {
+  "whole_body": [
+   {"n":"Skin","id":"FJ2810","fma":"FMA7163","t":[0,22372],"c":[0.031,0.851,0.007],"b":[[-0.333,0,-0.146],[0.333,1.72,0.146]]}
+  ],
+  "brain": [
+   {"n":"Left ciliary ganglion","id":"FJ1288","fma":"FMA53550","t":[0,26],"c":[0.024,1.603,0.032],"b":[[0.023,1.602,0.03],[0.026,1.605,0.033]]},
+   {"n":"Right ciliary ganglion","id":"FJ1339","fma":"FMA53549","t":[26,34],"c":[-0.024,1.604,0.031],"b":[[-0.026,1.602,0.03],[-0.023,1.605,0.033]]},
+   {"n":"Third ventricle","id":"FJ1730","fma":"FMA78454","t":[60,175],"c":[0,1.629,-0.012],"b":[[-0.004,1.616,-0.036],[0.004,1.639,0.004]]},
+   {"n":"Fourth ventricle","id":"FJ1731","fma":"FMA78469","t":[235,319],"c":[0,1.585,-0.038],"b":[[-0.014,1.569,-0.049],[0.014,1.607,-0.026]]},
+   {"n":"Left angular gyrus","id":"FJ1732","fma":"FMA72670","t":[554,525],"c":[0.042,1.647,-0.077],"b":[[0.023,1.617,-0.101],[0.065,1.681,-0.056]]},
+   {"n":"Right angular gyrus","id":"FJ1733","fma":"FMA72669","t":[1079,540],"c":[-0.043,1.647,-0.076],"b":[[-0.066,1.618,-0.102],[-0.022,1.681,-0.056]]},
+   {"n":"Anterior commissure","id":"FJ1734","fma":"FMA61961","t":[1619,100],"c":[-0.001,1.631,0.002],"b":[[-0.012,1.63,0],[0.012,1.632,0.005]]},
+   {"n":"Brachium of left superior colliculus","id":"FJ1735","fma":"FMA73462","t":[1719,38],"c":[-0.01,1.619,-0.03],"b":[[-0.018,1.615,-0.033],[-0.003,1.622,-0.026]]},
+   {"n":"Brachium of right superior colliculus","id":"FJ1736","fma":"FMA73461","t":[1757,42],"c":[0.01,1.619,-0.03],"b":[[0.003,1.615,-0.033],[0.018,1.622,-0.026]]},
+   {"n":"Central canal of spinal cord","id":"FJ1737","fma":"FMA78497","t":[1799,35],"c":[0,1.554,-0.044],"b":[[-0.001,1.537,-0.049],[0.001,1.572,-0.036]]},
+   {"n":"Cerebral aqueduct","id":"FJ1738","fma":"FMA78467","t":[1834,65],"c":[0,1.617,-0.025],"b":[[-0.002,1.607,-0.028],[0.002,1.624,-0.022]]},
+   {"n":"Left cingulate gyrus","id":"FJ1739","fma":"FMA72718","t":[1899,267],"c":[0.008,1.65,-0.021],"b":[[0.001,1.608,-0.07],[0.029,1.675,0.041]]},
+   {"n":"Right cingulate gyrus","id":"FJ1740","fma":"FMA72717","t":[2166,319],"c":[-0.009,1.648,-0.019],"b":[[-0.029,1.609,-0.071],[0,1.675,0.041]]},
+   {"n":"Commissure of fornix of forebrain","id":"FJ1741","fma":"FMA61970","t":[2485,409],"c":[0.001,1.633,-0.036],"b":[[-0.025,1.625,-0.044],[0.024,1.645,-0.013]]},
+   {"n":"Corpus callosum","id":"FJ1742","fma":"FMA86464","t":[2894,1237],"c":[0,1.645,-0.012],"b":[[-0.026,1.622,-0.062],[0.026,1.661,0.03]]},
+   {"n":"Habenula","id":"FJ1743","fma":"FMA62032","t":[4131,70],"c":[0,1.625,-0.031],"b":[[-0.004,1.623,-0.034],[0.004,1.627,-0.028]]},
+   {"n":"Left inferior frontal gyrus","id":"FJ1744","fma":"FMA72658","t":[4201,486],"c":[0.042,1.652,0.018],"b":[[0.026,1.625,-0.011],[0.061,1.686,0.052]]},
+   {"n":"Right inferior frontal gyrus","id":"FJ1745","fma":"FMA72657","t":[4687,506],"c":[-0.043,1.652,0.018],"b":[[-0.061,1.624,-0.011],[-0.027,1.685,0.052]]},
+   {"n":"Left inferior temporal gyrus","id":"FJ1746","fma":"FMA72688","t":[5193,349],"c":[0.042,1.608,-0.024],"b":[[0.017,1.591,-0.075],[0.061,1.621,0.02]]},
+   {"n":"Right inferior temporal gyrus","id":"FJ1747","fma":"FMA72687","t":[5542,354],"c":[-0.043,1.607,-0.022],"b":[[-0.06,1.592,-0.074],[-0.018,1.621,0.022]]},
+   {"n":"Left insula","id":"FJ1748","fma":"FMA72978","t":[5896,319],"c":[0.036,1.642,-0.002],"b":[[0.026,1.623,-0.03],[0.045,1.658,0.022]]},
+   {"n":"Right insula","id":"FJ1749","fma":"FMA72977","t":[6215,313],"c":[-0.037,1.642,-0.002],"b":[[-0.045,1.623,-0.03],[-0.026,1.658,0.022]]},
+   {"n":"Left internal capsule","id":"FJ1750","fma":"FMA72907","t":[6528,340],"c":[0.019,1.639,-0.008],"b":[[0.007,1.622,-0.036],[0.03,1.655,0.018]]},
+   {"n":"Right internal capsule","id":"FJ1751","fma":"FMA72906","t":[6868,350],"c":[-0.02,1.639,-0.009],"b":[[-0.03,1.622,-0.036],[-0.008,1.655,0.018]]},
+   {"n":"Interventricular foramen","id":"FJ1752","fma":"FMA75351","t":[7218,142],"c":[0,1.639,-0.005],"b":[[-0.006,1.634,-0.008],[0.006,1.645,-0.003]]},
+   {"n":"Left amygdala","id":"FJ1753","fma":"FMA72833","t":[7360,57],"c":[0.027,1.617,-0.001],"b":[[0.017,1.61,-0.011],[0.034,1.623,0.007]]},
+   {"n":"Left caudate nucleus","id":"FJ1754","fma":"FMA72827","t":[7417,195],"c":[0.019,1.635,-0.009],"b":[[0.002,1.618,-0.04],[0.034,1.655,0.024]]},
+   {"n":"Left fornix of forebrain","id":"FJ1756","fma":"FMA72925","t":null,"c":[0.016,1.629,-0.02],"b":[[0,1.613,-0.042],[0.031,1.646,0.002]]},
+   {"n":"Left globus pallidus","id":"FJ1757","fma":"FMA72831","t":[7822,222],"c":[0.022,1.632,-0.004],"b":[[0.013,1.624,-0.021],[0.03,1.642,0.009]]},
+   {"n":"White matter of left cerebral hemisphere","id":"FJ1758","fma":"FMA260794","t":[8044,2283],"c":[0.027,1.648,-0.033],"b":[[0.004,1.6,-0.101],[0.063,1.7,0.062]]},
+   {"n":"Left hippocampus","id":"FJ1759","fma":"FMA72714","t":[10327,116],"c":[0.028,1.616,-0.021],"b":[[0.017,1.607,-0.041],[0.037,1.629,0.002]]},
+   {"n":"Hypothalamus #1","id":"FJ1760","fma":"FMA62008","t":[10443,201],"c":[0.003,1.621,0.001],"b":[[0,1.61,-0.009],[0.008,1.63,0.009]]},
+   {"n":"Brachium of left inferior colliculus","id":"FJ1761","fma":"FMA73464","t":[10644,40],"c":[0.009,1.616,-0.029],"b":[[0.002,1.61,-0.032],[0.015,1.621,-0.025]]},
+   {"n":"Left inferior colliculus","id":"FJ1762","fma":"FMA73435","t":[10684,26],"c":[0.004,1.61,-0.03],"b":[[0,1.607,-0.033],[0.008,1.615,-0.026]]},
+   {"n":"Interpeduncular fossa #1","id":"FJ1763","fma":"FMA83740","t":[10710,16],"c":[0.001,1.621,-0.007],"b":[[0,1.62,-0.009],[0.002,1.622,-0.006]]},
+   {"n":"Lamina terminalis #1","id":"FJ1764","fma":"FMA61975","t":[10726,51],"c":[0.001,1.625,0.004],"b":[[0,1.618,0.002],[0.001,1.63,0.009]]},
+   {"n":"Left lateral geniculate body","id":"FJ1766","fma":"FMA73304","t":[10777,30],"c":[0.022,1.618,-0.024],"b":[[0.017,1.615,-0.03],[0.026,1.622,-0.019]]},
+   {"n":"Left lateral ventricle","id":"FJ1767","fma":"FMA78450","t":[10807,534],"c":[0.017,1.633,-0.019],"b":[[0,1.609,-0.083],[0.039,1.658,0.026]]},
+   {"n":"Mammillary body #1","id":"FJ1768","fma":"FMA74877","t":[11341,30],"c":[0.002,1.619,-0.007],"b":[[0,1.616,-0.009],[0.004,1.621,-0.004]]},
+   {"n":"Medulla oblongata #1","id":"FJ1769","fma":"FMA62004","t":[11371,227],"c":[0.006,1.569,-0.034],"b":[[0,1.543,-0.05],[0.013,1.584,-0.017]]},
+   {"n":"Midbrain #1","id":"FJ1770","fma":"FMA61993","t":[11598,294],"c":[0.004,1.616,-0.021],"b":[[0,1.607,-0.034],[0.014,1.624,-0.005]]},
+   {"n":"Optic chiasm #1","id":"FJ1771","fma":"FMA62045","t":[11892,140],"c":[0.004,1.618,0.005],"b":[[0,1.614,-0.001],[0.007,1.622,0.01]]},
+   {"n":"Left optic tract","id":"FJ1773","fma":"FMA67936","t":[12032,150],"c":[0.015,1.618,-0.015],"b":[[0.001,1.614,-0.031],[0.025,1.622,0.006]]},
+   {"n":"Peduncle of midbrain #1","id":"FJ1774","fma":"FMA62394","t":[12182,348],"c":[0.012,1.617,-0.011],"b":[[0.002,1.607,-0.024],[0.021,1.624,-0.002]]},
+   {"n":"Pons #1","id":"FJ1775","fma":"FMA67943","t":[12530,463],"c":[0.009,1.594,-0.023],"b":[[0,1.58,-0.038],[0.021,1.609,-0.004]]},
+   {"n":"Left putamen","id":"FJ1776","fma":"FMA72829","t":[12993,240],"c":[0.027,1.635,-0.003],"b":[[0.017,1.624,-0.025],[0.035,1.65,0.018]]},
+   {"n":"Left stria medullaris of thalamus","id":"FJ1777","fma":"FMA73414","t":null,"c":[0.002,1.631,-0.015],"b":[[0,1.623,-0.034],[0.004,1.639,0.003]]},
+   {"n":"Left stria terminalis","id":"FJ1778","fma":"FMA72940","t":[13375,103],"c":[0.015,1.631,-0.02],"b":[[0.003,1.615,-0.039],[0.028,1.646,0.003]]},
+   {"n":"Left superior colliculus","id":"FJ1779","fma":"FMA73423","t":[13478,24],"c":[0.005,1.619,-0.029],"b":[[0,1.615,-0.032],[0.008,1.622,-0.027]]},
+   {"n":"Tuber cinereum #1","id":"FJ1780","fma":"FMA62327","t":[13502,110],"c":[0.003,1.617,-0.002],"b":[[0,1.61,-0.007],[0.009,1.621,0.003]]},
+   {"n":"Cerebellum #1","id":"FJ1781","fma":"FMA67944","t":[13612,781],"c":[0.016,1.59,-0.055],"b":[[-0.001,1.565,-0.089],[0.053,1.619,-0.032]]},
+   {"n":"Left thalamus","id":"FJ1782","fma":"FMA258716","t":[14393,194],"c":[0.013,1.632,-0.022],"b":[[0,1.62,-0.039],[0.024,1.644,-0.002]]},
+   {"n":"Left fusiform gyrus","id":"FJ1783","fma":"FMA72690","t":[14587,244],"c":[0.028,1.607,-0.018],"b":[[0.011,1.594,-0.052],[0.043,1.62,0.01]]},
+   {"n":"Right fusiform gyrus","id":"FJ1784","fma":"FMA72689","t":[14831,241],"c":[-0.029,1.608,-0.019],"b":[[-0.043,1.593,-0.052],[-0.011,1.62,0.01]]},
+   {"n":"Left parahippocampal gyrus","id":"FJ1785","fma":"FMA72706","t":[15072,135],"c":[0.019,1.611,-0.025],"b":[[0.009,1.6,-0.049],[0.03,1.622,0.001]]},
+   {"n":"Right parahippocampal gyrus","id":"FJ1786","fma":"FMA72705","t":[15207,140],"c":[-0.02,1.61,-0.021],"b":[[-0.03,1.6,-0.05],[-0.01,1.622,0]]},
+   {"n":"Left middle frontal gyrus","id":"FJ1787","fma":"FMA72656","t":[15347,493],"c":[0.03,1.671,0.021],"b":[[0.015,1.639,-0.026],[0.049,1.7,0.059]]},
+   {"n":"Right middle frontal gyrus","id":"FJ1788","fma":"FMA72655","t":[15840,432],"c":[-0.031,1.671,0.02],"b":[[-0.05,1.639,-0.028],[-0.015,1.701,0.059]]},
+   {"n":"Left middle temporal gyrus","id":"FJ1789","fma":"FMA72686","t":[16272,336],"c":[0.052,1.618,-0.035],"b":[[0.034,1.6,-0.087],[0.069,1.633,0.024]]},
+   {"n":"Right middle temporal gyrus","id":"FJ1790","fma":"FMA72685","t":[16608,330],"c":[-0.052,1.618,-0.034],"b":[[-0.069,1.6,-0.087],[-0.034,1.634,0.024]]},
+   {"n":"Left occipital lobe","id":"FJ1791","fma":"FMA72976","t":[16938,669],"c":[0.018,1.618,-0.085],"b":[[0,1.596,-0.111],[0.044,1.65,-0.048]]},
+   {"n":"Right occipital lobe","id":"FJ1792","fma":"FMA72975","t":[17607,678],"c":[-0.019,1.62,-0.085],"b":[[-0.045,1.595,-0.111],[-0.001,1.65,-0.048]]},
+   {"n":"Orbital gyrus #1","id":"FJ1793","fma":"FMA256194","t":[18285,379],"c":[0.016,1.626,0.031],"b":[[0.001,1.613,-0.002],[0.042,1.642,0.065]]},
+   {"n":"Orbital gyrus #2","id":"FJ1794","fma":"FMA256194","t":[18664,385],"c":[-0.017,1.625,0.031],"b":[[-0.042,1.612,-0.003],[-0.001,1.642,0.064]]},
+   {"n":"Left postcentral gyrus","id":"FJ1797","fma":"FMA72666","t":[19049,547],"c":[0.034,1.673,-0.043],"b":[[0.001,1.642,-0.077],[0.069,1.702,-0.013]]},
+   {"n":"Right postcentral gyrus","id":"FJ1798","fma":"FMA72665","t":[19596,527],"c":[-0.035,1.673,-0.044],"b":[[-0.068,1.642,-0.077],[-0.001,1.702,-0.013]]},
+   {"n":"Posterior commissure","id":"FJ1799","fma":"FMA62072","t":[20123,86],"c":[-0.001,1.623,-0.027],"b":[[-0.008,1.621,-0.03],[0.008,1.624,-0.025]]},
+   {"n":"Left precentral gyrus","id":"FJ1800","fma":"FMA72662","t":[20209,587],"c":[0.032,1.675,-0.029],"b":[[0.001,1.639,-0.061],[0.064,1.706,0.004]]},
+   {"n":"Right precentral gyrus","id":"FJ1801","fma":"FMA72661","t":[20796,600],"c":[-0.032,1.675,-0.03],"b":[[-0.064,1.639,-0.061],[-0.001,1.705,0.003]]},
+   {"n":"Right caudate nucleus","id":"FJ1802","fma":"FMA72826","t":[21396,193],"c":[-0.019,1.635,-0.011],"b":[[-0.034,1.619,-0.041],[-0.002,1.655,0.023]]},
+   {"n":"Right fornix of forebrain","id":"FJ1804","fma":"FMA72924","t":[21589,216],"c":[-0.011,1.631,-0.017],"b":[[-0.032,1.613,-0.043],[0,1.645,0.002]]},
+   {"n":"Right globus pallidus","id":"FJ1805","fma":"FMA72830","t":[21805,178],"c":[-0.023,1.632,-0.005],"b":[[-0.03,1.624,-0.021],[-0.013,1.642,0.009]]},
+   {"n":"White matter of right cerebral hemisphere","id":"FJ1806","fma":"FMA260791","t":[21983,2306],"c":[-0.028,1.648,-0.032],"b":[[-0.063,1.6,-0.101],[-0.004,1.701,0.062]]},
+   {"n":"Right hippocampus","id":"FJ1807","fma":"FMA72713","t":[24289,110],"c":[-0.027,1.616,-0.02],"b":[[-0.038,1.607,-0.041],[-0.017,1.629,0.002]]},
+   {"n":"Hypothalamus #2","id":"FJ1808","fma":"FMA62008","t":[24399,202],"c":[-0.002,1.621,0.001],"b":[[-0.008,1.61,-0.008],[0,1.63,0.009]]},
+   {"n":"Brachium of right inferior colliculus","id":"FJ1809","fma":"FMA73463","t":[24601,34],"c":[-0.009,1.616,-0.029],"b":[[-0.015,1.61,-0.032],[-0.003,1.621,-0.025]]},
+   {"n":"Right inferior colliculus","id":"FJ1810","fma":"FMA73434","t":[24635,26],"c":[-0.004,1.611,-0.029],"b":[[-0.008,1.606,-0.033],[0,1.615,-0.025]]},
+   {"n":"Interpeduncular fossa #2","id":"FJ1811","fma":"FMA83740","t":[24661,20],"c":[-0.001,1.621,-0.007],"b":[[-0.002,1.62,-0.009],[0,1.622,-0.006]]},
+   {"n":"Lamina terminalis #2","id":"FJ1812","fma":"FMA61975","t":[24681,36],"c":[-0.001,1.625,0.004],"b":[[-0.002,1.618,0.002],[0,1.629,0.009]]},
+   {"n":"Right lateral geniculate body","id":"FJ1813","fma":"FMA73303","t":[24717,86],"c":[-0.02,1.618,-0.026],"b":[[-0.024,1.615,-0.032],[-0.016,1.622,-0.02]]},
+   {"n":"Right lateral ventricle","id":"FJ1814","fma":"FMA78449","t":[24803,550],"c":[-0.018,1.633,-0.02],"b":[[-0.039,1.608,-0.083],[0,1.657,0.026]]},
+   {"n":"Mammillary body #2","id":"FJ1815","fma":"FMA74877","t":[25353,28],"c":[-0.002,1.619,-0.007],"b":[[-0.005,1.616,-0.009],[0,1.621,-0.004]]},
+   {"n":"Right medial geniculate body","id":"FJ1816","fma":"FMA73309","t":[25381,28],"c":[-0.014,1.618,-0.026],"b":[[-0.018,1.613,-0.03],[-0.011,1.622,-0.023]]},
+   {"n":"Left medial geniculate body","id":"FJ1816M","fma":"FMA73310","t":[25409,28],"c":[0.015,1.619,-0.026],"b":[[0.012,1.614,-0.03],[0.019,1.622,-0.023]]},
+   {"n":"Midbrain #2","id":"FJ1817","fma":"FMA61993","t":[25437,287],"c":[-0.004,1.615,-0.02],"b":[[-0.015,1.607,-0.034],[0,1.624,-0.005]]},
+   {"n":"Optic chiasm #2","id":"FJ1818","fma":"FMA62045","t":[25724,116],"c":[-0.004,1.618,0.005],"b":[[-0.007,1.614,-0.001],[0,1.622,0.01]]},
+   {"n":"Right optic tract","id":"FJ1820","fma":"FMA62382","t":[25840,170],"c":[-0.015,1.618,-0.014],"b":[[-0.025,1.614,-0.031],[-0.001,1.622,0.007]]},
+   {"n":"Peduncle of midbrain #2","id":"FJ1821","fma":"FMA62394","t":[26010,458],"c":[-0.012,1.616,-0.01],"b":[[-0.021,1.607,-0.024],[-0.002,1.624,-0.001]]},
+   {"n":"Pons #2","id":"FJ1822","fma":"FMA67943","t":[26468,857],"c":[-0.008,1.594,-0.022],"b":[[-0.021,1.58,-0.038],[0,1.609,-0.004]]},
+   {"n":"Right putamen","id":"FJ1823","fma":"FMA72828","t":[27325,381],"c":[-0.027,1.635,-0.004],"b":[[-0.035,1.624,-0.025],[-0.017,1.65,0.018]]},
+   {"n":"Right stria medullaris of thalamus","id":"FJ1824","fma":"FMA73413","t":[27706,159],"c":[-0.002,1.631,-0.013],"b":[[-0.004,1.623,-0.034],[0,1.639,0.003]]},
+   {"n":"Stria terminalis","id":"FJ1825","fma":"FMA61974","t":[27865,171],"c":[-0.014,1.629,-0.017],"b":[[-0.028,1.615,-0.039],[0.024,1.645,0.005]]},
+   {"n":"Right superior colliculus","id":"FJ1826","fma":"FMA73422","t":[28036,42],"c":[-0.004,1.618,-0.03],"b":[[-0.008,1.615,-0.033],[0,1.621,-0.027]]},
+   {"n":"Right thalamus","id":"FJ1827","fma":"FMA258714","t":[28078,186],"c":[-0.012,1.632,-0.022],"b":[[-0.025,1.62,-0.039],[-0.001,1.644,-0.002]]},
+   {"n":"Tuber cinereum #2","id":"FJ1828","fma":"FMA62327","t":[28264,155],"c":[-0.003,1.617,-0.002],"b":[[-0.009,1.61,-0.007],[0,1.621,0.003]]},
+   {"n":"Right amygdala","id":"FJ1829","fma":"FMA72832","t":[28419,96],"c":[-0.026,1.617,-0.001],"b":[[-0.034,1.61,-0.012],[-0.017,1.623,0.006]]},
+   {"n":"Cerebellum #2","id":"FJ1830","fma":"FMA67944","t":[28515,1261],"c":[-0.015,1.59,-0.056],"b":[[-0.053,1.565,-0.088],[0,1.619,-0.032]]},
+   {"n":"Medulla oblongata #2","id":"FJ1831","fma":"FMA62004","t":[29776,393],"c":[-0.005,1.568,-0.034],"b":[[-0.013,1.543,-0.049],[0,1.584,-0.016]]},
+   {"n":"Septum of telencephalon","id":"FJ1832","fma":"FMA61842","t":[30169,772],"c":[0,1.646,-0.003],"b":[[-0.011,1.63,-0.041],[0.01,1.653,0.021]]},
+   {"n":"Left superior frontal gyrus","id":"FJ1833","fma":"FMA72654","t":[30941,1114],"c":[0.012,1.677,0.014],"b":[[0,1.63,-0.047],[0.033,1.709,0.07]]},
+   {"n":"Right superior frontal gyrus","id":"FJ1834","fma":"FMA72653","t":[32055,1151],"c":[-0.013,1.677,0.013],"b":[[-0.033,1.63,-0.046],[-0.001,1.708,0.069]]},
+   {"n":"Left superior parietal lobule","id":"FJ1835","fma":"FMA72672","t":[33206,1191],"c":[0.016,1.662,-0.079],"b":[[0,1.628,-0.106],[0.037,1.695,-0.051]]},
+   {"n":"Right superior parietal lobule","id":"FJ1836","fma":"FMA72671","t":[34397,1211],"c":[-0.017,1.662,-0.079],"b":[[-0.037,1.628,-0.107],[-0.001,1.695,-0.05]]},
+   {"n":"Anterior part of left superior temporal gyrus","id":"FJ1837","fma":"FMA72801","t":[35608,390],"c":[0.045,1.629,-0.003],"b":[[0.027,1.602,-0.047],[0.063,1.651,0.027]]},
+   {"n":"Anterior part of right superior temporal gyrus","id":"FJ1838","fma":"FMA72800","t":[35998,372],"c":[-0.045,1.629,-0.001],"b":[[-0.064,1.602,-0.047],[-0.027,1.651,0.028]]},
+   {"n":"Posterior part of left superior temporal gyrus","id":"FJ1839","fma":"FMA72805","t":[36370,473],"c":[0.055,1.635,-0.042],"b":[[0.039,1.612,-0.079],[0.071,1.651,-0.005]]},
+   {"n":"Posterior part of right superior temporal gyrus","id":"FJ1840","fma":"FMA72804","t":[36843,475],"c":[-0.056,1.635,-0.043],"b":[[-0.071,1.612,-0.079],[-0.039,1.651,-0.006]]},
+   {"n":"Left supramarginal gyrus","id":"FJ1841","fma":"FMA72668","t":[37318,569],"c":[0.049,1.658,-0.047],"b":[[0.024,1.64,-0.065],[0.07,1.681,-0.028]]},
+   {"n":"Right supramarginal gyrus","id":"FJ1842","fma":"FMA72667","t":[37887,562],"c":[-0.049,1.657,-0.047],"b":[[-0.069,1.64,-0.065],[-0.024,1.681,-0.028]]},
+   {"n":"Tentorium cerebelli","id":"FJ1843","fma":"FMA83966","t":[38449,1230],"c":[-0.025,1.6,-0.055],"b":[[-0.063,1.586,-0.095],[-0.002,1.62,-0.007]]}
+  ],
+  "heart": [
+   {"n":"Left anterior cusp of pulmonary valve","id":"FJ2417","fma":"FMA7247","t":[0,476],"c":[0.033,1.331,0.049],"b":[[0.024,1.323,0.039],[0.042,1.34,0.059]]},
+   {"n":"Anterior leaflet of mitral valve","id":"FJ2420","fma":"FMA7242","t":[476,984],"c":[0.03,1.297,0.011],"b":[[0.012,1.283,-0.008],[0.046,1.314,0.041]]},
+   {"n":"Anterior leaflet of tricuspid valve","id":"FJ2421","fma":"FMA7238","t":[1460,912],"c":[0,1.291,0.04],"b":[[-0.021,1.276,0.029],[0.024,1.314,0.056]]},
+   {"n":"Cavity of left ventricle","id":"FJ2422","fma":"FMA9466","t":[2372,571],"c":[0.036,1.3,0.018],"b":[[0.007,1.262,-0.014],[0.07,1.33,0.058]]},
+   {"n":"Cavity of right ventricle","id":"FJ2423","fma":"FMA9291","t":[2943,599],"c":[0.019,1.304,0.044],"b":[[-0.018,1.258,0.014],[0.053,1.338,0.073]]},
+   {"n":"Cavity of right atrium","id":"FJ2424","fma":"FMA11359","t":[3542,500],"c":[-0.014,1.312,0.02],"b":[[-0.034,1.263,-0.008],[0.004,1.356,0.053]]},
+   {"n":"Cavity of left atrium","id":"FJ2425","fma":"FMA9465","t":[4042,387],"c":[0.021,1.323,-0.006],"b":[[-0.02,1.284,-0.03],[0.049,1.347,0.026]]},
+   {"n":"Left posterior cusp of aortic valve","id":"FJ2426","fma":"FMA7254","t":[4429,358],"c":[0.027,1.326,0.015],"b":[[0.017,1.319,0.006],[0.033,1.333,0.026]]},
+   {"n":"Posterior cusp of pulmonary valve","id":"FJ2427","fma":"FMA7250","t":[4787,387],"c":[0.032,1.331,0.034],"b":[[0.024,1.323,0.027],[0.041,1.34,0.041]]},
+   {"n":"Wall of ventricle","id":"FJ2428","fma":"FMA13884","t":[5174,3242],"c":[0.034,1.301,0.033],"b":[[-0.023,1.252,-0.018],[0.08,1.344,0.076]]},
+   {"n":"Right posterior cusp of aortic valve","id":"FJ2431","fma":"FMA7252","t":[8416,195],"c":[0.016,1.321,0.013],"b":[[0.006,1.312,0.004],[0.024,1.329,0.023]]},
+   {"n":"Posterior leaflet of mitral valve","id":"FJ2432","fma":"FMA7243","t":[8611,1531],"c":[0.038,1.291,0.002],"b":[[0.014,1.278,-0.015],[0.063,1.31,0.023]]},
+   {"n":"Posterior leaflet of tricuspid valve","id":"FJ2433","fma":"FMA7239","t":[10142,1517],"c":[-0.002,1.283,0.028],"b":[[-0.018,1.267,0.013],[0.017,1.294,0.045]]},
+   {"n":"Right anterior cusp of pulmonary valve","id":"FJ2434","fma":"FMA7249","t":[11659,835],"c":[0.018,1.334,0.044],"b":[[0.009,1.326,0.032],[0.028,1.343,0.056]]},
+   {"n":"Anterior cusp of aortic valve","id":"FJ2435","fma":"FMA7253","t":[12494,563],"c":[0.019,1.321,0.026],"b":[[0.008,1.313,0.018],[0.027,1.331,0.032]]},
+   {"n":"Septal leaflet of tricuspid valve","id":"FJ2436","fma":"FMA7240","t":[13057,1391],"c":[0.006,1.303,0.028],"b":[[-0.006,1.291,0.013],[0.03,1.315,0.037]]},
+   {"n":"Wall of left atrium","id":"FJ2438","fma":"FMA9531","t":[14448,2536],"c":[0.022,1.319,-0.003],"b":[[-0.022,1.278,-0.03],[0.064,1.35,0.05]]},
+   {"n":"Wall of right atrium","id":"FJ2439","fma":"FMA9457","t":[16984,2405],"c":[-0.014,1.31,0.023],"b":[[-0.036,1.261,-0.005],[0.007,1.358,0.062]]}
+  ],
+  "blood": [
+   {"n":"Descending thoracic aorta","id":"FJ1931","fma":"FMA87217","t":[0,192],"c":[0.018,1.306,-0.028],"b":[[0.002,1.207,-0.047],[0.03,1.378,-0.001]]},
+   {"n":"Abdominal aorta","id":"FJ1932","fma":"FMA3789","t":[192,199],"c":[0.009,1.105,0.014],"b":[[0,1.027,-0.018],[0.021,1.214,0.032]]},
+   {"n":"Right renal artery","id":"FJ2038","fma":"FMA14752","t":[391,78],"c":[-0.012,1.114,0.008],"b":[[-0.042,1.103,-0.003],[0.013,1.127,0.019]]},
+   {"n":"Superior segmental branch of right renal artery","id":"FJ2042","fma":"FMA86340","t":[469,106],"c":[-0.061,1.127,-0.022],"b":[[-0.068,1.108,-0.037],[-0.057,1.151,-0.011]]},
+   {"n":"Inferior segmental branch of right renal artery","id":"FJ2043","fma":"FMA86346","t":[575,103],"c":[-0.073,1.092,-0.013],"b":[[-0.086,1.078,-0.017],[-0.056,1.112,-0.008]]},
+   {"n":"Posterior segmental branch of right renal artery","id":"FJ2045","fma":"FMA86348","t":[678,193],"c":[-0.084,1.087,-0.031],"b":[[-0.111,1.072,-0.05],[-0.06,1.097,-0.009]]},
+   {"n":"Left renal artery","id":"FJ2046","fma":"FMA14753","t":[871,111],"c":[0.02,1.12,0.009],"b":[[0.004,1.115,-0.004],[0.04,1.128,0.02]]},
+   {"n":"Inferior segmental branch of left renal artery","id":"FJ2049","fma":"FMA86347","t":[982,122],"c":[0.064,1.111,-0.014],"b":[[0.048,1.097,-0.02],[0.082,1.124,-0.009]]},
+   {"n":"Superior segmental branch of left renal artery","id":"FJ2052","fma":"FMA86341","t":[1104,96],"c":[0.049,1.14,-0.018],"b":[[0.046,1.122,-0.035],[0.053,1.163,-0.006]]},
+   {"n":"Posterior segmental branch of left renal artery #1","id":"FJ2053","fma":"FMA86349","t":[1200,108],"c":[0.06,1.132,-0.032],"b":[[0.055,1.118,-0.047],[0.069,1.15,-0.022]]},
+   {"n":"Posterior segmental branch of left renal artery #2","id":"FJ2054","fma":"FMA86349","t":[1308,191],"c":[0.068,1.115,-0.031],"b":[[0.043,1.106,-0.051],[0.094,1.123,-0.005]]},
+   {"n":"Descending branch of right lateral circumflex femoral artery","id":"FJ2057","fma":"FMA21422","t":[1499,612],"c":[-0.106,0.716,-0.002],"b":[[-0.121,0.489,-0.009],[-0.075,0.851,0.022]]},
+   {"n":"Descending branch of left lateral circumflex femoral artery","id":"FJ2063","fma":"FMA21423","t":[2111,586],"c":[0.107,0.717,-0.002],"b":[[0.076,0.489,-0.009],[0.122,0.851,0.022]]},
+   {"n":"Left femoral artery","id":"FJ2074","fma":"FMA70250","t":[2697,115],"c":[0.05,0.735,0.019],"b":[[0.038,0.549,-0.015],[0.066,0.909,0.042]]},
+   {"n":"Left lateral circumflex femoral artery","id":"FJ2078","fma":"FMA20802","t":[2812,126],"c":[0.096,0.854,-0.017],"b":[[0.076,0.847,-0.039],[0.121,0.873,0.024]]},
+   {"n":"Left popliteal artery","id":"FJ2086","fma":"FMA77381","t":[2938,1354],"c":[0.077,0.462,-0.03],"b":[[0.056,0.361,-0.048],[0.096,0.559,-0.005]]},
+   {"n":"Left deep femoral vein","id":"FJ2099","fma":"FMA51043","t":[4292,576],"c":[0.061,0.774,0.026],"b":[[0.034,0.586,0.004],[0.079,0.897,0.043]]},
+   {"n":"Left femoral vein","id":"FJ2102","fma":"FMA21189","t":[4868,117],"c":[0.048,0.738,0.022],"b":[[0.033,0.562,-0.017],[0.074,0.885,0.054]]},
+   {"n":"Left popliteal vein","id":"FJ2117","fma":"FMA44329","t":[4985,1396],"c":[0.081,0.495,-0.027],"b":[[0.065,0.398,-0.046],[0.102,0.574,-0.006]]},
+   {"n":"Right deep femoral vein","id":"FJ2135","fma":"FMA51042","t":[6381,574],"c":[-0.06,0.778,0.026],"b":[[-0.078,0.586,0.004],[-0.032,0.897,0.043]]},
+   {"n":"Right femoral artery","id":"FJ2143","fma":"FMA70249","t":[6955,115],"c":[-0.049,0.748,0.021],"b":[[-0.066,0.548,-0.015],[-0.037,0.908,0.042]]},
+   {"n":"Right femoral vein","id":"FJ2144","fma":"FMA21188","t":[7070,104],"c":[-0.046,0.744,0.024],"b":[[-0.073,0.562,-0.017],[-0.032,0.885,0.054]]},
+   {"n":"Right lateral circumflex femoral artery","id":"FJ2158","fma":"FMA20801","t":[7174,121],"c":[-0.094,0.853,-0.016],"b":[[-0.12,0.847,-0.039],[-0.076,0.873,0.024]]},
+   {"n":"Right popliteal artery","id":"FJ2170","fma":"FMA77380","t":[7295,1452],"c":[-0.077,0.461,-0.03],"b":[[-0.095,0.361,-0.048],[-0.055,0.559,-0.005]]},
+   {"n":"Right popliteal vein","id":"FJ2171","fma":"FMA44328","t":[8747,1469],"c":[-0.08,0.493,-0.027],"b":[[-0.101,0.398,-0.046],[-0.064,0.574,-0.006]]},
+   {"n":"Left lateral circumflex femoral vein","id":"FJ2188","fma":"FMA44922","t":[10216,309],"c":[0.104,0.857,-0.002],"b":[[0.051,0.839,-0.047],[0.147,0.89,0.027]]},
+   {"n":"Left medial circumflex femoral vein","id":"FJ2189","fma":"FMA44919","t":null,"c":[0.082,0.855,-0.007],"b":[[0.06,0.842,-0.039],[0.104,0.868,0.024]]},
+   {"n":"Right lateral circumflex femoral vein","id":"FJ2201","fma":"FMA44920","t":[10671,305],"c":[-0.104,0.857,-0.002],"b":[[-0.146,0.839,-0.047],[-0.05,0.889,0.027]]},
+   {"n":"Right medial circumflex femoral vein","id":"FJ2202","fma":"FMA44918","t":null,"c":[-0.081,0.855,-0.007],"b":[[-0.103,0.842,-0.039],[-0.059,0.868,0.024]]},
+   {"n":"Left axillary artery","id":"FJ2216","fma":"FMA22656","t":[11117,236],"c":[0.122,1.383,-0.009],"b":[[0.077,1.336,-0.021],[0.152,1.418,0.006]]},
+   {"n":"Left axillary vein","id":"FJ2217","fma":"FMA13331","t":[11353,182],"c":[0.125,1.375,0.003],"b":[[0.076,1.311,-0.009],[0.158,1.413,0.015]]},
+   {"n":"Left brachial artery","id":"FJ2219","fma":"FMA22692","t":[11535,340],"c":[0.177,1.239,-0.019],"b":[[0.144,1.099,-0.028],[0.218,1.352,-0.012]]},
+   {"n":"Left deep brachial artery","id":"FJ2225","fma":"FMA22697","t":[11875,218],"c":[0.187,1.234,-0.037],"b":[[0.175,1.193,-0.049],[0.207,1.262,-0.024]]},
+   {"n":"Left median antebrachial vein","id":"FJ2234","fma":"FMA22969","t":[12093,516],"c":[0.223,1.001,0.013],"b":[[0.177,0.893,-0.028],[0.263,1.092,0.034]]},
+   {"n":"Radial collateral branch of left deep brachial artery","id":"FJ2261","fma":"FMA23127","t":[12609,130],"c":[0.217,1.175,-0.048],"b":[[0.204,1.151,-0.05],[0.231,1.196,-0.046]]},
+   {"n":"Radial collateral branch of right deep brachial artery","id":"FJ2262","fma":"FMA23126","t":[12739,114],"c":[-0.216,1.174,-0.048],"b":[[-0.23,1.15,-0.05],[-0.203,1.196,-0.046]]},
+   {"n":"Right axillary artery","id":"FJ2268","fma":"FMA22655","t":[12853,212],"c":[-0.119,1.385,-0.009],"b":[[-0.151,1.336,-0.02],[-0.076,1.418,0.006]]},
+   {"n":"Right axillary vein","id":"FJ2269","fma":"FMA13330","t":[13065,169],"c":[-0.122,1.378,0.003],"b":[[-0.157,1.311,-0.009],[-0.074,1.413,0.014]]},
+   {"n":"Right brachial artery","id":"FJ2271","fma":"FMA22691","t":[13234,286],"c":[-0.176,1.241,-0.019],"b":[[-0.217,1.099,-0.028],[-0.142,1.353,-0.012]]},
+   {"n":"Right deep brachial artery","id":"FJ2277","fma":"FMA22696","t":[13520,206],"c":[-0.187,1.232,-0.038],"b":[[-0.206,1.193,-0.049],[-0.174,1.262,-0.024]]},
+   {"n":"Right median antebrachial vein","id":"FJ2286","fma":"FMA22968","t":[13726,509],"c":[-0.221,1.002,0.012],"b":[[-0.262,0.893,-0.028],[-0.176,1.092,0.034]]},
+   {"n":"Left medial brachial vein","id":"FJ2313","fma":"FMA22936","t":[14235,261],"c":[0.186,1.204,-0.012],"b":[[0.151,1.097,-0.018],[0.219,1.313,-0.004]]},
+   {"n":"Middle collateral branch of left deep brachial artery","id":"FJ2331","fma":"FMA23125","t":[14496,164],"c":[0.213,1.158,-0.047],"b":[[0.204,1.124,-0.05],[0.223,1.196,-0.045]]},
+   {"n":"Right medial brachial vein","id":"FJ2341","fma":"FMA22935","t":[14660,263],"c":[-0.182,1.212,-0.011],"b":[[-0.218,1.096,-0.018],[-0.149,1.313,-0.004]]},
+   {"n":"Middle collateral branch of right deep brachial artery","id":"FJ2362","fma":"FMA23124","t":[14923,158],"c":[-0.213,1.157,-0.047],"b":[[-0.222,1.124,-0.05],[-0.203,1.196,-0.045]]},
+   {"n":"Pulmonary trunk","id":"FJ2966","fma":"FMA8612","t":[15081,381],"c":[0.028,1.351,0.035],"b":[[0.012,1.335,0.016],[0.043,1.372,0.058]]},
+   {"n":"Arch of aorta","id":"FJ3411","fma":"FMA3768","t":[15462,226],"c":[0.015,1.376,-0.001],"b":[[-0.006,1.36,-0.051],[0.035,1.395,0.036]]},
+   {"n":"Ascending aorta","id":"FJ3413","fma":"FMA3736","t":[15688,151],"c":[0.011,1.338,0.021],"b":[[-0.006,1.312,0.006],[0.03,1.36,0.037]]},
+   {"n":"Brachiocephalic artery","id":"FJ3417","fma":"FMA3932","t":[15839,100],"c":[-0.006,1.408,0.01],"b":[[-0.019,1.382,0.001],[0.019,1.42,0.019]]},
+   {"n":"Bronchial branch of arch of aorta","id":"FJ3418","fma":"FMA14177","t":[15939,347],"c":[-0.002,1.363,-0.025],"b":[[-0.029,1.34,-0.031],[0.018,1.381,-0.022]]},
+   {"n":"Descending aorta","id":"FJ3427","fma":"FMA3784","t":[16286,645],"c":[0.015,1.22,-0.013],"b":[[-0.002,1.025,-0.056],[0.035,1.36,0.031]]},
+   {"n":"Set of oesophageal branches of thoracic aorta","id":"FJ3431","fma":"FMA71537","t":[16931,429],"c":[0.006,1.308,-0.027],"b":[[-0.014,1.278,-0.046],[0.023,1.335,-0.015]]},
+   {"n":"Inferior vena cava #1","id":"FJ3441","fma":"FMA10951","t":[17360,208],"c":[-0.015,1.222,0.014],"b":[[-0.026,1.173,0.003],[-0.003,1.269,0.026]]},
+   {"n":"Anterior division of left renal artery #1","id":"FJ3458","fma":"FMA70487","t":[17568,244],"c":[0.043,1.123,-0.002],"b":[[0.029,1.116,-0.019],[0.062,1.131,0.01]]},
+   {"n":"Anterior division of left renal artery #2","id":"FJ3459","fma":"FMA70487","t":[17812,261],"c":[0.053,1.094,-0.013],"b":[[0.049,1.08,-0.016],[0.057,1.109,-0.01]]},
+   {"n":"Anterior division of left renal artery #3","id":"FJ3460","fma":"FMA70487","t":[18073,159],"c":[0.065,1.119,-0.02],"b":[[0.061,1.087,-0.026],[0.071,1.136,-0.014]]},
+   {"n":"Anterior division of left renal artery #4","id":"FJ3461","fma":"FMA70487","t":[18232,776],"c":[0.066,1.115,-0.021],"b":[[0.043,1.075,-0.029],[0.082,1.153,-0.011]]},
+   {"n":"Anterior division of left renal artery #5","id":"FJ3462","fma":"FMA70487","t":[19008,396],"c":[0.044,1.13,-0.01],"b":[[0.032,1.119,-0.023],[0.058,1.144,0.006]]},
+   {"n":"Anterior division of left renal artery #6","id":"FJ3463","fma":"FMA70487","t":[19404,454],"c":[0.049,1.112,-0.007],"b":[[0.028,1.09,-0.02],[0.069,1.122,0.009]]},
+   {"n":"Left common iliac artery","id":"FJ3464","fma":"FMA14766","t":[19858,157],"c":[0.018,1.014,0.01],"b":[[0.001,0.98,-0.01],[0.037,1.043,0.029]]},
+   {"n":"Left common iliac vein","id":"FJ3465","fma":"FMA21388","t":[20015,244],"c":[-0.001,1.022,0.008],"b":[[-0.014,0.979,-0.024],[0.027,1.043,0.022]]},
+   {"n":"Left external iliac artery","id":"FJ3466","fma":"FMA18807","t":[20259,281],"c":[0.049,0.931,0.01],"b":[[0.026,0.888,-0.022],[0.066,0.99,0.052]]},
+   {"n":"Left inferior suprarenal artery","id":"FJ3467","fma":"FMA69266","t":[20540,442],"c":[0.045,1.15,-0.022],"b":[[0.023,1.118,-0.032],[0.077,1.166,0.006]]},
+   {"n":"Left middle suprarenal artery","id":"FJ3472","fma":"FMA14756","t":[20982,285],"c":[0.036,1.161,-0.021],"b":[[0.009,1.134,-0.035],[0.059,1.175,0.011]]},
+   {"n":"Posterior division of left renal artery #1","id":"FJ3473","fma":"FMA70490","t":[21267,157],"c":[0.039,1.118,-0.016],"b":[[0.017,1.116,-0.032],[0.058,1.122,0.012]]},
+   {"n":"Posterior division of left renal artery #2","id":"FJ3474","fma":"FMA70490","t":[21424,161],"c":[0.044,1.115,-0.027],"b":[[0.041,1.106,-0.03],[0.05,1.117,-0.025]]},
+   {"n":"Posterior division of left renal artery #3","id":"FJ3475","fma":"FMA70490","t":[21585,149],"c":[0.045,1.121,-0.015],"b":[[0.04,1.12,-0.031],[0.054,1.122,0]]},
+   {"n":"Trunk of left renal artery","id":"FJ3476","fma":"FMA66364","t":[21734,163],"c":[0.019,1.121,0.01],"b":[[0.004,1.115,-0.002],[0.039,1.128,0.02]]},
+   {"n":"Left renal vein #1","id":"FJ3477","fma":"FMA14336","t":[21897,390],"c":[0.011,1.111,0.014],"b":[[-0.015,1.101,-0.011],[0.032,1.118,0.032]]},
+   {"n":"Left renal vein #2","id":"FJ3478","fma":"FMA14336","t":[22287,1291],"c":[0.06,1.115,-0.023],"b":[[0.025,1.076,-0.033],[0.082,1.153,-0.003]]},
+   {"n":"Left subclavian artery","id":"FJ3479","fma":"FMA4694","t":[23578,350],"c":[0.046,1.418,-0.003],"b":[[0.018,1.385,-0.014],[0.087,1.434,0.005]]},
+   {"n":"Left suprarenal vein","id":"FJ3480","fma":"FMA14349","t":[23928,229],"c":[0.034,1.152,-0.022],"b":[[0.027,1.116,-0.031],[0.045,1.181,-0.011]]},
+   {"n":"Ureteric segment of left renal artery","id":"FJ3481","fma":"FMA70493","t":[24157,300],"c":[0.031,1.091,-0.002],"b":[[0.027,1.048,-0.009],[0.039,1.117,0.01]]},
+   {"n":"Left brachiocephalic vein","id":"FJ3482","fma":"FMA4761","t":[24457,471],"c":[0.003,1.4,0.019],"b":[[-0.023,1.374,0.01],[0.029,1.426,0.032]]},
+   {"n":"Left common carotid artery","id":"FJ3483","fma":"FMA4058","t":[24928,103],"c":[0.018,1.421,0.003],"b":[[0.012,1.385,-0.005],[0.024,1.452,0.012]]},
+   {"n":"Left external iliac vein #1","id":"FJ3484","fma":"FMA18886","t":[25031,371],"c":[0.041,0.928,-0.003],"b":[[0.014,0.883,-0.032],[0.058,0.983,0.05]]},
+   {"n":"Left internal jugular vein","id":"FJ3485","fma":"FMA4762","t":[25402,176],"c":[0.026,1.439,0.016],"b":[[0.019,1.415,0.011],[0.031,1.459,0.021]]},
+   {"n":"Left subclavian vein","id":"FJ3486","fma":"FMA4763","t":[25578,252],"c":[0.056,1.417,0.012],"b":[[0.02,1.403,0.005],[0.095,1.432,0.02]]},
+   {"n":"Left external iliac vein #2","id":"FJ3522","fma":"FMA18886","t":[25830,105],"c":[0.013,0.98,-0.018],"b":[[0.008,0.966,-0.033],[0.019,0.992,-0.007]]},
+   {"n":"Left external iliac vein #3","id":"FJ3523","fma":"FMA18886","t":[25935,115],"c":[0.015,0.957,-0.035],"b":[[0.011,0.945,-0.041],[0.019,0.97,-0.027]]},
+   {"n":"Left external iliac vein #4","id":"FJ3524","fma":"FMA18886","t":[26050,68],"c":[0.017,0.961,-0.039],"b":[[0.012,0.953,-0.05],[0.021,0.968,-0.028]]},
+   {"n":"Anterior division of right renal artery #1","id":"FJ3558","fma":"FMA70486","t":null,"c":[-0.048,1.093,-0.003],"b":[[-0.063,1.074,-0.008],[-0.034,1.109,0.003]]},
+   {"n":"Anterior division of right renal artery #2","id":"FJ3559","fma":"FMA70486","t":null,"c":[-0.042,1.109,-0.002],"b":[[-0.053,1.103,-0.008],[-0.034,1.115,0.003]]},
+   {"n":"Anterior division of right renal artery #3","id":"FJ3560","fma":"FMA70486","t":[26732,375],"c":[-0.042,1.117,-0.006],"b":[[-0.048,1.107,-0.011],[-0.036,1.128,0.002]]},
+   {"n":"Anterior division of right renal artery #4","id":"FJ3561","fma":"FMA70486","t":[27107,282],"c":[-0.049,1.099,-0.004],"b":[[-0.061,1.088,-0.012],[-0.038,1.108,0.002]]},
+   {"n":"Anterior division of right renal artery #5","id":"FJ3562","fma":"FMA70486","t":[27389,307],"c":[-0.052,1.091,-0.007],"b":[[-0.061,1.063,-0.015],[-0.044,1.12,-0.001]]},
+   {"n":"Anterior division of right renal artery #6","id":"FJ3563","fma":"FMA70486","t":[27696,777],"c":[-0.058,1.1,-0.012],"b":[[-0.073,1.059,-0.021],[-0.032,1.137,-0.003]]},
+   {"n":"Right common carotid artery","id":"FJ3564","fma":"FMA3941","t":[28473,428],"c":[-0.015,1.428,0.01],"b":[[-0.021,1.408,0.005],[-0.008,1.451,0.017]]},
+   {"n":"Right common iliac artery","id":"FJ3565","fma":"FMA14765","t":[28901,138],"c":[-0.012,1.013,0.017],"b":[[-0.037,0.981,0.004],[0.011,1.043,0.029]]},
+   {"n":"Right common iliac vein","id":"FJ3566","fma":"FMA21387","t":[29039,216],"c":[-0.016,1.017,0.009],"b":[[-0.035,0.979,-0.012],[-0.003,1.043,0.023]]},
+   {"n":"Right external iliac artery","id":"FJ3567","fma":"FMA18806","t":[29255,242],"c":[-0.048,0.941,0.003],"b":[[-0.061,0.882,-0.023],[-0.027,0.992,0.044]]},
+   {"n":"Right external iliac vein","id":"FJ3568","fma":"FMA18885","t":[29497,370],"c":[-0.041,0.932,-0.008],"b":[[-0.051,0.874,-0.038],[-0.024,0.984,0.051]]},
+   {"n":"Posterior division of right renal artery #1","id":"FJ3573","fma":"FMA70489","t":[29867,293],"c":[-0.067,1.096,-0.02],"b":[[-0.074,1.089,-0.022],[-0.061,1.1,-0.018]]},
+   {"n":"Posterior division of right renal artery #2","id":"FJ3574","fma":"FMA70489","t":[30160,222],"c":[-0.058,1.097,-0.021],"b":[[-0.065,1.084,-0.023],[-0.048,1.104,-0.018]]},
+   {"n":"Posterior division of right renal artery #3","id":"FJ3575","fma":"FMA70489","t":[30382,298],"c":[-0.046,1.106,-0.014],"b":[[-0.073,1.099,-0.023],[-0.026,1.113,0.005]]},
+   {"n":"Trunk of right renal artery","id":"FJ3576","fma":"FMA66363","t":[30680,176],"c":[-0.013,1.114,0.007],"b":[[-0.04,1.105,-0.003],[0.014,1.127,0.02]]},
+   {"n":"Right renal vein #1","id":"FJ3577","fma":"FMA14335","t":[30856,206],"c":[-0.019,1.104,0.005],"b":[[-0.031,1.099,-0.008],[-0.008,1.111,0.017]]},
+   {"n":"Right renal vein #2","id":"FJ3578","fma":"FMA14335","t":[31062,1388],"c":[-0.051,1.099,-0.013],"b":[[-0.073,1.059,-0.022],[-0.023,1.136,0.001]]},
+   {"n":"Right subclavian artery","id":"FJ3579","fma":"FMA3953","t":[32450,246],"c":[-0.045,1.419,0.002],"b":[[-0.082,1.409,-0.006],[-0.009,1.431,0.012]]},
+   {"n":"Right suprarenal vein","id":"FJ3580","fma":"FMA14343","t":[32696,282],"c":[-0.031,1.141,-0.001],"b":[[-0.045,1.115,-0.013],[-0.018,1.165,0.015]]},
+   {"n":"Ureteric segment of right renal artery #1","id":"FJ3581","fma":"FMA70492","t":[32978,174],"c":[-0.03,1.09,-0.001],"b":[[-0.037,1.068,-0.003],[-0.024,1.107,0.001]]},
+   {"n":"Ureteric segment of right renal artery #2","id":"FJ3582","fma":"FMA70492","t":[33152,199],"c":[-0.027,1.08,-0.001],"b":[[-0.031,1.061,-0.008],[-0.025,1.095,0.004]]},
+   {"n":"Right brachiocephalic vein","id":"FJ3583","fma":"FMA4751","t":[33351,340],"c":[-0.021,1.403,0.018],"b":[[-0.031,1.376,0.009],[-0.01,1.428,0.031]]},
+   {"n":"Right inferior suprarenal artery","id":"FJ3584","fma":"FMA69265","t":[33691,376],"c":[-0.047,1.138,-0.013],"b":[[-0.07,1.108,-0.025],[-0.029,1.15,0.003]]},
+   {"n":"Right internal jugular vein","id":"FJ3585","fma":"FMA4754","t":[34067,144],"c":[-0.026,1.438,0.017],"b":[[-0.031,1.419,0.012],[-0.021,1.46,0.021]]},
+   {"n":"Right middle suprarenal artery","id":"FJ3586","fma":"FMA14755","t":[34211,304],"c":[-0.026,1.146,-0.004],"b":[[-0.054,1.133,-0.02],[0.007,1.157,0.01]]},
+   {"n":"Right subclavian vein","id":"FJ3587","fma":"FMA4755","t":[34515,220],"c":[-0.051,1.418,0.014],"b":[[-0.086,1.406,0.008],[-0.022,1.43,0.021]]},
+   {"n":"Superior vena cava","id":"FJ3645","fma":"FMA4720","t":[34735,348],"c":[-0.015,1.37,0.015],"b":[[-0.026,1.353,0.003],[-0.004,1.388,0.027]]},
+   {"n":"Inferior vena cava #2","id":"FJ3659","fma":"FMA10951","t":[35083,269],"c":[-0.01,1.085,0.016],"b":[[-0.023,1.029,0.005],[-0.002,1.173,0.028]]}
+  ],
+  "bones": [
+   {"n":"Right fibularis brevis","id":"FJ1409","fma":"FMA22554","t":[0,206],"c":[-0.099,0.149,-0.04],"b":[[-0.117,0.022,-0.058],[-0.082,0.267,-0.006]]},
+   {"n":"Left fibularis brevis","id":"FJ1409M","fma":"FMA22555","t":[206,212],"c":[0.101,0.149,-0.04],"b":[[0.083,0.022,-0.059],[0.118,0.267,-0.006]]},
+   {"n":"Right fibularis longus","id":"FJ1410","fma":"FMA22552","t":[418,265],"c":[-0.102,0.21,-0.033],"b":[[-0.125,0.025,-0.059],[-0.083,0.429,0.036]]},
+   {"n":"Left fibularis longus","id":"FJ1410M","fma":"FMA22553","t":[683,269],"c":[0.103,0.203,-0.032],"b":[[0.083,0.026,-0.06],[0.127,0.429,0.036]]},
+   {"n":"Right fibularis tertius","id":"FJ1411","fma":"FMA22550","t":[952,200],"c":[-0.106,0.073,-0.015],"b":[[-0.119,0.024,-0.038],[-0.089,0.157,0.002]]},
+   {"n":"Left fibularis tertius","id":"FJ1411M","fma":"FMA22551","t":[1152,201],"c":[0.107,0.07,-0.014],"b":[[0.09,0.024,-0.038],[0.12,0.157,0.002]]},
+   {"n":"Right subscapularis","id":"FJ1504","fma":"FMA13414","t":[1353,562],"c":[-0.089,1.342,-0.073],"b":[[-0.165,1.273,-0.098],[-0.063,1.403,-0.001]]},
+   {"n":"Left subscapularis","id":"FJ1504M","fma":"FMA13415","t":[1915,555],"c":[0.09,1.343,-0.073],"b":[[0.064,1.273,-0.098],[0.166,1.403,-0.001]]},
+   {"n":"Right levator scapulae","id":"FJ1532","fma":"FMA32540","t":[2470,392],"c":[-0.045,1.465,-0.049],"b":[[-0.08,1.387,-0.088],[-0.021,1.547,-0.018]]},
+   {"n":"Left levator scapulae","id":"FJ1532M","fma":"FMA32541","t":[2862,412],"c":[0.047,1.462,-0.05],"b":[[0.022,1.387,-0.088],[0.082,1.547,-0.018]]},
+   {"n":"Cricoid cartilage #1","id":"FJ2440","fma":"FMA9615","t":[3274,366],"c":[0,1.472,0],"b":[[-0.011,1.465,-0.008],[0.011,1.483,0.011]]},
+   {"n":"Right major alar cartilage","id":"FJ2554","fma":"FMA59505","t":[3640,96],"c":[-0.007,1.561,0.091],"b":[[-0.015,1.554,0.072],[0,1.569,0.107]]},
+   {"n":"Left major alar cartilage","id":"FJ2555","fma":"FMA59506","t":[3736,97],"c":[0.007,1.561,0.091],"b":[[0.001,1.554,0.072],[0.015,1.569,0.107]]},
+   {"n":"Cricoid cartilage #2","id":"FJ2769","fma":"FMA9615","t":[3833,366],"c":[0,1.472,0],"b":[[-0.011,1.465,-0.008],[0.011,1.483,0.011]]},
+   {"n":"Hyoid bone #1","id":"FJ2772","fma":"FMA52749","t":[4199,290],"c":[0,1.51,0.014],"b":[[-0.019,1.5,-0.006],[0.019,1.519,0.028]]},
+   {"n":"Left cuneiform cartilage","id":"FJ2773","fma":"FMA55118","t":[4489,48],"c":[0.005,1.494,0.001],"b":[[0.004,1.492,-0.001],[0.006,1.495,0.002]]},
+   {"n":"Left arytenoid cartilage","id":"FJ2775","fma":"FMA55114","t":[4537,135],"c":[0.004,1.485,-0.003],"b":[[0.002,1.482,-0.005],[0.007,1.49,0.002]]},
+   {"n":"Left corniculate cartilage","id":"FJ2776","fma":"FMA55116","t":[4672,45],"c":[0.003,1.49,-0.005],"b":[[0.002,1.489,-0.006],[0.004,1.491,-0.004]]},
+   {"n":"Right arytenoid cartilage","id":"FJ2792","fma":"FMA55113","t":[4717,144],"c":[-0.004,1.484,-0.002],"b":[[-0.007,1.482,-0.005],[-0.002,1.49,0.002]]},
+   {"n":"Right corniculate cartilage","id":"FJ2793","fma":"FMA55115","t":[4861,43],"c":[-0.003,1.49,-0.005],"b":[[-0.004,1.489,-0.006],[-0.002,1.491,-0.004]]},
+   {"n":"Right cuneiform cartilage","id":"FJ2795","fma":"FMA55117","t":[4904,38],"c":[-0.005,1.493,0],"b":[[-0.006,1.492,-0.001],[-0.004,1.495,0.002]]},
+   {"n":"Thyroid cartilage","id":"FJ2808","fma":"FMA55099","t":[4942,518],"c":[0,1.487,0.001],"b":[[-0.019,1.469,-0.009],[0.019,1.509,0.022]]},
+   {"n":"Xiphoid process","id":"FJ3153","fma":"FMA7488","t":[5460,207],"c":[0.001,1.255,0.106],"b":[[-0.01,1.242,0.098],[0.011,1.262,0.113]]},
+   {"n":"Tenth thoracic vertebra","id":"FJ3154","fma":"FMA10037","t":[5667,580],"c":[0,1.212,-0.062],"b":[[-0.034,1.178,-0.093],[0.033,1.235,-0.016]]},
+   {"n":"Eleventh thoracic vertebra","id":"FJ3155","fma":"FMA10059","t":[6247,554],"c":[-0.001,1.185,-0.054],"b":[[-0.026,1.154,-0.088],[0.026,1.207,-0.008]]},
+   {"n":"Twelfth thoracic vertebra","id":"FJ3156","fma":"FMA10081","t":[6801,589],"c":[-0.001,1.157,-0.045],"b":[[-0.022,1.128,-0.079],[0.022,1.179,0.001]]},
+   {"n":"First thoracic vertebra","id":"FJ3158","fma":"FMA9165","t":[7390,389],"c":[0,1.44,-0.041],"b":[[-0.037,1.425,-0.084],[0.037,1.455,-0.014]]},
+   {"n":"Second thoracic vertebra","id":"FJ3160","fma":"FMA9187","t":[7779,446],"c":[0.001,1.424,-0.047],"b":[[-0.035,1.405,-0.089],[0.036,1.438,-0.017]]},
+   {"n":"Third cervical vertebra","id":"FJ3161","fma":"FMA12521","t":[8225,472],"c":[0.001,1.512,-0.033],"b":[[-0.029,1.495,-0.063],[0.029,1.524,-0.013]]},
+   {"n":"Third thoracic vertebra","id":"FJ3163","fma":"FMA9209","t":[8697,491],"c":[0.001,1.402,-0.057],"b":[[-0.032,1.38,-0.1],[0.032,1.42,-0.024]]},
+   {"n":"Fourth cervical vertebra","id":"FJ3164","fma":"FMA12522","t":[9188,587],"c":[0.001,1.499,-0.029],"b":[[-0.027,1.483,-0.06],[0.027,1.51,-0.012]]},
+   {"n":"Fourth thoracic vertebra","id":"FJ3166","fma":"FMA9248","t":[9775,428],"c":[0.001,1.379,-0.066],"b":[[-0.035,1.356,-0.1],[0.035,1.399,-0.032]]},
+   {"n":"Fifth cervical vertebra","id":"FJ3167","fma":"FMA12523","t":[10203,541],"c":[0.002,1.484,-0.03],"b":[[-0.029,1.472,-0.065],[0.029,1.496,-0.01]]},
+   {"n":"Fifth thoracic vertebra","id":"FJ3169","fma":"FMA9922","t":[10744,509],"c":[0,1.353,-0.071],"b":[[-0.035,1.318,-0.101],[0.035,1.375,-0.034]]},
+   {"n":"Sixth cervical vertebra","id":"FJ3170","fma":"FMA12524","t":[11253,554],"c":[0,1.47,-0.029],"b":[[-0.031,1.46,-0.072],[0.03,1.483,-0.009]]},
+   {"n":"Sixth thoracic vertebra","id":"FJ3171","fma":"FMA9945","t":[11807,480],"c":[-0.002,1.326,-0.075],"b":[[-0.036,1.287,-0.099],[0.036,1.347,-0.035]]},
+   {"n":"Seventh cervical vertebra","id":"FJ3172","fma":"FMA12525","t":[12287,436],"c":[0,1.457,-0.036],"b":[[-0.033,1.443,-0.08],[0.032,1.47,-0.011]]},
+   {"n":"Seventh thoracic vertebra","id":"FJ3173","fma":"FMA9968","t":[12723,553],"c":[0,1.297,-0.075],"b":[[-0.037,1.258,-0.1],[0.037,1.32,-0.035]]},
+   {"n":"Eighth thoracic vertebra","id":"FJ3174","fma":"FMA9991","t":null,"c":[0,1.262,-0.064],"b":[[-0.033,1.232,-0.1],[0.033,1.291,-0.029]]},
+   {"n":"Ninth thoracic vertebra","id":"FJ3175","fma":"FMA10014","t":[13848,552],"c":[0.001,1.242,-0.066],"b":[[-0.034,1.205,-0.094],[0.034,1.263,-0.023]]},
+   {"n":"Atlas","id":"FJ3176","fma":"FMA12519","t":[14400,412],"c":[-0.001,1.549,-0.033],"b":[[-0.041,1.54,-0.06],[0.041,1.56,-0.013]]},
+   {"n":"Axis","id":"FJ3177","fma":"FMA12520","t":null,"c":[0,1.534,-0.039],"b":[[-0.025,1.511,-0.064],[0.025,1.556,-0.014]]},
+   {"n":"Body of sternum","id":"FJ3178","fma":"FMA7487","t":[15356,822],"c":[0.002,1.303,0.092],"b":[[-0.023,1.258,0.064],[0.025,1.368,0.113]]},
+   {"n":"Distal phalanx of left second toe","id":"FJ3179","fma":"FMA32653","t":[16178,77],"c":[0.138,0.011,0.126],"b":[[0.133,0.008,0.12],[0.144,0.015,0.133]]},
+   {"n":"Distal phalanx of left third toe","id":"FJ3180","fma":"FMA32655","t":[16255,84],"c":[0.152,0.011,0.117],"b":[[0.146,0.008,0.111],[0.155,0.014,0.123]]},
+   {"n":"Distal phalanx of left fourth toe","id":"FJ3181","fma":"FMA32657","t":[16339,54],"c":[0.161,0.011,0.1],"b":[[0.156,0.008,0.095],[0.165,0.014,0.106]]},
+   {"n":"Distal phalanx of left big toe","id":"FJ3182","fma":"FMA32651","t":[16393,99],"c":[0.117,0.012,0.124],"b":[[0.104,0.008,0.111],[0.126,0.019,0.135]]},
+   {"n":"Distal phalanx of left index finger","id":"FJ3183","fma":"FMA23953","t":[16492,83],"c":[0.308,0.747,0.077],"b":[[0.302,0.74,0.069],[0.312,0.754,0.086]]},
+   {"n":"Distal phalanx of left little finger","id":"FJ3184","fma":"FMA23959","t":[16575,59],"c":[0.223,0.76,0.076],"b":[[0.22,0.755,0.068],[0.228,0.767,0.082]]},
+   {"n":"Distal phalanx of left little toe","id":"FJ3185","fma":"FMA32659","t":[16634,63],"c":[0.167,0.01,0.08],"b":[[0.162,0.008,0.075],[0.17,0.013,0.086]]},
+   {"n":"Distal phalanx of left middle finger","id":"FJ3186","fma":"FMA23955","t":[16697,71],"c":[0.277,0.738,0.085],"b":[[0.272,0.731,0.077],[0.281,0.744,0.094]]},
+   {"n":"Distal phalanx of left ring finger","id":"FJ3187","fma":"FMA23957","t":[16768,56],"c":[0.25,0.748,0.085],"b":[[0.246,0.743,0.078],[0.254,0.752,0.094]]},
+   {"n":"Distal phalanx of left thumb","id":"FJ3188","fma":"FMA23951","t":[16824,74],"c":[0.318,0.808,0.066],"b":[[0.311,0.797,0.057],[0.325,0.82,0.073]]},
+   {"n":"Distal phalanx of right second toe","id":"FJ3189","fma":"FMA32652","t":[16898,59],"c":[-0.138,0.011,0.126],"b":[[-0.142,0.008,0.12],[-0.132,0.015,0.133]]},
+   {"n":"Distal phalanx of right third toe","id":"FJ3190","fma":"FMA32654","t":[16957,65],"c":[-0.15,0.011,0.117],"b":[[-0.154,0.008,0.112],[-0.145,0.014,0.123]]},
+   {"n":"Distal phalanx of right fourth toe","id":"FJ3191","fma":"FMA32656","t":[17022,58],"c":[-0.159,0.011,0.1],"b":[[-0.163,0.008,0.094],[-0.155,0.015,0.106]]},
+   {"n":"Distal phalanx of right big toe","id":"FJ3192","fma":"FMA32650","t":[17080,111],"c":[-0.114,0.012,0.123],"b":[[-0.125,0.008,0.111],[-0.102,0.019,0.135]]},
+   {"n":"Distal phalanx of right index finger","id":"FJ3193","fma":"FMA24460","t":[17191,61],"c":[-0.306,0.747,0.077],"b":[[-0.311,0.74,0.069],[-0.301,0.754,0.086]]},
+   {"n":"Distal phalanx of right little finger","id":"FJ3194","fma":"FMA24463","t":[17252,52],"c":[-0.222,0.761,0.075],"b":[[-0.226,0.755,0.068],[-0.219,0.767,0.081]]},
+   {"n":"Distal phalanx of right little toe","id":"FJ3195","fma":"FMA32658","t":[17304,61],"c":[-0.165,0.01,0.081],"b":[[-0.169,0.008,0.075],[-0.161,0.013,0.086]]},
+   {"n":"Distal phalanx of right middle finger","id":"FJ3196","fma":"FMA24461","t":[17365,46],"c":[-0.276,0.738,0.086],"b":[[-0.28,0.731,0.077],[-0.271,0.744,0.095]]},
+   {"n":"Distal phalanx of right ring finger","id":"FJ3197","fma":"FMA24462","t":[17411,33],"c":[-0.249,0.748,0.085],"b":[[-0.253,0.743,0.078],[-0.245,0.752,0.094]]},
+   {"n":"Distal phalanx of right thumb","id":"FJ3198","fma":"FMA24459","t":[17444,72],"c":[-0.316,0.81,0.064],"b":[[-0.323,0.797,0.056],[-0.31,0.82,0.073]]},
+   {"n":"Ethmoid","id":"FJ3199","fma":"FMA52740","t":[17516,2294],"c":[0,1.591,0.042],"b":[[-0.021,1.575,0.019],[0.021,1.611,0.066]]},
+   {"n":"Frontal bone","id":"FJ3200","fma":"FMA52734","t":[19810,1389],"c":[0.001,1.642,0.038],"b":[[-0.063,1.6,0.006],[0.062,1.708,0.077]]},
+   {"n":"Hyoid bone #2","id":"FJ3201","fma":"FMA52749","t":[21199,290],"c":[0,1.51,0.014],"b":[[-0.019,1.5,-0.006],[0.019,1.519,0.028]]},
+   {"n":"Intervertebral disk of axis","id":"FJ3202","fma":"FMA25058","t":[21489,468],"c":[0,1.525,-0.024],"b":[[-0.013,1.52,-0.032],[0.012,1.529,-0.013]]},
+   {"n":"Intervertebral disk of fourth thoracic vertebra","id":"FJ3203","fma":"FMA13501","t":[21957,356],"c":[0.002,1.362,-0.05],"b":[[-0.015,1.356,-0.063],[0.015,1.369,-0.034]]},
+   {"n":"Intervertebral disk of fifth thoracic vertebra","id":"FJ3204","fma":"FMA13502","t":[22313,423],"c":[0.001,1.338,-0.054],"b":[[-0.015,1.333,-0.067],[0.015,1.343,-0.036]]},
+   {"n":"Intervertebral disk of sixth thoracic vertebra","id":"FJ3205","fma":"FMA13503","t":[22736,600],"c":[0.001,1.312,-0.055],"b":[[-0.017,1.305,-0.07],[0.017,1.317,-0.034]]},
+   {"n":"Intervertebral disk of seventh thoracic vertebra","id":"FJ3206","fma":"FMA13504","t":[23336,607],"c":[0,1.285,-0.05],"b":[[-0.017,1.279,-0.068],[0.017,1.291,-0.031]]},
+   {"n":"Intervertebral disk of eighth thoracic vertebra","id":"FJ3207","fma":"FMA13505","t":[23943,798],"c":[-0.001,1.259,-0.043],"b":[[-0.018,1.253,-0.062],[0.018,1.267,-0.026]]},
+   {"n":"Intervertebral disk of ninth thoracic vertebra","id":"FJ3208","fma":"FMA13506","t":[24741,750],"c":[0,1.234,-0.035],"b":[[-0.019,1.225,-0.057],[0.019,1.241,-0.021]]},
+   {"n":"Intervertebral disk of tenth thoracic vertebra","id":"FJ3209","fma":"FMA13507","t":[25491,755],"c":[-0.001,1.205,-0.032],"b":[[-0.019,1.198,-0.051],[0.019,1.213,-0.013]]},
+   {"n":"Intervertebral disk of eleventh thoracic vertebra","id":"FJ3210","fma":"FMA13508","t":[26246,826],"c":[-0.001,1.177,-0.025],"b":[[-0.02,1.17,-0.044],[0.02,1.186,-0.004]]},
+   {"n":"Intervertebral disk","id":"FJ3211","fma":"FMA10446","t":[27072,995],"c":[0.002,1.148,-0.016],"b":[[-0.021,1.14,-0.035],[0.021,1.157,0.004]]},
+   {"n":"Intervertebral disk of first lumbar vertebra","id":"FJ3212","fma":"FMA16033","t":[28067,981],"c":[0,1.118,-0.006],"b":[[-0.021,1.111,-0.026],[0.021,1.127,0.012]]},
+   {"n":"Intervertebral disk of third cervical vertebra","id":"FJ3213","fma":"FMA13896","t":[29048,199],"c":[0,1.508,-0.021],"b":[[-0.011,1.505,-0.028],[0.011,1.511,-0.012]]},
+   {"n":"Intervertebral disk of second lumbar vertebra","id":"FJ3214","fma":"FMA16034","t":[29247,843],"c":[-0.001,1.086,-0.004],"b":[[-0.023,1.079,-0.023],[0.022,1.091,0.015]]},
+   {"n":"Intervertebral disk of third lumbar vertebra","id":"FJ3215","fma":"FMA16035","t":[30090,1012],"c":[0,1.052,-0.01],"b":[[-0.022,1.041,-0.026],[0.022,1.059,0.012]]},
+   {"n":"Intervertebral disk of fourth lumbar vertebra","id":"FJ3216","fma":"FMA16036","t":[31102,908],"c":[0,1.02,-0.013],"b":[[-0.025,1.009,-0.036],[0.025,1.032,0.002]]},
+   {"n":"Intervertebral disk of fifth lumbar vertebra","id":"FJ3217","fma":"FMA16037","t":[32010,576],"c":[-0.001,0.987,-0.028],"b":[[-0.024,0.973,-0.047],[0.024,1.002,-0.01]]},
+   {"n":"Intervertebral disk of fourth cervical vertebra","id":"FJ3218","fma":"FMA13897","t":[32586,229],"c":[0,1.493,-0.018],"b":[[-0.013,1.487,-0.026],[0.013,1.497,-0.009]]},
+   {"n":"Intervertebral disk of fifth cervical vertebra","id":"FJ3219","fma":"FMA13898","t":[32815,219],"c":[0.001,1.477,-0.017],"b":[[-0.014,1.471,-0.025],[0.014,1.481,-0.009]]},
+   {"n":"Intervertebral disk of sixth cervical vertebra","id":"FJ3220","fma":"FMA13899","t":[33034,268],"c":[0,1.461,-0.02],"b":[[-0.014,1.455,-0.027],[0.014,1.465,-0.01]]},
+   {"n":"Intervertebral disk of seventh cervical vertebra","id":"FJ3221","fma":"FMA13900","t":[33302,259],"c":[0.001,1.444,-0.022],"b":[[-0.016,1.438,-0.031],[0.016,1.45,-0.013]]},
+   {"n":"Intervertebral disk of first thoracic vertebra","id":"FJ3222","fma":"FMA10458","t":[33561,293],"c":[0.001,1.427,-0.028],"b":[[-0.017,1.42,-0.037],[0.016,1.433,-0.017]]},
+   {"n":"Intervertebral disk of second thoracic vertebra","id":"FJ3223","fma":"FMA13495","t":[33854,381],"c":[0.001,1.407,-0.035],"b":[[-0.016,1.399,-0.045],[0.016,1.414,-0.023]]},
+   {"n":"Intervertebral disk of third thoracic vertebra","id":"FJ3224","fma":"FMA13500","t":[34235,433],"c":[0,1.385,-0.042],"b":[[-0.015,1.378,-0.055],[0.015,1.392,-0.029]]},
+   {"n":"Left tenth rib","id":"FJ3225","fma":"FMA8472","t":[34668,350],"c":[0.07,1.178,-0.054],"b":[[0.016,1.101,-0.09],[0.123,1.237,0.017]]},
+   {"n":"Left eleventh rib","id":"FJ3226","fma":"FMA8532","t":[35018,248],"c":[0.062,1.151,-0.053],"b":[[0.017,1.086,-0.083],[0.11,1.2,-0.005]]},
+   {"n":"Left twelfth rib","id":"FJ3227","fma":"FMA8534","t":[35266,158],"c":[0.051,1.132,-0.053],"b":[[0.017,1.089,-0.073],[0.086,1.168,-0.035]]},
+   {"n":"Left first rib","id":"FJ3228","fma":"FMA7987","t":[35424,234],"c":[0.043,1.423,-0.01],"b":[[0.014,1.388,-0.036],[0.069,1.449,0.03]]},
+   {"n":"Left second rib","id":"FJ3229","fma":"FMA8012","t":[35658,303],"c":[0.056,1.402,-0.006],"b":[[0.015,1.352,-0.05],[0.096,1.437,0.066]]},
+   {"n":"Left third rib","id":"FJ3230","fma":"FMA8039","t":[35961,359],"c":[0.061,1.38,-0.014],"b":[[0.013,1.322,-0.064],[0.108,1.414,0.079]]},
+   {"n":"Left fourth rib","id":"FJ3231","fma":"FMA8148","t":[36320,431],"c":[0.073,1.35,-0.013],"b":[[0.013,1.289,-0.078],[0.117,1.393,0.091]]},
+   {"n":"Left fifth rib","id":"FJ3232","fma":"FMA8093","t":[36751,494],"c":[0.076,1.321,-0.022],"b":[[0.015,1.25,-0.088],[0.126,1.369,0.097]]},
+   {"n":"Left sixth rib","id":"FJ3233","fma":"FMA8202","t":[37245,516],"c":[0.084,1.289,-0.029],"b":[[0.014,1.216,-0.097],[0.134,1.345,0.093]]},
+   {"n":"Left seventh rib","id":"FJ3234","fma":"FMA8256","t":[37761,505],"c":[0.081,1.262,-0.035],"b":[[0.013,1.183,-0.096],[0.136,1.318,0.079]]},
+   {"n":"Left eighth rib","id":"FJ3235","fma":"FMA8310","t":[38266,405],"c":[0.08,1.232,-0.043],"b":[[0.013,1.153,-0.096],[0.133,1.29,0.062]]},
+   {"n":"Left ninth rib","id":"FJ3236","fma":"FMA8391","t":[38671,395],"c":[0.076,1.205,-0.05],"b":[[0.015,1.128,-0.093],[0.128,1.264,0.035]]},
+   {"n":"Left clavicle","id":"FJ3237","fma":"FMA13323","t":[39066,189],"c":[0.079,1.414,0],"b":[[0.009,1.386,-0.046],[0.145,1.434,0.047]]},
+   {"n":"Left first costal cartilage","id":"FJ3239","fma":"FMA8005","t":[39255,151],"c":[0.04,1.387,0.034],"b":[[0.02,1.375,0.022],[0.057,1.398,0.05]]},
+   {"n":"Left first metacarpal bone","id":"FJ3240","fma":"FMA24465","t":[39406,143],"c":[0.293,0.856,0.038],"b":[[0.273,0.838,0.023],[0.31,0.875,0.053]]},
+   {"n":"Left first metatarsal bone","id":"FJ3241","fma":"FMA24508","t":[39549,235],"c":[0.092,0.031,0.062],"b":[[0.075,0.013,0.029],[0.105,0.056,0.091]]},
+   {"n":"Left second costal cartilage","id":"FJ3242","fma":"FMA8031","t":[39784,130],"c":[0.027,1.357,0.068],"b":[[0.011,1.348,0.057],[0.049,1.366,0.077]]},
+   {"n":"Left second metacarpal bone","id":"FJ3243","fma":"FMA24467","t":[39914,166],"c":[0.277,0.834,0.029],"b":[[0.263,0.797,0.016],[0.293,0.865,0.042]]},
+   {"n":"Left second metatarsal bone","id":"FJ3244","fma":"FMA24510","t":[40080,175],"c":[0.107,0.038,0.05],"b":[[0.091,0.012,0.022],[0.122,0.06,0.088]]},
+   {"n":"Left third costal cartilage","id":"FJ3245","fma":"FMA8058","t":[40255,134],"c":[0.031,1.33,0.081],"b":[[0.013,1.32,0.071],[0.051,1.338,0.089]]},
+   {"n":"Left third metacarpal bone","id":"FJ3246","fma":"FMA24469","t":[40389,156],"c":[0.262,0.835,0.025],"b":[[0.253,0.799,0.012],[0.273,0.863,0.042]]},
+   {"n":"Left third metatarsal bone","id":"FJ3247","fma":"FMA24512","t":[40545,175],"c":[0.117,0.034,0.045],"b":[[0.099,0.011,0.018],[0.134,0.054,0.08]]},
+   {"n":"Left fourth costal cartilage","id":"FJ3248","fma":"FMA8167","t":[40720,139],"c":[0.037,1.3,0.091],"b":[[0.015,1.289,0.084],[0.06,1.314,0.098]]},
+   {"n":"Left fourth metacarpal bone","id":"FJ3249","fma":"FMA24471","t":[40859,113],"c":[0.249,0.831,0.028],"b":[[0.242,0.803,0.015],[0.254,0.863,0.042]]},
+   {"n":"Left fourth metatarsal bone","id":"FJ3250","fma":"FMA24514","t":[40972,166],"c":[0.121,0.03,0.033],"b":[[0.102,0.011,0.007],[0.144,0.046,0.069]]},
+   {"n":"Left fifth costal cartilage","id":"FJ3251","fma":"FMA8112","t":[41138,163],"c":[0.05,1.269,0.099],"b":[[0.018,1.25,0.089],[0.083,1.293,0.108]]},
+   {"n":"Left fifth metacarpal bone","id":"FJ3252","fma":"FMA24473","t":[41301,129],"c":[0.236,0.834,0.032],"b":[[0.226,0.81,0.02],[0.246,0.865,0.044]]},
+   {"n":"Left fifth metatarsal bone","id":"FJ3253","fma":"FMA24516","t":[41430,173],"c":[0.131,0.022,0.025],"b":[[0.107,0.008,-0.012],[0.153,0.038,0.055]]},
+   {"n":"Left sixth costal cartilage","id":"FJ3254","fma":"FMA8221","t":[41603,144],"c":[0.058,1.238,0.1],"b":[[0.014,1.215,0.084],[0.094,1.276,0.111]]},
+   {"n":"Left seventh costal cartilage","id":"FJ3255","fma":"FMA8275","t":[41747,195],"c":[0.054,1.218,0.1],"b":[[0.004,1.181,0.07],[0.109,1.265,0.113]]},
+   {"n":"Left capitate","id":"FJ3257","fma":"FMA24447","t":[41942,108],"c":[0.256,0.871,0.018],"b":[[0.249,0.86,0.01],[0.265,0.883,0.027]]},
+   {"n":"Left cuboid bone","id":"FJ3258","fma":"FMA24529","t":[42050,212],"c":[0.099,0.042,-0.002],"b":[[0.083,0.026,-0.018],[0.116,0.056,0.016]]},
+   {"n":"Left fibula","id":"FJ3260","fma":"FMA24481","t":[42262,97],"c":[0.102,0.261,-0.039],"b":[[0.085,0.053,-0.051],[0.121,0.437,-0.023]]},
+   {"n":"Left hamate","id":"FJ3261","fma":"FMA24449","t":[42359,113],"c":[0.246,0.868,0.021],"b":[[0.237,0.859,0.011],[0.252,0.879,0.033]]},
+   {"n":"Left humerus","id":"FJ3262","fma":"FMA23131","t":[42472,262],"c":[0.188,1.265,-0.027],"b":[[0.14,1.108,-0.049],[0.242,1.414,-0.002]]},
+   {"n":"Left intermediate cuneiform bone","id":"FJ3264","fma":"FMA24524","t":[42734,131],"c":[0.092,0.055,0.019],"b":[[0.084,0.044,0.009],[0.102,0.067,0.03]]},
+   {"n":"Sesamoid bone of left foot #1","id":"FJ3266","fma":"FMA45098","t":[42865,33],"c":[0.093,0.013,0.08],"b":[[0.088,0.01,0.075],[0.095,0.017,0.084]]},
+   {"n":"Left lateral cuneiform bone","id":"FJ3267","fma":"FMA24526","t":[42898,166],"c":[0.099,0.049,0.013],"b":[[0.088,0.037,0],[0.113,0.063,0.024]]},
+   {"n":"Left lunate","id":"FJ3268","fma":"FMA24438","t":[43064,89],"c":[0.247,0.88,0.019],"b":[[0.237,0.875,0.01],[0.253,0.888,0.026]]},
+   {"n":"Left maxilla","id":"FJ3269","fma":"FMA53650","t":[43153,1029],"c":[0.018,1.562,0.055],"b":[[-0.002,1.542,0.026],[0.046,1.611,0.082]]},
+   {"n":"Sesamoid bone of left foot #2","id":"FJ3270","fma":"FMA45098","t":[44182,37],"c":[0.1,0.012,0.076],"b":[[0.096,0.008,0.07],[0.104,0.016,0.083]]},
+   {"n":"Left medial cuneiform bone","id":"FJ3271","fma":"FMA24522","t":[44219,236],"c":[0.082,0.049,0.027],"b":[[0.068,0.033,0.011],[0.095,0.064,0.04]]},
+   {"n":"Left nasal bone","id":"FJ3272","fma":"FMA53648","t":[44455,99],"c":[0.002,1.599,0.076],"b":[[-0.002,1.58,0.069],[0.008,1.612,0.089]]},
+   {"n":"Left palatine bone","id":"FJ3273","fma":"FMA53656","t":[44554,451],"c":[0.013,1.569,0.029],"b":[[-0.001,1.548,0.003],[0.028,1.591,0.049]]},
+   {"n":"Left parietal bone","id":"FJ3274","fma":"FMA52789","t":[45005,1090],"c":[0.028,1.67,-0.048],"b":[[-0.006,1.596,-0.116],[0.076,1.714,0.031]]},
+   {"n":"Left patella","id":"FJ3275","fma":"FMA24487","t":[46095,83],"c":[0.085,0.461,0.011],"b":[[0.061,0.439,0],[0.103,0.479,0.022]]},
+   {"n":"Left pisiform","id":"FJ3276","fma":"FMA24442","t":[46178,51],"c":[0.236,0.874,0.031],"b":[[0.232,0.868,0.026],[0.241,0.88,0.037]]},
+   {"n":"Left radius","id":"FJ3277","fma":"FMA23465","t":[46229,131],"c":[0.247,0.992,-0.006],"b":[[0.22,0.886,-0.039],[0.28,1.112,0.027]]},
+   {"n":"Left scaphoid","id":"FJ3278","fma":"FMA24436","t":[46360,82],"c":[0.261,0.882,0.016],"b":[[0.25,0.874,0.011],[0.273,0.89,0.025]]},
+   {"n":"Left scapula","id":"FJ3279","fma":"FMA13396","t":[46442,1416],"c":[0.118,1.381,-0.056],"b":[[0.058,1.262,-0.105],[0.167,1.428,0.002]]},
+   {"n":"Left talus","id":"FJ3280","fma":"FMA24483","t":[47858,322],"c":[0.071,0.062,-0.021],"b":[[0.05,0.047,-0.052],[0.09,0.081,0.005]]},
+   {"n":"Left temporal bone","id":"FJ3281","fma":"FMA52739","t":[48180,805],"c":[0.048,1.588,-0.019],"b":[[0.012,1.554,-0.066],[0.073,1.63,0.033]]},
+   {"n":"Left trapezium","id":"FJ3283","fma":"FMA24444","t":[48985,90],"c":[0.274,0.873,0.026],"b":[[0.265,0.864,0.017],[0.282,0.884,0.034]]},
+   {"n":"Left trapezoid","id":"FJ3284","fma":"FMA24445","t":[49075,120],"c":[0.268,0.867,0.02],"b":[[0.263,0.861,0.013],[0.274,0.873,0.028]]},
+   {"n":"Left triquetral","id":"FJ3285","fma":"FMA24440","t":[49195,90],"c":[0.238,0.872,0.021],"b":[[0.232,0.867,0.014],[0.243,0.881,0.029]]},
+   {"n":"Left ulna","id":"FJ3286","fma":"FMA23468","t":[49285,127],"c":[0.219,1.044,-0.023],"b":[[0.198,0.883,-0.057],[0.248,1.132,0.022]]},
+   {"n":"Left zygomatic bone","id":"FJ3287","fma":"FMA52893","t":[49412,305],"c":[0.047,1.585,0.043],"b":[[0.032,1.559,0.021],[0.064,1.615,0.061]]},
+   {"n":"Mandible","id":"FJ3289","fma":"FMA52748","t":[49717,584],"c":[0.001,1.54,0.03],"b":[[-0.053,1.499,-0.011],[0.053,1.584,0.073]]},
+   {"n":"Manubrium","id":"FJ3290","fma":"FMA7486","t":[50301,493],"c":[0.001,1.38,0.051],"b":[[-0.027,1.358,0.03],[0.028,1.403,0.078]]},
+   {"n":"Middle phalanx of left ring finger","id":"FJ3291","fma":"FMA23942","t":[50794,87],"c":[0.249,0.759,0.069],"b":[[0.244,0.748,0.056],[0.255,0.772,0.08]]},
+   {"n":"Middle phalanx of right ring finger","id":"FJ3292","fma":"FMA24457","t":[50881,88],"c":[-0.249,0.757,0.071],"b":[[-0.254,0.748,0.056],[-0.243,0.772,0.079]]},
+   {"n":"Middle phalanx of left second toe","id":"FJ3293","fma":"FMA32643","t":[50969,83],"c":[0.132,0.013,0.114],"b":[[0.126,0.01,0.107],[0.14,0.018,0.124]]},
+   {"n":"Middle phalanx of left third toe","id":"FJ3294","fma":"FMA32645","t":[51052,70],"c":[0.146,0.012,0.105],"b":[[0.14,0.009,0.098],[0.153,0.017,0.115]]},
+   {"n":"Middle phalanx of left fourth toe","id":"FJ3295","fma":"FMA32647","t":[51122,73],"c":[0.156,0.012,0.091],"b":[[0.15,0.008,0.085],[0.162,0.016,0.098]]},
+   {"n":"Middle phalanx of left index finger","id":"FJ3296","fma":"FMA23938","t":[51195,93],"c":[0.303,0.759,0.061],"b":[[0.294,0.749,0.05],[0.309,0.77,0.071]]},
+   {"n":"Middle phalanx of left little finger","id":"FJ3297","fma":"FMA23944","t":[51288,67],"c":[0.224,0.775,0.064],"b":[[0.22,0.766,0.054],[0.231,0.785,0.071]]},
+   {"n":"Middle phalanx of left little toe","id":"FJ3298","fma":"FMA230988","t":[51355,62],"c":[0.163,0.01,0.074],"b":[[0.159,0.008,0.071],[0.167,0.014,0.078]]},
+   {"n":"Middle phalanx of left middle finger","id":"FJ3299","fma":"FMA23940","t":[51417,103],"c":[0.275,0.752,0.07],"b":[[0.267,0.74,0.057],[0.281,0.766,0.08]]},
+   {"n":"Middle phalanx of right second toe","id":"FJ3300","fma":"FMA32642","t":[51520,78],"c":[-0.132,0.013,0.116],"b":[[-0.139,0.01,0.107],[-0.125,0.019,0.124]]},
+   {"n":"Middle phalanx of right third toe","id":"FJ3301","fma":"FMA32644","t":[51598,82],"c":[-0.145,0.013,0.106],"b":[[-0.151,0.009,0.098],[-0.139,0.017,0.115]]},
+   {"n":"Middle phalanx of right fourth toe","id":"FJ3302","fma":"FMA32646","t":[51680,96],"c":[-0.154,0.012,0.091],"b":[[-0.161,0.008,0.085],[-0.148,0.016,0.098]]},
+   {"n":"Middle phalanx of right index finger","id":"FJ3303","fma":"FMA24455","t":[51776,74],"c":[-0.302,0.758,0.063],"b":[[-0.309,0.749,0.051],[-0.294,0.77,0.071]]},
+   {"n":"Middle phalanx of right little finger","id":"FJ3304","fma":"FMA24458","t":[51850,49],"c":[-0.223,0.776,0.063],"b":[[-0.23,0.766,0.054],[-0.218,0.785,0.071]]},
+   {"n":"Middle phalanx of right little toe","id":"FJ3305","fma":"FMA230986","t":[51899,37],"c":[-0.161,0.011,0.074],"b":[[-0.166,0.008,0.071],[-0.158,0.014,0.078]]},
+   {"n":"Middle phalanx of right middle finger","id":"FJ3306","fma":"FMA24456","t":[51936,95],"c":[-0.272,0.755,0.068],"b":[[-0.279,0.741,0.057],[-0.266,0.766,0.08]]},
+   {"n":"Navicular bone of left foot","id":"FJ3307","fma":"FMA24501","t":[52031,168],"c":[0.077,0.058,0.007],"b":[[0.059,0.047,-0.006],[0.097,0.072,0.02]]},
+   {"n":"Navicular bone of right foot","id":"FJ3308","fma":"FMA24500","t":[52199,181],"c":[-0.079,0.06,0.007],"b":[[-0.096,0.048,-0.006],[-0.058,0.072,0.02]]},
+   {"n":"Occipital bone","id":"FJ3309","fma":"FMA52735","t":[52380,1355],"c":[0.001,1.598,-0.072],"b":[[-0.061,1.556,-0.118],[0.061,1.663,0.001]]},
+   {"n":"Proximal phalanx of right big toe","id":"FJ3310","fma":"FMA43253","t":[53735,131],"c":[-0.102,0.017,0.102],"b":[[-0.117,0.009,0.086],[-0.086,0.027,0.118]]},
+   {"n":"Proximal phalanx of left third toe","id":"FJ3311","fma":"FMA32637","t":[53866,106],"c":[0.135,0.016,0.086],"b":[[0.126,0.01,0.074],[0.146,0.022,0.101]]},
+   {"n":"Proximal phalanx of left fourth toe","id":"FJ3312","fma":"FMA32639","t":[53972,117],"c":[0.146,0.014,0.075],"b":[[0.135,0.008,0.064],[0.156,0.022,0.088]]},
+   {"n":"Proximal phalanx of left index finger","id":"FJ3313","fma":"FMA71915","t":[54089,100],"c":[0.294,0.781,0.046],"b":[[0.281,0.764,0.033],[0.303,0.802,0.056]]},
+   {"n":"Proximal phalanx of left little finger","id":"FJ3314","fma":"FMA66791","t":[54189,81],"c":[0.229,0.795,0.05],"b":[[0.223,0.781,0.037],[0.237,0.814,0.059]]},
+   {"n":"Proximal phalanx of left little toe","id":"FJ3315","fma":"FMA32641","t":[54270,105],"c":[0.155,0.012,0.061],"b":[[0.143,0.008,0.048],[0.165,0.018,0.073]]},
+   {"n":"Proximal phalanx of left middle finger","id":"FJ3316","fma":"FMA71908","t":[54375,119],"c":[0.271,0.78,0.051],"b":[[0.26,0.762,0.034],[0.278,0.803,0.063]]},
+   {"n":"Proximal phalanx of left ring finger","id":"FJ3317","fma":"FMA71916","t":[54494,106],"c":[0.249,0.787,0.049],"b":[[0.241,0.768,0.035],[0.255,0.807,0.061]]},
+   {"n":"Proximal phalanx of left thumb","id":"FJ3318","fma":"FMA65470","t":[54600,98],"c":[0.31,0.83,0.053],"b":[[0.299,0.815,0.042],[0.319,0.845,0.064]]},
+   {"n":"Proximal phalanx of right second toe","id":"FJ3319","fma":"FMA32634","t":[54698,111],"c":[-0.122,0.017,0.098],"b":[[-0.133,0.011,0.083],[-0.111,0.023,0.111]]},
+   {"n":"Proximal phalanx of right third toe","id":"FJ3320","fma":"FMA32636","t":[54809,112],"c":[-0.135,0.015,0.087],"b":[[-0.145,0.011,0.074],[-0.125,0.022,0.102]]},
+   {"n":"Proximal phalanx of right fourth toe","id":"FJ3321","fma":"FMA32638","t":[54921,110],"c":[-0.145,0.015,0.076],"b":[[-0.155,0.009,0.064],[-0.134,0.021,0.088]]},
+   {"n":"Proximal phalanx of right index finger","id":"FJ3322","fma":"FMA24451","t":[55031,93],"c":[-0.292,0.783,0.045],"b":[[-0.302,0.764,0.033],[-0.28,0.801,0.056]]},
+   {"n":"Proximal phalanx of right little finger","id":"FJ3323","fma":"FMA24454","t":[55124,77],"c":[-0.227,0.798,0.049],"b":[[-0.236,0.782,0.038],[-0.221,0.814,0.059]]},
+   {"n":"Proximal phalanx of right little toe","id":"FJ3324","fma":"FMA32640","t":[55201,112],"c":[-0.154,0.012,0.061],"b":[[-0.164,0.008,0.048],[-0.142,0.018,0.073]]},
+   {"n":"Proximal phalanx of right middle finger","id":"FJ3325","fma":"FMA24452","t":[55313,110],"c":[-0.269,0.782,0.05],"b":[[-0.277,0.762,0.034],[-0.258,0.803,0.064]]},
+   {"n":"Proximal phalanx of right ring finger","id":"FJ3326","fma":"FMA24453","t":[55423,92],"c":[-0.247,0.787,0.049],"b":[[-0.253,0.768,0.035],[-0.24,0.807,0.061]]},
+   {"n":"Proximal phalanx of right thumb","id":"FJ3327","fma":"FMA24450","t":[55515,89],"c":[-0.309,0.83,0.053],"b":[[-0.319,0.814,0.042],[-0.298,0.845,0.064]]},
+   {"n":"Proximal phalanx of left second toe","id":"FJ3328","fma":"FMA32635","t":[55604,106],"c":[0.124,0.017,0.098],"b":[[0.112,0.012,0.083],[0.134,0.024,0.111]]},
+   {"n":"Proximal phalanx of left big toe","id":"FJ3329","fma":"FMA43254","t":[55710,137],"c":[0.104,0.016,0.102],"b":[[0.087,0.009,0.085],[0.118,0.026,0.118]]},
+   {"n":"Right tenth rib","id":"FJ3330","fma":"FMA8445","t":[55847,346],"c":[-0.073,1.176,-0.055],"b":[[-0.123,1.101,-0.09],[-0.016,1.237,0.017]]},
+   {"n":"Right eleventh rib","id":"FJ3331","fma":"FMA8531","t":[56193,248],"c":[-0.066,1.148,-0.054],"b":[[-0.111,1.086,-0.082],[-0.017,1.2,-0.004]]},
+   {"n":"Right twelfth rib","id":"FJ3332","fma":"FMA8533","t":[56441,168],"c":[-0.051,1.132,-0.055],"b":[[-0.086,1.09,-0.073],[-0.018,1.167,-0.034]]},
+   {"n":"Right first costal cartilage","id":"FJ3333","fma":"FMA7875","t":[56609,157],"c":[-0.036,1.386,0.036],"b":[[-0.056,1.375,0.021],[-0.019,1.398,0.05]]},
+   {"n":"Right first rib","id":"FJ3334","fma":"FMA7857","t":[56766,234],"c":[-0.043,1.424,-0.012],"b":[[-0.069,1.389,-0.036],[-0.015,1.449,0.03]]},
+   {"n":"Right second costal cartilage","id":"FJ3335","fma":"FMA7886","t":[57000,155],"c":[-0.024,1.357,0.069],"b":[[-0.048,1.348,0.057],[-0.01,1.366,0.078]]},
+   {"n":"Right second rib","id":"FJ3336","fma":"FMA7882","t":[57155,291],"c":[-0.056,1.405,-0.011],"b":[[-0.096,1.352,-0.05],[-0.015,1.437,0.066]]},
+   {"n":"Right third costal cartilage","id":"FJ3337","fma":"FMA7913","t":[57446,140],"c":[-0.028,1.33,0.082],"b":[[-0.05,1.321,0.071],[-0.013,1.338,0.09]]},
+   {"n":"Right third rib","id":"FJ3338","fma":"FMA7909","t":[57586,346],"c":[-0.065,1.38,-0.015],"b":[[-0.108,1.322,-0.064],[-0.014,1.414,0.078]]},
+   {"n":"Right fourth costal cartilage","id":"FJ3339","fma":"FMA7976","t":[57932,129],"c":[-0.033,1.302,0.092],"b":[[-0.059,1.289,0.084],[-0.014,1.314,0.098]]},
+   {"n":"Right fourth rib","id":"FJ3340","fma":"FMA7957","t":[58061,463],"c":[-0.07,1.35,-0.013],"b":[[-0.117,1.289,-0.078],[-0.015,1.394,0.092]]},
+   {"n":"Right fifth costal cartilage","id":"FJ3341","fma":"FMA8070","t":[58524,230],"c":[-0.047,1.269,0.099],"b":[[-0.081,1.25,0.089],[-0.017,1.293,0.108]]},
+   {"n":"Right fifth rib","id":"FJ3342","fma":"FMA8066","t":[58754,797],"c":[-0.078,1.321,-0.023],"b":[[-0.127,1.25,-0.088],[-0.015,1.37,0.097]]},
+   {"n":"Right sixth costal cartilage","id":"FJ3343","fma":"FMA8194","t":null,"c":[-0.053,1.246,0.098],"b":[[-0.093,1.216,0.084],[-0.013,1.275,0.112]]},
+   {"n":"Right sixth rib","id":"FJ3344","fma":"FMA8175","t":[59798,855],"c":[-0.085,1.289,-0.028],"b":[[-0.134,1.216,-0.097],[-0.014,1.344,0.093]]},
+   {"n":"Right seventh costal cartilage","id":"FJ3345","fma":"FMA8248","t":null,"c":[-0.03,1.223,0.091],"b":[[-0.109,1.181,0.07],[0.05,1.265,0.113]]},
+   {"n":"Right seventh rib","id":"FJ3346","fma":"FMA8229","t":[60906,804],"c":[-0.083,1.261,-0.035],"b":[[-0.137,1.183,-0.096],[-0.013,1.318,0.079]]},
+   {"n":"Right eighth rib","id":"FJ3347","fma":"FMA8283","t":[61710,678],"c":[-0.083,1.229,-0.039],"b":[[-0.132,1.153,-0.096],[-0.013,1.289,0.062]]},
+   {"n":"Right ninth rib","id":"FJ3348","fma":"FMA8364","t":[62388,616],"c":[-0.079,1.204,-0.051],"b":[[-0.129,1.128,-0.093],[-0.015,1.263,0.035]]},
+   {"n":"Right radius","id":"FJ3349","fma":"FMA23464","t":[63004,196],"c":[-0.247,0.991,-0.006],"b":[[-0.279,0.884,-0.04],[-0.22,1.112,0.026]]},
+   {"n":"Right first metacarpal bone","id":"FJ3350","fma":"FMA24464","t":[63200,211],"c":[-0.293,0.853,0.04],"b":[[-0.309,0.838,0.023],[-0.272,0.875,0.053]]},
+   {"n":"Right first metatarsal bone","id":"FJ3351","fma":"FMA24507","t":[63411,361],"c":[-0.09,0.031,0.062],"b":[[-0.104,0.013,0.029],[-0.074,0.056,0.091]]},
+   {"n":"Right second metacarpal bone","id":"FJ3352","fma":"FMA24466","t":[63772,251],"c":[-0.276,0.832,0.03],"b":[[-0.292,0.797,0.016],[-0.261,0.865,0.042]]},
+   {"n":"Right second metatarsal bone","id":"FJ3353","fma":"FMA24509","t":[64023,252],"c":[-0.105,0.038,0.049],"b":[[-0.121,0.012,0.022],[-0.09,0.06,0.087]]},
+   {"n":"Right third metacarpal bone","id":"FJ3354","fma":"FMA24468","t":[64275,242],"c":[-0.261,0.835,0.025],"b":[[-0.272,0.798,0.012],[-0.252,0.863,0.042]]},
+   {"n":"Right third metatarsal bone","id":"FJ3355","fma":"FMA24511","t":[64517,268],"c":[-0.116,0.032,0.048],"b":[[-0.133,0.012,0.018],[-0.098,0.054,0.08]]},
+   {"n":"Right fourth metacarpal bone","id":"FJ3356","fma":"FMA24470","t":[64785,175],"c":[-0.248,0.834,0.027],"b":[[-0.253,0.803,0.015],[-0.241,0.863,0.042]]},
+   {"n":"Right fourth metatarsal bone","id":"FJ3357","fma":"FMA24513","t":[64960,221],"c":[-0.12,0.029,0.034],"b":[[-0.142,0.011,0.006],[-0.101,0.046,0.069]]},
+   {"n":"Right fifth metacarpal bone","id":"FJ3358","fma":"FMA24472","t":[65181,165],"c":[-0.235,0.836,0.032],"b":[[-0.245,0.81,0.019],[-0.225,0.865,0.044]]},
+   {"n":"Right fifth metatarsal bone","id":"FJ3359","fma":"FMA24515","t":[65346,257],"c":[-0.128,0.023,0.023],"b":[[-0.152,0.008,-0.012],[-0.106,0.038,0.054]]},
+   {"n":"Right capitate","id":"FJ3361","fma":"FMA24446","t":[65603,166],"c":[-0.255,0.872,0.019],"b":[[-0.264,0.86,0.01],[-0.248,0.883,0.028]]},
+   {"n":"Right clavicle","id":"FJ3362","fma":"FMA13322","t":[65769,321],"c":[-0.073,1.413,0.004],"b":[[-0.144,1.387,-0.046],[-0.009,1.434,0.046]]},
+   {"n":"Right cuboid bone","id":"FJ3364","fma":"FMA24528","t":[66090,345],"c":[-0.098,0.04,-0.001],"b":[[-0.114,0.027,-0.018],[-0.082,0.056,0.016]]},
+   {"n":"Right fibula","id":"FJ3366","fma":"FMA24480","t":[66435,155],"c":[-0.101,0.257,-0.039],"b":[[-0.12,0.053,-0.052],[-0.084,0.437,-0.023]]},
+   {"n":"Right hamate","id":"FJ3367","fma":"FMA24448","t":[66590,192],"c":[-0.245,0.867,0.021],"b":[[-0.251,0.859,0.011],[-0.236,0.879,0.033]]},
+   {"n":"Right humerus","id":"FJ3368","fma":"FMA23130","t":[66782,484],"c":[-0.184,1.272,-0.027],"b":[[-0.239,1.108,-0.05],[-0.14,1.414,0]]},
+   {"n":"Right intermediate cuneiform bone","id":"FJ3370","fma":"FMA24523","t":[67266,186],"c":[-0.09,0.055,0.019],"b":[[-0.101,0.044,0.009],[-0.082,0.067,0.03]]},
+   {"n":"Sesamoid bone of right foot #1","id":"FJ3372","fma":"FMA45097","t":[67452,33],"c":[-0.09,0.013,0.079],"b":[[-0.094,0.01,0.075],[-0.086,0.016,0.084]]},
+   {"n":"Right lateral cuneiform bone","id":"FJ3373","fma":"FMA24525","t":[67485,267],"c":[-0.097,0.048,0.012],"b":[[-0.112,0.038,0],[-0.087,0.063,0.025]]},
+   {"n":"Right lunate","id":"FJ3374","fma":"FMA24437","t":[67752,134],"c":[-0.244,0.881,0.017],"b":[[-0.252,0.876,0.01],[-0.236,0.888,0.026]]},
+   {"n":"Right maxilla","id":"FJ3375","fma":"FMA53649","t":[67886,1540],"c":[-0.019,1.563,0.054],"b":[[-0.047,1.542,0.029],[0,1.611,0.083]]},
+   {"n":"Sesamoid bone of right foot #2","id":"FJ3376","fma":"FMA45097","t":[69426,56],"c":[-0.099,0.013,0.076],"b":[[-0.102,0.009,0.07],[-0.094,0.016,0.083]]},
+   {"n":"Right medial cuneiform bone","id":"FJ3377","fma":"FMA24521","t":[69482,362],"c":[-0.08,0.049,0.027],"b":[[-0.094,0.033,0.011],[-0.065,0.064,0.04]]},
+   {"n":"Right nasal bone","id":"FJ3378","fma":"FMA53647","t":[69844,157],"c":[-0.004,1.596,0.078],"b":[[-0.008,1.579,0.069],[0,1.611,0.09]]},
+   {"n":"Right palatine bone","id":"FJ3379","fma":"FMA53655","t":[70001,622],"c":[-0.013,1.57,0.029],"b":[[-0.028,1.549,0.003],[0.001,1.591,0.049]]},
+   {"n":"Right parietal bone","id":"FJ3380","fma":"FMA52788","t":[70623,1538],"c":[-0.031,1.668,-0.047],"b":[[-0.075,1.596,-0.116],[0.005,1.714,0.027]]},
+   {"n":"Right patella","id":"FJ3381","fma":"FMA24486","t":[72161,118],"c":[-0.08,0.459,0.011],"b":[[-0.102,0.439,0],[-0.06,0.479,0.022]]},
+   {"n":"Right pisiform","id":"FJ3382","fma":"FMA24441","t":[72279,73],"c":[-0.236,0.873,0.033],"b":[[-0.24,0.868,0.027],[-0.232,0.879,0.037]]},
+   {"n":"Right scaphoid","id":"FJ3383","fma":"FMA24435","t":[72352,115],"c":[-0.263,0.883,0.018],"b":[[-0.273,0.874,0.011],[-0.249,0.89,0.026]]},
+   {"n":"Right scapula","id":"FJ3384","fma":"FMA13395","t":[72467,2141],"c":[-0.118,1.38,-0.056],"b":[[-0.166,1.262,-0.106],[-0.056,1.428,0.002]]},
+   {"n":"Right talus","id":"FJ3385","fma":"FMA24482","t":[74608,495],"c":[-0.07,0.062,-0.022],"b":[[-0.09,0.047,-0.052],[-0.049,0.081,0.005]]},
+   {"n":"Right temporal bone","id":"FJ3386","fma":"FMA52738","t":[75103,1215],"c":[-0.048,1.588,-0.019],"b":[[-0.073,1.553,-0.066],[-0.013,1.63,0.033]]},
+   {"n":"Right trapezium","id":"FJ3388","fma":"FMA24443","t":null,"c":[-0.272,0.875,0.028],"b":[[-0.281,0.864,0.017],[-0.264,0.884,0.034]]},
+   {"n":"Right trapezoid","id":"FJ3389","fma":"FMA23725","t":null,"c":[-0.266,0.867,0.02],"b":[[-0.273,0.861,0.013],[-0.262,0.876,0.028]]},
+   {"n":"Right triquetral","id":"FJ3390","fma":"FMA24439","t":[76652,72],"c":[-0.237,0.873,0.021],"b":[[-0.242,0.867,0.014],[-0.232,0.88,0.029]]},
+   {"n":"Right ulna","id":"FJ3391","fma":"FMA23467","t":[76724,228],"c":[-0.219,1.043,-0.022],"b":[[-0.246,0.883,-0.056],[-0.196,1.13,0.023]]},
+   {"n":"Right zygomatic bone","id":"FJ3392","fma":"FMA52892","t":[76952,495],"c":[-0.046,1.581,0.044],"b":[[-0.064,1.559,0.021],[-0.033,1.615,0.061]]},
+   {"n":"Sphenoid bone","id":"FJ3394","fma":"FMA52736","t":[77447,1780],"c":[0.001,1.595,0.016],"b":[[-0.056,1.557,-0.01],[0.055,1.627,0.044]]},
+   {"n":"Vomer","id":"FJ3395","fma":"FMA9710","t":null,"c":[0,1.574,0.038],"b":[[-0.005,1.553,0.01],[0.005,1.596,0.065]]}
+  ],
+  "bones_loadbearing": [
+   {"n":"Right iliotibial tract","id":"FJ1423","fma":"FMA58776","t":[0,1628],"c":[-0.134,0.721,-0.022],"b":[[-0.162,0.392,-0.068],[-0.091,1.023,0.013]]},
+   {"n":"Left iliotibial tract","id":"FJ1423M","fma":"FMA58777","t":[1628,1588],"c":[0.135,0.727,-0.022],"b":[[0.092,0.392,-0.068],[0.163,1.023,0.013]]},
+   {"n":"Right tibialis anterior","id":"FJ1439","fma":"FMA22544","t":[3216,386],"c":[-0.086,0.172,0.013],"b":[[-0.117,0.041,-0.028],[-0.066,0.433,0.049]]},
+   {"n":"Left tibialis anterior","id":"FJ1439M","fma":"FMA22545","t":[3602,368],"c":[0.087,0.172,0.014],"b":[[0.068,0.041,-0.028],[0.118,0.433,0.049]]},
+   {"n":"Right tibialis posterior","id":"FJ1440","fma":"FMA65018","t":[3970,980],"c":[-0.077,0.121,-0.001],"b":[[-0.104,0.036,-0.041],[-0.043,0.414,0.032]]},
+   {"n":"Left tibialis posterior","id":"FJ1440M","fma":"FMA65019","t":[4950,1219],"c":[0.076,0.117,-0.001],"b":[[0.044,0.036,-0.041],[0.105,0.414,0.032]]},
+   {"n":"Right hip bone","id":"FJ3152","fma":"FMA16586","t":[6169,1261],"c":[-0.068,0.923,-0.029],"b":[[-0.144,0.83,-0.1],[-0.002,1.036,0.038]]},
+   {"n":"First lumbar vertebra","id":"FJ3157","fma":"FMA13072","t":[7430,1535],"c":[0,1.124,-0.038],"b":[[-0.035,1.093,-0.072],[0.035,1.15,0.009]]},
+   {"n":"Second lumbar vertebra","id":"FJ3159","fma":"FMA13073","t":[8965,1567],"c":[-0.001,1.096,-0.032],"b":[[-0.04,1.07,-0.066],[0.04,1.118,0.014]]},
+   {"n":"Third lumbar vertebra","id":"FJ3162","fma":"FMA13074","t":[10532,1559],"c":[-0.001,1.069,-0.032],"b":[[-0.04,1.046,-0.071],[0.039,1.088,0.014]]},
+   {"n":"Fourth lumbar vertebra","id":"FJ3165","fma":"FMA13075","t":[12091,1661],"c":[0.001,1.041,-0.036],"b":[[-0.042,1.017,-0.074],[0.042,1.061,0.01]]},
+   {"n":"Fifth lumbar vertebra","id":"FJ3168","fma":"FMA13076","t":[13752,1668],"c":[0,1.011,-0.045],"b":[[-0.05,0.983,-0.083],[0.05,1.033,-0.002]]},
+   {"n":"Left calcaneus","id":"FJ3256","fma":"FMA24498","t":[15420,713],"c":[0.075,0.041,-0.036],"b":[[0.045,0.01,-0.077],[0.101,0.059,-0.007]]},
+   {"n":"Left femur","id":"FJ3259","fma":"FMA24475","t":[16133,755],"c":[0.091,0.685,-0.023],"b":[[0.033,0.446,-0.051],[0.151,0.912,0.012]]},
+   {"n":"Left tibia","id":"FJ3282","fma":"FMA24478","t":[16888,470],"c":[0.073,0.299,-0.02],"b":[[0.036,0.072,-0.049],[0.11,0.452,0.014]]},
+   {"n":"Left hip bone","id":"FJ3288","fma":"FMA16587","t":[17358,1228],"c":[0.069,0.924,-0.029],"b":[[0.003,0.83,-0.099],[0.146,1.036,0.038]]},
+   {"n":"Right calcaneus","id":"FJ3360","fma":"FMA24497","t":[18586,697],"c":[-0.074,0.04,-0.036],"b":[[-0.1,0.01,-0.077],[-0.044,0.059,-0.006]]},
+   {"n":"Right femur","id":"FJ3365","fma":"FMA24474","t":[19283,764],"c":[-0.09,0.686,-0.023],"b":[[-0.15,0.446,-0.051],[-0.031,0.912,0.011]]},
+   {"n":"Right tibia","id":"FJ3387","fma":"FMA24477","t":[20047,497],"c":[-0.073,0.294,-0.021],"b":[[-0.109,0.072,-0.049],[-0.035,0.452,0.014]]},
+   {"n":"Sacrum","id":"FJ3393","fma":"FMA16202","t":[20544,3216],"c":[0,0.948,-0.072],"b":[[-0.059,0.861,-0.108],[0.059,1.005,-0.019]]}
+  ],
+  "muscle_antigravity": [
+   {"n":"Lateral head of right gastrocnemius","id":"FJ1394","fma":"FMA45960","t":[0,328],"c":[-0.093,0.391,-0.061],"b":[[-0.116,0.212,-0.095],[-0.061,0.501,-0.02]]},
+   {"n":"Lateral head of left gastrocnemius","id":"FJ1394M","fma":"FMA45961","t":[328,336],"c":[0.093,0.387,-0.061],"b":[[0.062,0.212,-0.095],[0.117,0.501,-0.02]]},
+   {"n":"Medial head of right gastrocnemius","id":"FJ1397","fma":"FMA45957","t":[664,407],"c":[-0.051,0.371,-0.049],"b":[[-0.074,0.201,-0.087],[-0.022,0.51,-0.008]]},
+   {"n":"Medial head of left gastrocnemius","id":"FJ1397M","fma":"FMA45958","t":[1071,399],"c":[0.052,0.372,-0.048],"b":[[0.022,0.201,-0.087],[0.075,0.51,-0.008]]},
+   {"n":"Right gluteus maximus","id":"FJ1418","fma":"FMA22328","t":[1470,563],"c":[-0.081,0.888,-0.073],"b":[[-0.145,0.747,-0.12],[0.002,1.011,-0.023]]},
+   {"n":"Left gluteus maximus","id":"FJ1418M","fma":"FMA22329","t":[2033,564],"c":[0.083,0.889,-0.074],"b":[[-0.001,0.747,-0.12],[0.146,1.011,-0.023]]},
+   {"n":"Right gluteus medius","id":"FJ1419","fma":"FMA22330","t":[2597,569],"c":[-0.112,0.957,-0.046],"b":[[-0.15,0.867,-0.084],[-0.059,1.029,0.001]]},
+   {"n":"Left gluteus medius","id":"FJ1419M","fma":"FMA22331","t":[3166,577],"c":[0.114,0.957,-0.046],"b":[[0.06,0.867,-0.084],[0.151,1.029,0.001]]},
+   {"n":"Right psoas major","id":"FJ1431","fma":"FMA22342","t":[3743,598],"c":[-0.045,1.029,-0.016],"b":[[-0.113,0.813,-0.048],[-0.007,1.177,0.019]]},
+   {"n":"Left psoas major","id":"FJ1431M","fma":"FMA22343","t":[4341,913],"c":[0.043,1.036,-0.016],"b":[[0.008,0.813,-0.048],[0.114,1.177,0.019]]},
+   {"n":"Right rectus femoris","id":"FJ1433","fma":"FMA38928","t":[5254,895],"c":[-0.105,0.685,0.016],"b":[[-0.154,0.393,-0.017],[-0.062,0.949,0.052]]},
+   {"n":"Left rectus femoris","id":"FJ1433M","fma":"FMA38929","t":[6149,890],"c":[0.107,0.682,0.017],"b":[[0.064,0.393,-0.017],[0.155,0.949,0.052]]},
+   {"n":"Right soleus","id":"FJ1437","fma":"FMA22558","t":[7039,689],"c":[-0.08,0.311,-0.044],"b":[[-0.115,0.111,-0.068],[-0.035,0.437,-0.01]]},
+   {"n":"Left soleus","id":"FJ1437M","fma":"FMA22559","t":[7728,662],"c":[0.081,0.313,-0.044],"b":[[0.037,0.111,-0.068],[0.116,0.437,-0.01]]},
+   {"n":"Right vastus intermedius","id":"FJ1441","fma":"FMA38934","t":[8390,637],"c":[-0.105,0.632,0.006],"b":[[-0.132,0.421,-0.024],[-0.076,0.848,0.034]]},
+   {"n":"Left vastus intermedius","id":"FJ1441M","fma":"FMA38935","t":[9027,653],"c":[0.106,0.633,0.006],"b":[[0.077,0.421,-0.024],[0.133,0.848,0.034]]},
+   {"n":"Right vastus lateralis","id":"FJ1442","fma":"FMA38930","t":[9680,1019],"c":[-0.121,0.623,-0.001],"b":[[-0.159,0.396,-0.043],[-0.083,0.866,0.036]]},
+   {"n":"Left vastus lateralis","id":"FJ1442M","fma":"FMA38931","t":[10699,1033],"c":[0.123,0.625,-0.001],"b":[[0.085,0.396,-0.043],[0.16,0.866,0.036]]},
+   {"n":"Right vastus medialis","id":"FJ1443","fma":"FMA38932","t":[11732,700],"c":[-0.073,0.607,0.016],"b":[[-0.105,0.42,-0.012],[-0.034,0.816,0.046]]},
+   {"n":"Left vastus medialis","id":"FJ1443M","fma":"FMA38933","t":[12432,712],"c":[0.075,0.609,0.017],"b":[[0.035,0.42,-0.012],[0.106,0.816,0.046]]},
+   {"n":"Right iliocostalis lumborum","id":"FJ1527","fma":"FMA22740","t":[13144,2224],"c":[-0.048,1.074,-0.089],"b":[[-0.102,0.908,-0.11],[-0.005,1.317,-0.065]]},
+   {"n":"Left iliocostalis lumborum","id":"FJ1527M","fma":"FMA22741","t":[15368,2244],"c":[0.049,1.074,-0.089],"b":[[0.006,0.908,-0.11],[0.103,1.317,-0.065]]},
+   {"n":"Right longissimus thoracis","id":"FJ1535","fma":"FMA22751","t":[17612,2578],"c":[-0.033,1.214,-0.075],"b":[[-0.068,0.927,-0.104],[0.001,1.448,-0.03]]},
+   {"n":"Left longissimus thoracis","id":"FJ1535M","fma":"FMA22753","t":[20190,2536],"c":[0.034,1.212,-0.075],"b":[[0,0.927,-0.104],[0.069,1.448,-0.03]]}
+  ]
+ }
+}

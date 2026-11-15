@@ -1,0 +1,2647 @@
+{
+ "meta": {
+  "product": "e^x Crew Station",
+  "title": "Data lineage: where every piece of data comes from",
+  "generated": "2026-11-15",
+  "ref_base": "Paths in ref, samples, path and impl are relative to the NASA PROJECT folder.",
+  "layers": {
+   "0": "Sensors and sources",
+   "1": "Adapters and ingest",
+   "2": "Normalize",
+   "3": "Scoring and forecast",
+   "4": "Surfaces on board",
+   "5": "Handoff, link and ground"
+  },
+  "kinds": [
+   "api",
+   "core",
+   "dataset",
+   "device",
+   "model",
+   "person",
+   "surface"
+  ],
+  "status_legend": {
+   "live": "Real data or a real working path: real devices, real public data, deterministic app code.",
+   "simulated": "Synthetic values or a simulated counterpart (fictional crew, link, wrist, ground).",
+   "planned": "Named in the design with a channel mapping, not connected.",
+   "offline-sample": "Real public feed, verified live on 2026-11-14, used only as a saved snapshot. The app makes no runtime external request."
+  },
+  "extra_fields": {
+   "ref": "Files each claim comes from (every node and edge).",
+   "stage": "build = Tomas's Python pipeline before the app loads; runtime = inside the web app.",
+   "impl": "Code file. ml paths were checked on disk. Web paths follow the planned layout in BUILD-KICKOFF section 2 and were not checked.",
+   "samples": "Saved responses in docs/research/samples (checked on disk).",
+   "maps_to": "crew_data.json metric keys a planned device would feed.",
+   "relation": "Set on edges that are not a plain forward data flow: parity-test, calibration-note, user-input, bus-publish (a later layer publishing to the shared bus), display (handoff summary shown back on the console). Every edge without a relation runs from a lower or equal layer to a higher one.",
+   "edge.status": "Same vocabulary as node status, for that one link."
+  },
+  "rules": [
+   "Layers are one-way. The build-time crew pipeline sits in layer 0 because its output file stands in for the sensors.",
+   "No number that lives in crew_data.json or storm_forecast.json is repeated here. Read values from the files.",
+   "Real crew vitals are private (Privacy Act of 1974), so crew vitals are simulated with fictional crew.",
+   "Simulated vitals are never attached to real named astronauts.",
+   "GOES data describes space weather near Earth, not crew dose."
+  ],
+  "rules_ref": [
+   "docs/BUILD-KICKOFF.md section 2 (data rule)",
+   "docs/research/2-data-sources/01-realtime-data-apis.md sections 2.4, 4.2 and 5",
+   "contracts/DATA_CONTRACT.md"
+  ],
+  "open_points": [
+   "Environment dose rates in crew_data.json are working values set by hand; the Moon value is still to verify (THESIS-DETAILS section 7).",
+   "CBC study number: research says OSD-569, contract and real_crew.py say OSD-575.",
+   "CMO-DA and the DTN-style queue are described in BUILD-KICKOFF and THESIS only; no research file covers them.",
+   "No LOINC code found for mood (1-5), exercise, bone loss or dose; local codes needed.",
+   "Bio-Analyzer page names no analytes; glucose through it is a team mapping."
+  ],
+  "counts": {
+   "nodes": 53,
+   "edges": 74
+  }
+ },
+ "nodes": [
+  {
+   "id": "crew",
+   "label": "Astronaut",
+   "kind": "person",
+   "status": "live",
+   "layer": 0,
+   "owner": "external",
+   "source": "Self-report and self-measurement at the daily check-in",
+   "url": null,
+   "license": null,
+   "cadence": "Daily check-in",
+   "fields": [
+    "mood",
+    "sleep_h",
+    "exercise_min",
+    "bp_sys",
+    "bp_dia",
+    "glucose",
+    "temp",
+    "hr"
+   ],
+   "ref": [
+    "docs/BUILD-KICKOFF.md section 2 (ManualCheckInAdapter)",
+    "docs/research/2-data-sources/04-prototype-data-sources.md section 1 (manual entry is allowed by the challenge)",
+    "docs/research/2-data-sources/01-realtime-data-apis.md section 5.3"
+   ],
+   "note": "Mood is self-report only (1-5 scale). Exercise comes from the exercise log."
+  },
+  {
+   "id": "dev_ble_strap",
+   "label": "BLE heart strap",
+   "kind": "device",
+   "status": "live",
+   "layer": 0,
+   "owner": "external",
+   "source": "Any chest strap or watch broadcasting the standard Bluetooth Heart Rate Service",
+   "url": "https://developer.mozilla.org/en-US/docs/Web/API/Web_Bluetooth_API",
+   "license": "Open standard (Bluetooth SIG GATT); no account, no cost",
+   "cadence": "Notifications, about 1 per second (unverified per device)",
+   "fields": [
+    "hr",
+    "rr_ms"
+   ],
+   "ref": [
+    "docs/research/2-data-sources/04-prototype-data-sources.md sections 1-2",
+    "docs/BUILD-KICKOFF.md section 2 (WebBluetoothHRAdapter)"
+   ],
+   "protocol": "GATT service 0x180D, characteristic 0x2A37",
+   "note": "Chrome, Edge, Opera and Chrome Android only. Needs HTTPS or localhost and a button click."
+  },
+  {
+   "id": "dev_biomonitor",
+   "label": "Bio-Monitor",
+   "kind": "device",
+   "status": "planned",
+   "layer": 0,
+   "owner": "external",
+   "source": "CSA Bio-Monitor smart shirt and headband (Astroskin, Carre Technologies), on the ISS since December 2018",
+   "url": "https://www.asc-csa.gc.ca/eng/sciences/bio-monitor.asp",
+   "license": "No public data; ground science team only",
+   "cadence": "Recorded per session on a battery pack; batch downlink after docking",
+   "fields": [
+    "pulse_ecg",
+    "blood_pressure",
+    "breathing_rate_volume",
+    "skin_temperature",
+    "spo2",
+    "activity"
+   ],
+   "ref": [
+    "docs/research/3-health-science/09-csa-bio-monitor.md (Summary, Bio-Monitor components)",
+    "docs/research/2-data-sources/01-realtime-data-apis.md section 5.2"
+   ],
+   "maps_to": [
+    "hr",
+    "bp_sys",
+    "bp_dia",
+    "temp",
+    "sleep_h",
+    "exercise_min"
+   ],
+   "note": "Listed in the device registry as not connected. Hexoskin BLE, SDK and REST routes were judged not practical in 48 h, so the channel is simulated."
+  },
+  {
+   "id": "dev_actiwatch",
+   "label": "Actiwatch",
+   "kind": "device",
+   "status": "planned",
+   "layer": 0,
+   "owner": "external",
+   "source": "NASA Actiwatch Spectrum wrist actigraph (motion and ambient light)",
+   "url": "https://www.nasa.gov/mission/station/research-explorer/facility/?#id=838",
+   "license": "No public data feed",
+   "cadence": "Continuous wear; data access not stated",
+   "fields": [
+    "motion",
+    "ambient_light"
+   ],
+   "ref": [
+    "docs/research/3-health-science/10-nasa-iss-wearables.md (device map: Actiwatch Spectrum)",
+    "docs/THESIS-DETAILS.md section 8 (sleep measured by wrist actigraphy)"
+   ],
+   "maps_to": [
+    "sleep_h"
+   ]
+  },
+  {
+   "id": "dev_tmini",
+   "label": "T-Mini",
+   "kind": "device",
+   "status": "planned",
+   "layer": 0,
+   "owner": "external",
+   "source": "ESA T-Mini (Thermo-Mini) headband core temperature sensor",
+   "url": "https://www.nasa.gov/mission/station/research-explorer/investigation/?#id=8999",
+   "license": "No public data feed",
+   "cadence": "Continuous wear; data access not stated",
+   "fields": [
+    "core_body_temperature"
+   ],
+   "ref": [
+    "docs/research/3-health-science/10-nasa-iss-wearables.md (device map: T-Mini, Thermolab)",
+    "docs/THESIS-DETAILS.md section 8 (temperature: headband sensor, T-Mini class)"
+   ],
+   "maps_to": [
+    "temp"
+   ]
+  },
+  {
+   "id": "dev_dosimeter",
+   "label": "Crew dosimeter",
+   "kind": "device",
+   "status": "planned",
+   "layer": 0,
+   "owner": "external",
+   "source": "Crew-worn dosimeters: ESA Active Dosimeter, CSA EVARM pocket dosimeters",
+   "url": "https://www.nasa.gov/mission/station/research-explorer/investigation/?#id=1869",
+   "license": "No public data feed",
+   "cadence": "Dose over time; data access not stated",
+   "fields": [
+    "dose_over_time",
+    "eva_dose"
+   ],
+   "ref": [
+    "docs/research/3-health-science/10-nasa-iss-wearables.md (device map: Active Dosimeter, EVARM)",
+    "docs/research/2-data-sources/01-realtime-data-apis.md section 3.1 (crew dosimeters: no public feed)"
+   ],
+   "maps_to": [
+    "dose_mSv_day",
+    "dose_mSv_cum"
+   ]
+  },
+  {
+   "id": "dev_bioanalyzer",
+   "label": "Bio-Analyzer",
+   "kind": "device",
+   "status": "planned",
+   "layer": 0,
+   "owner": "external",
+   "source": "CSA Bio-Analyzer: blood, saliva, urine from a finger prick; goal 2 to 3 h to result",
+   "url": "https://www.asc-csa.gc.ca/eng/iss/bio-analyzer.asp",
+   "license": "No public data",
+   "cadence": "Per sample; result in 2 to 3 h (goal)",
+   "fields": [
+    "blood_cell_counts",
+    "biomarkers"
+   ],
+   "ref": [
+    "docs/research/3-health-science/09-csa-bio-monitor.md (Bio-Analyzer)",
+    "docs/THESIS-DETAILS.md section 8 (glucose: finger prick on analyser)"
+   ],
+   "maps_to": [
+    "glucose"
+   ],
+   "note": "The CSA page names no analytes such as glucose. Glucose via this path is a team mapping, entered through the manual check-in."
+  },
+  {
+   "id": "ds_published_ranges",
+   "label": "Published ranges",
+   "kind": "dataset",
+   "status": "live",
+   "layer": 0,
+   "owner": "external",
+   "source": "Published spaceflight physiology and clinical ranges used to seed the generator and the bands",
+   "url": null,
+   "license": "Papers and agency pages cited per row in the research",
+   "cadence": "Static",
+   "fields": [
+    "bp_flight_offset",
+    "core_temp_rise",
+    "sleep_mean_h",
+    "dose_per_day",
+    "career_limit_mSv"
+   ],
+   "ref": [
+    "docs/research/2-data-sources/04-prototype-data-sources.md section 5.1 (generator parameters and sources)",
+    "docs/THESIS-DETAILS.md section 8 (bands are Team or Clinical, never NASA; only the 600 mSv career limit is a NASA number)",
+    "contracts/DATA_CONTRACT.md (meta.note: simulated crew from published ranges)"
+   ]
+  },
+  {
+   "id": "ml_generator",
+   "label": "Crew generator",
+   "kind": "model",
+   "status": "simulated",
+   "layer": 0,
+   "owner": "Tomas",
+   "source": "ml/make_sample_data.py: AR(1) daily persistence with correlated shocks, planted demo days applied after the draw",
+   "url": null,
+   "license": "Team code",
+   "cadence": "Build time, on regenerate",
+   "fields": [
+    "hr",
+    "bp_sys",
+    "bp_dia",
+    "glucose",
+    "temp",
+    "sleep_h",
+    "mood",
+    "exercise_min",
+    "bone_loss_pct",
+    "dose_mSv_day",
+    "dose_mSv_cum"
+   ],
+   "ref": [
+    "ml/results/synthetic_crew.md (approved correlation matrix, AR(1) coefficients, realized fidelity)",
+    "ml/CLAUDE.md (T6b, D6)",
+    "ml/make_sample_data.py (header)"
+   ],
+   "stage": "build",
+   "impl": "ml/make_sample_data.py",
+   "note": "Bone loss and dose are built from the daily inputs and the planted storm day; they are not part of the correlation matrix. The storm dose sits on the one real GOES >10 MeV storm inside the mission window (date read from the file)."
+  },
+  {
+   "id": "ml_crew_flags",
+   "label": "Baseline rule",
+   "kind": "model",
+   "status": "simulated",
+   "layer": 0,
+   "owner": "Tomas",
+   "source": "ml/crew_flags.py: personal baseline from the first 14 days, z of the 3-day mean, low-side-only metrics, absolute limits",
+   "url": null,
+   "license": "Team code",
+   "cadence": "Build time, on regenerate",
+   "fields": [
+    "baseline.mean",
+    "baseline.sd",
+    "flags",
+    "status"
+   ],
+   "ref": [
+    "ml/crew_flags.py (header)",
+    "contracts/DATA_CONTRACT.md (client-side scoring for live check-ins)",
+    "docs/BUILD-KICKOFF.md section 4 (alert rule)"
+   ],
+   "stage": "build",
+   "impl": "ml/crew_flags.py",
+   "note": "Reference implementation of the rule. core/scoring.ts must reproduce it exactly (rule parity test)."
+  },
+  {
+   "id": "ds_crew_data",
+   "label": "crew_data.json",
+   "kind": "dataset",
+   "status": "simulated",
+   "layer": 0,
+   "owner": "Tomas",
+   "source": "web/public/data/crew_data.json, written by make_sample_data.py with flags from crew_flags.py",
+   "url": null,
+   "license": "Team data; simulated, not real astronaut records",
+   "cadence": "Regenerated by Tomas; the app must survive a regenerate with no code change",
+   "fields": [
+    "meta",
+    "mission",
+    "environments",
+    "career_limit_mSv",
+    "metrics",
+    "crew[].baseline",
+    "crew[].series",
+    "crew[].flags",
+    "crew[].status"
+   ],
+   "ref": [
+    "contracts/DATA_CONTRACT.md (crew_data.json)",
+    "docs/BUILD-KICKOFF.md sections 2 and 9",
+    "docs/THESIS-DETAILS.md section 7"
+   ],
+   "stage": "build",
+   "path": "web/public/data/crew_data.json",
+   "validated_by": "ml/validate_contracts.py",
+   "metric_keys": [
+    "hr",
+    "bp_sys",
+    "bp_dia",
+    "glucose",
+    "temp",
+    "sleep_h",
+    "mood",
+    "exercise_min",
+    "bone_loss_pct",
+    "dose_mSv_day",
+    "dose_mSv_cum"
+   ],
+   "body_regions": [
+    "brain",
+    "heart",
+    "blood",
+    "bones",
+    "whole_body"
+   ]
+  },
+  {
+   "id": "api_donki",
+   "label": "NASA DONKI",
+   "kind": "api",
+   "status": "live",
+   "layer": 0,
+   "owner": "external",
+   "source": "NASA CCMC DONKI event catalogue: FLR, CME, SEP (also GST, IPS, notifications)",
+   "url": "https://ccmc.gsfc.nasa.gov/DONKI/WS/get/{TYPE}?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD",
+   "license": "No key, free; credit NASA CCMC DONKI (licence text not stated in the research)",
+   "cadence": "Event catalogue; pulled at build time from 2010-01-01; suggested refresh 15 to 60 min; max 60 days per request",
+   "fields": [
+    "flrID",
+    "peakTime",
+    "classType",
+    "sourceLocation",
+    "activeRegionNum",
+    "linkedEvents",
+    "cmeAnalyses",
+    "startTime"
+   ],
+   "ref": [
+    "docs/research/2-data-sources/01-realtime-data-apis.md sections 2.1, 2.5 and 7",
+    "ml/fetch_donki.py (header; PRIMARY host ccmc.gsfc.nasa.gov/DONKI-API/get/{etype})",
+    "docs/THESIS-DETAILS.md section 7"
+   ],
+   "samples": [
+    "docs/research/samples/donki_ccmc_FLR.json",
+    "docs/research/samples/donki_ccmc_CME.json",
+    "docs/research/samples/donki_ccmc_SEP.json",
+    "docs/research/samples/donki_ccmc_GST.json",
+    "docs/research/samples/donki_ccmc_IPS.json",
+    "docs/research/samples/donki_ccmc_notifications.json"
+   ],
+   "cors": "open",
+   "note": "Use the direct CCMC host. api.nasa.gov DONKI FLR returned HTTP 404 and the legacy kauai host timed out on 2026-11-14. Real data, used at build time only; the app makes no runtime request."
+  },
+  {
+   "id": "api_swpc_scales",
+   "label": "NOAA scales",
+   "kind": "api",
+   "status": "offline-sample",
+   "layer": 0,
+   "owner": "external",
+   "source": "NOAA SWPC R, S, G scale levels now plus 3-day probabilities",
+   "url": "https://services.swpc.noaa.gov/products/noaa-scales.json",
+   "license": "No key, free (US government data; licence text not stated in the research)",
+   "cadence": "Live; poll at most once per minute (cache-control max-age=60)",
+   "fields": [
+    "R.Scale",
+    "S.Scale",
+    "G.Scale"
+   ],
+   "ref": [
+    "docs/research/2-data-sources/01-realtime-data-apis.md sections 2.1, 2.2 and 2.4"
+   ],
+   "samples": [
+    "docs/research/samples/swpc_noaa_scales.json"
+   ],
+   "cors": "open",
+   "note": "S level is the single radiation light. GOES describes geostationary orbit: label as space weather near Earth, not crew dose."
+  },
+  {
+   "id": "api_swpc_protons",
+   "label": "GOES protons",
+   "kind": "api",
+   "status": "offline-sample",
+   "layer": 0,
+   "owner": "external",
+   "source": "NOAA SWPC GOES integral proton flux, 5-minute steps; the >=10 MeV channel defines the S scale",
+   "url": "https://services.swpc.noaa.gov/json/goes/primary/integral-protons-6-hour.json",
+   "license": "No key, free (US government data; licence text not stated in the research)",
+   "cadence": "5 min; files for 6 hour, 1 day, 3 day, 7 day",
+   "fields": [
+    "time_tag",
+    "satellite",
+    "flux",
+    "energy"
+   ],
+   "ref": [
+    "docs/research/2-data-sources/01-realtime-data-apis.md section 2.1",
+    "docs/THESIS-DETAILS.md section 7 (GOES >=10 MeV flux: real, optional bundled files, replay overlay)"
+   ],
+   "samples": [
+    "docs/research/samples/swpc_goes_integral_protons_6hour.json",
+    "docs/research/samples/swpc_goes_integral_protons_1day.json",
+    "docs/research/samples/swpc_goes_integral_proton_fluence_7day.json",
+    "docs/research/samples/swpc_goes_differential_protons_6hour.json"
+   ],
+   "cors": "open"
+  },
+  {
+   "id": "api_swpc_xray",
+   "label": "GOES X-ray",
+   "kind": "api",
+   "status": "offline-sample",
+   "layer": 0,
+   "owner": "external",
+   "source": "NOAA SWPC GOES X-ray flares (latest, 7 day) and 1-minute X-ray flux",
+   "url": "https://services.swpc.noaa.gov/json/goes/primary/xray-flares-latest.json",
+   "license": "No key, free (US government data; licence text not stated in the research)",
+   "cadence": "1 min flux; flare list on event",
+   "fields": [
+    "time_tag",
+    "begin_time",
+    "max_time",
+    "max_class",
+    "end_time",
+    "current_class"
+   ],
+   "ref": [
+    "docs/research/2-data-sources/01-realtime-data-apis.md section 2.1"
+   ],
+   "samples": [
+    "docs/research/samples/swpc_goes_xray_flares_latest.json",
+    "docs/research/samples/swpc_goes_xray_flares_7day.json",
+    "docs/research/samples/swpc_goes_xrays_6hour.json"
+   ],
+   "cors": "open"
+  },
+  {
+   "id": "api_swpc_alerts",
+   "label": "SWPC alerts",
+   "kind": "api",
+   "status": "offline-sample",
+   "layer": 0,
+   "owner": "external",
+   "source": "NOAA SWPC text watches, warnings and alerts",
+   "url": "https://services.swpc.noaa.gov/products/alerts.json",
+   "license": "No key, free (US government data; licence text not stated in the research)",
+   "cadence": "On issue",
+   "fields": [
+    "product_id",
+    "issue_datetime",
+    "message"
+   ],
+   "ref": [
+    "docs/research/2-data-sources/01-realtime-data-apis.md section 2.1"
+   ],
+   "samples": [
+    "docs/research/samples/swpc_alerts.json"
+   ],
+   "cors": "open"
+  },
+  {
+   "id": "api_swpc_kp",
+   "label": "Planetary Kp",
+   "kind": "api",
+   "status": "offline-sample",
+   "layer": 0,
+   "owner": "external",
+   "source": "NOAA SWPC planetary K index (3-hour, 1-minute estimate, forecast); second source GFZ Potsdam",
+   "url": "https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json",
+   "license": "No key, free; GFZ copy is CC BY 4.0",
+   "cadence": "3 h; 1 min estimate",
+   "fields": [
+    "time_tag",
+    "Kp",
+    "a_running",
+    "station_count"
+   ],
+   "ref": [
+    "docs/research/2-data-sources/01-realtime-data-apis.md sections 2.1 and 2.2 (no biological effect listed for G storms: context only)"
+   ],
+   "samples": [
+    "docs/research/samples/swpc_planetary_k_index.json",
+    "docs/research/samples/swpc_planetary_k_index_1m.json",
+    "docs/research/samples/swpc_kp_forecast.json",
+    "docs/research/samples/gfz_kp_last2days.json"
+   ],
+   "cors": "open"
+  },
+  {
+   "id": "api_iswa_hapi",
+   "label": "iSWA HAPI dose",
+   "kind": "api",
+   "status": "offline-sample",
+   "layer": 0,
+   "owner": "external",
+   "source": "NASA CCMC iSWA HAPI: Curiosity RAD dose on Mars, LRO CRaTER dose in lunar orbit, GOES protons",
+   "url": "https://iswa.gsfc.nasa.gov/IswaSystemWebApp/hapi/data?id=msl_rad_dosimetry",
+   "license": "No key, free (licence text not stated in the research)",
+   "cadence": "MSL RAD about every 17 min, about 2 days behind; CRaTER about 5 weeks behind",
+   "fields": [
+    "Time",
+    "dose_b_raw",
+    "dose_b_rtg",
+    "dose_e_total"
+   ],
+   "ref": [
+    "docs/research/2-data-sources/01-realtime-data-apis.md sections 2.1, 3.1 and 3.4"
+   ],
+   "samples": [
+    "docs/research/samples/iswa_hapi_msl_rad_dosimetry_2026-11.csv",
+    "docs/research/samples/iswa_hapi_msl_rad_dosimetry_info.json",
+    "docs/research/samples/iswa_hapi_crater_micro_2026-10.csv",
+    "docs/research/samples/iswa_hapi_goesp_part_flux_last2h.csv",
+    "docs/research/samples/iswa_hapi_catalog.json"
+   ],
+   "cors": "open",
+   "note": "Benchmark for the Moon and Mars dose rates. Units are absorbed dose (uGy/day, cGy/day), not effective dose (mSv)."
+  },
+  {
+   "id": "api_radlab",
+   "label": "OSDR RadLab",
+   "kind": "api",
+   "status": "offline-sample",
+   "layer": 0,
+   "owner": "external",
+   "source": "NASA OSDR RadLab: dose rates from ISS detectors (DosTel and others) and BioSentinel",
+   "url": "https://visualization.osdr.nasa.gov/radlab/api/?spacecraft=ISS&format=json",
+   "license": "No key, free; NASA SMD Science Information Policy",
+   "cadence": "Archive; latest ISS data 2024-11-04",
+   "fields": [
+    "columns",
+    "index",
+    "data"
+   ],
+   "ref": [
+    "docs/research/2-data-sources/01-realtime-data-apis.md sections 3.1 and 3.4"
+   ],
+   "samples": [
+    "docs/research/samples/radlab_iss_dostel_sample.json",
+    "docs/research/samples/radlab_biosentinel_sample.json"
+   ],
+   "cors": "none",
+   "note": "No CORS header: pre-download a slice. Benchmark for the ISS dose rate."
+  },
+  {
+   "id": "api_isslive",
+   "label": "ISS Live",
+   "kind": "api",
+   "status": "offline-sample",
+   "layer": 0,
+   "owner": "external",
+   "source": "ISS Live public telemetry (Lightstreamer, adapter set ISSLIVE): cabin pressure, ppO2, ppCO2, cabin temperature, water tanks",
+   "url": "https://push.lightstreamer.com",
+   "license": "No key, free; public demo server, not an SLA service",
+   "cadence": "Push on change (MERGE mode); values can be days stale",
+   "fields": [
+    "Value",
+    "TimeStamp",
+    "Status.Class",
+    "Status.Indicator",
+    "CalibratedData"
+   ],
+   "ref": [
+    "docs/research/2-data-sources/01-realtime-data-apis.md sections 1.1 to 1.5"
+   ],
+   "samples": [
+    "docs/research/samples/isslive_lightstreamer_eclss_snapshot.json"
+   ],
+   "note": "No crew biomedical item, humidity or dose in the public list. Dictionary units do not match observed values; label units from observation."
+  },
+  {
+   "id": "api_wheretheiss",
+   "label": "ISS position",
+   "kind": "api",
+   "status": "offline-sample",
+   "layer": 0,
+   "owner": "external",
+   "source": "Where The ISS At: latitude, longitude, altitude, velocity, day or night",
+   "url": "https://api.wheretheiss.at/v1/satellites/25544",
+   "license": "No key, free",
+   "cadence": "5 to 10 s",
+   "fields": [
+    "latitude",
+    "longitude",
+    "altitude",
+    "velocity",
+    "visibility",
+    "timestamp"
+   ],
+   "ref": [
+    "docs/research/2-data-sources/01-realtime-data-apis.md sections 4.1 and 4.2"
+   ],
+   "samples": [
+    "docs/research/samples/wheretheiss_25544.json",
+    "docs/research/samples/wheretheiss_25544_tles.json",
+    "docs/research/samples/celestrak_iss_gp.json"
+   ],
+   "cors": "open",
+   "note": "Context only: day and night cycle."
+  },
+  {
+   "id": "api_corquaid",
+   "label": "Crew roster",
+   "kind": "api",
+   "status": "offline-sample",
+   "layer": 0,
+   "owner": "external",
+   "source": "corquaid ISS APIs: people in space, expedition, craft",
+   "url": "https://corquaid.github.io/international-space-station-APIs/JSON/people-in-space.json",
+   "license": "MIT",
+   "cadence": "Daily",
+   "fields": [
+    "number",
+    "iss_expedition",
+    "people"
+   ],
+   "ref": [
+    "docs/research/2-data-sources/01-realtime-data-apis.md sections 4.1 and 4.2"
+   ],
+   "samples": [
+    "docs/research/samples/corquaid_people_in_space.json"
+   ],
+   "cors": "open",
+   "note": "Context only. Never attach simulated vitals to real named astronauts."
+  },
+  {
+   "id": "ds_osd575",
+   "label": "Inspiration4 labs",
+   "kind": "dataset",
+   "status": "live",
+   "layer": 0,
+   "owner": "external",
+   "source": "NASA OSDR Inspiration4 blood panels: comprehensive metabolic panel (OSD-575) and complete blood count, 4 crew, 7 timepoints, with lab reference ranges",
+   "url": "https://osdr.nasa.gov/bio/repo/data/studies/OSD-575",
+   "license": "NASA SMD Science Information Policy; cite each study",
+   "cadence": "Static (published 2021 mission data)",
+   "fields": [
+    "ANALYTE",
+    "VALUE",
+    "RANGE_MIN",
+    "RANGE_MAX",
+    "UNITS",
+    "TEST_TYPE",
+    "SUBJECT_ID",
+    "timepoint"
+   ],
+   "ref": [
+    "docs/research/2-data-sources/02-datasets.md sections 1a and 3",
+    "docs/research/2-data-sources/07-osdr-study-catalog.md (Tier 1)",
+    "contracts/DATA_CONTRACT.md (real_crew.json)"
+   ],
+   "samples": [
+    "docs/research/samples/osdr_meta_OSD-569.json",
+    "docs/research/samples/osdr_human_studies_2026-11-14.json"
+   ],
+   "cors": "S3 bucket open; search API none",
+   "note": "Real, de-identified, public. The research lists the CBC under OSD-569 and the metabolic panel under OSD-575; the contract and real_crew.py cite OSD-575 for both. Check before quoting the study number for the CBC."
+  },
+  {
+   "id": "ml_fetch_donki",
+   "label": "fetch_donki.py",
+   "kind": "model",
+   "status": "live",
+   "layer": 1,
+   "owner": "Tomas",
+   "source": "ml/fetch_donki.py: pulls DONKI FLR, CME, SEP; caches raw JSON; writes flares.csv, cmes.csv, seps.csv",
+   "url": null,
+   "license": "Team code",
+   "cadence": "Build time",
+   "fields": [
+    "class_flux",
+    "latitude_deg",
+    "longitude_deg",
+    "has_linked_cme",
+    "cme_speed_kms",
+    "cme_half_angle_deg",
+    "active_region",
+    "sep_linked",
+    "sep_within_24h",
+    "sep_within_72h",
+    "sep_in_prior_48h"
+   ],
+   "ref": [
+    "ml/fetch_donki.py (header)",
+    "ml/CLAUDE.md (Inputs, T1)"
+   ],
+   "stage": "build",
+   "impl": "ml/fetch_donki.py",
+   "outputs": [
+    "data/raw/<TYPE>_<start>_<end>.json",
+    "data/processed/flares.csv",
+    "data/processed/cmes.csv",
+    "data/processed/seps.csv"
+   ]
+  },
+  {
+   "id": "ml_real_crew",
+   "label": "real_crew.py",
+   "kind": "model",
+   "status": "live",
+   "layer": 1,
+   "owner": "Tomas",
+   "source": "ml/real_crew.py: scores Inspiration4 CBC and chemistry against each person's pre-flight mean",
+   "url": null,
+   "license": "Team code",
+   "cadence": "Build time",
+   "fields": [
+    "baseline",
+    "z",
+    "pct_change",
+    "outside_lab_range",
+    "far_from_baseline",
+    "artefact",
+    "excluded"
+   ],
+   "ref": [
+    "ml/real_crew.py (header)",
+    "contracts/DATA_CONTRACT.md (real_crew.json)"
+   ],
+   "stage": "build",
+   "impl": "ml/real_crew.py"
+  },
+  {
+   "id": "ad_loader",
+   "label": "Data loader",
+   "kind": "core",
+   "status": "live",
+   "layer": 1,
+   "owner": "Emile",
+   "source": "Loads the JSON files from public/data with types from the contract; precached by the service worker",
+   "url": null,
+   "license": "Team code",
+   "cadence": "On app start",
+   "fields": [
+    "crew_data.json",
+    "storm_forecast.json",
+    "real_crew.json"
+   ],
+   "ref": [
+    "docs/BUILD-KICKOFF.md sections 2, 3 (fully offline) and 7 (Phase 0: types from the contract, loader)",
+    "contracts/DATA_CONTRACT.md"
+   ],
+   "stage": "runtime",
+   "impl": "web/src/data (planned layout)"
+  },
+  {
+   "id": "ad_replay",
+   "label": "ReplayAdapter",
+   "kind": "core",
+   "status": "simulated",
+   "layer": 1,
+   "owner": "Emile",
+   "source": "Replays crew_data.json series as Observations (the simulated crew, default source)",
+   "url": null,
+   "license": "Team code",
+   "cadence": "Simulated clock, one row per mission day",
+   "fields": [
+    "subject",
+    "metric",
+    "value",
+    "unit",
+    "time",
+    "source",
+    "loinc"
+   ],
+   "ref": [
+    "docs/BUILD-KICKOFF.md section 2 (devices: ReplayAdapter)"
+   ],
+   "stage": "runtime",
+   "impl": "web/src/devices (planned layout)"
+  },
+  {
+   "id": "ad_manual",
+   "label": "Check-in adapter",
+   "kind": "core",
+   "status": "live",
+   "layer": 1,
+   "owner": "Emile",
+   "source": "ManualCheckInAdapter: the daily check-in form becomes Observations",
+   "url": null,
+   "license": "Team code",
+   "cadence": "Per check-in",
+   "fields": [
+    "subject",
+    "metric",
+    "value",
+    "unit",
+    "time",
+    "source",
+    "loinc"
+   ],
+   "ref": [
+    "docs/BUILD-KICKOFF.md section 2 (devices: ManualCheckInAdapter)",
+    "docs/research/2-data-sources/04-prototype-data-sources.md section 1 (manual entry)"
+   ],
+   "stage": "runtime",
+   "impl": "web/src/devices (planned layout)"
+  },
+  {
+   "id": "ad_ble_hr",
+   "label": "Bluetooth HR adapter",
+   "kind": "core",
+   "status": "live",
+   "layer": 1,
+   "owner": "Emile",
+   "source": "WebBluetoothHRAdapter: reads the standard Heart Rate Service behind a Connect strap button",
+   "url": null,
+   "license": "Team code",
+   "cadence": "Per notification",
+   "fields": [
+    "subject",
+    "metric",
+    "value",
+    "unit",
+    "time",
+    "source",
+    "loinc"
+   ],
+   "ref": [
+    "docs/BUILD-KICKOFF.md section 2 (devices: WebBluetoothHRAdapter)",
+    "docs/research/2-data-sources/04-prototype-data-sources.md section 2 (implementation notes)"
+   ],
+   "stage": "runtime",
+   "impl": "web/src/devices (planned layout)",
+   "note": "Chrome only. First item to cut if late, after Ground view and Containerfile (BUILD-KICKOFF section 7)."
+  },
+  {
+   "id": "ad_sim_biomonitor",
+   "label": "Sim Bio-Monitor",
+   "kind": "core",
+   "status": "simulated",
+   "layer": 1,
+   "owner": "Emile",
+   "source": "SimBioMonitorAdapter: simulated Bio-Monitor-class channels",
+   "url": null,
+   "license": "Team code",
+   "cadence": "Simulated stream",
+   "fields": [
+    "hr",
+    "bp",
+    "temp",
+    "spo2",
+    "breathing",
+    "activity"
+   ],
+   "ref": [
+    "docs/BUILD-KICKOFF.md section 2 (devices: SimBioMonitorAdapter)",
+    "docs/research/3-health-science/09-csa-bio-monitor.md (How to use this in the build: exactly its six channels)"
+   ],
+   "stage": "runtime",
+   "impl": "web/src/devices (planned layout)"
+  },
+  {
+   "id": "ad_sim_dosimeter",
+   "label": "Sim dosimeter",
+   "kind": "core",
+   "status": "simulated",
+   "layer": 1,
+   "owner": "Emile",
+   "source": "SimDosimeterAdapter: simulated personal dosimeter, dose rate from the environment plus storm spikes",
+   "url": null,
+   "license": "Team code",
+   "cadence": "Simulated stream",
+   "fields": [
+    "dose_mSv_day",
+    "dose_mSv_cum"
+   ],
+   "ref": [
+    "docs/BUILD-KICKOFF.md section 2 (devices: SimDosimeterAdapter)",
+    "docs/research/2-data-sources/01-realtime-data-apis.md section 3.4 (simulated personal dosimeter; label simulated values as estimates)"
+   ],
+   "stage": "runtime",
+   "impl": "web/src/devices (planned layout)"
+  },
+  {
+   "id": "ad_registry",
+   "label": "Device registry",
+   "kind": "core",
+   "status": "live",
+   "layer": 1,
+   "owner": "Emile",
+   "source": "Lists every adapter with channels and status, including planned devices shown as not connected",
+   "url": null,
+   "license": "Team code",
+   "cadence": "On change",
+   "fields": [
+    "id",
+    "label",
+    "kind",
+    "channels",
+    "status"
+   ],
+   "ref": [
+    "docs/BUILD-KICKOFF.md sections 2 (registry) and 3 (device swap: adapter contract test)"
+   ],
+   "stage": "runtime",
+   "impl": "web/src/devices (planned layout)"
+  },
+  {
+   "id": "ad_spaceweather",
+   "label": "Space weather snapshot",
+   "kind": "core",
+   "status": "offline-sample",
+   "layer": 1,
+   "owner": "Emile",
+   "source": "Bundled SWPC snapshot for the replay overlay and the space-weather-now chip (optional scope)",
+   "url": null,
+   "license": "Team code; data NOAA SWPC",
+   "cadence": "Bundled at build; no runtime request",
+   "fields": [
+    "S.Scale",
+    "flux",
+    "energy",
+    "time_tag"
+   ],
+   "ref": [
+    "docs/THESIS-DETAILS.md sections 7 and 13 (GOES overlay; NOAA chip with cached fallback: should)",
+    "docs/research/2-data-sources/01-realtime-data-apis.md section 7 (offline fallback: samples snapshots)",
+    "docs/BUILD-KICKOFF.md section 3 (zero runtime external requests)"
+   ],
+   "stage": "runtime",
+   "impl": "not specified in BUILD-KICKOFF section 2",
+   "note": "Optional. The offline rule means bundled files, not live calls."
+  },
+  {
+   "id": "ml_prepare",
+   "label": "prepare_model_flares.py",
+   "kind": "model",
+   "status": "live",
+   "layer": 2,
+   "owner": "Tomas",
+   "source": "ml/prepare_model_flares.py: M and X class only; label = DONKI link to a GOES >10 MeV SEP; drops flares inside a running storm",
+   "url": null,
+   "license": "Team code",
+   "cadence": "Build time",
+   "fields": [
+    "sep_linked_goes10",
+    "sep_within_72h_goes10",
+    "class_flux",
+    "longitude_deg",
+    "has_linked_cme",
+    "cme_speed_kms"
+   ],
+   "ref": [
+    "ml/prepare_model_flares.py (header)",
+    "docs/THESIS-DETAILS.md section 3 (pillar E)"
+   ],
+   "stage": "build",
+   "impl": "ml/prepare_model_flares.py",
+   "outputs": [
+    "data/processed/flares_model.csv"
+   ]
+  },
+  {
+   "id": "ds_real_crew",
+   "label": "real_crew.json",
+   "kind": "dataset",
+   "status": "live",
+   "layer": 2,
+   "owner": "Tomas",
+   "source": "web/public/data/real_crew.json: Inspiration4 lab draws scored against each person's pre-flight mean",
+   "url": null,
+   "license": "NASA SMD Science Information Policy; cite OSDR",
+   "cadence": "Static",
+   "fields": [
+    "meta",
+    "analytes",
+    "flags",
+    "variation",
+    "crew[].baseline",
+    "crew[].series"
+   ],
+   "ref": [
+    "contracts/DATA_CONTRACT.md (real_crew.json: not the simulated crew, not an input to the check-in scorer)",
+    "docs/THESIS-DETAILS.md section 7 (reference strip, never scored)"
+   ],
+   "stage": "build",
+   "path": "web/public/data/real_crew.json"
+  },
+  {
+   "id": "core_observation",
+   "label": "Observation",
+   "kind": "core",
+   "status": "live",
+   "layer": 2,
+   "owner": "Emile",
+   "source": "core/observation.ts: every reading normalized to one FHIR Observation-shaped record; LOINC codes only where verified",
+   "url": "https://hl7.org/fhir/R4/observation-vitalsigns.html",
+   "license": "HL7 FHIR R4 (open standard); LOINC codes",
+   "cadence": "Per reading",
+   "fields": [
+    "subject",
+    "metric",
+    "value",
+    "unit",
+    "time",
+    "source",
+    "loinc"
+   ],
+   "ref": [
+    "docs/BUILD-KICKOFF.md section 2 (core/observation.ts)",
+    "docs/research/2-data-sources/04-prototype-data-sources.md section 4 (FHIR R4 Observation and LOINC table)"
+   ],
+   "stage": "runtime",
+   "impl": "web/src/core/observation.ts (planned layout)",
+   "loinc": {
+    "hr": "8867-4",
+    "bp_panel": "85354-9",
+    "bp_sys": "8480-6",
+    "bp_dia": "8462-4",
+    "temp": "8310-5",
+    "glucose": "41653-7",
+    "sleep_h": "93832-4",
+    "mood": null,
+    "exercise_min": null,
+    "bone_loss_pct": null,
+    "dose_mSv_day": null,
+    "dose_mSv_cum": null
+   },
+   "note": "No LOINC was found for the 1-5 mood scale or radiation dose: use local codes. Dose is environment data, not a patient Observation. Exercise and bone loss are not covered by the research table."
+  },
+  {
+   "id": "core_bus",
+   "label": "Event bus",
+   "kind": "core",
+   "status": "live",
+   "layer": 2,
+   "owner": "Emile",
+   "source": "core/bus.ts: small event store; every Observation, flag, alert and report passes through it",
+   "url": null,
+   "license": "Team code",
+   "cadence": "Per event",
+   "fields": [
+    "observation",
+    "flag",
+    "alert",
+    "report"
+   ],
+   "ref": [
+    "docs/BUILD-KICKOFF.md sections 2 (core/bus.ts) and 5 (Systems diagram driven by real bus events)"
+   ],
+   "stage": "runtime",
+   "impl": "web/src/core/bus.ts (planned layout)"
+  },
+  {
+   "id": "ml_model_v1",
+   "label": "Storm model v1",
+   "kind": "model",
+   "status": "live",
+   "layer": 3,
+   "owner": "Tomas",
+   "source": "ml/train_v1.py: logistic regression fit on train only, thresholds chosen on validation, test years untouched until frozen",
+   "url": null,
+   "license": "Team code; scikit-learn",
+   "cadence": "Build time; frozen",
+   "fields": [
+    "log10_class_flux",
+    "longitude_deg",
+    "has_linked_cme",
+    "log10_cme_speed"
+   ],
+   "ref": [
+    "ml/train_v1.py (header)",
+    "ml/CLAUDE.md (T4, D2, D4)",
+    "docs/THESIS-DETAILS.md sections 3 and 4"
+   ],
+   "stage": "build",
+   "impl": "ml/train_v1.py",
+   "outputs": [
+    "ml/models/v1.pkl",
+    "ml/results/thresholds_v1.json"
+   ],
+   "note": "Model name, thresholds and headline numbers are read from storm_forecast.json meta, never retyped."
+  },
+  {
+   "id": "ml_export",
+   "label": "run_test_and_export.py",
+   "kind": "model",
+   "status": "live",
+   "layer": 3,
+   "owner": "Tomas",
+   "source": "ml/run_test_and_export.py: scores 2024 to today with v1 and writes storm_forecast.json",
+   "url": null,
+   "license": "Team code",
+   "cadence": "Build time",
+   "fields": [
+    "flare_id",
+    "peak_time",
+    "flare_class",
+    "class_flux",
+    "source_location",
+    "latitude_deg",
+    "longitude_deg",
+    "has_linked_cme",
+    "cme_speed_kms",
+    "p_storm",
+    "alert_level",
+    "actual_storm",
+    "storm_onset_time",
+    "lead_time_h",
+    "split"
+   ],
+   "ref": [
+    "ml/run_test_and_export.py (header)",
+    "ml/CLAUDE.md (T7)"
+   ],
+   "stage": "build",
+   "impl": "ml/run_test_and_export.py"
+  },
+  {
+   "id": "ds_storm_forecast",
+   "label": "storm_forecast.json",
+   "kind": "dataset",
+   "status": "live",
+   "layer": 3,
+   "owner": "Tomas",
+   "source": "web/public/data/storm_forecast.json: real model output on held-out test flares",
+   "url": null,
+   "license": "Team data derived from NASA CCMC DONKI; credit in meta.data_credit",
+   "cadence": "Regenerated by Tomas; the app must survive a regenerate with no code change",
+   "fields": [
+    "meta.model",
+    "meta.horizon_hours",
+    "meta.thresholds",
+    "meta.metrics_test",
+    "meta.feature_importance",
+    "meta.data_credit",
+    "events[]"
+   ],
+   "ref": [
+    "contracts/DATA_CONTRACT.md (storm_forecast.json)",
+    "docs/BUILD-KICKOFF.md sections 0 and 4 (radiation)",
+    "docs/THESIS-DETAILS.md section 7"
+   ],
+   "stage": "build",
+   "path": "web/public/data/storm_forecast.json",
+   "validated_by": "ml/validate_contracts.py",
+   "event_fields": [
+    "flare_id",
+    "peak_time",
+    "flare_class",
+    "class_flux",
+    "source_location",
+    "latitude_deg",
+    "longitude_deg",
+    "has_linked_cme",
+    "cme_speed_kms",
+    "p_storm",
+    "alert_level",
+    "actual_storm",
+    "storm_onset_time",
+    "lead_time_h",
+    "split"
+   ],
+   "note": "Replay uses split == test events in the window the contract names. Headline numbers come only from meta.metrics_test."
+  },
+  {
+   "id": "core_scoring",
+   "label": "Scoring",
+   "kind": "core",
+   "status": "live",
+   "layer": 3,
+   "owner": "Emile",
+   "source": "core/scoring.ts: personal-baseline rule, absolute limits, low-side-only metrics, dose and bone bands",
+   "url": null,
+   "license": "Team code",
+   "cadence": "Per Observation",
+   "fields": [
+    "z",
+    "severity",
+    "body_region",
+    "status"
+   ],
+   "ref": [
+    "docs/BUILD-KICKOFF.md sections 2 (core/scoring.ts), 3 (rule parity with ml) and 4 (alert rule)",
+    "contracts/DATA_CONTRACT.md (client-side scoring for live check-ins)"
+   ],
+   "stage": "runtime",
+   "impl": "web/src/core/scoring.ts (planned layout)",
+   "note": "Deterministic. No generative AI in alerts or scoring."
+  },
+  {
+   "id": "core_radiation",
+   "label": "Radiation",
+   "kind": "core",
+   "status": "live",
+   "layer": 3,
+   "owner": "Emile",
+   "source": "core/radiation.ts: forecast feed, alert levels, replay timeline, per-storm lead time, dose gauge against the career limit",
+   "url": null,
+   "license": "Team code",
+   "cadence": "Per replay tick",
+   "fields": [
+    "p_storm",
+    "alert_level",
+    "actual_storm",
+    "lead_time_h",
+    "dose_mSv_cum",
+    "career_limit_mSv"
+   ],
+   "ref": [
+    "docs/BUILD-KICKOFF.md sections 2 (core/radiation.ts) and 4 (radiation)"
+   ],
+   "stage": "runtime",
+   "impl": "web/src/core/radiation.ts (planned layout)"
+  },
+  {
+   "id": "core_escalation",
+   "label": "Escalation",
+   "kind": "core",
+   "status": "live",
+   "layer": 3,
+   "owner": "Emile",
+   "source": "core/escalation.ts: status and environment decide who is told, the one-way delay and the report queue",
+   "url": null,
+   "license": "Team code",
+   "cadence": "Per status change",
+   "fields": [
+    "severity",
+    "environment",
+    "recipient",
+    "delay",
+    "report"
+   ],
+   "ref": [
+    "docs/BUILD-KICKOFF.md sections 2 (core/escalation.ts) and 4 (verify step, escalation, environment switch)",
+    "docs/THESIS-DETAILS.md section 3 (pillar C)"
+   ],
+   "stage": "runtime",
+   "impl": "web/src/core/escalation.ts (planned layout)"
+  },
+  {
+   "id": "sf_console",
+   "label": "Crew Console",
+   "kind": "surface",
+   "status": "live",
+   "layer": 4,
+   "owner": "Emile",
+   "source": "Main surface: crew overview, body map, metric panel, check-in, action, re-measure, escalation",
+   "url": null,
+   "license": "Team code",
+   "cadence": "Live from the bus",
+   "fields": [
+    "status",
+    "body_region",
+    "flags",
+    "series",
+    "baseline",
+    "actions"
+   ],
+   "ref": [
+    "docs/BUILD-KICKOFF.md sections 1 and 5"
+   ],
+   "stage": "runtime",
+   "impl": "web/src (ui)"
+  },
+  {
+   "id": "sf_radiation",
+   "label": "Radiation module",
+   "kind": "surface",
+   "status": "live",
+   "layer": 4,
+   "owner": "Emile",
+   "source": "Dose gauge, forecast feed, model card and the May 2024 replay",
+   "url": null,
+   "license": "Team code",
+   "cadence": "Live from the bus",
+   "fields": [
+    "events",
+    "meta.metrics_test",
+    "dose_mSv_cum",
+    "career_limit_mSv"
+   ],
+   "ref": [
+    "docs/BUILD-KICKOFF.md sections 1, 4 (radiation) and 6"
+   ],
+   "stage": "runtime",
+   "impl": "web/src (ui)"
+  },
+  {
+   "id": "sf_wrist",
+   "label": "Wrist",
+   "kind": "surface",
+   "status": "simulated",
+   "layer": 4,
+   "owner": "Emile",
+   "source": "Simulated watch face docked on screen: urgency pulses only; real vibration where navigator.vibrate is supported",
+   "url": null,
+   "license": "Team code",
+   "cadence": "On alert",
+   "fields": [
+    "urgency"
+   ],
+   "ref": [
+    "docs/BUILD-KICKOFF.md section 1 (Wrist)"
+   ],
+   "stage": "runtime",
+   "impl": "web/src (ui)"
+  },
+  {
+   "id": "sf_systems",
+   "label": "Systems",
+   "kind": "surface",
+   "status": "live",
+   "layer": 4,
+   "owner": "Emile",
+   "source": "Architecture map and flight-readiness checks, driven by bus events; this file is its data model",
+   "url": null,
+   "license": "Team code",
+   "cadence": "Live from the bus",
+   "fields": [
+    "nodes",
+    "edges",
+    "readiness_checks"
+   ],
+   "ref": [
+    "docs/BUILD-KICKOFF.md sections 1, 3 and 5 (Systems screen)"
+   ],
+   "stage": "runtime",
+   "impl": "web/src (ui)"
+  },
+  {
+   "id": "person_cmo",
+   "label": "Crew medical officer",
+   "kind": "person",
+   "status": "simulated",
+   "layer": 4,
+   "owner": "external",
+   "source": "Crew member acting as medical officer on board; told at once on red",
+   "url": null,
+   "license": null,
+   "cadence": "On red",
+   "fields": [
+    "severity",
+    "case_summary"
+   ],
+   "ref": [
+    "docs/BUILD-KICKOFF.md section 4 (escalation)",
+    "docs/THESIS-DETAILS.md section 3 (pillar C)"
+   ]
+  },
+  {
+   "id": "core_handoff",
+   "label": "CMO-DA handoff",
+   "kind": "core",
+   "status": "live",
+   "layer": 5,
+   "owner": "Emile",
+   "source": "core/handoff.ts: builds the case bundle (JSON) and a plain-language summary from a deterministic template",
+   "url": null,
+   "license": "Team code",
+   "cadence": "On demand, from any amber or red",
+   "fields": [
+    "who",
+    "what_drifted",
+    "values_vs_own_normal",
+    "days_running",
+    "re_measured",
+    "actions_taken",
+    "radiation_context"
+   ],
+   "ref": [
+    "docs/BUILD-KICKOFF.md sections 2 (core/handoff.ts) and 4 (CMO-DA handoff)"
+   ],
+   "stage": "runtime",
+   "impl": "web/src/core/handoff.ts (planned layout)"
+  },
+  {
+   "id": "ext_cmo_da",
+   "label": "CMO-DA",
+   "kind": "api",
+   "status": "planned",
+   "layer": 5,
+   "owner": "external",
+   "source": "NASA JSC Crew Medical Officer Digital Assistant: offline AI medic, built with Google, tested with Red Hat on a ground copy of HPE Spaceborne Computer-2, not yet flown",
+   "url": null,
+   "license": "Not public",
+   "cadence": "Not connected",
+   "fields": [
+    "case_bundle"
+   ],
+   "ref": [
+    "docs/BUILD-KICKOFF.md section 1 (positioning)",
+    "docs/THESIS.md (Hand off row)"
+   ],
+   "note": "No integration exists. Label the output: Prepared for an onboard AI medical assistant such as NASA's CMO-DA. This item is not covered in docs/research/; the source is the thesis and the kickoff file."
+  },
+  {
+   "id": "core_link",
+   "label": "Link queue",
+   "kind": "core",
+   "status": "simulated",
+   "layer": 5,
+   "owner": "Emile",
+   "source": "core/link.ts: comm-link simulator with delay by environment, loss-of-signal windows and a store-and-forward queue (DTN-style bundles)",
+   "url": null,
+   "license": "Team code",
+   "cadence": "Per report",
+   "fields": [
+    "delay",
+    "blackout",
+    "queue",
+    "bytes_per_report"
+   ],
+   "ref": [
+    "docs/BUILD-KICKOFF.md sections 2 (core/link.ts) and 3 (link delay and loss, downlink budget)",
+    "docs/THESIS-DETAILS.md sections 2 (row 4) and 3 (one-way delay by environment)",
+    "docs/research/2-data-sources/04-prototype-data-sources.md section 5.1 (comm delay)"
+   ],
+   "stage": "runtime",
+   "impl": "web/src/core/link.ts (planned layout)",
+   "note": "Simulated link, not a real DTN stack. Delay values come from core/link.ts with their sources in THESIS-DETAILS; bare light time and operational latency differ for the Moon."
+  },
+  {
+   "id": "sf_ground",
+   "label": "Ground",
+   "kind": "surface",
+   "status": "simulated",
+   "layer": 5,
+   "owner": "Emile",
+   "source": "Flight surgeon view: reports arriving after the one-way delay, link status, what the crew already did",
+   "url": null,
+   "license": "Team code",
+   "cadence": "On report arrival",
+   "fields": [
+    "report",
+    "arrival_time",
+    "link_status",
+    "actions_taken"
+   ],
+   "ref": [
+    "docs/BUILD-KICKOFF.md section 1 (Ground)"
+   ],
+   "stage": "runtime",
+   "impl": "web/src (ui)",
+   "note": "First item to cut if late (BUILD-KICKOFF section 7)."
+  },
+  {
+   "id": "person_surgeon",
+   "label": "Flight surgeon",
+   "kind": "person",
+   "status": "simulated",
+   "layer": 5,
+   "owner": "external",
+   "source": "Flight surgeon at mission control; sees crew health data privately in real practice",
+   "url": "https://www.nasa.gov/podcasts/houston-we-have-a-podcast/mission-control-crew-health-consoles/",
+   "license": null,
+   "cadence": "After the link delay; amber waits for the next private medical conference",
+   "fields": [
+    "report"
+   ],
+   "ref": [
+    "docs/research/2-data-sources/01-realtime-data-apis.md section 5.2 (private medical conference, who sees crew data)",
+    "docs/BUILD-KICKOFF.md section 4 (escalation)"
+   ]
+  }
+ ],
+ "edges": [
+  {
+   "from": "ds_published_ranges",
+   "to": "ml_generator",
+   "payload": "Stated means, sds and ranges per metric",
+   "fields": [
+    "mean",
+    "sd"
+   ],
+   "status": "simulated",
+   "ref": [
+    "docs/research/2-data-sources/04-prototype-data-sources.md section 5.1",
+    "ml/results/synthetic_crew.md (means and standard deviations)"
+   ]
+  },
+  {
+   "from": "api_donki",
+   "to": "ml_generator",
+   "payload": "Date of the one real GOES >10 MeV storm in the mission window, used to place the storm dose",
+   "fields": [
+    "storm_date"
+   ],
+   "status": "simulated",
+   "ref": [
+    "docs/BUILD-KICKOFF.md section 9",
+    "docs/THESIS-DETAILS.md section 5",
+    "ml/make_sample_data.py (STORM_DAY)"
+   ],
+   "note": "Placed by hand in the generator; not an automated feed."
+  },
+  {
+   "from": "ml_generator",
+   "to": "ml_crew_flags",
+   "payload": "Daily series per crew member",
+   "fields": [
+    "hr",
+    "bp_sys",
+    "bp_dia",
+    "glucose",
+    "temp",
+    "sleep_h",
+    "mood",
+    "exercise_min",
+    "bone_loss_pct",
+    "dose_mSv_day",
+    "dose_mSv_cum"
+   ],
+   "status": "simulated",
+   "ref": [
+    "ml/make_sample_data.py (imports baseline, flag_series, status_from)"
+   ]
+  },
+  {
+   "from": "ml_crew_flags",
+   "to": "ds_crew_data",
+   "payload": "Personal baselines, flags and body-region status",
+   "fields": [
+    "baseline",
+    "flags",
+    "status"
+   ],
+   "status": "simulated",
+   "ref": [
+    "ml/crew_flags.py (header)",
+    "contracts/DATA_CONTRACT.md (crew_data.json)"
+   ]
+  },
+  {
+   "from": "ml_generator",
+   "to": "ds_crew_data",
+   "payload": "Mission, environments, metric metadata and daily series",
+   "fields": [
+    "meta",
+    "mission",
+    "environments",
+    "career_limit_mSv",
+    "metrics",
+    "crew[].series"
+   ],
+   "status": "simulated",
+   "ref": [
+    "contracts/DATA_CONTRACT.md (crew_data.json)",
+    "ml/make_sample_data.py (header)"
+   ]
+  },
+  {
+   "from": "ds_crew_data",
+   "to": "ad_loader",
+   "payload": "Whole file, typed from the contract",
+   "fields": [
+    "meta",
+    "mission",
+    "environments",
+    "career_limit_mSv",
+    "metrics",
+    "crew"
+   ],
+   "status": "simulated",
+   "ref": [
+    "contracts/DATA_CONTRACT.md",
+    "docs/BUILD-KICKOFF.md section 2 (data rule)"
+   ]
+  },
+  {
+   "from": "ad_loader",
+   "to": "ad_replay",
+   "payload": "Crew series to replay",
+   "fields": [
+    "crew[].id",
+    "crew[].series"
+   ],
+   "status": "simulated",
+   "ref": [
+    "docs/BUILD-KICKOFF.md section 2 (ReplayAdapter)"
+   ]
+  },
+  {
+   "from": "ad_loader",
+   "to": "core_scoring",
+   "payload": "Baselines, limits and metric metadata; historical flags and status shown as given",
+   "fields": [
+    "crew[].baseline",
+    "metrics.absolute_red",
+    "metrics.low_side_only",
+    "environments",
+    "career_limit_mSv",
+    "crew[].flags",
+    "crew[].status"
+   ],
+   "status": "simulated",
+   "ref": [
+    "contracts/DATA_CONTRACT.md (client-side scoring)",
+    "docs/BUILD-KICKOFF.md section 4 (alert rule)"
+   ]
+  },
+  {
+   "from": "ml_crew_flags",
+   "to": "core_scoring",
+   "payload": "Rule parity: the TypeScript scoring must reproduce today's status of every crew member",
+   "fields": [
+    "status"
+   ],
+   "status": "live",
+   "ref": [
+    "docs/BUILD-KICKOFF.md section 3 (rule parity with ml)",
+    "contracts/DATA_CONTRACT.md (client-side scoring)"
+   ],
+   "relation": "parity-test"
+  },
+  {
+   "from": "crew",
+   "to": "ad_manual",
+   "payload": "Daily check-in values",
+   "fields": [
+    "mood",
+    "sleep_h",
+    "exercise_min",
+    "bp_sys",
+    "bp_dia",
+    "glucose",
+    "temp",
+    "hr"
+   ],
+   "status": "live",
+   "ref": [
+    "docs/BUILD-KICKOFF.md section 2",
+    "docs/research/2-data-sources/04-prototype-data-sources.md section 1"
+   ]
+  },
+  {
+   "from": "dev_ble_strap",
+   "to": "ad_ble_hr",
+   "payload": "Heart Rate Measurement notifications",
+   "fields": [
+    "hr",
+    "rr_ms"
+   ],
+   "status": "live",
+   "ref": [
+    "docs/research/2-data-sources/04-prototype-data-sources.md section 2",
+    "docs/BUILD-KICKOFF.md section 2"
+   ]
+  },
+  {
+   "from": "dev_biomonitor",
+   "to": "ad_sim_biomonitor",
+   "payload": "Channel mapping only; the stream is simulated until a device is connected",
+   "fields": [
+    "hr",
+    "bp",
+    "temp",
+    "spo2",
+    "breathing",
+    "activity"
+   ],
+   "status": "planned",
+   "ref": [
+    "docs/research/3-health-science/09-csa-bio-monitor.md (How to use this in the build)",
+    "docs/BUILD-KICKOFF.md section 2 (registry: planned devices)"
+   ]
+  },
+  {
+   "from": "dev_dosimeter",
+   "to": "ad_sim_dosimeter",
+   "payload": "Channel mapping only; the dose stream is simulated",
+   "fields": [
+    "dose_mSv_day",
+    "dose_mSv_cum"
+   ],
+   "status": "planned",
+   "ref": [
+    "docs/research/3-health-science/10-nasa-iss-wearables.md (Active Dosimeter, EVARM)",
+    "docs/BUILD-KICKOFF.md section 2"
+   ]
+  },
+  {
+   "from": "dev_actiwatch",
+   "to": "ad_registry",
+   "payload": "Planned device, shown as not connected",
+   "fields": [
+    "sleep_h"
+   ],
+   "status": "planned",
+   "ref": [
+    "docs/research/3-health-science/10-nasa-iss-wearables.md (Actiwatch Spectrum)",
+    "docs/BUILD-KICKOFF.md section 2 (registry)"
+   ]
+  },
+  {
+   "from": "dev_tmini",
+   "to": "ad_registry",
+   "payload": "Planned device, shown as not connected",
+   "fields": [
+    "temp"
+   ],
+   "status": "planned",
+   "ref": [
+    "docs/research/3-health-science/10-nasa-iss-wearables.md (T-Mini)",
+    "docs/BUILD-KICKOFF.md section 2 (registry)"
+   ]
+  },
+  {
+   "from": "dev_bioanalyzer",
+   "to": "ad_manual",
+   "payload": "Lab result entry path (blood values the garment cannot measure)",
+   "fields": [
+    "glucose"
+   ],
+   "status": "planned",
+   "ref": [
+    "docs/research/3-health-science/09-csa-bio-monitor.md (Bio-Analyzer: our use; add a lab result entry path)",
+    "docs/THESIS-DETAILS.md section 8"
+   ]
+  },
+  {
+   "from": "ad_loader",
+   "to": "ad_sim_dosimeter",
+   "payload": "Dose rate per environment",
+   "fields": [
+    "environments.dose_mSv_day"
+   ],
+   "status": "simulated",
+   "ref": [
+    "docs/BUILD-KICKOFF.md sections 2 and 4 (environment switch)",
+    "contracts/DATA_CONTRACT.md (environments)"
+   ]
+  },
+  {
+   "from": "api_iswa_hapi",
+   "to": "ds_crew_data",
+   "payload": "Benchmark for the Moon and Mars dose rates; the file holds working values, not a live read",
+   "fields": [
+    "dose_e_total"
+   ],
+   "status": "planned",
+   "ref": [
+    "docs/research/2-data-sources/01-realtime-data-apis.md section 3.4",
+    "docs/THESIS-DETAILS.md section 7 (daily dose per environment: working values; Moon value still to verify)"
+   ],
+   "note": "Not wired. The environment dose rates in crew_data.json were set by hand."
+  },
+  {
+   "from": "api_radlab",
+   "to": "ds_crew_data",
+   "payload": "Benchmark for the ISS dose rate; not a live read",
+   "fields": [
+    "dose_rate"
+   ],
+   "status": "planned",
+   "ref": [
+    "docs/research/2-data-sources/01-realtime-data-apis.md section 3.4",
+    "docs/THESIS-DETAILS.md section 7"
+   ],
+   "note": "Not wired."
+  },
+  {
+   "from": "ad_replay",
+   "to": "core_observation",
+   "payload": "Normalized Observations",
+   "fields": [
+    "subject",
+    "metric",
+    "value",
+    "unit",
+    "time",
+    "source",
+    "loinc"
+   ],
+   "status": "simulated",
+   "ref": [
+    "docs/BUILD-KICKOFF.md section 2 (DeviceAdapter: onObservation)",
+    "docs/research/2-data-sources/04-prototype-data-sources.md section 4"
+   ]
+  },
+  {
+   "from": "ad_manual",
+   "to": "core_observation",
+   "payload": "Normalized Observations",
+   "fields": [
+    "subject",
+    "metric",
+    "value",
+    "unit",
+    "time",
+    "source",
+    "loinc"
+   ],
+   "status": "live",
+   "ref": [
+    "docs/BUILD-KICKOFF.md section 2 (DeviceAdapter: onObservation)",
+    "docs/research/2-data-sources/04-prototype-data-sources.md section 4"
+   ]
+  },
+  {
+   "from": "ad_ble_hr",
+   "to": "core_observation",
+   "payload": "Normalized Observations",
+   "fields": [
+    "subject",
+    "metric",
+    "value",
+    "unit",
+    "time",
+    "source",
+    "loinc"
+   ],
+   "status": "live",
+   "ref": [
+    "docs/BUILD-KICKOFF.md section 2 (DeviceAdapter: onObservation)",
+    "docs/research/2-data-sources/04-prototype-data-sources.md section 4"
+   ]
+  },
+  {
+   "from": "ad_sim_biomonitor",
+   "to": "core_observation",
+   "payload": "Normalized Observations",
+   "fields": [
+    "subject",
+    "metric",
+    "value",
+    "unit",
+    "time",
+    "source",
+    "loinc"
+   ],
+   "status": "simulated",
+   "ref": [
+    "docs/BUILD-KICKOFF.md section 2 (DeviceAdapter: onObservation)",
+    "docs/research/2-data-sources/04-prototype-data-sources.md section 4"
+   ]
+  },
+  {
+   "from": "ad_sim_dosimeter",
+   "to": "core_observation",
+   "payload": "Normalized Observations",
+   "fields": [
+    "subject",
+    "metric",
+    "value",
+    "unit",
+    "time",
+    "source",
+    "loinc"
+   ],
+   "status": "simulated",
+   "ref": [
+    "docs/BUILD-KICKOFF.md section 2 (DeviceAdapter: onObservation)",
+    "docs/research/2-data-sources/04-prototype-data-sources.md section 4"
+   ]
+  },
+  {
+   "from": "ad_replay",
+   "to": "ad_registry",
+   "payload": "Adapter identity, channels and connection status",
+   "fields": [
+    "id",
+    "label",
+    "kind",
+    "channels",
+    "status"
+   ],
+   "status": "live",
+   "ref": [
+    "docs/BUILD-KICKOFF.md section 2 (DeviceAdapter interface, registry)"
+   ]
+  },
+  {
+   "from": "ad_manual",
+   "to": "ad_registry",
+   "payload": "Adapter identity, channels and connection status",
+   "fields": [
+    "id",
+    "label",
+    "kind",
+    "channels",
+    "status"
+   ],
+   "status": "live",
+   "ref": [
+    "docs/BUILD-KICKOFF.md section 2 (DeviceAdapter interface, registry)"
+   ]
+  },
+  {
+   "from": "ad_ble_hr",
+   "to": "ad_registry",
+   "payload": "Adapter identity, channels and connection status",
+   "fields": [
+    "id",
+    "label",
+    "kind",
+    "channels",
+    "status"
+   ],
+   "status": "live",
+   "ref": [
+    "docs/BUILD-KICKOFF.md section 2 (DeviceAdapter interface, registry)"
+   ]
+  },
+  {
+   "from": "ad_sim_biomonitor",
+   "to": "ad_registry",
+   "payload": "Adapter identity, channels and connection status",
+   "fields": [
+    "id",
+    "label",
+    "kind",
+    "channels",
+    "status"
+   ],
+   "status": "live",
+   "ref": [
+    "docs/BUILD-KICKOFF.md section 2 (DeviceAdapter interface, registry)"
+   ]
+  },
+  {
+   "from": "ad_sim_dosimeter",
+   "to": "ad_registry",
+   "payload": "Adapter identity, channels and connection status",
+   "fields": [
+    "id",
+    "label",
+    "kind",
+    "channels",
+    "status"
+   ],
+   "status": "live",
+   "ref": [
+    "docs/BUILD-KICKOFF.md section 2 (DeviceAdapter interface, registry)"
+   ]
+  },
+  {
+   "from": "core_observation",
+   "to": "core_bus",
+   "payload": "Observation events",
+   "fields": [
+    "subject",
+    "metric",
+    "value",
+    "unit",
+    "time",
+    "source",
+    "loinc"
+   ],
+   "status": "live",
+   "ref": [
+    "docs/BUILD-KICKOFF.md section 2 (core/bus.ts)"
+   ]
+  },
+  {
+   "from": "core_bus",
+   "to": "core_scoring",
+   "payload": "Observations to score",
+   "fields": [
+    "subject",
+    "metric",
+    "value",
+    "unit",
+    "time",
+    "source",
+    "loinc"
+   ],
+   "status": "live",
+   "ref": [
+    "docs/BUILD-KICKOFF.md section 2 (layers strictly one-way)"
+   ]
+  },
+  {
+   "from": "api_donki",
+   "to": "ml_fetch_donki",
+   "payload": "FLR, CME and SEP events from 2010-01-01",
+   "fields": [
+    "flrID",
+    "peakTime",
+    "classType",
+    "sourceLocation",
+    "linkedEvents",
+    "cmeAnalyses"
+   ],
+   "status": "live",
+   "ref": [
+    "ml/fetch_donki.py (header)",
+    "docs/research/2-data-sources/01-realtime-data-apis.md section 2.1"
+   ]
+  },
+  {
+   "from": "ml_fetch_donki",
+   "to": "ml_prepare",
+   "payload": "Flat flare table with features and candidate labels, plus raw SEP files",
+   "fields": [
+    "class_flux",
+    "latitude_deg",
+    "longitude_deg",
+    "has_linked_cme",
+    "cme_speed_kms",
+    "sep_linked",
+    "sep_within_72h",
+    "sep_in_prior_48h"
+   ],
+   "status": "live",
+   "ref": [
+    "ml/prepare_model_flares.py (header)",
+    "ml/CLAUDE.md (Inputs)"
+   ]
+  },
+  {
+   "from": "ml_prepare",
+   "to": "ml_model_v1",
+   "payload": "Development flares only (peaks through 2023)",
+   "fields": [
+    "sep_linked_goes10",
+    "class_flux",
+    "longitude_deg",
+    "has_linked_cme",
+    "cme_speed_kms"
+   ],
+   "status": "live",
+   "ref": [
+    "ml/devset.py (header)",
+    "ml/train_v1.py (header)"
+   ]
+  },
+  {
+   "from": "ml_prepare",
+   "to": "ml_export",
+   "payload": "Flares from 2024 onward, scored once",
+   "fields": [
+    "peak_time",
+    "class_flux",
+    "longitude_deg",
+    "has_linked_cme",
+    "cme_speed_kms",
+    "sep_linked_goes10"
+   ],
+   "status": "live",
+   "ref": [
+    "ml/run_test_and_export.py (header)"
+   ]
+  },
+  {
+   "from": "ml_model_v1",
+   "to": "ml_export",
+   "payload": "Frozen model and thresholds",
+   "fields": [
+    "v1.pkl",
+    "thresholds.watch",
+    "thresholds.warning"
+   ],
+   "status": "live",
+   "ref": [
+    "ml/train_v1.py (header)",
+    "ml/run_test_and_export.py (header)"
+   ]
+  },
+  {
+   "from": "ml_export",
+   "to": "ds_storm_forecast",
+   "payload": "Scored test events and the model card",
+   "fields": [
+    "meta",
+    "events[]"
+   ],
+   "status": "live",
+   "ref": [
+    "contracts/DATA_CONTRACT.md (storm_forecast.json)",
+    "ml/CLAUDE.md (T7)"
+   ]
+  },
+  {
+   "from": "ds_storm_forecast",
+   "to": "core_radiation",
+   "payload": "Forecast events and model card, read through the data loader",
+   "fields": [
+    "flare_id",
+    "peak_time",
+    "flare_class",
+    "class_flux",
+    "source_location",
+    "latitude_deg",
+    "longitude_deg",
+    "has_linked_cme",
+    "cme_speed_kms",
+    "p_storm",
+    "alert_level",
+    "actual_storm",
+    "storm_onset_time",
+    "lead_time_h",
+    "split",
+    "meta.thresholds",
+    "meta.metrics_test",
+    "meta.horizon_hours"
+   ],
+   "status": "live",
+   "ref": [
+    "docs/BUILD-KICKOFF.md section 4 (radiation)",
+    "contracts/DATA_CONTRACT.md (storm_forecast.json)"
+   ]
+  },
+  {
+   "from": "ad_loader",
+   "to": "core_radiation",
+   "payload": "Career limit for the dose gauge",
+   "fields": [
+    "career_limit_mSv"
+   ],
+   "status": "simulated",
+   "ref": [
+    "docs/BUILD-KICKOFF.md section 4 (radiation: dose gauge vs career_limit_mSv)"
+   ]
+  },
+  {
+   "from": "api_swpc_scales",
+   "to": "ad_spaceweather",
+   "payload": "Bundled snapshot of the S level",
+   "fields": [
+    "S.Scale"
+   ],
+   "status": "offline-sample",
+   "ref": [
+    "docs/THESIS-DETAILS.md sections 7 and 13",
+    "docs/research/2-data-sources/01-realtime-data-apis.md section 2.4"
+   ]
+  },
+  {
+   "from": "api_swpc_protons",
+   "to": "ad_spaceweather",
+   "payload": "Bundled >=10 MeV proton curve for the replay overlay",
+   "fields": [
+    "time_tag",
+    "flux",
+    "energy"
+   ],
+   "status": "offline-sample",
+   "ref": [
+    "docs/THESIS-DETAILS.md section 7",
+    "docs/research/2-data-sources/01-realtime-data-apis.md section 2.1"
+   ]
+  },
+  {
+   "from": "ad_spaceweather",
+   "to": "core_radiation",
+   "payload": "Space weather context beside the forecast (optional)",
+   "fields": [
+    "S.Scale",
+    "flux"
+   ],
+   "status": "offline-sample",
+   "ref": [
+    "docs/THESIS-DETAILS.md section 13 (should)"
+   ]
+  },
+  {
+   "from": "api_swpc_xray",
+   "to": "ad_spaceweather",
+   "payload": "Latest flare (context; not wired)",
+   "fields": [
+    "max_class",
+    "max_time"
+   ],
+   "status": "planned",
+   "ref": [
+    "docs/research/2-data-sources/01-realtime-data-apis.md section 2.4"
+   ]
+  },
+  {
+   "from": "api_swpc_alerts",
+   "to": "ad_spaceweather",
+   "payload": "Alert texts (context; not wired)",
+   "fields": [
+    "message"
+   ],
+   "status": "planned",
+   "ref": [
+    "docs/research/2-data-sources/01-realtime-data-apis.md section 2.1"
+   ]
+  },
+  {
+   "from": "api_swpc_kp",
+   "to": "ad_spaceweather",
+   "payload": "Geomagnetic context (not wired; no biological effect listed)",
+   "fields": [
+    "Kp"
+   ],
+   "status": "planned",
+   "ref": [
+    "docs/research/2-data-sources/01-realtime-data-apis.md section 2.2"
+   ]
+  },
+  {
+   "from": "api_isslive",
+   "to": "sf_systems",
+   "payload": "Cabin environment context (not wired; snapshot only)",
+   "fields": [
+    "CalibratedData",
+    "TimeStamp"
+   ],
+   "status": "planned",
+   "ref": [
+    "docs/research/2-data-sources/01-realtime-data-apis.md sections 1.4 and 7"
+   ]
+  },
+  {
+   "from": "api_wheretheiss",
+   "to": "sf_systems",
+   "payload": "Day or night context (not wired)",
+   "fields": [
+    "visibility"
+   ],
+   "status": "planned",
+   "ref": [
+    "docs/research/2-data-sources/01-realtime-data-apis.md section 4.2"
+   ]
+  },
+  {
+   "from": "api_corquaid",
+   "to": "sf_systems",
+   "payload": "Roster context (not wired; never joined to vitals)",
+   "fields": [
+    "number",
+    "iss_expedition"
+   ],
+   "status": "planned",
+   "ref": [
+    "docs/research/2-data-sources/01-realtime-data-apis.md section 4.2"
+   ]
+  },
+  {
+   "from": "ds_osd575",
+   "to": "ml_real_crew",
+   "payload": "CBC and metabolic panel CSVs",
+   "fields": [
+    "ANALYTE",
+    "VALUE",
+    "RANGE_MIN",
+    "RANGE_MAX",
+    "UNITS",
+    "SUBJECT_ID",
+    "timepoint"
+   ],
+   "status": "live",
+   "ref": [
+    "ml/real_crew.py (header)",
+    "docs/research/2-data-sources/02-datasets.md section 3"
+   ]
+  },
+  {
+   "from": "ml_real_crew",
+   "to": "ds_real_crew",
+   "payload": "Per-person baselines, scored draws and flags",
+   "fields": [
+    "crew[].baseline",
+    "crew[].series",
+    "flags",
+    "variation"
+   ],
+   "status": "live",
+   "ref": [
+    "contracts/DATA_CONTRACT.md (real_crew.json)"
+   ]
+  },
+  {
+   "from": "ml_real_crew",
+   "to": "ml_generator",
+   "payload": "Glucose calibration check only; the generator is not refit",
+   "fields": [
+    "variation.glucose"
+   ],
+   "status": "live",
+   "ref": [
+    "ml/results/synthetic_crew.md (calibration against Inspiration4 pre-flight glucose)"
+   ],
+   "relation": "calibration-note"
+  },
+  {
+   "from": "ds_real_crew",
+   "to": "sf_console",
+   "payload": "Real crew reference strip, read through the data loader; never scored, never merged with the simulated crew",
+   "fields": [
+    "crew[].series.glucose"
+   ],
+   "status": "planned",
+   "ref": [
+    "docs/THESIS-DETAILS.md section 7 (Inspiration4 glucose: reference strip, never scored; should)"
+   ]
+  },
+  {
+   "from": "core_scoring",
+   "to": "core_bus",
+   "payload": "Flags and body-region status",
+   "fields": [
+    "metric",
+    "severity",
+    "z",
+    "body_region",
+    "status"
+   ],
+   "status": "live",
+   "ref": [
+    "docs/BUILD-KICKOFF.md section 2 (bus)"
+   ],
+   "relation": "bus-publish"
+  },
+  {
+   "from": "core_scoring",
+   "to": "core_escalation",
+   "payload": "Status per crew member",
+   "fields": [
+    "severity",
+    "metric",
+    "overall"
+   ],
+   "status": "live",
+   "ref": [
+    "docs/BUILD-KICKOFF.md section 4 (escalation)"
+   ]
+  },
+  {
+   "from": "core_radiation",
+   "to": "core_bus",
+   "payload": "Radiation alerts and replay ticks",
+   "fields": [
+    "alert_level",
+    "p_storm",
+    "lead_time_h"
+   ],
+   "status": "live",
+   "ref": [
+    "docs/BUILD-KICKOFF.md section 2 (bus)"
+   ],
+   "relation": "bus-publish"
+  },
+  {
+   "from": "core_radiation",
+   "to": "core_escalation",
+   "payload": "Radiation warning as an escalation trigger",
+   "fields": [
+    "alert_level"
+   ],
+   "status": "live",
+   "ref": [
+    "docs/BUILD-KICKOFF.md sections 1 (Wrist: continuous pulse on radiation warning) and 4"
+   ]
+  },
+  {
+   "from": "core_escalation",
+   "to": "core_bus",
+   "payload": "Who is told, and when the report arrives",
+   "fields": [
+    "recipient",
+    "delay",
+    "report"
+   ],
+   "status": "live",
+   "ref": [
+    "docs/BUILD-KICKOFF.md section 2 (bus)"
+   ],
+   "relation": "bus-publish"
+  },
+  {
+   "from": "core_bus",
+   "to": "sf_console",
+   "payload": "Status, flags, series and actions",
+   "fields": [
+    "status",
+    "flags",
+    "series",
+    "actions"
+   ],
+   "status": "live",
+   "ref": [
+    "docs/BUILD-KICKOFF.md section 2 (ui reads only from core and bus)"
+   ]
+  },
+  {
+   "from": "core_bus",
+   "to": "sf_radiation",
+   "payload": "Forecast feed, replay and dose",
+   "fields": [
+    "events",
+    "alert_level",
+    "dose_mSv_cum"
+   ],
+   "status": "live",
+   "ref": [
+    "docs/BUILD-KICKOFF.md section 2"
+   ]
+  },
+  {
+   "from": "core_bus",
+   "to": "sf_wrist",
+   "payload": "Urgency only",
+   "fields": [
+    "urgency"
+   ],
+   "status": "live",
+   "ref": [
+    "docs/BUILD-KICKOFF.md section 1 (Wrist)"
+   ]
+  },
+  {
+   "from": "core_bus",
+   "to": "sf_systems",
+   "payload": "Every event, drawn as packets on the map",
+   "fields": [
+    "observation",
+    "flag",
+    "alert",
+    "report"
+   ],
+   "status": "live",
+   "ref": [
+    "docs/BUILD-KICKOFF.md section 5 (Systems screen)"
+   ]
+  },
+  {
+   "from": "ad_registry",
+   "to": "sf_systems",
+   "payload": "Connected and planned devices",
+   "fields": [
+    "id",
+    "label",
+    "channels",
+    "status"
+   ],
+   "status": "live",
+   "ref": [
+    "docs/BUILD-KICKOFF.md section 3 (device swap)"
+   ]
+  },
+  {
+   "from": "sf_console",
+   "to": "ad_manual",
+   "payload": "Check-in and re-measure input",
+   "fields": [
+    "metric",
+    "value"
+   ],
+   "status": "live",
+   "ref": [
+    "docs/BUILD-KICKOFF.md section 4 (verify step)"
+   ],
+   "relation": "user-input"
+  },
+  {
+   "from": "core_escalation",
+   "to": "person_cmo",
+   "payload": "Red: crew medical officer now",
+   "fields": [
+    "severity",
+    "metric"
+   ],
+   "status": "simulated",
+   "ref": [
+    "docs/BUILD-KICKOFF.md section 4 (escalation)"
+   ]
+  },
+  {
+   "from": "core_escalation",
+   "to": "core_handoff",
+   "payload": "Amber or red case to hand off",
+   "fields": [
+    "who",
+    "what_drifted",
+    "days_running",
+    "actions_taken"
+   ],
+   "status": "live",
+   "ref": [
+    "docs/BUILD-KICKOFF.md section 4 (CMO-DA handoff)"
+   ]
+  },
+  {
+   "from": "core_radiation",
+   "to": "core_handoff",
+   "payload": "Radiation context for the case bundle",
+   "fields": [
+    "alert_level",
+    "dose_mSv_cum"
+   ],
+   "status": "live",
+   "ref": [
+    "docs/BUILD-KICKOFF.md section 4 (CMO-DA handoff: radiation context)"
+   ]
+  },
+  {
+   "from": "core_handoff",
+   "to": "ext_cmo_da",
+   "payload": "Case bundle (JSON) and readable summary",
+   "fields": [
+    "case_bundle",
+    "summary"
+   ],
+   "status": "planned",
+   "ref": [
+    "docs/BUILD-KICKOFF.md sections 1 and 4",
+    "docs/THESIS.md (Hand off row)"
+   ],
+   "note": "No real connection. The bundle is produced and shown; CMO-DA is not called."
+  },
+  {
+   "from": "core_handoff",
+   "to": "sf_console",
+   "payload": "Case summary shown to the crew",
+   "fields": [
+    "summary"
+   ],
+   "status": "live",
+   "ref": [
+    "docs/BUILD-KICKOFF.md section 6 (demo step 3)"
+   ],
+   "relation": "display"
+  },
+  {
+   "from": "core_escalation",
+   "to": "core_link",
+   "payload": "Report queued to the flight surgeon",
+   "fields": [
+    "report",
+    "environment"
+   ],
+   "status": "simulated",
+   "ref": [
+    "docs/BUILD-KICKOFF.md sections 2 (escalation.ts, link.ts) and 4"
+   ]
+  },
+  {
+   "from": "core_handoff",
+   "to": "core_link",
+   "payload": "Case bundle size for the downlink budget",
+   "fields": [
+    "bytes_per_report"
+   ],
+   "status": "simulated",
+   "ref": [
+    "docs/BUILD-KICKOFF.md section 3 (downlink budget)"
+   ]
+  },
+  {
+   "from": "ad_loader",
+   "to": "core_link",
+   "payload": "Current environment",
+   "fields": [
+    "mission.environment",
+    "environments"
+   ],
+   "status": "simulated",
+   "ref": [
+    "docs/BUILD-KICKOFF.md section 4 (environment switch)"
+   ]
+  },
+  {
+   "from": "core_link",
+   "to": "core_bus",
+   "payload": "Link state and queue events",
+   "fields": [
+    "delay",
+    "blackout",
+    "queue"
+   ],
+   "status": "simulated",
+   "ref": [
+    "docs/BUILD-KICKOFF.md section 5 (Systems screen)"
+   ],
+   "relation": "bus-publish"
+  },
+  {
+   "from": "core_link",
+   "to": "sf_ground",
+   "payload": "Reports delivered after the one-way delay, in order, after any loss of signal",
+   "fields": [
+    "report",
+    "arrival_time",
+    "link_status"
+   ],
+   "status": "simulated",
+   "ref": [
+    "docs/BUILD-KICKOFF.md sections 1 (Ground) and 3 (link delay and loss)"
+   ]
+  },
+  {
+   "from": "sf_ground",
+   "to": "person_surgeon",
+   "payload": "Report read on the ground",
+   "fields": [
+    "report"
+   ],
+   "status": "simulated",
+   "ref": [
+    "docs/BUILD-KICKOFF.md section 1 (Ground)",
+    "docs/research/2-data-sources/01-realtime-data-apis.md section 5.2"
+   ]
+  }
+ ]
+}
