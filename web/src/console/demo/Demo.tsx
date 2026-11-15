@@ -52,7 +52,7 @@ function TrendLine({ t }: { t: Trend }) {
 function Player() {
   const { data } = useMissionData();
   const nav = useNavigate();
-  const { i, playing, go, exit, setPlaying } = useDemo();
+  const { i, playing, record, go, exit, setPlaying } = useDemo();
   const setCrew = useMissionStore((s) => s.setSelectedCrewId);
   const setEnv = useMissionStore((s) => s.setEnvironment);
   const still = useMemo(reduced, []);
@@ -69,6 +69,11 @@ function Player() {
   useEffect(() => {
     if (!beat) return;
     elapsed.current = 0;
+    // flags for a screen recorder (demo-video pipeline): which beat is on, and when it ends
+    const root = document.documentElement;
+    root.dataset.demo = 'playing';
+    root.dataset.demoBeat = beat.id;
+    window.dispatchEvent(new CustomEvent('ex-demo-beat', { detail: { index: i, id: beat.id, seconds: beat.seconds } }));
     setEnv(beat.env);
     if (beat.crew) setCrew(beat.crew);
     nav(beat.to, { replace: true });
@@ -81,6 +86,10 @@ function Player() {
     if (b?.crew) setCrew(b.crew);
     exit();
     nav('/', { replace: true });
+    const root = document.documentElement;
+    root.dataset.demo = 'done';
+    delete root.dataset.demoBeat;
+    window.dispatchEvent(new CustomEvent('ex-demo-done'));
   };
   const next = () => (i < beats.length - 1 ? go(i + 1) : leave());
   const back = () => go(Math.max(0, i - 1));
@@ -124,7 +133,7 @@ function Player() {
     };
     const takeover = (e: Event) => {
       if ((e.target as HTMLElement | null)?.closest?.('.demo')) return;
-      if (useDemo.getState().playing) setPlaying(false);
+      if (useDemo.getState().playing && !useDemo.getState().record) setPlaying(false);
     };
     window.addEventListener('keydown', key, true);
     window.addEventListener('pointerdown', takeover, true);
@@ -139,7 +148,7 @@ function Player() {
   if (!beat) return null;
   const auto = playing && !still;
   return createPortal(
-    <section className="demo" role="region" aria-label="Guided demo" data-playing={auto}>
+    <section className="demo" role="region" aria-label="Guided demo" data-playing={auto} data-record={record || undefined}>
       <ol className="demo-steps" aria-hidden>
         {beats.map((b, k) => (
           <li key={b.id} data-state={k < i ? 'done' : k === i ? 'now' : 'next'} ref={k === i ? (bar as React.RefObject<HTMLLIElement>) : undefined} />
@@ -193,11 +202,12 @@ export function DemoButton() {
   const start = useDemo((s) => s.start);
   const loc = useLocation();
   useEffect(() => {
-    if (new URLSearchParams(loc.search).get('demo') === '1' && !useDemo.getState().on) start();
+    const q = new URLSearchParams(loc.search);
+    if (q.get('demo') === '1' && !useDemo.getState().on) start(q.get('record') === '1');
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <>
-      <button type="button" className="demo-open" aria-pressed={on} onClick={() => (on ? useDemo.getState().exit() : start())}>
+      <button type="button" className="demo-open" aria-pressed={on} hidden={on && useDemo.getState().record} onClick={() => (on ? useDemo.getState().exit() : start())}>
         Demo
       </button>
       {on && <Player />}

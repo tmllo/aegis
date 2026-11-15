@@ -1,0 +1,71 @@
+/* Space-weather forecast. Layout and the map; type and buttons follow the console pattern. */
+.wx { position: absolute; inset: 0; z-index: 12; background: rgb(0 0 0 / 0.93); --wx: 255 255 255; }
+.wx[data-status='amber'] { --wx: var(--warn, 245 166 35); }
+.wx[data-status='red'] { --wx: var(--crit, 239 68 68); }
+
+.wx-read { position: absolute; left: 56px; top: 156px; width: 440px; display: flex; flex-direction: column; gap: 10px; }
+.wx-word { font-size: 88px; }
+.wx-do { font-size: 24px; font-weight: 300; line-height: 1.2; color: #fff; }
+.wx[data-status='red'] .wx-do, .wx[data-status='amber'] .wx-do { color: rgb(var(--wx)); }
+
+.wx-rows { margin: 14px 0 0; border-bottom: 1px solid rgb(255 255 255 / 0.14); }
+.wx-row { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 16px; min-height: 64px; padding: 6px 0; border-top: 1px solid rgb(255 255 255 / 0.14); }
+.wx-row dt { display: grid; gap: 3px; font-size: 16px; }
+.wx-row dt small { font-size: 12.5px; line-height: 1.3; color: rgb(255 255 255 / 0.72); }
+.wx-row dd { margin: 0; font-size: 26px; font-weight: 200; font-variant-numeric: tabular-nums; white-space: nowrap; text-align: right; }
+.wx-row[data-status] dd { color: rgb(var(--wx)); }
+
+.wx-chart { position: absolute; left: 560px; right: 56px; top: 110px; bottom: 96px; display: flex; flex-direction: column; gap: 12px; min-height: 0; }
+.wx-map { flex: 1; min-height: 0; width: 100%; }
+.wx-orbit { fill: none; stroke: rgb(255 255 255 / 0.16); stroke-dasharray: 2 7; }
+.wx-field { fill: none; stroke: rgb(255 255 255 / 0.1); stroke-width: 1; }
+.wx-road { fill: none; stroke: rgb(255 255 255 / 0.85); stroke-width: 2; }
+.wx-flow { fill: none; stroke: rgb(var(--wx)); stroke-width: 5; stroke-linecap: round; stroke-dasharray: 2 26; animation: wx-flow 1.6s linear infinite; }
+@keyframes wx-flow { to { stroke-dashoffset: -28; } }
+.wx-cloud { fill: rgb(var(--wx) / 0.1); }
+.wx-front { fill: none; stroke: rgb(var(--wx) / 0.8); stroke-width: 2; stroke-dasharray: 6 6; }
+.wx-sun { fill: rgb(255 255 255 / 0.07); stroke: #fff; stroke-width: 1.5; }
+.wx-foot { fill: #000; stroke: #fff; stroke-width: 1.5; }
+.wx-flare { fill: rgb(var(--wx)); stroke: #000; stroke-width: 2; }
+.wx-lead { stroke: rgb(var(--wx) / 0.7); stroke-width: 1; }
+.wx-earth { fill: none; stroke: rgb(255 255 255 / 0.7); stroke-width: 1.5; }
+.wx-crew { fill: #fff; }
+.wx-crew-box { fill: none; stroke: #fff; stroke-width: 1; }
+.wx-t { fill: #fff; font: 400 15px/1 'Inter Tight', system-ui, sans-serif; }
+.wx-t-dim { fill: rgb(255 255 255 / 0.72); font-size: 13.5px; }
+.wx-t-status { fill: rgb(var(--wx)); }
+.wx[data-status='green'] .wx-t-status { fill: #fff; }
+.wx-scale line { stroke: rgb(255 255 255 / 0.45); stroke-width: 1; }
+
+.wx-picks { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 8px; }
+.wx-pick { display: grid; gap: 4px; align-content: center; min-height: 68px; padding: 8px 14px; border: 1px solid rgb(255 255 255 / 0.28); background: none; color: #fff; text-align: left; cursor: pointer; transition: background 150ms ease-out, border-color 150ms ease-out; }
+.wx-pick b { font-size: 15px; font-weight: 400; }
+.wx-pick span { font: 400 12.5px/1 'JetBrains Mono', ui-monospace, monospace; color: rgb(255 255 255 / 0.75); font-variant-numeric: tabular-nums; }
+.wx-pick[data-status='amber'] span { color: rgb(var(--warn, 245 166 35)); }
+.wx-pick[data-status='red'] span { color: rgb(var(--crit, 239 68 68)); }
+.wx-pick:hover { border-color: #fff; }
+.wx-pick:active { background: rgb(255 255 255 / 0.18); }
+.wx-pick[aria-pressed='true'] { background: #fff; color: #050608; border-color: #fff; }
+.wx-pick[aria-pressed='true'] span { color: #050608; }
+.wx-pick:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+
+.wx-actions { position: absolute; left: 56px; bottom: 56px; display: flex; gap: 12px; }
+.wx-btn { height: 72px; padding: 0 28px; font-size: 14px; }
+.wx-src { position: absolute; left: 560px; right: 56px; bottom: 60px; font-size: 12.5px; color: rgb(255 255 255 / 0.68); }
+
+@media (max-height: 860px) and (min-width: 1101px) {
+  .wx-read { top: 140px; }
+  .wx-word { font-size: 72px; }
+  .wx-row { min-height: 56px; padding: 4px 0; }
+}
+@media (max-width: 1100px) {
+  .wx { overflow-y: auto; padding: 150px 16px 32px; display: flex; flex-direction: column; gap: 20px; }
+  .wx-read, .wx-chart, .wx-actions, .wx-src { position: static; width: auto; }
+  .wx-word { font-size: 64px; }
+  .wx-map { min-height: 300px; }
+  .wx-picks { grid-auto-flow: row; grid-template-columns: 1fr 1fr; }
+  .wx-actions { flex-direction: column; }
+  .wx-t { font-size: 22px; }
+  .wx-t-dim { font-size: 20px; }
+}
+@media (prefers-reduced-motion: reduce) { .wx-flow { animation: none; } }
