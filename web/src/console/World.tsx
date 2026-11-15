@@ -1,44 +1,61 @@
-// The one persistent 3D scene behind the HUD: a static star field, the Earth (real sun
-// terminator, night-side city lights, slow clouds, orbit track, network mesh) and the
-// porcelain body in a grey studio below it. Sections never load a new scene: the camera flies
-// between views in 800 ms (eased) and comes back along the same path. Drag to orbit (damped),
-// scroll or pinch to zoom within limits, double-click to fly to a point or organ.
+// The one persistent 3D scene behind the HUD. Earth sections (Environment, Systems) use the
+// globe from src/globe-lab: real Sun, Moon and stars for now, a physically based atmosphere and
+// Google-Earth-style controls (drag the surface, scroll to zoom at the cursor, Shift/right drag
+// to tilt, double-click to fly, click the ISS or Mission Control to focus). The Crew section
+// keeps the porcelain body in its grey studio below the Earth with the orbit camera.
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { ContactShadows, Environment, Lightformer, OrbitControls, Stars } from '@react-three/drei';
+import { ContactShadows, Environment, Lightformer, OrbitControls, PerformanceMonitor } from '@react-three/drei';
+import { Bloom, EffectComposer, ToneMapping, Vignette } from '@react-three/postprocessing';
+import { ToneMappingMode } from 'postprocessing';
 import * as THREE from 'three';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { TARGETS } from '../components/body3d/targets';
-import { EarthGroup, Pin, SUN_VIEW, sunLocal } from './Globe';
+import { Pin } from './Globe';
+import { Atmosphere } from '../globe-lab/Atmosphere';
+import { Earth } from '../globe-lab/Earth';
+import { ll, R_KM, sunDir, toLatLon } from '../globe-lab/frame';
+import { GlobeControls, type GlobeApi, type View as GlobeView } from '../globe-lab/GlobeControls';
+import { useIssSource } from '../globe-lab/iss';
+import { IssTrack, Marker } from '../globe-lab/Orbit';
+import { Sky } from '../globe-lab/Sky';
+import { labTime, useLab } from '../globe-lab/store';
+import { SunTracker } from '../globe-lab/SunTracker';
+import { RANK, STATUS_WORD } from './model';
+import { useConsole } from './useConsole';
+import type { Status } from '../data/types';
 import { Porcelain } from './Porcelain';
 import { useHud } from './hud';
 
 export const BODY_Y = -6;
-const TILT = 0.32;
 
 // The scene mounts after the intro hands off (the GLB and textures are prefetched meanwhile).
 
 type V3 = [number, number, number];
 type View = { pos: V3; target: V3 };
 
-function viewFor(path: string, focus: string | null, sun: THREE.Vector3): View {
-  if (path === '/') {
-    const t = focus ? TARGETS[focus as keyof typeof TARGETS] : null;
-    if (t) {
-      const c = t.box.c;
-      const d = Math.max(0.8, Math.hypot(...t.box.h) * 3.8);
-      return { pos: [c[0] + 0.22, c[1] + BODY_Y + 0.06, c[2] + d], target: [c[0] + 0.12, c[1] + BODY_Y, c[2]] };
-    }
-    return { pos: [0, BODY_Y + 0.98, 3.25], target: [0, BODY_Y + 0.9, 0] };
+function bodyView(focus: string | null): View {
+  const t = focus ? TARGETS[focus as keyof typeof TARGETS] : null;
+  if (t) {
+    const c = t.box.c;
+    const d = Math.max(0.8, Math.hypot(...t.box.h) * 3.8);
+    return { pos: [c[0] + 0.22, c[1] + BODY_Y + 0.06, c[2] + d], target: [c[0] + 0.12, c[1] + BODY_Y, c[2]] };
   }
-  if (path.startsWith('/environment')) {
-    // the sun side of the Earth, a little off so the terminator shows
-    const p = sun.clone().applyAxisAngle(new THREE.Vector3(0, 1, 0), -0.9).multiplyScalar(3.7);
-    return { pos: [p.x, p.y + 0.25, p.z], target: [0, 0, 0] };
+  return { pos: [0, BODY_Y + 0.98, 3.25], target: [0, BODY_Y + 0.9, 0] };
+}
+
+/** Globe view per Earth section: Environment looks at the day side with the dusk terminator on
+ *  the right; Systems sits the whole disc above the bottom card. */
+function globeView(path: string, iss: { lat: number; lon: number } | null): { view: GlobeView; offset: number } {
+  const s = toLatLon(sunDir(new Date(labTime.ms)));
+  if (path.startsWith('/systems')) {
+    // the crew is the subject: centre on the station, the whole disc above the bottom card
+    const c = iss ?? { lat: 20, lon: s.lon };
+    return { view: { lat: Math.max(-40, Math.min(40, c.lat)), lon: c.lon, altKm: 34000, heading: 0, tilt: 0 }, offset: 0.2 };
   }
-  if (path.startsWith('/systems')) return { pos: [0.1, 2.3, 3.2], target: [0.1, -0.15, 0] };
-  return { pos: [0.42, 0.06, 4.15], target: [0.42, 0.06, 0] };
+  // the day side between the two cards, dusk terminator on the right
+  return { view: { lat: Math.max(-30, Math.min(30, s.lat * 0.6 + 10)), lon: s.lon + 50, altKm: 21000, heading: 0, tilt: 0 }, offset: 0.03 };
 }
 
 const ease = (k: number) => (k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2);
@@ -47,35 +64,86 @@ const ease = (k: number) => (k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 
 function CameraRig({ view, body, onNear }: { view: View; body: boolean; onNear: (n: boolean) => void }) {
   const controls = useRef<OrbitControlsImpl>(null);
   const { camera } = useThree();
-  const tween = useRef<{ p0: THREE.Vector3; t0: THREE.Vector3; p1: THREE.Vector3; t1: THREE.Vector3; start: number } | null>(null);
+  const tween = useRef<{ path: THREE.CatmullRomCurve3; look: THREE.CatmullRomCurve3; start: number } | null>(null);
+  const par = useRef({ x: 0, y: 0 });
+  const tick = useRef(0);
   const near = useRef(false);
   const reduced = useMemo(() => typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches, []);
   const key = view.pos.join() + view.target.join();
   useEffect(() => {
     const c = controls.current;
     const t0 = c ? c.target.clone() : new THREE.Vector3(...view.target);
-    tween.current = { p0: camera.position.clone(), t0, p1: new THREE.Vector3(...view.pos), t1: new THREE.Vector3(...view.target), start: -1 };
+    const p0 = camera.position.clone();
+    const p1 = new THREE.Vector3(...view.pos);
+    const t1 = new THREE.Vector3(...view.target);
+    // fly on a curve: the midpoint is pulled back and up, the look-at follows its own curve
+    const mid = p0.clone().lerp(p1, 0.5);
+    const out = mid.clone().sub(t0.clone().lerp(t1, 0.5)).normalize().multiplyScalar(Math.min(1.2, p0.distanceTo(p1) * 0.25));
+    mid.add(out).add(new THREE.Vector3(0, Math.min(0.6, p0.distanceTo(p1) * 0.1), 0));
+    tween.current = {
+      path: new THREE.CatmullRomCurve3([p0, mid, p1], false, 'centripetal'),
+      look: new THREE.CatmullRomCurve3([t0, t0.clone().lerp(t1, 0.5), t1], false, 'centripetal'),
+      start: -1,
+    };
   }, [key, camera]); // eslint-disable-line react-hooks/exhaustive-deps
+  const idle = useRef(0);
   useEffect(() => {
     const c = controls.current;
     if (!c) return;
-    const stop = () => (tween.current = null);
+    const stop = () => {
+      tween.current = null;
+      idle.current = 0;
+    };
+    const wake = () => (idle.current = 0);
     c.addEventListener('start', stop);
-    return () => c.removeEventListener('start', stop);
+    addEventListener('pointerdown', wake);
+    addEventListener('wheel', wake);
+    addEventListener('keydown', wake);
+    return () => {
+      c.removeEventListener('start', stop);
+      removeEventListener('pointerdown', wake);
+      removeEventListener('wheel', wake);
+      removeEventListener('keydown', wake);
+    };
   }, []);
-  useFrame((state) => {
+  useEffect(() => {
+    idle.current = 0;
+  }, [key]);
+  useFrame((state, dt) => {
     const c = controls.current;
     if (!c) return;
     const tw = tween.current;
     if (tw) {
       if (tw.start < 0) tw.start = state.clock.elapsedTime;
-      const k = reduced ? 1 : Math.min(1, (state.clock.elapsedTime - tw.start) / 0.8);
+      const k = reduced ? 1 : Math.min(1, (state.clock.elapsedTime - tw.start) / 0.9);
       const e = ease(k);
-      camera.position.lerpVectors(tw.p0, tw.p1, e);
-      c.target.lerpVectors(tw.t0, tw.t1, e);
+      camera.position.copy(tw.path.getPoint(e));
+      c.target.copy(tw.look.getPoint(e));
       if (k >= 1) tween.current = null;
     }
+    // Crew idle mode: after 20 s without input the camera orbits the body slowly (one turn a minute),
+    // easing in over 3 s; any input stops it at once
+    idle.current += Math.min(dt, 0.1);
+    const orbiting = body && !reduced && !tw && idle.current > 20;
+    c.autoRotate = orbiting;
+    c.autoRotateSpeed = orbiting ? -1 * Math.min(1, (idle.current - 20) / 3) : 0;
     c.update();
+    // gentle damped pointer parallax, at most 2 degrees
+    if (!reduced) {
+      par.current.x += (state.pointer.x - par.current.x) * 0.05;
+      par.current.y += (state.pointer.y - par.current.y) * 0.05;
+      camera.rotateY(-par.current.x * 0.035);
+      camera.rotateX(par.current.y * 0.035);
+    }
+    // quiet telemetry from the camera
+    if ((tick.current = (tick.current + 1) % 8) === 0) {
+      const el = document.getElementById('cx-tele');
+      if (el) {
+        const d = camera.position.distanceTo(c.target);
+        const h = ((Math.atan2(camera.position.x - c.target.x, camera.position.z - c.target.z) * 180) / Math.PI + 360) % 360;
+        el.textContent = `RNG ${d.toFixed(2)}  HDG ${h.toFixed(0).padStart(3, '0')}`;
+      }
+    }
     if (body) {
       const n = camera.position.distanceTo(c.target) < 1.3;
       if (n !== near.current) {
@@ -88,56 +156,52 @@ function CameraRig({ view, body, onNear }: { view: View; body: boolean; onNear: 
 }
 
 
-/** A very faint Milky Way: a few thousand dim points concentrated about one great circle. */
-function MilkyWay() {
-  const pos = useMemo(() => {
-    const n = 5000;
-    const a = new Float32Array(n * 3);
-    for (let i = 0; i < n; i++) {
-      const lon = Math.random() * Math.PI * 2;
-      const g = (Math.random() + Math.random() + Math.random() - 1.5) * 0.18; // narrow band
-      const r = 110;
-      a.set([r * Math.cos(g) * Math.cos(lon), r * Math.sin(g), r * Math.cos(g) * Math.sin(lon)], i * 3);
-    }
-    return a;
-  }, []);
-  return (
-    <points rotation={[0.9, 0.3, 0.5]}>
-      <bufferGeometry>
-        <bufferAttribute attach="attributes-position" args={[pos, 3]} />
-      </bufferGeometry>
-      <pointsMaterial color="#c9d6e8" size={0.35} sizeAttenuation transparent opacity={0.18} depthWrite={false} />
-    </points>
-  );
+/** Bridges the console HUD (zoom buttons and keys, compass dial, reset) and the camera
+ *  readout to the globe controls. */
+function GlobeBridge({ api }: { api: React.MutableRefObject<GlobeApi | null> }) {
+  useEffect(() => {
+    const unHud = useHud.subscribe((s, p) => {
+      const g = api.current;
+      if (!g) return;
+      if (s.zoom !== p.zoom) g.zoomBy(p.zoom / s.zoom);
+      if (s.yaw !== p.yaw) g.setHeading((-s.yaw * 180) / Math.PI);
+      if (s.reset !== p.reset) g.home();
+    });
+    const unLab = useLab.subscribe((s, p) => {
+      if (s.readout === p.readout) return;
+      const el = document.getElementById('cx-tele');
+      if (el) el.textContent = `ALT ${Math.round(s.readout.altKm).toLocaleString('en-US')} KM  HDG ${String(Math.round(s.readout.heading) % 360).padStart(3, '0')}  TILT ${Math.round(s.readout.tilt)}`;
+    });
+    return () => {
+      unHud();
+      unLab();
+    };
+  }, [api]);
+  return null;
 }
 
-/** Sun disc far along the real sun direction; also feeds the view-space sun to the night lights. */
-function Sun({ dir }: { dir: THREE.Vector3 }) {
-  const { camera } = useThree();
-  useFrame(() => {
-    SUN_VIEW.value.copy(dir).transformDirection(camera.matrixWorldInverse);
-  });
-  return (
-    <mesh position={dir.clone().multiplyScalar(60)} raycast={() => null}>
-      <sphereGeometry args={[1.1, 32, 32]} />
-      <meshBasicMaterial color="#fff4e0" toneMapped={false} />
-    </mesh>
-  );
-}
+const HOUSTON = ll(29.56, -95.09, 1.004);
 
 export function World() {
   const loc = useLocation();
   const nav = useNavigate();
   const { yaw, focus, tint, setBodyReady, bodyTips, zoom, reset } = useHud();
-  const [fly, setFly] = useState<View | null>(null);
   const [near, setNear] = useState(false);
+  const [dpr, setDpr] = useState(1.6);
   const body = loc.pathname === '/';
+  const { views, seat } = useConsole();
+  const iss = useIssSource(() => labTime.ms);
+  const globe = useRef<GlobeApi | null>(null);
+  const earth = useRef<THREE.Group>(null);
+  const [focused, setFocused] = useState<string | null>(null);
+  const gv = useMemo(() => globeView(loc.pathname, iss.at(labTime.ms)), [loc.pathname, iss.kind]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => setFocused(null), [loc.pathname, reset]);
+  const worst = views.reduce<Status>((w, v) => (RANK[v.overall] > RANK[w] ? v.overall : w), 'green');
+  const crewLine = views.map((v) => seat[v.m.id]).filter(Boolean).join(' · ');
 
-  // the real sun in world space (the Earth is tilted and turned by the dial)
-  const sun = useMemo(() => sunLocal().applyEuler(new THREE.Euler(TILT, body ? 0 : yaw, 0)), [yaw, body]);
-  useEffect(() => setFly(null), [loc.pathname, reset]);
-
-  const base = fly ?? viewFor(loc.pathname, body ? focus : null, sun);
+  // the body studio's key light follows the real Sun
+  const sun = useMemo(() => sunDir(new Date(labTime.ms)), [loc.pathname]); // eslint-disable-line react-hooks/exhaustive-deps
+  const base = bodyView(focus);
   const bk = base.pos.join() + base.target.join();
   const view: View = useMemo(() => {
     const t = new THREE.Vector3(...base.target);
@@ -145,25 +209,54 @@ export function World() {
     return { pos: [p.x, p.y, p.z], target: base.target };
   }, [bk, zoom, reset]); // eslint-disable-line react-hooks/exhaustive-deps
 
-
   return (
-    <Canvas dpr={[1, 1.75]} camera={{ position: view.pos, fov: 36, near: 0.01, far: 300 }} gl={{ antialias: true }}>
-      <color attach="background" args={['#02040a']} />
-      <Stars radius={120} depth={60} count={7000} factor={2.2} saturation={0} fade speed={0} />
-      <MilkyWay />
-      <ambientLight intensity={0.04} />
+    <Canvas dpr={dpr} camera={{ position: view.pos, fov: 36, near: 0.01, far: 300 }} gl={{ antialias: true }}>
+      <PerformanceMonitor onDecline={() => setDpr(1)} onIncline={() => setDpr(1.6)} />
+      <color attach="background" args={['#000000']} />
+      <SunTracker />
       <directionalLight position={sun.clone().multiplyScalar(5)} intensity={3.4} color="#fff6ea" />
-      {!body && <Sun dir={sun} />}
-      <EarthGroup
-        yaw={body ? 0 : yaw}
-        tips={[]}
-        orbitTips={[]}
-        orbit={!loc.pathname.startsWith('/cabin')}
-        onDouble={(p) => {
-          const n = p.clone().normalize();
-          setFly({ pos: [n.x * 2.3, n.y * 2.3, n.z * 2.3], target: [p.x * 0.6, p.y * 0.6, p.z * 0.6] });
-        }}
-      />
+      <group ref={earth}>
+        <Suspense fallback={null}>
+          <Sky sun={!body} />
+        </Suspense>
+        <Suspense fallback={null}>
+          <Earth />
+        </Suspense>
+        <Atmosphere />
+        {!body && (
+          <>
+            <IssTrack src={iss} />
+            <Marker
+              id="iss"
+              title="ISS"
+              line={crewLine ? `${crewLine} · ${STATUS_WORD[worst]}` : undefined}
+              status={worst}
+              active={focused === 'iss'}
+              where={() => {
+                const p = iss.at(labTime.ms);
+                return p ? ll(p.lat, p.lon, 1 + p.altKm / R_KM) : null;
+              }}
+              onFocus={() => {
+                const p = iss.at(labTime.ms);
+                if (!p) return;
+                setFocused('iss');
+                globe.current?.focus(p.lat, p.lon, 1600, true);
+              }}
+            />
+            <Marker
+              id="ground"
+              title="Mission Control"
+              line="Houston"
+              active={focused === 'ground'}
+              where={() => HOUSTON}
+              onFocus={() => {
+                setFocused('ground');
+                globe.current?.focus(29.56, -95.09, 2200);
+              }}
+            />
+          </>
+        )}
+      </group>
 
       {/* the body studio, below the Earth */}
       <Environment resolution={256}>
@@ -186,7 +279,19 @@ export function World() {
         <ContactShadows position={[0, 0.002, 0]} opacity={0.5} scale={2.2} blur={2.4} far={1.2} frames={1} />
       </group>
 
-      <CameraRig view={view} body={body} onNear={setNear} />
+      {body ? (
+        <CameraRig view={view} body={body} onNear={setNear} />
+      ) : (
+        <>
+          <GlobeControls key="globe" initial={gv.view} home={gv.view} offset={gv.offset} earth={earth} api={globe} keys={false} drift enter follow={() => iss.at(labTime.ms)} />
+          <GlobeBridge api={globe} />
+        </>
+      )}
+      <EffectComposer multisampling={0}>
+        <Bloom mipmapBlur luminanceThreshold={1} luminanceSmoothing={0.2} intensity={0.55} />
+        <Vignette offset={0.22} darkness={0.62} eskil={false} />
+        <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
+      </EffectComposer>
     </Canvas>
   );
 }

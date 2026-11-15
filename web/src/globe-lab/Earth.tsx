@@ -7,6 +7,7 @@ import { useFrame } from '@react-three/fiber';
 import { useTexture } from '@react-three/drei';
 import * as THREE from 'three';
 import { KM } from './frame';
+import { useLateTextures } from './progressive';
 import { SCATTER_GLSL } from './scattering.glsl';
 import { labTime, useLab } from './store';
 
@@ -127,7 +128,7 @@ void main() {
     vec3 d = vPos - uCamPos;
     float t = length(d);
     vec3 ins; vec3 tr;
-    atmScatter(uCamPos, d / t, t, 10, 4, ins, tr);
+    atmScatter(uCamPos, d / t, t, 8, 3, ins, tr);
     col = col * tr + ins * 0.75;
   }
 
@@ -139,13 +140,22 @@ void main() {
 const _inv = new THREE.Matrix4();
 
 export function Earth() {
+  // 3.3 MB of 2k maps for the first view, then 15 MB of full-size maps once the page is idle
   const [day, night, normal, water, clouds] = useTexture([
-    `${base}earth-day-8k.jpg`,
-    `${base}earth-night-4k.jpg`,
-    `${base}earth-normal-4k.jpg`,
-    `${base}earth-water-8k.png`,
-    `${base}earth-clouds-8k.jpg`,
+    `${base}earth-day-2k.jpg`,
+    `${base}earth-night-2k.jpg`,
+    `${base}earth-normal-2k.jpg`,
+    `${base}earth-water-2k.png`,
+    `${base}earth-clouds-2k.jpg`,
   ]);
+  const hd = useLateTextures(
+    [`${base}earth-day-8k.jpg`, `${base}earth-night-4k.jpg`, `${base}earth-normal-4k.jpg`, `${base}earth-water-8k.png`, `${base}earth-clouds-8k.jpg`],
+    (t, i) => {
+      if (i < 2) t.colorSpace = THREE.SRGBColorSpace;
+      t.anisotropy = 16;
+      t.wrapS = THREE.RepeatWrapping;
+    },
+  );
   const mesh = useRef<THREE.Mesh>(null);
   const layers = useLab((s) => s.layers);
 
@@ -181,6 +191,11 @@ export function Earth() {
   }, [day, night, normal, water, clouds]);
 
   useEffect(() => () => mat.dispose(), [mat]);
+  useEffect(() => {
+    if (!hd) return;
+    const u = mat.uniforms;
+    [u.uDay.value, u.uNight.value, u.uNormal.value, u.uWater.value, u.uClouds.value] = hd;
+  }, [hd, mat]);
   useEffect(() => {
     const u = mat.uniforms;
     u.uCloudsOn.value = layers.clouds ? 1 : 0;

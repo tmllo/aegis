@@ -9,6 +9,7 @@ import * as THREE from 'three';
 import { SUN_LOCAL } from './Earth';
 import { gmstDeg, ll, moonPos, R_KM } from './frame';
 import { bvToRgb, flux, sunVisibility } from './sky-math';
+import { useLateTextures } from './progressive';
 import { labTime, useLab } from './store';
 
 const base = `${import.meta.env.BASE_URL}refs/globe-lab/`;
@@ -115,10 +116,11 @@ function radialTexture(stops: [number, string][]): THREE.Texture {
   return t;
 }
 
-export function Sky() {
+export function Sky({ sun: showSun = true }: { sun?: boolean }) {
   const layers = useLab((s) => s.layers);
   const { gl } = useThree();
-  const [milky, moonMap] = useTexture([`${base}milkyway-4k.jpg`, `${base}moon-2k.jpg`]);
+  const [milky, moonMap] = useTexture([`${base}milkyway-1k.jpg`, `${base}moon-2k.jpg`]);
+  const milkyHd = useLateTextures([`${base}milkyway-4k.jpg`], (t) => (t.colorSpace = THREE.SRGBColorSpace), 2500);
   const stars = useStars();
   const sky = useRef<THREE.Group>(null);
   const turn = useRef<THREE.Group>(null);
@@ -130,9 +132,9 @@ export function Sky() {
     milky.colorSpace = THREE.SRGBColorSpace;
     moonMap.colorSpace = THREE.SRGBColorSpace;
     moonMap.anisotropy = 8;
-    const mw = new THREE.ShaderMaterial({ vertexShader: skyVert, fragmentShader: skyFrag, uniforms: { uMap: { value: milky }, uGain: { value: 0.16 } }, side: THREE.BackSide, depthTest: false, depthWrite: false });
+    const mw = new THREE.ShaderMaterial({ vertexShader: skyVert, fragmentShader: skyFrag, uniforms: { uMap: { value: milky }, uGain: { value: 0.035 } }, side: THREE.BackSide, depthTest: false, depthWrite: false });
     const st = new THREE.ShaderMaterial({ vertexShader: starVert, fragmentShader: starFrag, uniforms: { uPx: { value: 1 }, uGain: { value: 1 } }, transparent: false, blending: THREE.AdditiveBlending, depthTest: false, depthWrite: false });
-    const glareTex = radialTexture([[0, 'rgba(255,250,240,1)'], [0.06, 'rgba(255,244,225,0.85)'], [0.2, 'rgba(255,226,190,0.22)'], [0.5, 'rgba(255,210,170,0.05)'], [1, 'rgba(255,200,160,0)']]);
+    const glareTex = radialTexture([[0, 'rgba(255,250,240,1)'], [0.08, 'rgba(255,246,232,0.7)'], [0.22, 'rgba(255,236,210,0.12)'], [0.5, 'rgba(255,226,200,0.025)'], [1, 'rgba(255,200,160,0)']]);
     const gm = new THREE.SpriteMaterial({ map: glareTex, blending: THREE.AdditiveBlending, depthTest: false, depthWrite: false, transparent: true, color: new THREE.Color(3, 3, 3) });
     const sunDisc = new THREE.MeshBasicMaterial({ color: new THREE.Color(60, 56, 50), depthTest: false, depthWrite: false });
     const mm = new THREE.ShaderMaterial({
@@ -165,6 +167,9 @@ export function Sky() {
     [mats],
   );
   useEffect(() => () => moonGeo.dispose(), [moonGeo]);
+  useEffect(() => {
+    if (milkyHd) mats.mw.uniforms.uMap.value = milkyHd[0];
+  }, [milkyHd, mats]);
 
   const tmp = useMemo(() => ({ inv: new THREE.Matrix4(), cam: new THREE.Vector3(), mp: new THREE.Vector3(), q: new THREE.Quaternion(), wq: new THREE.Quaternion() }), []);
 
@@ -184,17 +189,20 @@ export function Sky() {
     const inAir = 1 - THREE.MathUtils.smoothstep(alt, (60 / R_KM) * 1.6, (160 / R_KM) * 1.6);
     const sunUp = THREE.MathUtils.smoothstep(tmp.cam.clone().normalize().dot(SUN_LOCAL), -0.15, 0.1);
     const dim = 1 - 0.92 * inAir * sunUp;
-    mats.mw.uniforms.uGain.value = 0.16 * dim;
+    mats.mw.uniforms.uGain.value = 0.035 * dim;
     mats.st.uniforms.uGain.value = dim;
     mats.st.uniforms.uPx.value = gl.getPixelRatio();
 
     // sun disc and glare
-    if (sun.current) sun.current.position.copy(SUN_LOCAL).multiplyScalar(SKY_R * 0.9);
+    if (sun.current) {
+      sun.current.position.copy(SUN_LOCAL).multiplyScalar(SKY_R * 0.9);
+      sun.current.visible = showSun;
+    }
     if (glare.current) {
       const vis = sunVisibility(tmp.cam, SUN_LOCAL);
       glare.current.material.opacity = vis;
-      glare.current.visible = vis > 0.001;
-      const s = SKY_R * 0.9 * 0.22;
+      glare.current.visible = showSun && vis > 0.001;
+      const s = SKY_R * 0.9 * 0.075;
       glare.current.scale.set(s, s, 1);
     }
 

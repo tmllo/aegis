@@ -5,7 +5,7 @@
 //   shift / ctrl / right drag, two-finger drag   heading (horizontal) and tilt (vertical)
 //   double click   fly to the point and zoom in
 //   keys           arrows pan, +/- zoom, shift+arrows heading/tilt, N north up, U top down, R reset
-import { useEffect, useMemo, useRef, type RefObject } from 'react';
+import { useEffect, useMemo, useRef, type MutableRefObject, type RefObject } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { clampState, flyLerp, flySeconds, grabRotation, hitSphere, pose, rangeForAlt, rayFrom, rotateState, zoomAt, type LookAt } from './camera-math';
@@ -31,12 +31,32 @@ interface Props {
   earth?: RefObject<THREE.Object3D>;
   /** Live sub-satellite point to follow after a fly-to with follow: 'iss'. */
   follow?: () => { lat: number; lon: number } | null;
+  /** Own keyboard shortcuts (off when a host app already binds the keys). */
+  keys?: boolean;
+  /** Shift the globe up on screen by this fraction of the viewport height (room for bottom cards). */
+  offset?: number;
+  /** Slow eastward drift after a few seconds without input. */
+  drift?: boolean;
+  /** Fly in from further out when mounted. */
+  enter?: boolean;
+  /** Imperative handle for a host HUD (zoom buttons, compass, reset, markers). */
+  api?: MutableRefObject<GlobeApi | null>;
 }
 
-export function GlobeControls({ initial, home = initial, earth, follow }: Props) {
+export interface GlobeApi {
+  zoomBy: (factor: number) => void;
+  setHeading: (deg: number) => void;
+  home: () => void;
+  focus: (lat: number, lon: number, altKm: number, follow?: boolean) => void;
+}
+
+export function GlobeControls({ initial, home = initial, earth, follow, keys = true, offset = 0, drift = false, enter = false, api }: Props) {
   const { camera, gl, size } = useThree();
   const cam = camera as THREE.PerspectiveCamera;
-  const state = useRef<LookAt>(stateFor(initial));
+  const state = useRef<LookAt>(stateFor(enter ? { ...initial, altKm: initial.altKm * 2.4 } : initial));
+  const idle = useRef(0); // seconds since the last input
+  const offsetRef = useRef(offset);
+  offsetRef.current = offset;
   const omega = useRef(new THREE.Vector3()); // inertia: axis * rad/s, Earth-local
   const zoomPending = useRef({ log: 0, x: 0, y: 0 });
   const fly = useRef<{ from: LookAt; to: LookAt; t: number; dur: number } | null>(null);
@@ -59,7 +79,43 @@ export function GlobeControls({ initial, home = initial, earth, follow }: Props)
   const cancel = () => {
     fly.current = null;
     following.current = false;
+    idle.current = 0;
   };
+
+  if (api)
+    api.current = {
+      zoomBy: (f) => {
+        cancel();
+        zoomPending.current = { log: zoomPending.current.log + Math.log(f), x: 0, y: 0 };
+      },
+      setHeading: (deg) => {
+        idle.current = 0;
+        state.current.heading = deg * D;
+      },
+      home: () => flyTo(stateFor(home)),
+      focus: (lat, lon, altKm, f = false) => {
+        // straight down: a point above the surface (the ISS) then sits on the view centre
+        flyTo(stateFor({ lat, lon, altKm, heading: 0, tilt: 0 }));
+        following.current = f;
+      },
+    };
+
+  // entrance, and a new view when the host section changes
+  const viewKey = `${initial.lat},${initial.lon},${initial.altKm},${initial.heading ?? 0},${initial.tilt ?? 0}`;
+  useEffect(() => {
+    flyTo(stateFor(initial));
+  }, [viewKey]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // hand the camera back clean (near/far/offset) when unmounted
+  useEffect(
+    () => () => {
+      cam.clearViewOffset();
+      cam.near = 0.01;
+      cam.far = 300;
+      cam.updateProjectionMatrix();
+    },
+    [cam],
+  );
 
   // HUD requests: fly-to targets and orientation resets
   useEffect(
@@ -83,7 +139,7 @@ export function GlobeControls({ initial, home = initial, earth, follow }: Props)
     const el = gl.domElement;
     const ndc = (e: { clientX: number; clientY: number }) => {
       const r = el.getBoundingClientRect();
-      return { x: ((e.clientX - r.left) / r.width) * 2 - 1, y: -((e.clientY - r.top) / r.height) * 2 + 1 };
+      return { x: ((e.clientX - r.left) / r.width) * 2 - 1, y: -((e.clientY - r.top) / r.height) * 2 + 1 - 2 * offsetRef.current };
     };
     const aspect = () => sizeRef.current.width / Math.max(1, sizeRef.current.height);
     const hitAt = (x: number, y: number, miss = true) => hitSphere(rayFrom(pose(state.current), x, y, cam.fov, aspect()), miss);
@@ -128,12 +184,13 @@ export function GlobeControls({ initial, home = initial, earth, follow }: Props)
       pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
       if (!dragging && Math.hypot(e.clientX - start.x, e.clientY - start.y) < 4) return;
       dragging = true;
+      idle.current = 0;
       const now = performance.now();
       const dt = Math.max(1, now - last.t) / 1000;
       if (mode === 'touch2' && pointers.size === 2) {
         const t = two();
         const r = el.getBoundingClientRect();
-        const c = { x: ((t.cx - r.left) / r.width) * 2 - 1, y: -((t.cy - r.top) / r.height) * 2 + 1 };
+        const c = { x: ((t.cx - r.left) / r.width) * 2 - 1, y: -((t.cy - r.top) / r.height) * 2 + 1 - 2 * offsetRef.current };
         if (pinch.d > 0 && t.d > 0) state.current = zoomAt(state.current, pinch.d / t.d, c.x, c.y, cam.fov, aspect());
         const s = state.current;
         s.heading -= Math.atan2(Math.sin(t.a - pinch.a), Math.cos(t.a - pinch.a));
@@ -173,6 +230,7 @@ export function GlobeControls({ initial, home = initial, earth, follow }: Props)
     const wheel = (e: WheelEvent) => {
       e.preventDefault();
       cancel();
+      idle.current = 0;
       omega.current.set(0, 0, 0);
       const unit = e.deltaMode === 1 ? 40 : e.deltaMode === 2 ? 800 : 1;
       const k = e.ctrlKey ? 0.01 : 0.0016; // ctrl+wheel = trackpad pinch on macOS
@@ -193,6 +251,7 @@ export function GlobeControls({ initial, home = initial, earth, follow }: Props)
     };
 
     const key = (e: KeyboardEvent) => {
+      if (!keys) return;
       const t = e.target as HTMLElement | null;
       if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
       const s = state.current;
@@ -246,7 +305,7 @@ export function GlobeControls({ initial, home = initial, earth, follow }: Props)
       el.removeEventListener('contextmenu', menu);
       window.removeEventListener('keydown', key);
     };
-  }, [gl, cam]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [gl, cam, keys]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const tmp = useMemo(() => ({ m: new THREE.Matrix4(), q: new THREE.Quaternion(), qa: new THREE.Quaternion(), v: new THREE.Vector3(), s: new THREE.Vector3() }), []);
 
@@ -280,6 +339,13 @@ export function GlobeControls({ initial, home = initial, earth, follow }: Props)
       z.log -= part;
       state.current = zoomAt(state.current, Math.exp(part), z.x, z.y, cam.fov, size.width / Math.max(1, size.height));
     }
+    // idle drift: the globe turns slowly eastward under the camera (about 1.5 deg/s)
+    idle.current += dt;
+    if (drift && !reduced && !f && !following.current && idle.current > 4 && w.lengthSq() === 0) {
+      const k = Math.min(1, (idle.current - 4) / 2);
+      tmp.qa.setFromAxisAngle(tmp.v.set(0, 1, 0), -0.026 * k * dt);
+      state.current = rotateState(state.current, tmp.qa);
+    }
     clampState(state.current);
 
     // apply the pose (Earth-local -> world)
@@ -297,7 +363,14 @@ export function GlobeControls({ initial, home = initial, earth, follow }: Props)
     const alt = p.eye.length() - 1;
     const near = Math.max(0.5 * KM, alt * 0.25);
     const far = p.eye.length() + 80;
-    if (Math.abs(cam.near - near) / near > 0.02 || cam.far !== far) {
+    const oy = Math.round(offsetRef.current * size.height);
+    const vo = cam.view;
+    const offChanged = oy === 0 ? !!vo?.enabled : !vo?.enabled || vo.offsetY !== oy || vo.fullHeight !== size.height || vo.fullWidth !== size.width;
+    if (offChanged) {
+      if (oy === 0) cam.clearViewOffset();
+      else cam.setViewOffset(size.width, size.height, 0, oy, size.width, size.height);
+    }
+    if (offChanged || Math.abs(cam.near - near) / near > 0.02 || cam.far !== far) {
       cam.near = near;
       cam.far = far;
       cam.updateProjectionMatrix();

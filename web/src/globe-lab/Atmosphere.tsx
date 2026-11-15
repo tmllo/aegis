@@ -26,7 +26,7 @@ void main() {
   vec2 pl = raySphere(uCamPos, d, 0.9999);
   if (pl.x > 0.0 && pl.x < pl.y) discard;
   vec3 ins; vec3 tr;
-  atmScatter(uCamPos, d, 1e9, 16, 6, ins, tr);
+  atmScatter(uCamPos, d, 1e9, 12, 5, ins, tr);
   float t = dot(tr, vec3(0.3333));
   gl_FragColor = vec4(ins * uLimb, t);
   #include <tonemapping_fragment>

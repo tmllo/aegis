@@ -1,4 +1,5 @@
 // Globe lab HUD in the Crew Station style: camera readout, compass, layers, time and presets.
+import { useState } from 'react';
 import { issAt, useTle } from './iss';
 import { labTime, useLab, type LayerKey } from './store';
 
@@ -42,6 +43,7 @@ export function Hud() {
   const paused = useLab((s) => s.paused);
   const layers = useLab((s) => s.layers);
   const tle = useTle();
+  const [open, setOpen] = useState(false);
   const { toggleLayer, setRate, togglePause, setDate, requestFly, requestOrient } = useLab.getState();
   const utc = `${date.getUTCFullYear()}-${pad(date.getUTCMonth() + 1)}-${pad(date.getUTCDate())} ${pad(date.getUTCHours())}:${pad(date.getUTCMinutes())}:${pad(date.getUTCSeconds())} UTC`;
 
@@ -83,8 +85,10 @@ export function Hud() {
         </div>
       </header>
 
-      <aside className="gl-layers" aria-label="Layers">
-        <div className="gl-label">Layers</div>
+      <aside className="gl-layers" aria-label="Layers" data-open={open}>
+        <button className="gl-label" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
+          Layers
+        </button>
         {LAYERS.map(([k, label]) => (
           <button key={k} className="gl-row" aria-pressed={layers[k]} onClick={() => toggleLayer(k)}>
             <span className="gl-dot" />
@@ -112,7 +116,7 @@ export function Hud() {
           ))}
         </div>
       </footer>
-      <p className="gl-credit">Black Marble, Deep Star Maps, CGI Moon Kit: NASA · Earth day (from NASA Blue Marble), relief, water, clouds: Solar System Scope, CC BY 4.0 · Stars: Yale BSC5 · Drag to move, scroll to zoom, Shift+drag to tilt</p>
+      <p className="gl-credit">Black Marble, Deep Star Maps, CGI Moon Kit: NASA · Earth day (from NASA Blue Marble), relief, water, clouds: Solar System Scope, CC BY 4.0 · Stars: Yale BSC5 · Orbits: CelesTrak (celestrak.org) · Drag to move, scroll to zoom, Shift+drag to tilt</p>
     </div>
   );
 }
