@@ -15,7 +15,19 @@ export default function ShelterPage() {
   const [phase, setPhase] = useState<'ready' | 'warning' | 'sheltered' | 'arrived'>('ready');
   const [t, setT] = useState(0); // drill hours elapsed
   const [ask, setAsk] = useState(false);
-  const ev = useMemo(() => (data ? sortedEvents(data.storm).filter((e) => e.alert_level === 'warning' && e.actual_storm && e.lead_time_h != null).at(-1) : undefined), [data]);
+  // the storm day in the crew series is the day with the highest daily dose (the generator puts the
+  // one real storm of the mission window there); the warning is the verified one nearest that day
+  const stormDay = useMemo(() => {
+    const s = cv?.m.series.filter((r) => r.dose_mSv_day != null) ?? [];
+    return s.length ? s.reduce((a, b) => (b.dose_mSv_day! > a.dose_mSv_day! ? b : a)).date : null;
+  }, [cv]);
+  const ev = useMemo(() => {
+    if (!data) return undefined;
+    const warn = sortedEvents(data.storm).filter((e) => e.alert_level === 'warning' && e.actual_storm && e.lead_time_h != null);
+    if (!stormDay) return warn.at(-1);
+    const t0 = Date.parse(stormDay);
+    return [...warn].sort((a, b) => Math.abs(Date.parse(a.peak_time) - t0) - Math.abs(Date.parse(b.peak_time) - t0))[0];
+  }, [data, stormDay]);
   const lead = ev?.lead_time_h ?? 0;
 
   useEffect(() => {
@@ -31,8 +43,7 @@ export default function ShelterPage() {
   if (!ev) return <p className="cx-error">No verified storm warning in the forecast file</p>;
 
   // dose on the storm days in the (simulated) crew series, against the site's normal daily dose
-  const onset = (ev.storm_onset_time ?? ev.peak_time).slice(0, 10);
-  const near = cv.m.series.filter((r) => Math.abs(Date.parse(r.date) - Date.parse(onset)) <= 2 * 86400000 && r.dose_mSv_day != null);
+  const near = cv.m.series.filter((r) => r.date === stormDay && r.dose_mSv_day != null);
   const normal = cd.environments[cd.mission.environment].dose_mSv_day;
   const storm = near.length ? Math.max(...near.map((r) => r.dose_mSv_day!)) : null;
   const excess = storm != null ? Math.max(0, storm - normal) : null;
@@ -91,7 +102,7 @@ export default function ShelterPage() {
         </div>
       </Panel>
 
-      <Panel label={`Dose · ${seat[cv.m.id]}`} icon="dial" aside="Storm day" className="sh-right">
+      <Panel label={`Dose · ${seat[cv.m.id]}`} icon="dial" aside={`Storm day ${stormDay ?? '--'}`} className="sh-right">
         <dl className="stats">
           <div className="st" data-status="red">
             <dt>Not sheltered</dt>

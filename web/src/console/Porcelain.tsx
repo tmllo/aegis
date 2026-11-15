@@ -40,8 +40,8 @@ const BASE: Record<string, number> = {
   skin: 0.16,
   muscles: 0,
   muscle_antigravity: 0,
-  bones: 0.9,
-  bones_loadbearing: 0.9,
+  bones: 0.72,
+  bones_loadbearing: 0.72,
   arteries: 0.1,
   artery_lad: 0.1,
   veins: 0.06,
@@ -87,7 +87,7 @@ export function Porcelain({
 
   // goals for each node
   const goals = useMemo(() => {
-    const g: Record<string, { o: number; c: THREE.Color }> = {};
+    const g: Record<string, { o: number; c: THREE.Color; top?: boolean }> = {};
     const inFocus = new Set(focus ? TARGETS[focus].nodes : []);
     for (const n of Object.keys(geo)) {
       let o = BASE[n] ?? 0.3;
@@ -98,7 +98,7 @@ export function Porcelain({
     for (const [t, s] of Object.entries(tint) as [TargetId, Status][]) {
       const n = TINT_NODE[t];
       if (!n || !g[n] || (s === 'green' && t !== focus)) continue;
-      g[n] = { o: Math.max(g[n].o, 0.9), c: WHITE.clone().lerp(TINT[s], 0.55) };
+      g[n] = { o: Math.max(g[n].o, 0.9), c: WHITE.clone().lerp(TINT[s], 0.55), top: s !== 'green' && !focus };
     }
     for (const n of Object.keys(g)) {
       if (!layers[LAYER_OF[n] ?? 'organs']) g[n] = { ...g[n], o: 0 };
@@ -116,6 +116,7 @@ export function Porcelain({
       m.opacity += (goal.o - m.opacity) * k;
       m.color.lerp(goal.c, k);
       m.depthWrite = m.opacity > 0.85;
+      m.depthTest = !goal.top; // an affected organ shows through the skeleton
       m.visible = m.opacity > 0.01;
     }
   });

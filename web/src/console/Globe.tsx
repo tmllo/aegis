@@ -2,7 +2,7 @@
 // Solar System Scope clouds (CC BY 4.0), a fresnel atmosphere, an orbit track, a fine dotted
 // network mesh, and tooltips anchored to points with a leader line. Still: it only turns
 // when the crew uses the rotate dial.
-import { Suspense, useMemo, useRef, type ReactNode } from 'react';
+import { Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Html, useTexture } from '@react-three/drei';
 import * as THREE from 'three';
@@ -150,6 +150,7 @@ export const onOrbit = (a: number): [number, number, number] => [Math.cos(a) * O
 
 /** Earth, atmosphere, network mesh and orbit track, at the origin (no canvas). */
 export function EarthGroup({ yaw = 0, tips = [], orbitTips = [], onDouble, orbit = true }: { yaw?: number; tips?: Tip[]; orbitTips?: Tip[]; onDouble?: (p: THREE.Vector3) => void; orbit?: boolean }) {
+  const iss = useIssTrack();
   const atmo = useMemo(
     () =>
       new THREE.ShaderMaterial({
@@ -171,7 +172,7 @@ export function EarthGroup({ yaw = 0, tips = [], orbitTips = [], onDouble, orbit
       <mesh scale={1.035} material={atmo}>
         <sphereGeometry args={[1, 64, 64]} />
       </mesh>
-      <group rotation={ORBIT_TILT} visible={orbit}>
+      <group rotation={ORBIT_TILT} visible={orbit && !iss}>
         <mesh>
           <torusGeometry args={[ORBIT_R, 0.0022, 8, 256]} />
           <meshBasicMaterial color="#e6f4f4" transparent opacity={0.45} />
@@ -180,15 +181,105 @@ export function EarthGroup({ yaw = 0, tips = [], orbitTips = [], onDouble, orbit
           <sphereGeometry args={[0.018, 16, 16]} />
           <meshBasicMaterial color="#5fd3d6" />
         </mesh>
-        {orbitTips.map((t) => (
-          <Pin key={t.id} tip={t} />
-        ))}
+        {!iss &&
+          orbitTips.map((t) => (
+            <Pin key={t.id} tip={t} />
+          ))}
       </group>
       <group rotation={[0.32, yaw, 0]}>
+        {orbit && iss && (
+          <>
+            <line>
+              <bufferGeometry>
+                <bufferAttribute attach="attributes-position" args={[iss.points, 3]} />
+              </bufferGeometry>
+              <lineBasicMaterial color="#5fd3d6" transparent opacity={0.75} />
+            </line>
+            <mesh position={iss.now}>
+              <sphereGeometry args={[0.016, 16, 16]} />
+              <meshBasicMaterial color="#5fd3d6" />
+            </mesh>
+            {orbitTips.map((t) => (
+              <Pin key={t.id} tip={{ ...t, pos: iss.now }} />
+            ))}
+          </>
+        )}
         {tips.map((t) => (
           <Pin key={t.id} tip={t} />
         ))}
       </group>
     </group>
   );
+}
+
+/* ---------- ISS orbit from a CelesTrak TLE (two-body propagation, client-side, offline) ---------- */
+
+const MU = 398600.4418; // km^3/s^2
+const RE = 6378.137; // km
+
+interface Tle { epoch: number; i: number; raan: number; e: number; argp: number; m0: number; n: number }
+
+function parseTle(text: string): Tle | null {
+  const lines = text.trim().split('\n').map((l) => l.trimEnd());
+  const l1 = lines.find((l) => l.startsWith('1 '));
+  const l2 = lines.find((l) => l.startsWith('2 '));
+  if (!l1 || !l2) return null;
+  const yy = Number(l1.slice(18, 20));
+  const doy = Number(l1.slice(20, 32));
+  const year = yy < 57 ? 2000 + yy : 1900 + yy;
+  const epoch = Date.UTC(year, 0, 1) + (doy - 1) * 86400000;
+  const d = (a: number, b: number) => (Number(l2.slice(a, b)) * Math.PI) / 180;
+  return { epoch, i: d(8, 16), raan: d(17, 25), e: Number(`0.${l2.slice(26, 33).trim()}`), argp: d(34, 42), m0: d(43, 51), n: (Number(l2.slice(52, 63)) * 2 * Math.PI) / 86400 };
+}
+
+/** Earth-fixed lat/lon/alt at time t (ms). Two-body: no J2 drift, good for a ground track. */
+function propagate(k: Tle, t: number): { lat: number; lon: number; alt: number } {
+  const a = Math.cbrt(MU / (k.n * k.n));
+  const M = k.m0 + k.n * ((t - k.epoch) / 1000);
+  let E = M;
+  for (let j = 0; j < 8; j++) E -= (E - k.e * Math.sin(E) - M) / (1 - k.e * Math.cos(E));
+  const nu = 2 * Math.atan2(Math.sqrt(1 + k.e) * Math.sin(E / 2), Math.sqrt(1 - k.e) * Math.cos(E / 2));
+  const r = a * (1 - k.e * Math.cos(E));
+  const u = k.argp + nu;
+  const x = r * (Math.cos(k.raan) * Math.cos(u) - Math.sin(k.raan) * Math.sin(u) * Math.cos(k.i));
+  const y = r * (Math.sin(k.raan) * Math.cos(u) + Math.cos(k.raan) * Math.sin(u) * Math.cos(k.i));
+  const z = r * Math.sin(u) * Math.sin(k.i);
+  const jd = t / 86400000 + 2440587.5;
+  const gmst = ((280.46061837 + 360.98564736629 * (jd - 2451545)) * Math.PI) / 180;
+  const lon = Math.atan2(y, x) - gmst;
+  return { lat: (Math.asin(z / r) * 180) / Math.PI, lon: ((((lon * 180) / Math.PI + 540) % 360) + 360) % 360 - 180, alt: r - RE };
+}
+
+/** One orbit of the ISS ground track from now, from public/orbits/iss.tle. */
+export function useIssTrack(at?: Date): { points: Float32Array; now: [number, number, number] } | null {
+  const [tle, setTle] = useStateTle();
+  void setTle;
+  return useMemo(() => {
+    if (!tle) return null;
+    const t0 = (at ?? new Date()).getTime();
+    const period = (2 * Math.PI) / tle.n;
+    const pts: number[] = [];
+    let now: [number, number, number] = [0, 0, 0];
+    for (let s = 0; s <= 180; s++) {
+      const p = propagate(tle, t0 + (s / 180) * period * 1000);
+      const v = ll(p.lat, p.lon, 1 + p.alt / RE);
+      pts.push(...v);
+      if (s === 0) now = v;
+    }
+    return { points: new Float32Array(pts), now };
+  }, [tle, at]);
+}
+
+let tleCache: Promise<Tle | null> | null = null;
+function useStateTle(): [Tle | null, (t: Tle | null) => void] {
+  const [tle, setTle] = useState<Tle | null>(null);
+  useEffect(() => {
+    tleCache ??= fetch(`${import.meta.env.BASE_URL}orbits/iss.tle`).then((r) => (r.ok ? r.text() : '')).then(parseTle, () => null);
+    let alive = true;
+    void tleCache.then((t) => alive && setTle(t));
+    return () => {
+      alive = false;
+    };
+  }, []);
+  return [tle, setTle];
 }
