@@ -1,5 +1,6 @@
 // Globe lab shared state: simulation clock, layer toggles, camera readout and fly-to requests.
 import { create } from 'zustand';
+import { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 
 export type LayerKey = 'atmosphere' | 'clouds' | 'stars' | 'milkyway' | 'grid' | 'night';
@@ -45,7 +46,7 @@ export const useLab = create<LabState>((set) => ({
  *  of real time so React subscribers do not re-render every frame; shaders read `labTime` directly. */
 export const labTime = { ms: Date.now() };
 export function useLabClock() {
-  const acc = { t: 0 };
+  const acc = useRef({ t: 0 }).current;
   useFrame((_, dt) => {
     const s = useLab.getState();
     if (s.paused) return;

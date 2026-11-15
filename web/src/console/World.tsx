@@ -10,12 +10,9 @@ import * as THREE from 'three';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { TARGETS } from '../components/body3d/targets';
-import type { Status } from '../data/types';
-import { EarthGroup, ll, onOrbit, Pin, SUN_VIEW, sunLocal, type Tip } from './Globe';
+import { EarthGroup, Pin, SUN_VIEW, sunLocal } from './Globe';
 import { Porcelain } from './Porcelain';
 import { useHud } from './hud';
-import { RANK, STATUS_WORD } from './model';
-import { useConsole } from './useConsole';
 
 export const BODY_Y = -6;
 const TILT = 0.32;
@@ -131,7 +128,6 @@ function Sun({ dir }: { dir: THREE.Vector3 }) {
 export function World() {
   const loc = useLocation();
   const nav = useNavigate();
-  const { views, seat } = useConsole();
   const { yaw, focus, tint, setBodyReady, bodyTips, zoom, reset } = useHud();
   const [fly, setFly] = useState<View | null>(null);
   const [near, setNear] = useState(false);
@@ -149,12 +145,6 @@ export function World() {
     return { pos: [p.x, p.y, p.z], target: base.target };
   }, [bk, zoom, reset]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const worst = views.reduce<Status>((w, v) => (RANK[v.overall] > RANK[w] ? v.overall : w), 'green');
-  const tips: Tip[] =
-    loc.pathname.startsWith('/environment') || loc.pathname.startsWith('/systems')
-      ? [{ id: 'ground', pos: ll(29.56, -95.09, 1.01), title: 'Mission control', line: <em>Escalation queue</em>, status: 'green' }]
-      : [];
-  const orbitTips: Tip[] = !body ? [{ id: 'crew', pos: onOrbit(2.2), title: views.map((v) => seat[v.m.id]).join(' · '), line: <em>{STATUS_WORD[worst]}</em>, status: worst }] : [];
 
   return (
     <Canvas dpr={[1, 1.75]} camera={{ position: view.pos, fov: 36, near: 0.01, far: 300 }} gl={{ antialias: true }}>
@@ -166,8 +156,8 @@ export function World() {
       <Sun dir={sun} />
       <EarthGroup
         yaw={body ? 0 : yaw}
-        tips={tips}
-        orbitTips={orbitTips}
+        tips={[]}
+        orbitTips={[]}
         orbit={!loc.pathname.startsWith('/cabin')}
         onDouble={(p) => {
           const n = p.clone().normalize();

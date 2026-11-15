@@ -411,3 +411,33 @@ button.wg:hover { border-color: rgb(255 255 255 / 0.22); }
 .env-modes button { height: 56px; padding: 0 18px; border-radius: 9px; font-size: 13px; color: rgb(var(--dim)); }
 .env-modes button[aria-pressed='true'] { color: rgb(var(--ink)); background: rgb(255 255 255 / 0.1); }
 .env-storm { position: relative; }
+
+/* ultra-simple HUD: one card, one button */
+.one-card { position: absolute; z-index: 10; left: 28px; top: 104px; width: 380px; display: flex; flex-direction: column; gap: 14px; padding: 22px 24px; border-radius: 14px; border: 1px solid rgb(255 255 255 / 0.1); background: rgb(var(--glass) / 0.55); box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.12); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+.one-seat { font-size: 15px; letter-spacing: 0.06em; color: rgb(var(--dim)); }
+.one-seat b { font-size: 26px; font-weight: 400; letter-spacing: 0; color: rgb(var(--ink)); margin-left: 4px; }
+.one-card[data-status='amber'] .one-seat b { color: rgb(var(--warn)); }
+.one-card[data-status='red'] .one-seat b { color: rgb(var(--crit)); }
+.one-line { display: flex; align-items: center; gap: 10px; font-size: 22px; font-weight: 300; line-height: 1.3; }
+.btn-amber { background: rgb(var(--warn)); color: #1a1406; border: 0; font-weight: 600; }
+.btn-red { background: rgb(var(--crit)); color: #fff; border: 0; font-weight: 600; }
+.one-checkin { position: absolute; z-index: 12; right: 28px; top: 104px; width: 120px; height: 64px; display: flex; flex-direction: row; gap: 10px; font-size: 13px; }
+.crew-right { right: 28px; top: 184px; width: 440px; bottom: 60px; }
+.env-left { left: 28px; }
+.env-right { left: auto; right: 28px; }
+.env-back { position: absolute; z-index: 20; left: 28px; top: 96px; width: 110px; display: flex; flex-direction: row; gap: 8px; font-size: 13px; }
+.three { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.three div { display: flex; flex-direction: column; gap: 2px; }
+.three small { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: rgb(var(--dim)); }
+.three b { font-size: 34px; font-weight: 300; font-variant-numeric: tabular-nums; }
+.three div[data-status='amber'] b { color: rgb(var(--warn)); }
+.three div[data-status='red'] b { color: rgb(var(--crit)); }
+.sys-flow { position: absolute; z-index: 10; left: 50%; translate: -50% 0; bottom: 70px; width: 760px; display: flex; flex-direction: column; align-items: center; gap: 18px; padding: 26px 30px; border-radius: 14px; border: 1px solid rgb(255 255 255 / 0.1); background: rgb(var(--glass) / 0.55); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+.sys-flow .flow { width: 100%; }
+.sys-proof { font-size: 18px; font-weight: 300; }
+.sys-src { right: 28px; top: 104px; width: 440px; bottom: 300px; }
+.cx-day { font-size: 18px; font-variant-numeric: tabular-nums; }
+.cx-live { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: rgb(var(--dim)); }
+.cx-live i { width: 8px; height: 8px; border-radius: 50%; background: rgb(var(--faint)); }
+.cx-live[data-on] i { background: rgb(var(--accent)); }
+.cx-icons { gap: 22px; }

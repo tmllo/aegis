@@ -2,11 +2,9 @@
 // crew selection on the left; the page (hero scene + glass cards) behind; credits at the foot.
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { useCabin } from '../data/cabin';
 import { hasServer } from '../data/http';
 import { DISCLAIMERS } from '../components/Footer';
-import { Confirm, Icon, Mark, statusWord } from './ui';
-import { LINK_DELAY, rowOf, SHORT } from './model';
+import { Mark, statusWord } from './ui';
 import { useConsole } from './useConsole';
 // three.js and the scene load only after the intro, so nothing competes with the video
 const World = lazy(() => import('./World').then((m) => ({ default: m.World })));
@@ -20,11 +18,8 @@ export const SECTIONS = [
 ] as const;
 
 export function Shell() {
-  const { data, cd, views, seat, cv, setCrew, day, loadState, error, asOf } = useConsole();
-  const { cabin } = useCabin();
+  const { data, views, seat, cv, setCrew, day, loadState, error } = useConsole();
   const [server, setServer] = useState<boolean | null>(null);
-  const [ask, setAsk] = useState<null | 'measure' | 'ground'>(null);
-  const [sent, setSent] = useState<Record<string, boolean>>({});
   const nav = useNavigate();
   const loc = useLocation();
 
@@ -63,8 +58,6 @@ export function Shell() {
     return () => removeEventListener('keydown', k);
   }, [nav]);
 
-  const issue = cd && cv?.issue ? rowOf(cd, cv.m, cv.scores, cv.issue.metric) : null;
-  const ppco2 = cabin?.readings.find((r) => r.metric.key === 'cabin.ppco2');
 
   return (
     <div className="cx">
@@ -118,33 +111,10 @@ export function Shell() {
           ))}
         </nav>
         <div className="cx-icons">
-          <dl className="cx-tele">
-            <div>
-              <dt>{asOf ? 'Replay' : 'Day'}</dt>
-              <dd style={asOf ? { color: 'rgb(var(--warn))' } : undefined}>{day ?? '--'}</dd>
-            </div>
-            <div>
-              <dt>ppCO2</dt>
-              <dd>{ppco2?.value != null ? ppco2.value.toFixed(ppco2.metric.digits) : '--'}</dd>
-            </div>
-            <div>
-              <dt>Cabin</dt>
-              <dd>{cabin ? (cabin.readings.some((r) => r.quality === 'live') ? 'LIVE' : 'REC') : '--'}</dd>
-            </div>
-            <div>
-              <dt>Server</dt>
-              <dd>{server == null ? '--' : server ? 'LIVE' : 'OFFLINE'}</dd>
-            </div>
-          </dl>
-          <button type="button" className="sq" aria-label="Check-in" title="Check-in" onClick={() => nav('/?p=checkin')}>
-            <Icon name="checkin" size={20} />
-          </button>
-          <button type="button" className="sq" aria-label="Re-measure" title="Re-measure" disabled={!issue} aria-pressed={!!sent.measure} onClick={() => setAsk('measure')}>
-            <Icon name="measure" size={20} />
-          </button>
-          <button type="button" className="sq" aria-label="Escalate" title="Escalate" aria-pressed={!!sent.ground} onClick={() => setAsk('ground')}>
-            <Icon name="ground" size={20} />
-          </button>
+          <span className="cx-day">Day {day ?? '--'}</span>
+          <span className="cx-live" data-on={server || undefined} title={server ? 'Server live' : 'Offline'}>
+            <i /> {server ? 'Live' : 'Offline'}
+          </span>
         </div>
       </header>
 
@@ -155,34 +125,6 @@ export function Shell() {
       </footer>
       <div className="cx-grain" aria-hidden />
 
-      <Confirm
-        open={ask === 'measure' && !!issue}
-        code={issue ? `2.0${String(Object.keys(SHORT).indexOf(issue.k) + 10)}` : ''}
-        title={issue ? `Re-measure ${SHORT[issue.k].toLowerCase()}` : ''}
-        tag="Vitals"
-        status={issue ? `${cv ? seat[cv.m.id] : ''} ${statusWord(issue.status)}` : ''}
-        body={issue?.action ?? ''}
-        danger={issue?.status === 'red'}
-        onDone={() => {
-          setSent((s) => ({ ...s, measure: true }));
-          setAsk(null);
-        }}
-        onCancel={() => setAsk(null)}
-      />
-      <Confirm
-        open={ask === 'ground'}
-        code="1.001"
-        title="Escalate"
-        tag="Escalation"
-        status={cd ? `Report arrives in ~${LINK_DELAY[cd.mission.environment] ?? 'unknown'}` : ''}
-        body={cv ? `${seat[cv.m.id]} status goes to the flight surgeon.` : ''}
-        go="Send"
-        onDone={() => {
-          setSent((s) => ({ ...s, ground: true }));
-          setAsk(null);
-        }}
-        onCancel={() => setAsk(null)}
-      />
     </div>
   );
 }
