@@ -61,14 +61,21 @@ def _streak_days(days: set[str], date: str) -> int:
 
 # ---- self-report scoring -------------------------------------------------------
 def _daily_means(store: Store, subject: str, metric: str) -> dict[str, float]:
-    """Mean per day. On a day with a live check-in, only the check-in values count (they replace the simulated one)."""
+    """Value per day: the latest live check-in that day if any (it replaces the simulated value), else the mean."""
     vals: dict[str, list[float]] = {}
-    live: dict[str, list[float]] = {}
+    live: dict[str, tuple[str, float]] = {}
     for o in store.observations(subject=subject, metric=metric):
-        if o.value is not None:
-            (live if o.source == CHECKIN_SOURCE else vals).setdefault(day_of(o.t), []).append(float(o.value))
-    vals.update(live)
-    return {d: sum(v) / len(v) for d, v in vals.items()}
+        if o.value is None:
+            continue
+        d = day_of(o.t)
+        if o.source == CHECKIN_SOURCE:
+            if d not in live or o.t >= live[d][0]:
+                live[d] = (o.t, float(o.value))         # a re-rating the same day replaces the earlier one
+        else:
+            vals.setdefault(d, []).append(float(o.value))
+    out = {d: sum(v) / len(v) for d, v in vals.items()}
+    out.update({d: v for d, (_, v) in live.items()})
+    return out
 
 
 def _self_report_metrics(cat: Catalog) -> list[dict]:
@@ -125,6 +132,7 @@ def sync(cat: Catalog, store: Store, subject: str | None = None) -> dict:
     opened: list[str] = []
     closed: list[str] = []
     keys = [m["key"] for m in _self_report_metrics(cat)]
+    live_keys = set(keys)
     for s in _crew(cat, subject):
         repo.replace_assessments_for(store, s, keys, score_self_report(cat, store, s))
 
@@ -137,6 +145,8 @@ def sync(cat: Catalog, store: Store, subject: str | None = None) -> dict:
             # evidence_t: the newest reading already stored when the task opens. Only a reading after it closes the
             # task, so the check-in that raised the alert never closes its own task (same-day re-measure still does).
             seen = [o.t for o in store.observations(subject=s, metric=metric)]
+            if seen and day_of(max(seen)) > day:
+                continue                        # not current: a newer day's reading is no longer flagged
             task = Task(id=f"sys-{s}-{metric}-{day}", subject=s, kind="todo", label=a.action, origin="system",
                         created=day, due=_shift(day, 1), metric=metric,
                         attrs={"severity": a.severity, "z": a.z, "message": a.message, "assessment_t": a.t,
@@ -153,6 +163,10 @@ def sync(cat: Catalog, store: Store, subject: str | None = None) -> dict:
             if at is None:
                 continue
             newer = [o.t for o in store.observations(subject=s, metric=task.metric) if o.t > at]
+            if newer and task.metric in live_keys:
+                # Verify: a score the engine re-scores live closes only when the newest reading is no longer flagged.
+                if any(a.metric == task.metric and a.t == day_of(max(newer)) for a in store.assessments(s)):
+                    continue
             if newer:
                 repo.add_event(store, TaskEvent(task.id, min(newer), "closed"))
                 closed.append(task.id)

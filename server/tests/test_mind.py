@@ -150,13 +150,16 @@ def test_sync_opens_and_closes_a_system_task(cat, store):
     # idempotent while nothing new arrives
     assert engine.sync(cat, store, "c1") == {"opened": [], "closed": []}
 
-    # a newer reading closes the task
+    # a newer reading that still leaves the 3-day average flagged keeps it open (Verify) ...
     nxt = days_from(days[-1], 2)[1]
-    store.write(checkin_batch(cat, "c1", "self.social", f"{nxt}T09:00:00Z", 4))
+    store.write(checkin_batch(cat, "c1", "self.social", f"{nxt}T08:00:00Z", 4))
+    assert engine.sync(cat, store, "c1")["closed"] == []
+    # ... and a re-rating that clears it closes the task (same day: the later rating replaces the earlier one)
+    store.write(checkin_batch(cat, "c1", "self.social", f"{nxt}T09:00:00Z", 5))
     out = engine.sync(cat, store, "c1")
     assert tid in out["closed"]
     ev = repo.events(store, task_id=tid)
-    assert [(e.status, e.t) for e in ev] == [("closed", f"{nxt}T09:00:00Z")]
+    assert [(e.status, e.t) for e in ev] == [("closed", f"{nxt}T08:00:00Z")]
     v = engine.task_view(cat, store, repo.get_task(store, tid), nxt)
     assert v["status"] == "closed" and v["done"] is True
 
@@ -286,7 +289,7 @@ def test_progress_counts_closed_system_task(cat, store):
     days = put_series(store, cat, "c1", "self.social", BASE, [4] * 14 + [2, 2, 2])
     engine.sync(cat, store, "c1")
     nxt = days_from(days[-1], 2)[1]
-    store.write(checkin_batch(cat, "c1", "self.social", f"{nxt}T09:00:00Z", 4))
+    store.write(checkin_batch(cat, "c1", "self.social", f"{nxt}T09:00:00Z", 5))
     engine.sync(cat, store, "c1")
     p = engine.progress(cat, store, "c1", nxt)
     assert p["system_tasks_closed"] >= 1
@@ -527,9 +530,11 @@ def test_activity_logged_does_not_close_alert_but_new_reading_does():
     row = next(a for a in res["activities"] if a["id"] == aid)
     assert row["done_today"] and row["times_done"] == 1
     assert res["open_alerts"]                                   # Verify needs a reading, not an activity
-    store.write(records.checkin_batch(cat, "c1", "self.social", f"{day}T21:00:00Z", 4))
+    later = [(dt.date.fromisoformat(day) + dt.timedelta(days=k)).isoformat() for k in (1, 2)]
+    for d in later:                                             # two good days clear the 3-day average
+        store.write(records.checkin_batch(cat, "c1", "self.social", f"{d}T09:00:00Z", 5))
     engine.sync(cat, store, "c1")
-    res = engine.activities_for(cat, store, "c1", day)
+    res = engine.activities_for(cat, store, "c1", later[-1])
     assert res["open_alerts"] == [] and not any(a["suggested"] for a in res["activities"])
 
 
@@ -550,3 +555,46 @@ def test_activities_api():
     assert c.post(f"/api/activities/{first['id']}/events", json={"subject": "iss"}).status_code == 404
     assert c.post(f"/api/activities/{first['id']}/events", json={"subject": "c3", "t": "2026-02-30"}).status_code == 422
     assert c.get("/api/activities", params={"subject": "c3", "date": "2026-13-01"}).status_code == 422
+
+
+
+# ---- replay of Emile's app (origin/crew-station 84818bb, web/src/data/mind.ts) -------
+def test_replay_emile_mind_ts_still_flagged_checkin_keeps_the_alert_open():
+    """mind.ts:159 posts every score at `${date}T12:00:00Z` with date = crew_data mission.today. c3's connection is
+    red; a check-in that is still low must not close the alert, a re-rating that clears it must."""
+    c = TestClient(create_app())
+    tid = "sys-c3-self.social-2026-11-14"
+    body = {"subject": "c3", "metric": "self.social", "t": "2026-11-14T12:00:00Z", "value": 2}
+    r = c.post("/api/observations", json=body)
+    assert r.status_code == 201 and r.json()["assessment"]["severity"] in ("amber", "red")
+    assert tid not in r.json()["closed_tasks"]
+    open_ids = {t["id"] for t in c.get("/api/tasks", params={"subject": "c3", "date": "2026-11-14"}).json()["tasks"]
+                if t["origin"] == "system" and not t["done"]}
+    assert tid in open_ids
+    r = c.post("/api/observations", json={**body, "value": 5})     # mind.ts re-sends the same t when a score changes
+    assert (tid in r.json()["closed_tasks"]) == (r.json()["assessment"] is None)
+
+
+def test_replay_emile_mind_ts_reads():
+    """The fields mind.ts reads: checkin metrics[].key/scale.words (5), tasks[] ServerTask, progress subset."""
+    c = TestClient(create_app())
+    ck = c.get("/api/checkin?subject=c1&date=2026-11-14").json()
+    words = {m["key"].replace("self.", ""): m["scale"]["words"] for m in ck["metrics"]}
+    assert set(words) == {"mood", "stress", "energy", "sleep_quality", "social"}
+    assert all(len(w) == 5 for w in words.values())
+    tasks = c.get("/api/tasks?subject=c1&date=2026-11-14").json()["tasks"]
+    assert tasks and all({"id", "kind", "label", "origin", "metric", "done", "status", "streak"} <= set(t) for t in tasks)
+    p = c.get("/api/progress?subject=c1&date=2026-11-14").json()
+    assert {"xp", "level", "checkin_streak", "best_habit_streak"} <= set(p)
+
+
+def test_scale_words_equal_emile_scales():
+    """web/src/data/mind.ts SCALES (84818bb) is the offline fallback; the server's words must be the same."""
+    emile = {"mood": ["Very low", "Low", "Okay", "Good", "Great"],
+             "stress": ["Calm", "Settled", "Some pressure", "Strained", "Overwhelmed"],
+             "energy": ["Drained", "Low", "Okay", "Good", "High"],
+             "sleep_quality": ["Very poor", "Poor", "Fair", "Good", "Great"],
+             "social": ["Cut off", "Distant", "Okay", "Connected", "Close"]}
+    c = TestClient(create_app())
+    ck = c.get("/api/checkin?subject=c2").json()
+    assert {m["key"].replace("self.", ""): m["scale"]["words"] for m in ck["metrics"]} == emile
