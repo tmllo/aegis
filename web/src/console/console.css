@@ -885,3 +885,4 @@ html { background: #101a3d; }
 .sheet .sheet-chart { height: auto; gap: 6px; }
 .cx-top { background: linear-gradient(180deg, rgb(16 26 61 / 0.92) 0, rgb(16 26 61 / 0.7) 70%, rgb(16 26 61 / 0) 100%); }
 .rd-name:empty { display: none; }
+.rd-num-static { border-bottom: 0; cursor: default; }

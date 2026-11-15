@@ -11,6 +11,12 @@ import { useWristband } from '../wearable';
 import { AlarmStrip, type Alarm } from './Monitor';
 import { fmt, METRIC_TARGET, RANK, rowOf, SHORT, STATUS_WORD, TARGET_METRICS, toSteps, type Row } from './model';
 import { saveEntry, useEntries, VITAL } from './entries';
+import type { ComponentType } from 'react';
+
+// 1f's VitalsPanel (every metric as an editable slider) replaces the vitals list below once
+// ./vitals/VitalsPanel.tsx lands (TODO: then delete the local list, Spark and edit state)
+const vitalsMod = Object.values(import.meta.glob<{ VitalsPanel?: ComponentType; default?: ComponentType }>('./vitals/VitalsPanel.tsx', { eager: true }))[0];
+const VitalsPanel = vitalsMod?.VitalsPanel ?? vitalsMod?.default ?? null;
 import { Confirm } from './ui';
 import { CheckinPanel } from './CheckinPanel';
 import { HandoffPanel } from './HandoffPanel';
@@ -330,7 +336,7 @@ export default function CrewPage() {
               )}
             </div>
           )}
-          {vitals}
+          {VitalsPanel ? <VitalsPanel /> : vitals}
           {red && (
             <button type="button" className="ghost" onClick={() => navigate('/checkup')}>
               Start daily check

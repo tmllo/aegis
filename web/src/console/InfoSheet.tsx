@@ -10,6 +10,13 @@ import type { CrewData, CrewMember, MetricKey, Status } from '../data/types';
 import { saveEntry, useEntries } from './entries';
 import { fmt, RANK, rowOf, SHORT, STATUS_WORD, TARGET_METRICS, toSteps, type Row } from './model';
 import { Chart } from './ui';
+import type { ComponentType } from 'react';
+
+// 1f's shared slider (usual band, red limits, today marker, trail, edit) from ./vitals; until that
+// file lands the minimal range bar and steppers below stand in (TODO: drop them once it is here)
+type SliderProps = { metricKey: MetricKey; memberId: string; editable?: boolean };
+const vitalsMod = Object.values(import.meta.glob<{ MetricSlider?: ComponentType<SliderProps> }>('./vitals/VitalsPanel.tsx', { eager: true }))[0];
+const MetricSlider = vitalsMod?.MetricSlider ?? null;
 
 /** Plain name of each body part, and its readings (a pair is one reading). */
 const TITLE: Record<TargetId, string> = { heart: 'Heart', vessels: 'Blood pressure', brain: 'Brain', bone: 'Bones', muscle: 'Muscles', metabolic: 'Blood sugar', dna: 'Whole body' };
@@ -66,7 +73,17 @@ function Reading({ rows, cd, m, typed, title }: { rows: Row[]; cd: CrewData; m: 
         {NAME(rows.map((r) => r.k)) !== title && NAME(rows.map((r) => r.k))}
         {rows.some((r) => r.k in typed) && <small> · entered by crew</small>}
       </span>
-      {edit ? (
+      {MetricSlider ? (
+        <>
+          <b className="rd-num rd-num-static">
+            {rows.map((r) => fmt(r.value, r.digits)).join(' / ')}
+            <small>{unit}</small>
+          </b>
+          {rows.map((r) => (
+            <MetricSlider key={r.k} metricKey={r.k} memberId={m.id} editable />
+          ))}
+        </>
+      ) : edit ? (
         <form
           className="rd-edit"
           onSubmit={(e) => {
@@ -101,12 +118,14 @@ function Reading({ rows, cd, m, typed, title }: { rows: Row[]; cd: CrewData; m: 
           <small>{unit}</small>
         </button>
       )}
+      {!MetricSlider && (
       <span className="rd-bars">
         {rows.map((r) => (
           <RangeBar key={r.k} r={r} />
         ))}
       </span>
-      {rows.some((r) => r.lo != null && r.hi != null) && (
+      )}
+      {!MetricSlider && rows.some((r) => r.lo != null && r.hi != null) && (
         <span className="rd-usual">Your usual {rows.map((r) => (r.lo != null && r.hi != null ? `${fmt(r.lo, r.digits)}-${fmt(r.hi, r.digits)}` : '--')).join(' / ')}</span>
       )}
     </div>
