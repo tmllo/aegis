@@ -5,8 +5,54 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="color-scheme" content="dark" />
     <title>e^x Crew Station</title>
+    <style>
+      /* Loading screen: first paint. Placeholder inline, full image crossfades in after decode, app fades in under it.
+         src/boot.ts drives the hairline from the real loads (data + GLB/textures). */
+      #boot { position: fixed; inset: 0; z-index: 2147483000; background: #05070c; overflow: hidden; transition: opacity 500ms cubic-bezier(0.16, 1, 0.3, 1); }
+      #boot.boot-out { opacity: 0; pointer-events: none; }
+      #boot .boot-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+      #boot .boot-lqip { background: #05070c url("data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAASABIAAD/4QB0RXhpZgAATU0AKgAAAAgAAwEaAAUAAAABAAAAMgEbAAUAAAABAAAAOodpAAQAAAABAAAAQgAAAAAAAABIAAAAAQAAAEgAAAABAAOgAQADAAAAAQABAACgAgAEAAAAAQAAACCgAwAEAAAAAQAAABIAAAAA/+0AOFBob3Rvc2hvcCAzLjAAOEJJTQQEAAAAAAAAOEJJTQQlAAAAAAAQ1B2M2Y8AsgTpgAmY7PhCfv/AABEIABIAIAMBIgACEQEDEQH/xAAfAAABBQEBAQEBAQAAAAAAAAAAAQIDBAUGBwgJCgv/xAC1EAACAQMDAgQDBQUEBAAAAX0BAgMABBEFEiExQQYTUWEHInEUMoGRoQgjQrHBFVLR8CQzYnKCCQoWFxgZGiUmJygpKjQ1Njc4OTpDREVGR0hJSlNUVVZXWFlaY2RlZmdoaWpzdHV2d3h5eoOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4eLj5OXm5+jp6vHy8/T19vf4+fr/xAAfAQADAQEBAQEBAQEBAAAAAAAAAQIDBAUGBwgJCgv/xAC1EQACAQIEBAMEBwUEBAABAncAAQIDEQQFITEGEkFRB2FxEyIygQgUQpGhscEJIzNS8BVictEKFiQ04SXxFxgZGiYnKCkqNTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqCg4SFhoeIiYqSk5SVlpeYmZqio6Slpqeoqaqys7S1tre4ubrCw8TFxsfIycrS09TV1tfY2dri4+Tl5ufo6ery8/T19vf4+fr/2wBDAAQEBAQEBAYEBAYJBgYGCQwJCQkJDA8MDAwMDA8SDw8PDw8PEhISEhISEhIVFRUVFRUZGRkZGRwcHBwcHBwcHBz/2wBDAQQFBQcHBwwHBwwdFBAUHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR3/3QAEAAL/2gAMAwEAAhEDEQA/APhCGCdrJjDGzmZ9p2gnhee3qSPyroLPTdR0vQLnW5C0cdw62YhYEeYzDf06MFC5I7HHrW1p/ha0ghxq135hhJcxW5wADgHLkc9ug/GnaTftZeI7l9HYrbRgBYmYkAEAEguTgg89cnpWvI1a5mpp3M7RtO8RahKIruymexlUo+VEYCnncu7AypwRTbb4f69eSMlmnnpkhXRJCGHYjCY5+teqwtfXsjQNuUSJuln3BtsWQrEbckklgoPvXp5l0jSvDy3VjIWvdywwQsATM54VQCPlA5JPoKJygvMUed7n/9D5CVmMtwCSc28v8jWboqr/AGwnA/1DN+OOv1rRT/XT/wDXvL/6Caz9F/5DEf8A17t/KumZhA9Y8PuwW+cEhvs0nPfiWHFX1d18QaY6sQwiLAjrksAT9aztA/1d/wD9e0v/AKNiq+P+Q9pv/XE/+hiuKW50H//Z") center / cover no-repeat; filter: blur(18px); transform: scale(1.06); }
+      #boot .boot-full { opacity: 0; transform: scale(1.02); transition: opacity 600ms cubic-bezier(0.16, 1, 0.3, 1), transform 6s cubic-bezier(0.16, 1, 0.3, 1); }
+      #boot.boot-sharp .boot-full { opacity: 1; transform: scale(1); }
+      #boot .boot-scrim { position: absolute; inset: 0; background: linear-gradient(0deg, rgba(5, 7, 12, 0.85) 0%, rgba(5, 7, 12, 0) 38%); }
+      #boot .boot-ui { position: absolute; left: 6vw; right: 6vw; bottom: 7vh; color: #e8eef7; font-family: 'Inter Tight', system-ui, sans-serif; }
+      #boot .boot-mark { font-family: 'Instrument Serif', Georgia, serif; font-size: clamp(48px, 6vw, 96px); line-height: 1; letter-spacing: -0.01em; }
+      #boot .boot-mark sup { font-size: 0.5em; vertical-align: 0.9em; margin-left: 0.04em; }
+      #boot .boot-line { position: relative; height: 1px; margin-top: 28px; background: rgba(232, 238, 247, 0.18); overflow: hidden; }
+      #boot .boot-line i { position: absolute; inset: 0; background: #e8eef7; transform-origin: left; transform: scaleX(var(--p, 0.04)); transition: transform 400ms cubic-bezier(0.16, 1, 0.3, 1); }
+      #boot .boot-credit { margin-top: 14px; font-size: 11px; letter-spacing: 0.04em; color: rgba(232, 238, 247, 0.55); }
+      @media (prefers-reduced-motion: reduce) {
+        #boot .boot-full { transform: none; transition: opacity 400ms linear; }
+        #boot .boot-line i { transition: none; }
+      }
+    </style>
   </head>
   <body>
+    <div id="boot" role="status" aria-label="Loading">
+      <div class="boot-img boot-lqip"></div>
+      <img
+        class="boot-img boot-full"
+        alt=""
+        src="/loading/loading-cupola-1440.jpg"
+        srcset="/loading/loading-cupola-1440.jpg 1440w, /loading/loading-cupola-2560.jpg 2560w"
+        sizes="100vw"
+        decoding="async"
+        fetchpriority="high"
+      />
+      <div class="boot-scrim"></div>
+      <div class="boot-ui">
+        <div class="boot-mark">e<sup>x</sup></div>
+        <div class="boot-line"><i></i></div>
+        <p class="boot-credit">Earth: NASA Blue Marble and Black Marble, public domain &middot; Body: MakeHuman, CC0</p>
+      </div>
+    </div>
+    <script>
+      (function () {
+        var img = document.querySelector('#boot .boot-full');
+        var sharp = function () { document.getElementById('boot').classList.add('boot-sharp'); };
+        if (img.decode) img.decode().then(sharp, sharp); else img.onload = sharp;
+      })();
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
