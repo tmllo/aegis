@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>e^x System Board</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* One visual world: cockpit-panel navy, thin light type, small mono labels.
+   Layout: summary strip -> full-width data map with a detail rail -> scope, hazards, ideas, lanes, decisions. */
+:root {
+  --bg: #0a1426;
+  --panel: #0f1d36;
+  --panel-2: #142645;
+  --line: #24395f;
+  --text: #e6edf8;
+  --dim: #93a4c3;
+  --faint: #5f7398;
+  --built: #7fd1b9;
+  --next: #8ab4ff;
+  --planned: #c3a6ff;
+  --stretch: #6b7a99;
+  --gap: #ffb86b;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--font-body); font-weight: 400; }
+body { padding: 28px clamp(16px, 3vw, 40px) 60px; line-height: 1.5; }
+h1, h2, h3 { text-wrap: balance; margin: 0; font-weight: 400; }
+h1 { font-size: clamp(28px, 3.4vw, 40px); font-weight: 300; letter-spacing: -0.01em; }
+h1 b { font-weight: 500; }
+h2 { font-size: 22px; font-weight: 300; }
+.eyebrow { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--faint); }
+.mono { font-family: var(--font-mono); }
+.dim { color: var(--dim); }
+a { color: var(--next); }
+header { display: grid; gap: 10px; margin-bottom: 22px; max-width: 1200px; }
+header p { margin: 0; color: var(--dim); max-width: 75ch; }
+.strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; margin-bottom: 26px; }
+.tile { background: var(--panel); padding: 14px 16px; display: grid; gap: 4px; }
+.tile .n { font-size: 30px; font-weight: 300; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.tile .l { font-size: 13px; color: var(--dim); }
+.tile .bar { height: 3px; border-radius: 2px; margin-top: 6px; }
+section { margin-top: 44px; }
+.sec-head { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.sec-head p { margin: 4px 0 0; color: var(--dim); max-width: 75ch; font-size: 14px; }
+.controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.seg button { background: transparent; color: var(--dim); border: 0; padding: 7px 12px; font: 500 12px var(--font-mono); letter-spacing: 0.04em; cursor: pointer; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--panel-2); color: var(--text); }
+.seg button:focus-visible, .node:focus-visible, .chip-btn:focus-visible { outline: 2px solid var(--next); outline-offset: 2px; }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12px; color: var(--dim); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.sw { width: 18px; height: 10px; border-radius: 2px; border: 1.5px solid; }
+.map-wrap { display: grid; grid-template-columns: 1fr; gap: 12px; }
+.map { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; overflow-x: auto; }
+.map svg { display: block; min-width: 1380px; width: 100%; height: auto; }
+.node { cursor: pointer; }
+.node rect.box { transition: opacity .2s; }
+.node text { pointer-events: none; }
+.edge { fill: none; stroke: var(--faint); stroke-width: 1.2; opacity: .45; transition: opacity .2s, stroke .2s; }
+.edge.hot { stroke: var(--text); opacity: .95; stroke-width: 1.6; }
+.elabel { font: 10.5px var(--font-mono); fill: var(--text); opacity: 0; transition: opacity .2s; }
+.elabel.hot { opacity: 1; }
+.elabel-bg { fill: var(--bg); opacity: 0; }
+.elabel-bg.hot { opacity: .9; }
+.faded { opacity: .12; }
+.rail { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 18px 20px; display: grid; gap: 10px; }
+.rail .rh { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.rail h3 { font-size: 20px; font-weight: 400; }
+.rail dl { margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px 24px; }
+.rail dt { font: 11px var(--font-mono); text-transform: uppercase; letter-spacing: .07em; color: var(--faint); }
+.rail dd { margin: 2px 0 0; font-size: 14px; color: var(--text); overflow-wrap: anywhere; }
+.rail dd code { font-family: var(--font-mono); font-size: 12px; color: var(--dim); }
+.pill { display: inline-flex; align-items: center; gap: 6px; font: 500 11px var(--font-mono); letter-spacing: .05em; text-transform: uppercase; padding: 3px 8px; border-radius: 99px; border: 1px solid; width: fit-content; }
+.pill i { width: 6px; height: 6px; border-radius: 50%; display: block; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.tbl { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; overflow-x: auto; }
+th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font: 500 11px var(--font-mono); text-transform: uppercase; letter-spacing: .07em; color: var(--faint); background: var(--panel-2); }
+tr:last-child td { border-bottom: 0; }
+td.st { white-space: nowrap; }
+.hz { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 16px; display: grid; gap: 8px; align-content: start; }
+.card h3 { font-size: 16px; font-weight: 500; }
+.card p { margin: 0; font-size: 13.5px; color: var(--dim); }
+.card ul { margin: 0; padding-left: 18px; font-size: 13.5px; color: var(--dim); display: grid; gap: 3px; }
+.card.gapcard { border-color: var(--gap); }
+.ideas { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+.idea { border-left: 3px solid var(--next); }
+.idea.top { border-left-color: var(--gap); background: linear-gradient(180deg, rgba(255,184,107,.07), transparent 60%), var(--panel); }
+.meta { display: flex; flex-wrap: wrap; gap: 6px; }
+.tag { font: 11px var(--font-mono); color: var(--dim); border: 1px solid var(--line); border-radius: 4px; padding: 2px 6px; }
+.lanes td:first-child { font-family: var(--font-mono); white-space: nowrap; }
+.qs { display: grid; gap: 8px; max-width: 900px; }
+.q { display: grid; grid-template-columns: 26px 1fr; gap: 10px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; font-size: 14px; }
+.q .k { font-family: var(--font-mono); color: var(--faint); }
+footer { margin-top: 48px; color: var(--faint); font-size: 13px; max-width: 80ch; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<header>
+  <div class="eyebrow">NASA Space Apps 2026 · Health monitoring for astronauts · repo tmllo/aegis @ 147c1ad</div>
+  <h1><b>e^x</b> system board: what exists, what we build next</h1>
+  <p>Every part of the project and where its data comes from. Click any box to see what it is, its file, its source and its feeds. Use the switch to compare what is built today with the full design. Comment on this page to add to the board.</p>
+</header>
+
+<div class="strip" id="strip"></div>
+
+<section style="margin-top:0">
+  <div class="sec-head">
+    <div>
+      <div class="eyebrow">01 · Data map</div>
+      <h2>From NASA source to the astronaut's screen</h2>
+      <p>Left to right: where data comes from, the Python that turns it into numbers, the files and feeds that cross the wire, the browser logic, the screens, and what leaves the system.</p>
+    </div>
+    <div class="controls">
+      <div class="seg" role="group" aria-label="Show">
+        <button type="button" data-mode="all" aria-pressed="true">Full design</button>
+        <button type="button" data-mode="built" aria-pressed="false">Built today</button>
+        <button type="button" data-mode="backend" aria-pressed="false">Our backend</button>
+        <button type="button" data-mode="frontend" aria-pressed="false">Emile's frontend</button>
+      </div>
+    </div>
+  </div>
+  <div class="legend" id="legend" style="margin-bottom:12px"></div>
+  <div class="map-wrap">
+    <div class="map"><svg id="map" role="img" aria-label="Data map: NASA and NOAA sources feed Tomas's Python and the planned server, which publish contract files and live feeds to the browser core, which drives the crew, wrist, ground and systems screens."></svg></div>
+    <aside class="rail" id="rail" aria-live="polite"></aside>
+  </div>
+</section>
+
+<section>
+  <div class="sec-head"><div>
+    <div class="eyebrow">02 · Challenge scope</div>
+    <h2>Every ask from the official brief, and how we cover it</h2>
+    <p>Data column: is the information already in our files. Screen column: is it visible to the astronaut yet. No screen is built yet, so the screen column is Emile's swarm's to-do list.</p>
+  </div></div>
+  <div class="tbl"><table id="scope"><thead><tr><th>The brief asks for</th><th>How e^x covers it</th><th>Data</th><th>Screen</th></tr></thead><tbody></tbody></table></div>
+</section>
+
+<section>
+  <div class="sec-head"><div>
+    <div class="eyebrow">03 · NASA's five hazards</div>
+    <h2>One hazard is not covered yet: the closed environment</h2>
+    <p>NASA's Human Research Program names five hazards. Four already have a metric in our crew file. The fifth, a hostile closed environment, gets real data once the ISS cabin feed is in.</p>
+  </div></div>
+  <div class="hz" id="hazards"></div>
+</section>
+
+<section>
+  <div class="sec-head"><div>
+    <div class="eyebrow">04 · Ideas to agree on</div>
+    <h2>What takes this from a dashboard to a system</h2>
+    <p>All proposals. The orange one is the strongest proof we have and its data is already built.</p>
+  </div></div>
+  <div class="ideas" id="ideas"></div>
+</section>
+
+<section>
+  <div class="sec-head"><div>
+    <div class="eyebrow">05 · Parallel build</div>
+    <h2>Backend lanes: one terminal each, one folder each</h2>
+    <p>Rule that keeps them apart: every module in <span class="mono">server/</span> exposes a FastAPI <span class="mono">router</span>, and <span class="mono">server/app.py</span> mounts whichever modules exist. Nobody edits another lane's file. Emile's swarm stays in <span class="mono">web/</span>.</p>
+  </div></div>
+  <div class="tbl"><table class="lanes" id="lanes"><thead><tr><th>Lane</th><th>Who runs it</th><th>Builds</th><th>Writes only</th><th>Waits for</th></tr></thead><tbody></tbody></table></div>
+</section>
+
+<section>
+  <div class="sec-head"><div>
+    <div class="eyebrow">06 · Decisions</div>
+    <h2>Questions for Emile before the build starts</h2>
+  </div></div>
+  <div class="qs" id="qs"></div>
+</section>
+
+<footer>
+  Sources for every box: files in the repo (paths shown) and <span class="mono">docs/research/2-data-sources/01-realtime-data-apis.md</span>, where each feed was tested live on 14 Nov 2026. Crew vitals are simulated; no public astronaut vitals feed exists. Headline model numbers come from <span class="mono">storm_forecast.json</span> <span class="mono">meta.metrics_test</span>.
+</footer>
+
+<script>
+const STATUS = {
+  built:    { label: 'Built',              color: 'var(--built)',   dash: '',      fill: 'rgba(127,209,185,.10)' },
+  partial:  { label: 'Part built',         color: 'var(--built)',   dash: '6 4',   fill: 'rgba(127,209,185,.05)' },
+  next:     { label: 'Next: our backend',  color: 'var(--next)',    dash: '6 4',   fill: 'rgba(138,180,255,.07)' },
+  planned:  { label: "Next: Emile's app",  color: 'var(--planned)', dash: '6 4',   fill: 'rgba(195,166,255,.06)' },
+  stretch:  { label: 'Stretch',            color: 'var(--stretch)', dash: '2 4',   fill: 'transparent' },
+};
+
+const COLS = ['Sources', 'Python: ml/ + server/', 'Contract: what crosses the wire', 'Browser core', 'Screens', 'Leaves the system'];
+
+const N = [
+  // col 0: sources
+  { id:'donki', c:0, t:'NASA DONKI', s:'flares · CMEs · SEP', st:'built', owner:'Tomas',
+    what:'NASA CCMC space-weather database. Every flare with its class, position on the Sun and linked CME, plus the proton storms (SEP) used as labels.',
+    path:'ml/fetch_donki.py → data/raw (not in git)', src:'CCMC DONKI API. The api.nasa.gov DONKI flare route returned HTTP 404 in our test, so use the CCMC host. Sample: docs/research/samples/donki_ccmc_FLR.json',
+    note:'History 2010 → Nov 2026 is pulled and modelled. Live polling every 15 min is the next step (server/live.py).' },
+  { id:'swpc', c:0, t:'NOAA SWPC + GOES', s:'protons · X-rays · Kp', st:'next', owner:'Tomas + Claude',
+    what:'Live JSON from NOAA: GOES proton flux above 10 MeV (the radiation that matters for crews), X-ray flares, planetary Kp, NOAA R/S/G scales and alerts.',
+    path:'server/live.py (to build)', src:'services.swpc.noaa.gov JSON, free, no key. Samples: docs/research/samples/swpc_goes_integral_protons_6hour.json and others',
+    note:'Gives the radiation screen a "right now" strip with the fetch time, and lets the model score today\'s flares.' },
+  { id:'isslive', c:0, t:'ISS Live! telemetry', s:'cabin air · water', st:'next', owner:'Tomas + Claude',
+    what:'Public subset of real ISS telemetry streamed from Mission Control: cabin pressure, ppCO2, ppO2, cabin temperature, water and urine tanks.',
+    path:'server/env.py (to build)', src:'Lightstreamer push.lightstreamer.com, adapter set ISSLIVE. Snapshot: docs/research/samples/isslive_lightstreamer_eclss_snapshot.json',
+    note:'Some items update rarely (our ppCO2 reading was last updated 2 to 3 Nov), so always show the last-update time. No crew biomedical items are public. NASA CO2 limit: 1-hour average of 3 mmHg or less.' },
+  { id:'hapi', c:0, t:'CCMC iSWA HAPI', s:'Mars + Moon dose', st:'next', owner:'Tomas + Claude',
+    what:'Measured radiation dose on Mars from Curiosity RAD (data to 12 Nov 2026) and in lunar orbit from LRO CRaTER (to 7 Oct 2026).',
+    path:'server/env.py (to build)', src:'iswa.gsfc.nasa.gov HAPI. Samples: docs/research/samples/iswa_hapi_msl_rad_dosimetry_2026-11.csv, iswa_hapi_crater_micro_2026-10.csv',
+    note:'Replaces the hand-set dose rates in crew_data.json environments, which lineage.json lists as an open point.' },
+  { id:'osdr', c:0, t:'NASA OSDR', s:'Inspiration4 bloodwork', st:'built', owner:'Tomas',
+    what:'De-identified blood count and chemistry for the four Inspiration4 crew, before and after flight.',
+    path:'ml/real_crew.py', src:'NASA Open Science Data Repository, study OSD-575 (research notes say OSD-569: to confirm)',
+    note:'25 post-flight values sit inside the lab\'s normal range yet at least 2 SD from that person\'s own pre-flight mean.' },
+  { id:'ranges', c:0, t:'Published ranges', s:'HRP · thresholds research', st:'built', owner:'Tomas',
+    what:'Physiological ranges, spaceflight effects and thresholds gathered from published sources. They shape the simulated crew.',
+    path:'docs/research/3-health-science/03-health-indicators-thresholds.md', src:'NASA HRP, CSA, peer-reviewed papers (cited in the file)',
+    note:'NASA does not publish crew self-check thresholds, so the app says so in the footer.' },
+  { id:'people', c:0, t:'Who is in space now', s:'crew list · ISS position', st:'stretch', owner:'open',
+    what:'Live list of people in space and the ISS position, for header context.',
+    path:'server/env.py (stretch)', src:'corquaid people-in-space, Launch Library 2, wheretheiss.at. open-notify is stale: do not use',
+    note:'Flavour only. Last to build.' },
+  { id:'devices', c:0, t:'Devices + check-in', s:'Bluetooth HR · manual form', st:'planned', owner:'Emile',
+    what:'Real heart rate from any strap or watch that broadcasts the standard Bluetooth Heart Rate Service, the daily check-in form, and simulated Bio-Monitor and dosimeter adapters.',
+    path:'web/src/devices/ (planned)', src:'Web Bluetooth GATT service 0x180D, characteristic 0x2A37 (Chrome only)',
+    note:'A live strap on stage turns the demo from a replay into a reading.' },
+
+  // col 1: python
+  { id:'ml_storm', c:1, t:'Storm model v1', s:'logistic · 72 h horizon', st:'built', owner:'Tomas',
+    what:'Predicts the chance of a proton storm within 72 h of each flare from CME speed, flare longitude, flare flux and whether a CME is linked.',
+    path:'ml/train_v1.py → ml/models/v1.pkl, ml/run_test_and_export.py, ml/results/', src:'DONKI history',
+    note:'Held out 2024 → Nov 2026: caught 16 of 17 storms, about 1 false alarm a month, median 3.8 h ahead, Brier skill 0.41 vs climatology. The file label says trained 2010-2023: fix to 2010-2021 + tuned 2022-23.' },
+  { id:'gen', c:1, t:'Simulated crew', s:'3 crew · 75 days', st:'built', owner:'Tomas',
+    what:'Ana, Kenji and Léa at Artemis Base Camp (sim) from 1 Sep 2026: 11 daily metrics, personal baselines from the first 14 days, flags on the 3-day mean.',
+    path:'ml/make_sample_data.py, ml/crew_flags.py, docs/analysis/alert_testbench.py', src:'Published ranges',
+    note:'On 6,000 simulated missions the 3-day rule raised 1.7 alerts per astronaut-month against 4.8 for a one-day rule. Storm dose placed on 5 Sep 2026, the real GOES storm in the window.' },
+  { id:'realcrew', c:1, t:'Real-crew scorer', s:'pre-flight baselines', st:'built', owner:'Tomas',
+    what:'Scores each Inspiration4 post-flight value against that person\'s own pre-flight mean.',
+    path:'ml/real_crew.py → ml/results/real_crew.md', src:'OSDR',
+    note:'Reference only: never mixed with the simulated crew or the check-in scorer.' },
+  { id:'live', c:1, t:'Live space weather', s:'server/live.py · B2', st:'next', owner:'Claude',
+    what:'Every 15 min: pull the last 7 days of DONKI flares with linked CMEs, compute the v1 features with ml/ code, score with v1.pkl, plus the NOAA GOES feeds.',
+    path:'server/live.py', src:'DONKI + SWPC',
+    note:'Caches to disk and falls back to the cache or the repo samples when offline, flagged cached: true. Parity test: same p_storm as the export on a past flare.' },
+  { id:'env', c:1, t:'Environment feed', s:'server/env.py · B2b', st:'next', owner:'Tomas terminal',
+    what:'ISS cabin air and water from ISS Live!, measured Mars and Moon dose from HAPI, people in space.',
+    path:'server/env.py', src:'ISS Live!, HAPI, Launch Library 2',
+    note:'The Python Lightstreamer client is an extra dependency: agree first.' },
+  { id:'relay', c:1, t:'Bus relay', s:'server/relay.py · B3', st:'next', owner:'Tomas terminal',
+    what:'WebSocket that passes app events between devices, so a report sent from the crew laptop arrives on the flight surgeon\'s phone.',
+    path:'server/relay.py', src:'Browser bus events',
+    note:'The light delay stays in the browser (link.ts). The server only relays.' },
+  { id:'store', c:1, t:'Check-in store', s:'server/store.py · B4', st:'next', owner:'Tomas terminal',
+    what:'Saves check-ins and reports to SQLite and merges check-ins into the crew series on the next load.',
+    path:'server/store.py', src:'Check-in form',
+    note:'Invisible on stage. Last backend step.' },
+  { id:'app', c:1, t:'Server shell', s:'server/app.py · B1', st:'next', owner:'Tomas terminal',
+    what:'One FastAPI process: the built app at /, the contract files at /data, extras at /api, the relay at /ws/bus. Mounts each lane\'s router.',
+    path:'server/app.py, server/Containerfile, server/tests/', src:'—',
+    note:'Runs on a laptop, a USB stick or a container. With Wi-Fi off it serves the cached files and the app works as today.' },
+
+  // col 2: contract
+  { id:'crew_json', c:2, t:'crew_data.json', s:'contract v1', st:'built', owner:'Tomas',
+    what:'Mission, environments, 11 metric definitions (label, unit, body region, red limits, explanation, how to measure, amber and red actions) and each crew member\'s baseline, series, flags and status.',
+    path:'web/public/data/crew_data.json, contracts/DATA_CONTRACT.md', src:'Simulated crew', note:'Shape changes go through contracts/CHANGELOG.md first.' },
+  { id:'storm_json', c:2, t:'storm_forecast.json', s:'1,528 test flares', st:'built', owner:'Tomas',
+    what:'Every held-out flare with its probability, alert level, position and the storm it led to, plus model metadata and thresholds.',
+    path:'web/public/data/storm_forecast.json', src:'Storm model v1',
+    note:'Proposed: events may also carry split "live" for flares the server scores today. Headline metrics never include them.' },
+  { id:'real_json', c:2, t:'real_crew.json', s:'Inspiration4 · n = 4', st:'built', owner:'Tomas',
+    what:'Real bloodwork scored against each person\'s pre-flight mean, with sample-handling artefacts and exclusions marked.',
+    path:'web/public/data/real_crew.json', src:'OSDR', note:'Not loaded by any screen yet.' },
+  { id:'sw_json', c:2, t:'space_weather_now', s:'proposed file + /api', st:'next', owner:'Tomas',
+    what:'GOES protons, latest X-ray flares, Kp and NOAA scales, with fetched_at and cached.',
+    path:'/api/space-weather/now', src:'Live space weather', note:'Needs Emile\'s yes (CHANGELOG entry marked PROPOSED).' },
+  { id:'env_json', c:2, t:'environment_now', s:'proposed file + /api', st:'next', owner:'Tomas',
+    what:'ISS cabin ppCO2, ppO2, pressure, temperature and water with last-update times; measured Mars and Moon dose rates with their dates.',
+    path:'/api/environment/now', src:'Environment feed', note:'Needs Emile\'s yes.' },
+  { id:'ws', c:2, t:'/ws/bus', s:'one bus record per message', st:'next', owner:'Tomas',
+    what:'Each message is one record from core/bus.ts as JSON, plus the sending device id so a device ignores its own echo.',
+    path:'/ws/bus', src:'Bus relay', note:'Needs the small bridge on Emile\'s side.' },
+
+  // col 3: browser core
+  { id:'loader', c:3, t:'Data loader + store', s:'load.ts · store.ts', st:'built', owner:'Emile',
+    what:'Fetches the three contract files once per page load and keeps them in a shared store with the selected crew member, region and environment.',
+    path:'web/src/data/', src:'/data/*.json', note:'The only network call in the app today. Serve the same paths from the server and the app goes live with no code change.' },
+  { id:'scoring', c:3, t:'Scoring rule', s:'core/scoring.ts', st:'built', owner:'Emile',
+    what:'The contract\'s personal-baseline rule in TypeScript, for live check-ins.',
+    path:'web/src/core/scoring.ts + scoring.test.ts', src:'crew_data.json', note:'Golden test reproduces every status and flag in crew_data.json, so the browser and Tomas\'s Python agree.' },
+  { id:'bus', c:3, t:'Event bus', s:'core/bus.ts', st:'built', owner:'Emile',
+    what:'Typed event store: observation, flag, status, alert, report, device. The Systems screen can draw it live.',
+    path:'web/src/core/bus.ts + bus.test.ts', src:'—', note:'Lives in one browser tab until the bridge exists.' },
+  { id:'obs', c:3, t:'Observation model', s:'FHIR R4 shape', st:'built', owner:'Emile',
+    what:'Every reading in one shape, modelled on the hospital standard FHIR Observation, whatever device produced it.',
+    path:'web/src/core/observation.ts', src:'Devices, replay, check-in', note:'The hospital-at-home line in the pitch rests on this.' },
+  { id:'adapters', c:3, t:'Device adapters', s:'devices/', st:'planned', owner:'Emile',
+    what:'Replay of the crew file, manual check-in, Bluetooth HR, simulated Bio-Monitor and dosimeter, plus planned devices listed as not connected.',
+    path:'web/src/devices/', src:'Devices', note:'' },
+  { id:'logic', c:3, t:'Link · escalation · handoff', s:'core/ (planned)', st:'planned', owner:'Emile',
+    what:'Light delay by environment and blackout windows, who gets told, the case bundle for an onboard AI medic, the radiation timeline.',
+    path:'web/src/core/link.ts, escalation.ts, handoff.ts, radiation.ts', src:'Store + bus', note:'Delay examples: ISS about 0 s, Moon about 1.3 s, Mars 11 min (up to 22).' },
+  { id:'remote', c:3, t:'Bus bridge', s:'core/remote.ts · ~40 lines', st:'next', owner:'Tomas (handoff)',
+    what:'Mirrors bus events to /ws/bus and replays events from other devices, only when the page is served by our server.',
+    path:'docs/handoff/remote.ts → web/src/core/remote.ts', src:'Bus', note:'We write it, Emile\'s agent drops it in.' },
+
+  // col 4: screens
+  { id:'console', c:4, t:'Crew Console', s:'crew cards · environment', st:'planned', owner:'Emile',
+    what:'Main tablet or laptop screen: crew overview coloured by worst status, environment switch, entry to each astronaut.',
+    path:'web/src/ui or concepts/', src:'Store', note:'Demo opens here: Moon base, Ana amber, Kenji red, Léa green.' },
+  { id:'body', c:4, t:'3D body map', s:'5 clickable regions', st:'partial', owner:'Emile',
+    what:'Translucent body with brain, heart, blood, bones and whole-body regions coloured by status.',
+    path:'web/src/components/body/AegisBody.tsx, web/public/models/aegis-body.glb', src:'Store', note:'Model built from BodyParts3D (CC BY 4.0). The component exists; the screen around it does not.' },
+  { id:'panels', c:4, t:'Metric panel + check-in', s:'charts · actions · streak', st:'planned', owner:'Emile',
+    what:'For a region: each metric against the astronaut\'s own normal band, explanation, how to measure, action, re-measure, check-in with streak.',
+    path:'web/src/ui/body', src:'Store + scoring', note:'' },
+  { id:'radui', c:4, t:'Radiation + replay', s:'dose · forecast · May 2024', st:'planned', owner:'Emile',
+    what:'Dose against the 600 mSv career limit, forecast feed, model card, and the May 2024 replay with the shelter alarm.',
+    path:'web/src/ui/radiation', src:'storm_forecast.json', note:'Replay warned about 39 h before the 10 May particles, with one false warning shown honestly.' },
+  { id:'wrist', c:4, t:'Wrist', s:'urgency pulses', st:'planned', owner:'Emile',
+    what:'Simulated watch face: one pulse to check in, two for confirmed amber, continuous for red or radiation.',
+    path:'web/src/ui/wrist', src:'Bus', note:'' },
+  { id:'ground', c:4, t:'Ground view', s:'flight surgeon', st:'planned', owner:'Emile',
+    what:'Reports arriving after the one-way light delay, link status, what the crew already did.',
+    path:'web/src/ui/ground', src:'Bus (later: /ws/bus)', note:'On a second device once the relay exists.' },
+  { id:'systems', c:4, t:'Systems screen', s:'architecture · readiness', st:'planned', owner:'Emile',
+    what:'Animated data-flow diagram driven by real events, connected devices, offline and parity checks.',
+    path:'web/src/ui/systems, web/docs/lineage.json (53 nodes, 74 edges)', src:'Bus + lineage', note:'This board is a draft of it.' },
+
+  // col 5: outputs
+  { id:'cmoda', c:5, t:'Case bundle', s:'for an onboard AI medic', st:'planned', owner:'Emile',
+    what:'Who, what drifted, values against their own normal, days running, what was re-measured and done, radiation context. JSON plus a readable summary.',
+    path:'web/src/core/handoff.ts', src:'Panels', note:'Labelled "Prepared for an onboard AI medical assistant such as NASA\'s CMO-DA".' },
+  { id:'report', c:5, t:'Report to Earth', s:'queued · delayed', st:'planned', owner:'Emile',
+    what:'Red status queues a report to the flight surgeon; it arrives after the light delay for the environment.',
+    path:'web/src/core/link.ts', src:'Escalation', note:'' },
+  { id:'shelter', c:5, t:'Shelter alarm', s:'suspend EVA', st:'planned', owner:'Emile',
+    what:'Banner and sound when a flare crosses the warning threshold.',
+    path:'web/src/ui/radiation', src:'Forecast', note:'Wording: "SEP likely: suspend EVA, crew to shelter (mission rule)".' },
+  { id:'pitch', c:5, t:'Pitch + submission', s:'deck · video · form', st:'next', owner:'Tomas',
+    what:'Deck, 3-minute script, 30 s video, submission text, judge Q&A.',
+    path:'docs/pitch/ (to write), ml/results/pitch_outline.md', src:'ml/results', note:'Every number must trace to a file in ml/results or docs/analysis.' },
+];
+
+const E = [
+  ['donki','ml_storm','2010–2026 history'], ['donki','live','last 7 days, every 15 min'], ['swpc','live','GOES protons, X-rays, Kp'],
+  ['isslive','env','cabin air stream'], ['hapi','env','measured dose'], ['people','env','crew list'],
+  ['osdr','realcrew','pre/post-flight draws'], ['ranges','gen','ranges + effects'], ['devices','adapters','readings'],
+  ['ml_storm','storm_json','held-out predictions'], ['live','storm_json','split: live'], ['live','sw_json','now + cached flag'],
+  ['gen','crew_json','3 crew × 75 days'], ['realcrew','real_json','scored draws'], ['env','env_json','cabin + dose'],
+  ['relay','ws','relay'], ['store','crew_json','merged check-ins'], ['ml_storm','pitch','headline numbers'],
+  ['crew_json','loader','fetch once'], ['storm_json','loader','fetch once'], ['real_json','loader','fetch once'],
+  ['sw_json','loader','poll'], ['env_json','loader','poll'],
+  ['loader','scoring','series + baselines'], ['adapters','obs','normalize'], ['obs','bus','observation'], ['scoring','bus','flag, status'],
+  ['bus','remote','mirror'], ['remote','ws','WebSocket'], ['loader','logic','environment'],
+  ['loader','console','crew + status'], ['loader','body','region status'], ['scoring','panels','scores'], ['loader','radui','forecast'],
+  ['bus','wrist','alerts'], ['logic','ground','delayed reports'], ['bus','systems','live events'],
+  ['panels','cmoda','case'], ['logic','report','queue'], ['radui','shelter','warning'],
+];
+
+const W = 1680, colX = c => 18 + c * 290, NW = 206, NH = 46, TOP = 64, PITCH = 58;
+const byId = Object.fromEntries(N.map(n => [n.id, n]));
+const rows = {};
+N.forEach(n => { rows[n.c] = (rows[n.c] || 0); n.r = rows[n.c]++; n.x = colX(n.c); n.y = TOP + n.r * PITCH; });
+const H = TOP + Math.max(...Object.values(rows)) * PITCH + 24;
+
+const svg = document.getElementById('map');
+const NS = 'http://www.w3.org/2000/svg';
+const el = (tag, attrs = {}, parent = svg) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); parent.appendChild(e); return e; };
+svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+
+const defs = el('defs');
+const mk = el('marker', { id: 'arr', viewBox: '0 0 10 10', refX: '9', refY: '5', markerWidth: '6', markerHeight: '6', orient: 'auto-start-reverse' }, defs);
+el('path', { d: 'M0,0 L10,5 L0,10 z', fill: 'currentColor' }, mk);
+svg.style.color = 'var(--faint)';
+
+COLS.forEach((name, c) => {
+  const t = el('text', { x: colX(c), y: 30, fill: 'var(--faint)', 'font-family': 'var(--font-mono)', 'font-size': '11', 'letter-spacing': '1' });
+  t.textContent = name.toUpperCase();
+  el('line', { x1: colX(c), x2: colX(c) + NW, y1: 40, y2: 40, stroke: 'var(--line)' });
+});
+
+// group box: everything in col 2 is served by server/app.py
+const c2 = N.filter(n => n.c === 2);
+const g2y0 = Math.min(...c2.map(n => n.y)) - 10, g2y1 = Math.max(...c2.map(n => n.y)) + NH + 22;
+el('rect', { x: colX(2) - 9, y: g2y0, width: NW + 18, height: g2y1 - g2y0, rx: 10, fill: 'none', stroke: 'var(--next)', 'stroke-dasharray': '3 5', opacity: '.55' });
+const gl = el('text', { x: colX(2), y: g2y1 - 6, fill: 'var(--next)', 'font-family': 'var(--font-mono)', 'font-size': '10.5' });
+gl.textContent = 'served by server/app.py (B1)';
+
+const edgeLayer = el('g'), labelLayer = el('g'), nodeLayer = el('g');
+const edges = E.map(([a, b, label]) => {
+  const A = byId[a], B = byId[b];
+  const fwd = B.c > A.c || (B.c === A.c);
+  const x1 = fwd ? A.x + NW : A.x, y1 = A.y + NH / 2;
+  const x2 = fwd ? B.x : B.x + NW, y2 = B.y + NH / 2;
+  const dx = Math.max(40, Math.abs(x2 - x1) * 0.45) * (fwd ? 1 : -1);
+  const p = el('path', { d: `M${x1},${y1} C${x1 + dx},${y1} ${x2 - dx},${y2} ${x2},${y2}`, class: 'edge', 'marker-end': 'url(#arr)' }, edgeLayer);
+  const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
+  const bg = el('rect', { class: 'elabel-bg', x: mx - label.length * 3.2 - 4, y: my - 9, width: label.length * 6.4 + 8, height: 15, rx: 3 }, labelLayer);
+  const lt = el('text', { class: 'elabel', x: mx, y: my + 2, 'text-anchor': 'middle' }, labelLayer);
+  lt.textContent = label;
+  return { a, b, p, bg, lt };
+});
+
+const nodeEls = {};
+N.forEach(n => {
+  const s = STATUS[n.st];
+  const g = el('g', { class: 'node', tabindex: '0', role: 'button', 'aria-label': `${n.t}, ${s.label}` }, nodeLayer);
+  el('rect', { class: 'box', x: n.x, y: n.y, width: NW, height: NH, rx: 6, fill: s.fill, stroke: s.color, 'stroke-width': n.st === 'built' ? 1.6 : 1.3, 'stroke-dasharray': s.dash }, g);
+  el('rect', { x: n.x, y: n.y + 8, width: 3, height: NH - 16, rx: 1.5, fill: s.color }, g);
+  const t1 = el('text', { x: n.x + 12, y: n.y + 19, fill: 'var(--text)', 'font-size': '13', 'font-weight': '500' }, g); t1.textContent = n.t;
+  const t2 = el('text', { x: n.x + 12, y: n.y + 35, fill: 'var(--dim)', 'font-family': 'var(--font-mono)', 'font-size': '10.5' }, g); t2.textContent = n.s;
+  g.addEventListener('click', () => select(n.id));
+  g.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); select(n.id); } });
+  g.addEventListener('mouseenter', () => highlight(n.id));
+  g.addEventListener('mouseleave', () => highlight(current));
+  nodeEls[n.id] = g;
+});
+
+let current = 'loader', mode = 'all';
+const MODES = {
+  all: () => true,
+  built: n => n.st === 'built' || n.st === 'partial',
+  backend: n => n.st === 'next' || n.c === 0,
+  frontend: n => n.st === 'planned' || n.st === 'partial' || n.id === 'remote',
+};
+function applyMode() {
+  const f = MODES[mode];
+  N.forEach(n => nodeEls[n.id].classList.toggle('faded', !f(n)));
+  edges.forEach(e => e.p.classList.toggle('faded', !(f(byId[e.a]) && f(byId[e.b]))));
+}
+function highlight(id) {
+  edges.forEach(e => {
+    const hot = e.a === id || e.b === id;
+    e.p.classList.toggle('hot', hot); e.lt.classList.toggle('hot', hot); e.bg.classList.toggle('hot', hot);
+    if (hot) edgeLayer.appendChild(e.p);
+  });
+  N.forEach(n => nodeEls[n.id].querySelector('rect.box').setAttribute('stroke-width', n.id === id ? 2.6 : (n.st === 'built' ? 1.6 : 1.3)));
+}
+const pill = st => { const s = STATUS[st]; return `<span class="pill" style="color:${s.color};border-color:${s.color}"><i style="background:${s.color}"></i>${s.label}</span>`; };
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+function select(id) {
+  current = id; const n = byId[id];
+  const ins = E.filter(e => e[1] === id).map(e => byId[e[0]].t + ' (' + e[2] + ')');
+  const outs = E.filter(e => e[0] === id).map(e => byId[e[1]].t + ' (' + e[2] + ')');
+  document.getElementById('rail').innerHTML = `
+    <div class="eyebrow">${esc(COLS[n.c])} · selected box</div>
+    <div class="rh"><h3>${esc(n.t)}</h3>${pill(n.st)}</div>
+    <dl>
+      <div><dt>What it is</dt><dd>${esc(n.what)}</dd></div>
+      <div><dt>Where</dt><dd><code>${esc(n.path)}</code></dd></div>
+      <div><dt>Data comes from</dt><dd>${esc(n.src)}</dd></div>
+      ${ins.length ? `<div><dt>Fed by</dt><dd>${esc(ins.join(' · '))}</dd></div>` : ''}
+      ${outs.length ? `<div><dt>Feeds</dt><dd>${esc(outs.join(' · '))}</dd></div>` : ''}
+      ${n.note ? `<div><dt>Note</dt><dd>${esc(n.note)}</dd></div>` : ''}
+      <div><dt>Owner</dt><dd>${esc(n.owner)}</dd></div>
+    </dl>`;
+  highlight(id);
+}
+document.querySelectorAll('.seg button').forEach(b => b.addEventListener('click', () => {
+  mode = b.dataset.mode;
+  document.querySelectorAll('.seg button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+  applyMode();
+}));
+
+// legend + strip
+document.getElementById('legend').innerHTML = Object.entries(STATUS).map(([k, s]) =>
+  `<span><i class="sw" style="border-color:${s.color};border-style:${s.dash ? (k === 'stretch' ? 'dotted' : 'dashed') : 'solid'};background:${s.fill}"></i>${s.label}</span>`).join('') +
+  `<span class="dim">Click a box to label its arrows</span>`;
+const count = st => N.filter(n => st.includes(n.st)).length;
+document.getElementById('strip').innerHTML = [
+  [count(['built', 'partial']), 'parts built', 'var(--built)'],
+  [count(['next']), 'parts in our backend plan', 'var(--next)'],
+  [count(['planned']), "parts in Emile's app plan", 'var(--planned)'],
+  ['16 / 17', 'held-out proton storms caught, ~1 false alarm a month', 'var(--built)'],
+  ['0', 'screens built so far (web is a scaffold)', 'var(--planned)'],
+  ['1 of 5', 'NASA hazards with no data yet: closed environment', 'var(--gap)'],
+].map(([n, l, c]) => `<div class="tile"><div class="n">${n}</div><div class="l">${l}</div><div class="bar" style="background:${c}"></div></div>`).join('');
+
+applyMode(); select(current);
+
+// scope
+const D = { yes: ['built', 'In our files'], part: ['partial', 'Partly'], no: ['planned', 'To build'], next: ['next', 'Backend next'] };
+const chip = k => { const [st, l] = D[k]; const s = STATUS[st]; return `<span class="pill" style="color:${s.color};border-color:${s.color}"><i style="background:${s.color}"></i>${l}</span>`; };
+const SCOPE = [
+  ['A visual tool to assess their own health', 'Crew Console, 3D body and metric panels, all scored against each astronaut\'s own normal', 'yes', 'no'],
+  ['Guidance on treatment and health improvement', 'Amber and red action per metric in crew_data.json, re-measure step, case bundle for an onboard AI medic', 'yes', 'no'],
+  ['Which measurements can be done in space', 'how_to_measure for each of the 11 metrics; device list with real and planned sensors', 'yes', 'no'],
+  ['How each hazard affects each indicator', 'Explanation per metric and the five-hazard map below', 'part', 'no'],
+  ['When a result needs the crew or flight surgeons', '3-day mean vs personal baseline (amber at 2σ, red at 3σ), absolute red limits, escalation with light delay', 'yes', 'no'],
+  ['Actions that prevent a critical condition', 'Per-metric actions, verify step, shelter rule on radiation warnings', 'yes', 'no'],
+  ['A clickable human body showing function and status', '3D model with 5 regions coloured by status; component built, screen not', 'yes', 'part'],
+  ['Colour coding', 'Status per region and overall in the file; one colour per status', 'yes', 'no'],
+  ['Dynamic charts over time', '75 days per metric with the personal normal band behind each chart', 'yes', 'no'],
+  ['Gamification', 'Check-in streak, XP and mission-ready badge', 'no', 'no'],
+  ['Prompts to measure as part of the routine', 'Wrist pulses and check-in reminders', 'no', 'no'],
+  ['Simple explanations', 'Plain-language explain text for every metric', 'yes', 'no'],
+  ['Different environments (station, Moon, Mars, transit)', 'Environment switch changes dose and link delay; dose rates move from hand-set to measured Mars and Moon data', 'next', 'no'],
+];
+document.querySelector('#scope tbody').innerHTML = SCOPE.map(([a, b, d, s]) => `<tr><td>${a}</td><td class="dim">${b}</td><td class="st">${chip(d)}</td><td class="st">${chip(s)}</td></tr>`).join('');
+
+// hazards
+const HZ = [
+  ['Space radiation', 'Daily and cumulative dose vs the 600 mSv career limit; storm forecast from DONKI', ['Built: dose series, storm model, May 2024 replay data', 'Next: live GOES protons, measured Mars and Moon dose'], false],
+  ['Isolation and confinement', 'Sleep hours and mood, low side only', ['Built: simulated series and flags (Kenji red on sleep)'], false],
+  ['Distance from Earth', 'Light delay by environment, onboard escalation, case bundle, Ground view', ['Planned: link, escalation, handoff in the browser', 'Next: relay so the Ground view runs on a second device'], false],
+  ['Gravity fields', 'Bone loss, exercise minutes, blood pressure shifts', ['Built: simulated series and flags (Ana amber on systolic BP)'], false],
+  ['Hostile closed environment', 'Cabin CO2, O2, pressure, temperature and water reserve from the real ISS', ['Gap today: no metric in the crew file', 'Next: ISS Live! feed, shown on the brain and whole-body regions'], true],
+];
+document.getElementById('hazards').innerHTML = HZ.map(([t, p, li, gap]) =>
+  `<div class="card ${gap ? 'gapcard' : ''}"><div class="eyebrow" style="color:${gap ? 'var(--gap)' : 'var(--faint)'}">${gap ? 'Not covered yet' : 'Covered'}</div><h3>${t}</h3><p>${p}</p><ul>${li.map(x => `<li>${x}</li>`).join('')}</ul></div>`).join('');
+
+// ideas
+const IDEAS = [
+  [true, 'Lab says normal, their own baseline says no', 'Real Inspiration4 bloodwork: 25 post-flight values inside the lab\'s normal range yet at least 2 SD from that person\'s pre-flight mean. Real data proving the personal-baseline idea the whole app rests on.', ['data built', 'one card in the app', 'Emile']],
+  [false, "Today's Sun, scored live", 'The radiation screen shows flares from the last 7 days scored by our model, and GOES protons right now, each with its fetch time.', ['backend B2', 'Claude', 'radiation screen']],
+  [false, 'Station air drives the body', 'Real ISS cabin CO2 near the 3 mmHg limit lights the brain region with a headache and focus note. Covers the fifth hazard with real data.', ['backend env', 'Tomas terminal', 'body panel']],
+  [false, 'Real Mars and Moon dose', 'The environment switch reads measured dose from Curiosity on Mars and LRO at the Moon instead of numbers we typed.', ['backend env', 'small UI change']],
+  [false, 'Two-device ground link', 'Crew screen on the laptop, flight surgeon view on a phone. The report arrives on the phone after the light delay for that environment.', ['backend B3', 'bridge in web/', 'Ground view']],
+  [false, 'Live Systems map', 'The Systems screen animates real events: packets arriving from DONKI, GOES and the ISS, scored, shown, relayed, with timestamps. This board is its first draft.', ['lineage.json exists', 'Emile']],
+  [false, 'Judge wears the strap', 'A judge puts on a Bluetooth heart-rate strap or watch and their reading enters the system live.', ['needs hardware', 'adapter planned']],
+  [false, 'Who is up there now', 'Live count and names of people in space in the header.', ['stretch', 'tiny']],
+];
+document.getElementById('ideas').innerHTML = IDEAS.map(([top, t, p, tags]) =>
+  `<div class="card idea ${top ? 'top' : ''}">${top ? '<div class="eyebrow" style="color:var(--gap)">Strongest proof</div>' : ''}<h3>${t}</h3><p>${p}</p><div class="meta">${tags.map(x => `<span class="tag">${x}</span>`).join('')}</div></div>`).join('');
+
+// lanes
+const LANES = [
+  ['T1', 'Tomas, terminal 1', 'Server shell, router mounting, Containerfile, contract tests', 'server/app.py, server/Containerfile, server/tests/test_contract.py', 'nothing (start first)'],
+  ['T2', 'Claude (cloud copy)', 'Live DONKI scoring + NOAA GOES feeds, cache and offline fallback', 'server/live.py, server/tests/test_live.py', 'nothing (router mounted by T1)'],
+  ['T3', 'Tomas, terminal 2', 'ISS cabin feed, measured Mars and Moon dose, people in space', 'server/env.py, server/tests/test_env.py', 'yes on the Lightstreamer dependency'],
+  ['T4', 'Tomas, terminal 3', 'WebSocket relay, SQLite store, the browser bridge as a handoff file', 'server/relay.py, server/store.py, docs/handoff/remote.ts', "Emile's yes on the bridge"],
+  ['T5', 'Tomas, terminal 4', 'Contract text for the new feeds, pitch numbers, submission draft', 'contracts/ (after yes), docs/pitch/', "Emile's yes on section 4"],
+  ['Web', "Emile's swarm", 'All screens, device adapters, link and escalation logic', 'web/', 'pushes web-wip at each gate so we can see it'],
+];
+document.querySelector('#lanes tbody').innerHTML = LANES.map(r => `<tr>${r.map((c, i) => `<td class="${i > 1 ? 'dim' : ''}">${i === 3 ? `<span class="mono" style="font-size:12px">${c}</span>` : c}</td>`).join('')}</tr>`).join('');
+
+// questions
+const QS = [
+  'New feeds: yes to split "live" in storm_forecast.json, plus space_weather_now and environment_now from the server?',
+  'Bus bridge: yes to a ~40-line core/remote.ts, active only when the app is served by our server, so the Ground view can run on a phone?',
+  'Visibility: push a web-wip branch with screenshots at each phase gate, starting with the 3 concepts?',
+  'Placement: Inspiration4 card on which screen? Today\'s Sun on the radiation screen? Station air on the brain panel?',
+  'Blender: cut unless the whole demo path already works?',
+  'Bluetooth HR: does anyone have a strap or watch that broadcasts heart rate for the stage?',
+];
+document.getElementById('qs').innerHTML = QS.map((q, i) => `<div class="q"><span class="k">${String(i + 1).padStart(2, '0')}</span><span>${q}</span></div>`).join('');
+</script>
+</body>
+</html>
