@@ -15,3 +15,4 @@
 - 07:10 watch: no new crew-station commits (still 3a65968). main 0d4b3bc.
 - 07:20 watch: no new crew-station commits (still 3a65968). main 0d4b3bc.
 - 07:30 watch: reached the 07:30 stop. crew-station still 3a65968. Gate identical, rejected=0, 128 passed. Morning summary written.
+- 08:10 integration task 1: SPA fallback and `AEGIS_WEB_DIST`. `scripts/serve_demo.sh` builds origin/crew-station outside this repo. Deep links return index.html. `/api` stays JSON. Gate run with this commit.

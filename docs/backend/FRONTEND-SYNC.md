@@ -9,6 +9,15 @@
 
 - `web/src/console/entries.ts` `VITAL` still maps glucose to `vital.glucose`. The server stores that as `lab.glucose`. The crew page's main button (`act` in `CrewPage.tsx`) posts through `VITAL`, so sleep, mood and exercise on that button are not sent (they are not in the map). The slider does send `self.sleep_h`, `self.mood` and `self.exercise_min`. Add those three keys to `VITAL` if that button should store them too.
 
+## Integration
+
+| Call | Status | Shape |
+|---|---|---|
+| GET /environment, /checkup, /mind (no file in the build) | 200 text/html | `index.html` from `AEGIS_WEB_DIST` |
+| GET /assets/* when the file exists | 200 | the file |
+| GET /api/nope | 404 JSON | unchanged |
+| GET /data/crew_data.json | 200 JSON | this server's contract file, not the copy in the build |
+
 ## Log
 
 - 2026-11-15 06:18 Europe/Paris. Emile `3a65968` ("Use shared vitals sliders across crew and organ views"). `CrewPage` and `InfoSheet` now edit through `MetricSlider`, which posts catalog keys (`lab.glucose`, `vital.hr`, `vital.bp_sys`, `vital.bp_dia`, `vital.temp`, `self.sleep_h`, `self.mood`, `self.exercise_min`). The crew page's main button still posts `VITAL`, including `vital.glucose`, which the server already maps to `lab.glucose`. No new server change.
