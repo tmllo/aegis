@@ -146,14 +146,24 @@ export function useCameraScan({ durationS = 25 }: Options = {}): CameraScan {
 
     void (async () => {
       try {
-        stream = await navigator.mediaDevices.getUserMedia({
+        // A request that never answers (prompt dismissed, macOS camera access off for the browser,
+        // camera busy in another app) must not leave the user on "Allow camera" forever.
+        const request = navigator.mediaDevices.getUserMedia({
           video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 }, frameRate: { ideal: 30 } },
           audio: false,
         });
+        const timeout = new Promise<never>((_, reject) =>
+          setTimeout(() => reject(Object.assign(new Error('timeout'), { name: 'TimeoutError' })), 12000));
+        stream = await Promise.race([request, timeout]);
       } catch (e) {
         const name = (e as DOMException)?.name;
         setStatus(name === 'NotAllowedError' || name === 'SecurityError' ? 'denied' : 'error');
-        setError(name === 'NotAllowedError' ? 'Camera permission was declined' : 'No camera available');
+        setError(
+          name === 'NotAllowedError' ? 'Camera permission was declined'
+          : name === 'TimeoutError' ? 'Camera did not start: allow it in the address bar, turn on Chrome in macOS Settings > Privacy > Camera, close other apps using the camera, then try again'
+          : name === 'NotReadableError' ? 'Camera is busy in another app: close it and try again'
+          : name === 'NotFoundError' || name === 'OverconstrainedError' ? 'No camera found'
+          : 'Camera error: try again');
         run.current = null;
         return;
       }
@@ -261,7 +271,7 @@ export function useCameraScan({ durationS = 25 }: Options = {}): CameraScan {
   const message =
     status === 'idle' ? 'Ready to scan'
     : status === 'starting' ? 'Allow camera'
-    : status === 'scanning' ? (hint ?? `Hold still · ${secondsLeft ?? durationS} s`)
+    : status === 'scanning' ? `${hint ?? 'Hold still'} · ${secondsLeft ?? durationS} s`
     : status === 'done' ? (bpm != null ? `Done · ${bpm} bpm${breathing != null ? ` · ${breathing} breaths/min` : ''}` : 'Done · no clear pulse, try more light and stay still')
     : status === 'denied' ? 'Camera blocked: allow it in the address bar and try again'
     : status === 'unsupported' ? 'This browser cannot use the camera'
