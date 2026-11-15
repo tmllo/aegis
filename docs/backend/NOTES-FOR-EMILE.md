@@ -31,11 +31,11 @@ Starlink and “every active satellite” are large. Call `getJson(path, 20000)`
 
 ## Habit untick
 
-Unticking a habit sends no request, so the server keeps the task `done`. To undo it, post the same task and the same `t` with status `skipped`. A second event for that task and `t` replaces the first.
+Unticking a habit only deletes the local event. The queue stays as it was, so the server keeps the task `done`. The tick you do send uses `t` of `${date}T12:00:00Z`. Post `skipped` with that same `t` and the server replaces the done event. A later `t` on the same day is the one that counts, so a bare date would leave the noon done event in place.
 
 ```http
 POST /api/tasks/routine-c1-hydration/events
-{"status": "skipped", "t": "2026-11-14"}
+{"status": "skipped", "t": "2026-11-14T12:00:00Z"}
 ```
 
 `status` is `"done"` or `"skipped"`. `"closed"` is server-only and returns 422.
