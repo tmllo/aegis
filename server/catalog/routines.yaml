@@ -1,0 +1,69 @@
+# Mind layer: default habits, the check-in form, XP and badges (docs/backend/NEXT.md section 2).
+# Read by server/mind via cat.extra["routines"]. Every routine is created for every crew_sim subject at build.
+# schedule: "daily" or "days:mon,wed,fri" (UTC mission days). metric: optional link to a catalog metric.
+
+checkin:
+  # The daily check-in, in screen order. self.mood is defined in metrics.yaml; its words are here.
+  metrics: [self.mood, self.stress, self.energy, self.social, self.sleep_quality]
+  scales:
+    self.mood:
+      min: 1
+      max: 5
+      words: [Very low, Low, Okay, Good, Great]
+
+routines:
+- id: checkin
+  label: Daily check-in (mood, stress, energy, connection, sleep)
+  schedule: daily
+  metric: self.mood
+  basis: NASA lists isolation and confinement among the five hazards of human spaceflight; a short daily self-rating
+    gives each crew member a personal baseline so a drift is seen early (PROJECT_CONTEXT, Mind layer).
+- id: exercise
+  label: Exercise block (about 2 h)
+  schedule: daily
+  metric: self.exercise_min
+  basis: ISS crews exercise about two hours a day to limit bone and muscle loss (NASA, ISS exercise; PROJECT_CONTEXT
+    section 10). Verify the figure before quoting it on a slide.
+- id: sleep_window
+  label: Keep the sleep window (8.5 h scheduled)
+  schedule: daily
+  metric: self.sleep_h
+  basis: ISS schedules allot 8.5 h for sleep; crews often get less (NASA sleep studies). Team working value.
+- id: hydration
+  label: Hydration (drink to plan)
+  schedule: daily
+  basis: Fluid shifts in microgravity and low cabin humidity make planned drinking part of the crew day. Team habit.
+- id: journal
+  label: One journal line
+  schedule: daily
+  basis: Expressive writing is a low-cost self-care habit used in isolated-confined analogues. Private, never sent to
+    the ground. Team habit.
+- id: call_home
+  label: Call home
+  schedule: days:wed,sun
+  metric: self.social
+  basis: Private family conferences are part of ISS crew support and help social connection. Team schedule.
+
+xp:
+  task_done: 10          # a self or routine task marked done
+  system_task_done: 20   # a task the engine made from an alert, done or closed by a new reading
+  checkin_day: 5         # each mission day with at least one check-in score
+  journal_day: 5         # each day with at least one journal entry (count only, never the text)
+  level_every: 100       # level = 1 + xp // level_every
+
+badges:
+- id: first_checkin
+  label: First check-in
+  rule: {checkin_days: 1}
+- id: week_streak
+  label: Seven-day check-in streak
+  rule: {checkin_streak: 7}
+- id: month_streak
+  label: 28-day check-in streak
+  rule: {checkin_streak: 28}
+- id: closed_loop
+  label: Closed the loop (acted on an alert)
+  rule: {system_tasks_closed: 1}
+- id: habit_keeper
+  label: A habit kept seven days running
+  rule: {best_habit_streak: 7}
