@@ -100,6 +100,62 @@ const BUILT: { n: string; t: string }[] = [
   { n: '0', t: 'AI in alerts or scoring' },
 ];
 
+/** Where every number comes from (counts from ml/results/metrics.md, anomaly_metrics.md and the data files, 15 Nov). */
+const DATA: { src: string; what: string; n: string; kind: 'Real' | 'Simulated' }[] = [
+  { src: 'NASA CCMC DONKI', what: 'Solar flares, eruptions and proton events, Apr 2010 to Nov 2026', n: '3,407 flares', kind: 'Real' },
+  { src: 'NASA OSDR OSD-575', what: 'Inspiration4 blood labs, each against that person’s own pre-flight baseline', n: '4 crew', kind: 'Real' },
+  { src: 'NASA JPL SMAP and MSL', what: 'Spacecraft telemetry with labelled faults, to tune and test the cabin detector', n: '81 channels, 104 faults', kind: 'Real' },
+  { src: 'Crew readings', what: '11 daily readings per astronaut, modelled on the CSA Bio-Monitor channel set', n: '3 crew, 75 days', kind: 'Simulated' },
+  { src: 'Cabin telemetry', what: 'CO₂, oxygen, pressure, temperature and humidity, hourly, with 3 planted faults', n: '1,800 hours', kind: 'Simulated' },
+];
+/** How each model learns: train, tune and test never share data. */
+const LEARN: { name: string; rows: [string, string][] }[] = [
+  {
+    name: 'Radiation forecast',
+    rows: [
+      ['Predicts', 'The chance that a flare is followed by a proton storm (GOES >10 MeV). Never a dose'],
+      ['Inputs', 'Flare size, solar longitude, linked eruption, eruption speed'],
+      ['Model', 'Logistic regression, chosen over gradient boosting on validation'],
+      ['Train', '484 flares, 2010‑2021'],
+      ['Tune', '540 flares, 2022‑2023: model choice and both alert thresholds'],
+      ['Test', '1,528 flares, 2024‑2026, scored once after freezing'],
+      ['Result', '16 of 17 storms warned, 41% better than the long-run storm rate (Brier skill)'],
+    ],
+  },
+  {
+    name: 'Cabin fault detector',
+    rows: [
+      ['Predicts', 'Whether a channel has left its own expected pattern'],
+      ['Model', 'Ridge forecast of the next value; the alert is the size of the miss'],
+      ['Tune', 'NASA MSL only: 27 channels, 36 labelled faults'],
+      ['Test', 'NASA SMAP, scored once: 54 channels, 68 labelled faults'],
+      ['Result', '33 of 68 faults found, 43% of alerts real (a plain 3‑sigma rule: 22%)'],
+      ['Honest', 'A planted fault it missed is shown as Missed on the Cabin page'],
+    ],
+  },
+];
+/** What was put on a common scale, and how. */
+const NORM: [string, string][] = [
+  ['Crew readings', 'Scored against that astronaut’s own first 14 mission days, on a 3-day average, so one odd reading does not raise an alert'],
+  ['Flare size and eruption speed', 'Log scale, then standardised; a missing value takes the median'],
+  ['Solar longitude', 'One convention, west positive; one mis-stored 2013 position corrected'],
+  ['Storm label', 'M and X flares only; one definition of a storm (GOES >10 MeV); flares inside a running storm removed: 3,407 to 2,552'],
+  ['Self-reports', 'Mood, stress, energy, sleep and connection on one 1 to 5 scale with a word per step'],
+  ['Every source', 'One catalogue of metrics and units, one record per reading, each marked live, recorded or simulated'],
+];
+const VALUE: { t: string; s: string }[] = [
+  { t: 'Earlier', s: 'A storm warning hours ahead, and a health drift flagged days before it is an emergency' },
+  { t: 'Personal', s: 'Your own normal, not a population range: under 2 false alarms a month per astronaut' },
+  { t: 'Autonomous', s: 'Works with no link to Earth; says what the crew handles and what goes to the surgeon' },
+  { t: 'Honest', s: 'Every number carries its source and whether it is real, recorded or simulated' },
+];
+const AI: [string, string][] = [
+  ['Used for', 'Claude (Anthropic), through Claude Code, wrote most of the web app code and helped research and draft documents from the team’s prompts'],
+  ['The team’s own', 'The concept, the data choices, the model design, the validation and every decision'],
+  ['Not used for', 'Any alert, score or forecast. The radiation model is a logistic regression the team trained and validated'],
+  ['One exception', 'The optional Mind chat calls Google Gemini only if a key is pasted on the device; otherwise replies are scripted. Labelled AI demo, not medical advice; it never decides escalation'],
+];
+
 export default function Built() {
   return (
     <Page
@@ -154,6 +210,87 @@ export default function Built() {
             </li>
           ))}
         </ol>
+
+          <section className="bt-sect">
+            <h2>Value</h2>
+            <dl className="bt-value">
+              {VALUE.map((v) => (
+                <div key={v.t}>
+                  <dt>{v.t}</dt>
+                  <dd>{v.s}</dd>
+                </div>
+              ))}
+            </dl>
+          </section>
+
+          <section className="bt-sect">
+            <h2>Data collected</h2>
+            <table className="bt-table">
+              <thead>
+                <tr>
+                  <th>Source</th>
+                  <th>What</th>
+                  <th>Size</th>
+                  <th>Kind</th>
+                </tr>
+              </thead>
+              <tbody>
+                {DATA.map((d) => (
+                  <tr key={d.src}>
+                    <td>
+                      <b>{d.src}</b>
+                    </td>
+                    <td>{d.what}</td>
+                    <td className="bt-num">{d.n}</td>
+                    <td className={d.kind === 'Real' ? 'bt-real' : 'bt-sim'}>{d.kind}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </section>
+
+          <section className="bt-sect">
+            <h2>How the models learn</h2>
+            <div className="bt-two">
+              {LEARN.map((m) => (
+                <div key={m.name}>
+                  <h3>{m.name}</h3>
+                  <dl className="bt-kv">
+                    {m.rows.map(([k, v]) => (
+                      <div key={k}>
+                        <dt>{k}</dt>
+                        <dd>{v}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <section className="bt-sect">
+            <h2>What we normalised</h2>
+            <dl className="bt-kv is-wide">
+              {NORM.map(([k, v]) => (
+                <div key={k}>
+                  <dt>{k}</dt>
+                  <dd>{v}</dd>
+                </div>
+              ))}
+            </dl>
+          </section>
+
+          <section className="bt-sect">
+            <h2>AI acknowledgement</h2>
+            <dl className="bt-kv is-wide">
+              {AI.map(([k, v]) => (
+                <div key={k}>
+                  <dt>{k}</dt>
+                  <dd>{v}</dd>
+                </div>
+              ))}
+            </dl>
+          </section>
         </div>
       }
     />
