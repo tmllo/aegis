@@ -27,3 +27,21 @@ export function hasServer(): Promise<boolean> {
   );
   return probe;
 }
+
+/** POST JSON to an endpoint below the app's base (only used when hasServer() is true). */
+export async function postJson<T>(path: string, body: unknown, timeoutMs = 4000): Promise<T> {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    const res = await fetch(`${base()}${path}`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(body),
+      signal: ctrl.signal,
+    });
+    if (!res.ok) throw new Error(`${path}: HTTP ${res.status}`);
+    return (await res.json().catch(() => null)) as T;
+  } finally {
+    clearTimeout(timer);
+  }
+}

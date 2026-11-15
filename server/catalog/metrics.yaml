@@ -323,8 +323,20 @@ metrics:
   hazard: closed_environment
   body_region: whole_body
   rule:
-    type: display_only
-    basis: no sourced limit yet
+    type: bands
+    bands:
+      red_low: 690
+      amber_low: 735
+      amber_high: 790
+      red_high: 800
+    source: Team
+    basis: team band, no NASA source
+    emergency_below: 690
+  display:
+    order: 1
+    label: Cabin pressure
+    short: Pressure
+    digits: 0
 - key: cabin.temp
   label: Cabin temperature (US Lab)
   unit: degC
@@ -333,8 +345,20 @@ metrics:
   hazard: closed_environment
   body_region: whole_body
   rule:
-    type: display_only
-    basis: no sourced limit yet
+    type: bands
+    bands:
+      red_low: 15
+      amber_low: 18.3
+      amber_high: 26.7
+      red_high: 30
+    source: Team
+    basis: team band, no NASA source
+  display:
+    order: 5
+    label: Cabin temperature
+    short: Temperature
+    digits: 1
+    unit: °C
 - key: cabin.ppo2
   label: Oxygen partial pressure (US Lab)
   unit: mmHg
@@ -343,8 +367,18 @@ metrics:
   hazard: closed_environment
   body_region: whole_body
   rule:
-    type: display_only
-    basis: no sourced limit yet
+    type: bands
+    bands:
+      red_low: 122
+      amber_low: 127
+    source: NASA
+    basis: 'NASA-STD-3001 V2 inspired ppO2 floors (see ref)'
+    ref: 'NASA-STD-3001 V2: inspired ppO2 floor 127 mmHg with monitoring, 1-hour floor 122 mmHg'
+  display:
+    order: 2
+    label: Oxygen, partial pressure
+    short: ppO2
+    digits: 0
 - key: cabin.ppco2
   label: CO2 partial pressure (US Lab)
   unit: mmHg
@@ -353,9 +387,18 @@ metrics:
   hazard: closed_environment
   body_region: brain
   rule:
-    type: absolute
-    amber_above: 3.0
+    type: bands
+    bands:
+      amber_high: 2.5
+      red_high: 3.0
+    source: NASA
     basis: 'NASA limit: 1-hour average at or below 3 mmHg (NASA OCHMO CO2 technical brief)'
+    ref: 'NASA-STD-3001 V2 6004: 1-hour average at or below 3 mmHg. Headaches reported from 2.8 mmHg, fatigue and nausea above 4.5 mmHg'
+  display:
+    order: 3
+    label: CO2, partial pressure
+    short: ppCO2
+    digits: 2
 - key: cabin.ppo2_node3
   label: Oxygen partial pressure (Node 3)
   unit: mmHg
@@ -364,8 +407,13 @@ metrics:
   hazard: closed_environment
   body_region: whole_body
   rule:
-    type: display_only
-    basis: no sourced limit yet
+    type: bands
+    bands:
+      red_low: 122
+      amber_low: 127
+    source: NASA
+    basis: 'NASA-STD-3001 V2 inspired ppO2 floors (see ref)'
+    ref: 'NASA-STD-3001 V2: inspired ppO2 floor 127 mmHg with monitoring, 1-hour floor 122 mmHg'
 - key: cabin.ppn2_node3
   label: Nitrogen partial pressure (Node 3)
   unit: mmHg
@@ -384,9 +432,13 @@ metrics:
   hazard: closed_environment
   body_region: brain
   rule:
-    type: absolute
-    amber_above: 3.0
+    type: bands
+    bands:
+      amber_high: 2.5
+      red_high: 3.0
+    source: NASA
     basis: 'NASA limit: 1-hour average at or below 3 mmHg (NASA OCHMO CO2 technical brief)'
+    ref: 'NASA-STD-3001 V2 6004: 1-hour average at or below 3 mmHg. Headaches reported from 2.8 mmHg, fatigue and nausea above 4.5 mmHg'
 - key: cabin.urine_tank
   label: Urine tank
   unit: '%'
@@ -395,9 +447,19 @@ metrics:
   hazard: closed_environment
   body_region: whole_body
   rule:
-    type: display_only
-    basis: no sourced limit yet
-- key: cabin.waste_water
+    type: bands
+    bands:
+      amber_high: 80
+      red_high: 95
+    source: Team
+    basis: team band, no NASA source
+  display:
+    order: 9
+    label: Urine tank
+    short: Urine
+    digits: 0
+    tank: true
+- key: cabin.water_waste
   label: Waste water tank
   unit: '%'
   kind: habitat_telemetry
@@ -405,8 +467,18 @@ metrics:
   hazard: closed_environment
   body_region: whole_body
   rule:
-    type: display_only
-    basis: no sourced limit yet
+    type: bands
+    bands:
+      amber_high: 80
+      red_high: 95
+    source: Team
+    basis: team band, no NASA source
+  display:
+    order: 8
+    label: Waste water tank
+    short: Waste water
+    digits: 0
+    tank: true
 - key: cabin.water_clean
   label: Clean water tank
   unit: '%'
@@ -415,8 +487,18 @@ metrics:
   hazard: closed_environment
   body_region: whole_body
   rule:
-    type: display_only
-    basis: no sourced limit yet
+    type: bands
+    bands:
+      red_low: 10
+      amber_low: 25
+    source: Team
+    basis: team band, no NASA source
+  display:
+    order: 7
+    label: Clean water tank
+    short: Clean water
+    digits: 0
+    tank: true
 - key: sw.goes_p10
   label: GOES proton flux above 10 MeV
   unit: pfu

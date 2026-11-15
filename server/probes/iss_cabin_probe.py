@@ -27,7 +27,7 @@ ITEMS = {
     "NODE3000001": ("cabin.ppo2_node3", "ppO2 (Node 3)", "mmHg"),
     "NODE3000003": ("cabin.ppco2_node3", "ppCO2 (Node 3)", "mmHg"),
     "NODE3000005": ("cabin.urine_tank", "Urine tank", "%"),
-    "NODE3000008": ("cabin.waste_water", "Waste water tank", "%"),
+    "NODE3000008": ("cabin.water_waste", "Waste water tank", "%"),
     "NODE3000009": ("cabin.water_clean", "Clean water tank", "%"),
     "TIME_000001": ("link.station_time", "Station time / signal", ""),
 }

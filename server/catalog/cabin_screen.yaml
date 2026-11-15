@@ -1,0 +1,6 @@
+# Cabin screen settings (Emile's 02 Cabin). Read as cat.extra["cabin_screen"] by server/views/cabin_catalog.py.
+# Per-metric bands, source and ref live in each cabin.* metric's rule; labels and digits in its display block.
+about: "Cabin catalog for the Cabin screen, keyed like server/catalog/metrics.yaml (cabin.*). Bands: a value below red_low or above red_high is red, below amber_low or above amber_high is amber. source NASA = a published NASA limit; Team = our own band, no NASA source. Item ids are ISS Live! (Lightstreamer ISSLIVE). Units are as observed, not as the dictionary states (see docs/research/2-data-sources/01-realtime-data-apis.md 1.2)."
+stale_after_h: 24
+signal_item: TIME_000001
+signal_ok_class: '24'
