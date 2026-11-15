@@ -4,7 +4,7 @@
 // model's real lead time), the crew moves to shelter with one confirm, and the dose with and
 // without shelter is compared. The sheltered figure is an estimate and says so.
 import { useEffect, useMemo, useState } from 'react';
-import { SHELTER_BANNER, sortedEvents } from '../core/radiation';
+import { sortedEvents } from '../core/radiation';
 import { Confirm, Mark } from './ui';
 import './shelter.css';
 import { useConsole } from './useConsole';
@@ -52,14 +52,26 @@ export default function ShelterPage() {
   const sheltered = excess != null ? normal + excess * SHELTER_KEEPS : null;
   const left = Math.max(0, lead - t);
 
-  const fmtT = (x?: string | null) => (x ?? '--').slice(0, 16).replace('T', ' ');
+  // plain dates: "30 Jul 2026, 17:00"
+  const fmtT = (x?: string | null, time = true) => {
+    const d = x ? new Date(x.length <= 10 ? `${x}T00:00:00Z` : x.endsWith('Z') ? x : `${x}Z`) : null;
+    if (!d || Number.isNaN(d.getTime())) return '--';
+    const day = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
+    return time ? `${day}, ${d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' })}` : day;
+  };
   const word = phase === 'arrived' ? 'Arrived' : `${(phase === 'ready' ? lead : left).toFixed(1)} h`;
   const line =
-    phase === 'ready' ? 'Lead time the model gave' : phase === 'warning' ? 'Particles arrive in · crew exposed' : phase === 'sheltered' ? 'Particles arrive in · crew in shelter' : 'Particles on station';
+    phase === 'ready'
+      ? 'Warning time before the radiation arrives'
+      : phase === 'warning'
+        ? 'Until the radiation arrives · crew not in shelter'
+        : phase === 'sheltered'
+          ? 'Until the radiation arrives · crew safe in shelter'
+          : 'The radiation has arrived';
   const steps: [string, boolean][] = [
-    ['Warning received', phase !== 'ready'],
+    ['Warning shown', phase !== 'ready'],
     ['Crew in shelter', phase === 'sheltered' || (phase === 'arrived' && t > 0)],
-    ['Particles arrive', phase === 'arrived'],
+    ['Radiation arrives', phase === 'arrived'],
   ];
 
   return (
@@ -68,10 +80,11 @@ export default function ShelterPage() {
       <i className="safe safe-right" aria-hidden />
 
       <section className="pat sh-pat-left" aria-live="polite">
-        <span className="cap">Shelter drill · {ev.flare_class} flare · {fmtT(ev.peak_time)}</span>
+        <span className="cap">Storm drill · real warning of {fmtT(ev.peak_time, false)}</span>
         <b className={`pat-word sh-word ${phase === 'warning' ? 'st-red' : ''}`}>{word}</b>
-        <span className="cap pat-line">{line}{phase === 'warning' || phase === 'sheltered' ? ' · 1 s = 1 h' : ''}</span>
-        {phase !== 'ready' && <span className="cap sh-rule">{SHELTER_BANNER}</span>}
+        <span className="cap pat-line">{line}</span>
+        {(phase === 'warning' || phase === 'sheltered') && <span className="cap">Drill runs fast: 1 second = 1 hour</span>}
+        {phase !== 'ready' && <span className="cap sh-rule">Stop outside work · all crew to the shelter</span>}
         <div className="sh-rows">
           {steps.map(([l, on]) => (
             <div key={l} className="vrow" data-on={on}>
@@ -82,17 +95,17 @@ export default function ShelterPage() {
           ))}
         </div>
         <span className="cap">
-          Storm chance {Math.round(ev.p_storm * 100)} % · {ev.has_linked_cme ? `CME ${ev.cme_speed_kms ?? '--'} km/s` : 'no CME'} · source {ev.source_location ?? '--'}
+          Solar flare {ev.flare_class} · storm chance {Math.round(ev.p_storm * 100)} %{ev.has_linked_cme && ev.cme_speed_kms ? ` · eruption at ${Math.round(ev.cme_speed_kms).toLocaleString('en-US')} km/s` : ''}
         </span>
-        <span className="cap">Storm onset {fmtT(ev.storm_onset_time)}</span>
+        <span className="cap">Storm began {fmtT(ev.storm_onset_time)} UTC</span>
       </section>
 
       <section className="pat sh-pat-right">
-        <span className="cap">Dose · {seat[cv.m.id]} · storm day {stormDay ?? '--'}</span>
+        <span className="cap">Radiation dose · {seat[cv.m.id]} · worst storm day, {fmtT(stormDay, false)}</span>
         <div className="sh-rows">
           <div className="vrow" data-status="red">
             <Mark s="red" />
-            <span className="vrow-l">Not sheltered</span>
+            <span className="vrow-l">Without shelter</span>
             <span className="vrow-v sh-big">
               {storm?.toFixed(2) ?? '--'}
               <small>mSv</small>
@@ -101,7 +114,7 @@ export default function ShelterPage() {
           <div className="vrow">
             <Mark s="green" />
             <span className="vrow-l">
-              Sheltered
+              In shelter
               <small>estimate</small>
             </span>
             <span className="vrow-v sh-big">
@@ -111,7 +124,7 @@ export default function ShelterPage() {
           </div>
           <div className="vrow">
             <span />
-            <span className="vrow-l">Saved</span>
+            <span className="vrow-l">Dose avoided</span>
             <span className="vrow-v">
               {excess != null ? (excess * (1 - SHELTER_KEEPS)).toFixed(2) : '--'}
               <small>mSv</small>
@@ -119,14 +132,14 @@ export default function ShelterPage() {
           </div>
           <div className="vrow">
             <span />
-            <span className="vrow-l">Site normal</span>
+            <span className="vrow-l">A normal day</span>
             <span className="vrow-v">
               {normal}
-              <small>mSv/d</small>
+              <small>mSv</small>
             </span>
           </div>
         </div>
-        <span className="cap">Sheltered assumes the shelter halves the storm excess · not measured</span>
+        <span className="cap">Estimate: the shelter is assumed to block half of the extra storm radiation · not measured</span>
       </section>
 
       <div className="pat-actions">
@@ -142,7 +155,7 @@ export default function ShelterPage() {
         )}
         {(phase === 'sheltered' || phase === 'arrived') && (
           <button type="button" className="ghost" onClick={() => { setT(0); setPhase('ready'); }}>
-            Reset drill
+            Run again
           </button>
         )}
       </div>
@@ -152,8 +165,8 @@ export default function ShelterPage() {
         code="4.001"
         title="Move to shelter"
         tag="Storm"
-        status={`Particles in ${left.toFixed(1)} h`}
-        body={`${ev.flare_class} flare, storm probability ${Math.round(ev.p_storm * 100)} %. Suspend EVA, all crew to the shelter.`}
+        status={`Radiation in ${left.toFixed(1)} h`}
+        body={`A solar storm is likely (${Math.round(ev.p_storm * 100)} %). Stop outside work and move all crew to the shelter.`}
         go="Shelter"
         danger
         onDone={() => {

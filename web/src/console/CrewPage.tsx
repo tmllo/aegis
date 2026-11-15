@@ -183,7 +183,6 @@ export default function CrewPage() {
 
   return (
     <div className="crew" data-idle={idle || undefined} data-status={cv.overall}>
-      <AlarmStrip alarms={alarms} acked={acked} onAck={(id) => setAcked((a) => ({ ...a, [id]: true }))} />
       {panel === 'checkin' ? (
         <CheckinPanel className="crew-right" />
       ) : panel === 'handoff' || handoff ? (
@@ -242,6 +241,7 @@ export default function CrewPage() {
             </button>
           )}
         </span>
+        <AlarmStrip alarms={alarms} acked={acked} onAck={(id) => setAcked((a) => ({ ...a, [id]: true }))} />
       </section>
 
       <div className="crew-actions">

@@ -329,7 +329,7 @@ export default function StormReplay() {
 
       <section className="rp-read brk" aria-live="polite">
         <span className="cap">Storm replay · 5–20 May 2024</span>
-        <b className="rp-word">{WORD[level]}</b>
+        <b className="pat-word rp-word">{WORD[level]}</b>
         <span className="cap rp-line">
           {utc(t)}
           {latest ? ` · ${latest.flareClass} · p ${latest.p.toFixed(2)}` : ' · no flare yet'}
