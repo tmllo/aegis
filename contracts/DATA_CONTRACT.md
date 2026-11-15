@@ -1,8 +1,9 @@
 # Data contract (the only interface between /ml and /web)
 
-Two JSON files, served by the web app from `web/public/data/`:
+JSON files served by the web app from `web/public/data/`:
 - `storm_forecast.json`: produced by Tomas's model
 - `crew_data.json`: produced by Tomas's baseline logic (crew is simulated)
+- `real_crew.json`: published Inspiration4 lab draws, scored against each person's pre-flight mean. Not the simulated crew, and not an input to the check-in scorer.
 
 Until the real files exist, the app loads `contracts/*.sample.json` (copied into `web/public/data/`). The samples are fake but **exactly** the real shape.
 
@@ -122,3 +123,94 @@ For a new value `x` of metric `m` on day `t`:
 - Amber when the score is ≥ 2. Red when the score is ≥ 3, or when the raw check-in `x` (not the 3-day mean) is outside `absolute_red`.
 
 The `z` stored on a flag is this 3-day-mean z.
+
+---
+
+## real_crew.json
+
+Published CBC and chemistry for Inspiration4, NASA OSDR OSD-575, crew codes C001–C004. `meta.simulated` is `false`. Do not merge this file into `crew_data.json`, and do not run the live check-in rule on it. The demo crew stays the simulated file.
+
+Times are not calendar dates. Each draw has a `timepoint` id (`L-92`, `L-44`, `L-3`, `R+1`, `R+45`, `R+82`, `R+194`), a `phase` (`pre` or `post`), and a `day`. For `L` draws, `day` is days before launch and is negative. For `R` draws, `day` is days after return and is positive. The mission sits between `L-3` and `R+1`. There is no in-flight sample.
+
+```json
+{
+  "meta": {
+    "generated_at": "2026-11-15T00:15:40Z",
+    "schema_version": 1,
+    "source": "NASA OSDR OSD-575",
+    "mission": "Inspiration4",
+    "simulated": false,
+    "baseline_rule": "Mean of the available L timepoints for that person and analyte.",
+    "far_rule": "Post-flight, inside the printed lab range, not an artefact, and |z| >= 2.",
+    "artefact_rule": "At R+45 only: glucose under 50 mg/dL, or potassium over 5.5 mmol/L.",
+    "exclusions": [
+      { "crew": "C003", "timepoint": "L-92", "panel": "cbc", "reason": "shifted columns" }
+    ],
+    "counts": {
+      "inside_lab_far_from_baseline": 25,
+      "outside_lab_range": 8,
+      "sample_handling_artefact": 4
+    }
+  },
+  "analytes": [
+    { "key": "lymphocytes", "label": "Absolute lymphocytes", "unit": "cells/µL", "panel": "cbc" }
+  ],
+  "flags": [
+    {
+      "crew": "C002", "timepoint": "R+1", "phase": "post", "analyte": "glucose",
+      "kind": "inside_lab_far_from_baseline", "value": 83, "unit": "mg/dL",
+      "pct_change": 13.7, "z": 2.18, "lab_min": 65, "lab_max": 99
+    }
+  ],
+  "variation": {
+    "glucose": {
+      "unit": "mg/dL",
+      "pooled_within_person_sd": 12.59,
+      "df": 8,
+      "per_crew": { "C002": { "n": 3, "mean": 73.0, "sd": 4.58, "cv_pct": 6.3 } },
+      "synthetic_day_to_day_sd": {
+        "stated_mg_dl": 5,
+        "realized_mg_dl": [{ "crew": "c1", "sd": 5.11 }]
+      }
+    }
+  },
+  "crew": [
+    {
+      "id": "C001",
+      "baseline": {
+        "glucose": { "n": 3, "timepoints": ["L-92", "L-44", "L-3"], "mean": 77.3333, "sd": 7.3711, "unit": "mg/dL" }
+      },
+      "series": [
+        {
+          "timepoint": "R+1", "phase": "post", "day": 1,
+          "glucose": {
+            "value": 90, "unit": "mg/dL", "lab_min": 65, "lab_max": 99,
+            "outside_lab_range": false, "pct_change": 16.4, "pct_of_baseline": 116.4,
+            "z": 1.72, "far_from_baseline": false, "artefact": false, "excluded": false,
+            "baseline_n": 3
+          }
+        }
+      ]
+    }
+  ]
+}
+```
+
+| field | meaning |
+|---|---|
+| `analytes[].key` | `lymphocytes`, `neutrophils`, `wbc`, `glucose`, `potassium`, `platelets`, `hemoglobin`, `calcium`. Lymphocytes and neutrophils are absolute counts, not percents. |
+| `hemoglobin` unit | g/dL. The source column is named `hemoglobin_value_percent`; the numbers match g/dL. See `unit_note`. |
+| `crew[].baseline` | Pre-flight mean and sample sd (n − 1) for that person. C003's CBC analytes have `n: 2` (L-92 excluded). No sd floor. |
+| `series[].day` | Days before launch (negative) or days after return (positive). Not one continuous clock. |
+| `value` | The lab result. `null` when `excluded` is true. |
+| `lab_min`, `lab_max` | Reference interval printed on that draw. Intervals differ by person, and C003's interval changes at R+1 for some analytes. |
+| `outside_lab_range` | `true` when `value < lab_min` or `value > lab_max`. A value sitting on the boundary is inside. |
+| `pct_change` | `100 * (value - baseline.mean) / baseline.mean`, including on artefact rows. |
+| `z` | `(value - baseline.mean) / baseline.sd`, rounded to 2 decimals. |
+| `far_from_baseline` | `true` only for a post-flight value inside the lab range, not an artefact, with `\|z\| >= 2`. `null` for pre-flight draws, excluded rows, and artefacts. |
+| `artefact` | `true` for R+45 glucose under 50 mg/dL, or R+45 potassium over 5.5 mmol/L. Sample handling, not biology. |
+| `excluded` | `true` only for C003 L-92 CBC analytes (shifted columns). The CMP row from that draw is kept. |
+| `flags[].kind` | `inside_lab_far_from_baseline`, `outside_lab_range`, or `sample_handling_artefact`. An artefact that is also outside the lab range is recorded once, as the artefact. |
+| `variation` | Within-person sd from the pre-flight draws. These draws are weeks apart, so this is not a day-to-day sd. `glucose.synthetic_day_to_day_sd` copies the stated and realized sds from the synthetic crew report. The generator is not fit to this file. |
+
+The findings note is `ml/results/real_crew.md`. The slide is `ml/results/slide_real_crew.png`.
