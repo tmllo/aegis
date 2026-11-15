@@ -140,7 +140,8 @@ def sync(cat: Catalog, store: Store, subject: str | None = None) -> dict:
             task = Task(id=f"sys-{s}-{metric}-{day}", subject=s, kind="todo", label=a.action, origin="system",
                         created=day, due=_shift(day, 1), metric=metric,
                         attrs={"severity": a.severity, "z": a.z, "message": a.message, "assessment_t": a.t,
-                               "evidence_t": max(seen + [a.t]), "rule": a.rule})
+                               "evidence_t": max(seen + [a.t]), "rule": a.rule,
+                               "activities": activity_ids_for(cat, metric)})
             if repo.put_task(store, task, replace=False):
                 opened.append(task.id)
 
@@ -391,3 +392,72 @@ def resolve_task_id(cat: Catalog, task_id: str) -> str:
                 if name == r["id"] or name in r.get("aliases", []):
                     return prefix + r["id"]
     return task_id
+
+
+# ---- activities (catalog/activities.yaml), suggested by open alerts --------------
+SEVERITY_RANK = {"red": 2, "amber": 1}
+
+
+def _activity_catalog(cat: Catalog) -> list[dict]:
+    return list((cat.extra.get("activities") or {}).get("activities") or [])
+
+
+def activity(cat: Catalog, activity_id: str) -> dict | None:
+    return next((a for a in _activity_catalog(cat) if a["id"] == activity_id), None)
+
+
+def activity_ids_for(cat: Catalog, metric: str) -> list[str]:
+    """Activities whose `helps` lists this metric, in catalog order (a fixed rule, no inference)."""
+    return [a["id"] for a in _activity_catalog(cat) if metric in (a.get("helps") or [])]
+
+
+def activity_task_id(subject: str, activity_id: str) -> str:
+    return f"activity-{subject}-{activity_id}"
+
+
+def open_alerts(cat: Catalog, store: Store, subject: str, date: str | None = None) -> list[dict]:
+    """System tasks still open on `date`: the alerts the crew member has not yet closed with a new reading or done."""
+    d = date or today(cat)
+    ctx = _Ctx(cat, store, subject)
+    out = []
+    for task in repo.tasks(store, subject, origin="system"):
+        if day_of(task.created) > d or not task.metric:
+            continue
+        if any(day_of(e.t) <= d and e.status in DONE for e in ctx.events.get(task.id, [])):
+            continue
+        out.append({"task_id": task.id, "metric": task.metric, "severity": task.attrs.get("severity"),
+                    "t": task.attrs.get("assessment_t", task.created), "message": task.attrs.get("message")})
+    out.sort(key=lambda a: (-SEVERITY_RANK.get(a["severity"], 0), a["metric"]))
+    return out
+
+
+def activities_for(cat: Catalog, store: Store, subject: str, date: str | None = None) -> dict:
+    """The activity catalog for one crew member on one day. Activities that help a metric with an open alert are
+    `suggested` and come first (red before amber, then catalog order)."""
+    d = date or today(cat)
+    alerts = open_alerts(cat, store, subject, d)
+    ctx = _Ctx(cat, store, subject)
+    rows = []
+    for i, a in enumerate(_activity_catalog(cat)):
+        because = [{"metric": x["metric"], "severity": x["severity"], "task_id": x["task_id"]}
+                   for x in alerts if x["metric"] in (a.get("helps") or [])]
+        done = [e for e in ctx.events.get(activity_task_id(subject, a["id"]), []) if e.status == "done" and day_of(e.t) <= d]
+        rank = max((SEVERITY_RANK.get(b["severity"], 0) for b in because), default=0)
+        rows.append((-rank, i, {**a, "suggested": bool(because), "because": because,
+                                "done_today": any(day_of(e.t) == d for e in done), "times_done": len(done)}))
+    rows.sort(key=lambda r: (r[0], r[1]))
+    return {"subject": subject, "date": d, "open_alerts": alerts, "activities": [r[2] for r in rows]}
+
+
+def log_activity(cat: Catalog, store: Store, subject: str, activity_id: str, t: str) -> dict:
+    """Doing an activity = a done event on the crew member's activity task (a self to-do, created on first use).
+    It earns task XP; it never closes an alert (only a new reading does: Verify)."""
+    a = activity(cat, activity_id)
+    if a is None:
+        raise KeyError(activity_id)
+    tid = activity_task_id(subject, activity_id)
+    repo.put_task(store, Task(id=tid, subject=subject, kind="todo", label=f"Activity: {a['label']}", origin="self",
+                              created=day_of(t), due=day_of(t), attrs={"activity": activity_id}), replace=False)
+    repo.add_event(store, TaskEvent(tid, t, "done"))
+    times = sum(1 for e in repo.events(store, task_id=tid) if e.status == "done")
+    return {"activity_id": activity_id, "task_id": tid, "t": t, "status": "done", "times_done": times}
