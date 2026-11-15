@@ -159,7 +159,7 @@ def test_sync_opens_and_closes_a_system_task(cat, store):
     out = engine.sync(cat, store, "c1")
     assert tid in out["closed"]
     ev = repo.events(store, task_id=tid)
-    assert [(e.status, e.t) for e in ev] == [("closed", f"{nxt}T08:00:00Z")]
+    assert [(e.status, e.t) for e in ev] == [("closed", f"{nxt}T09:00:00Z")]
     v = engine.task_view(cat, store, repo.get_task(store, tid), nxt)
     assert v["status"] == "closed" and v["done"] is True
 
@@ -598,3 +598,38 @@ def test_scale_words_equal_emile_scales():
     c = TestClient(create_app())
     ck = c.get("/api/checkin?subject=c2").json()
     assert {m["key"].replace("self.", ""): m["scale"]["words"] for m in ck["metrics"]} == emile
+
+
+def test_same_t_correction_closes_the_alert_like_emile_sends_it():
+    """mind.ts re-sends the same t when a score is changed: the corrected (no longer flagged) score closes the task."""
+    c = TestClient(create_app())
+    body = {"subject": "c1", "metric": "self.mood", "t": "2026-11-14T12:00:00Z", "value": 1}
+    tid = "sys-c1-self.mood-2026-11-14"
+    assert tid in c.post("/api/observations", json=body).json()["opened_tasks"]
+    r = c.post("/api/observations", json={**body, "value": 5}).json()
+    assert r["assessment"] is None and tid in r["closed_tasks"]
+    acts = c.get("/api/activities", params={"subject": "c1"}).json()
+    assert all(a["metric"] != "self.mood" for a in acts["open_alerts"])
+
+
+def test_a_score_that_stays_low_keeps_one_open_task():
+    cat = Catalog.load()
+    store = Store(":memory:", cat)
+    start = dt.date(2026, 10, 1)
+    days = [(start + dt.timedelta(days=i)).isoformat() for i in range(20)]
+    for i, d in enumerate(days):
+        store.write(records.checkin_batch(cat, "c2", "self.energy", d, 4 if i < 14 else 1))
+        engine.sync(cat, store, "c2")
+    open_sys = [t for t in repo.tasks(store, "c2", origin="system")
+                if not repo.events(store, task_id=t.id) and t.metric == "self.energy"]
+    assert len(open_sys) == 1
+
+
+def test_activity_logged_twice_a_day_counts_once_and_is_not_in_the_task_list():
+    c = TestClient(create_app())
+    xp0 = c.get("/api/progress", params={"subject": "c2"}).json()["xp"]
+    a = c.post("/api/activities/grounding/events", json={"subject": "c2"}).json()
+    b = c.post("/api/activities/grounding/events", json={"subject": "c2", "t": "2026-11-14T18:00:00Z"}).json()
+    assert a["times_done"] == 1 and b["times_done"] == 1 and b["xp"] == xp0 + 10
+    ids = {t["id"] for t in c.get("/api/tasks", params={"subject": "c2"}).json()["tasks"]}
+    assert "activity-c2-grounding" not in ids
