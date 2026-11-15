@@ -1,22 +1,27 @@
-// Shelter drill, in the Crew screen's language (one big read, mono captions, hairline rows, one
-// white action): a real warning from storm_forecast.json replayed as a live alarm. The warning
+// Shelter drill, one look: a countdown, one sentence, three dose numbers, one button, three
+// steps. Everything else is behind Details. a real warning from storm_forecast.json replayed as a live alarm. The warning
 // arrives, a countdown runs to "particles arrive" (drill clock: one second per hour of the
 // model's real lead time), the crew moves to shelter with one confirm, and the dose with and
 // without shelter is compared. The sheltered figure is an estimate and says so.
 import { useEffect, useMemo, useState } from 'react';
 import { sortedEvents } from '../core/radiation';
-import { Confirm, Mark } from './ui';
+import { Confirm } from './ui';
+import './weather/weather.css';
 import './shelter.css';
 import { useConsole } from './useConsole';
 
 /** Assumed shelter effect on the storm excess. Not measured; shown on screen as an assumption. */
 const SHELTER_KEEPS = 0.5;
+/** Real seconds the drill takes, whatever the storm's warning time was. */
+const DRILL_SECONDS = 15;
 
 export default function ShelterPage() {
   const { data, cd, cv, seat } = useConsole();
   const [phase, setPhase] = useState<'ready' | 'warning' | 'sheltered' | 'arrived'>('ready');
   const [t, setT] = useState(0); // drill hours elapsed
   const [ask, setAsk] = useState(false);
+  const [safe, setSafe] = useState(false); // the crew confirmed the move to the shelter
+  const [more, setMore] = useState(false);
   // the storm day in the crew series is the day with the highest daily dose (the generator puts the
   // one real storm of the mission window there); the warning is the verified one nearest that day
   const stormDay = useMemo(() => {
@@ -33,10 +38,11 @@ export default function ShelterPage() {
   const lead = ev?.lead_time_h ?? 0;
 
   useEffect(() => {
-    if (phase !== 'warning' && phase !== 'sheltered') return;
-    const id = window.setInterval(() => setT((x) => x + 0.1), 100);
+    // the whole warning time plays in DRILL_SECONDS, and waits while the confirm dialog is open
+    if ((phase !== 'warning' && phase !== 'sheltered') || ask || lead <= 0) return;
+    const id = window.setInterval(() => setT((x) => x + lead / (DRILL_SECONDS * 10)), 100);
     return () => window.clearInterval(id);
-  }, [phase]);
+  }, [phase, ask, lead]);
   useEffect(() => {
     if (t >= lead && (phase === 'warning' || phase === 'sheltered')) setPhase('arrived');
   }, [t, lead, phase]);
@@ -59,106 +65,111 @@ export default function ShelterPage() {
     const day = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
     return time ? `${day}, ${d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' })}` : day;
   };
-  const word = phase === 'arrived' ? 'Arrived' : `${(phase === 'ready' ? lead : left).toFixed(1)} h`;
+  const word = phase === 'arrived' ? (safe ? 'Safe' : 'Exposed') : `${(phase === 'ready' ? lead : left).toFixed(1)} h`;
   const line =
     phase === 'ready'
       ? 'Warning time before the radiation arrives'
       : phase === 'warning'
-        ? 'Until the radiation arrives · crew not in shelter'
+        ? 'Go to the shelter now'
         : phase === 'sheltered'
-          ? 'Until the radiation arrives · crew safe in shelter'
-          : 'The radiation has arrived';
+          ? 'In the shelter. Stay until it passes.'
+          : safe
+            ? 'The radiation arrived. The crew was in the shelter.'
+            : 'The radiation arrived before the crew sheltered.';
+  const tone = phase === 'warning' || (phase === 'arrived' && !safe) ? 'red' : 'green';
   const steps: [string, boolean][] = [
     ['Warning shown', phase !== 'ready'],
-    ['Crew in shelter', phase === 'sheltered' || (phase === 'arrived' && t > 0)],
+    ['Crew in the shelter', safe],
     ['Radiation arrives', phase === 'arrived'],
   ];
+  const restart = () => {
+    setT(0);
+    setSafe(false);
+    setPhase('ready');
+  };
 
   return (
-    <>
-      <i className="safe safe-left" aria-hidden />
-      <i className="safe safe-right" aria-hidden />
-
-      <section className="pat sh-pat-left" aria-live="polite">
+    <div className="wx sh" data-status={tone}>
+      <section className="wx-read" aria-live="polite">
         <span className="cap">Storm drill · real warning of {fmtT(ev.peak_time, false)}</span>
-        <b className={`pat-word sh-word ${phase === 'warning' ? 'st-red' : ''}`}>{word}</b>
-        <span className="cap pat-line">{line}</span>
-        {(phase === 'warning' || phase === 'sheltered') && <span className="cap">Drill runs fast: 1 second = 1 hour</span>}
-        {phase !== 'ready' && <span className="cap sh-rule">Stop outside work · all crew to the shelter</span>}
-        <div className="sh-rows">
-          {steps.map(([l, on]) => (
-            <div key={l} className="vrow" data-on={on}>
-              <Mark s={on ? 'green' : null} />
-              <span className="vrow-l">{l}</span>
-              <span className="cap">{on ? 'Done' : ''}</span>
-            </div>
-          ))}
-        </div>
-        <span className="cap">
-          Solar flare {ev.flare_class} · storm chance {Math.round(ev.p_storm * 100)} %{ev.has_linked_cme && ev.cme_speed_kms ? ` · eruption at ${Math.round(ev.cme_speed_kms).toLocaleString('en-US')} km/s` : ''}
-        </span>
-        <span className="cap">Storm began {fmtT(ev.storm_onset_time)} UTC</span>
-      </section>
+        <b className={`pat-word wx-word sh-word st-${tone}`}>{word}</b>
+        <span className="wx-do">{line}</span>
 
-      <section className="pat sh-pat-right">
-        <span className="cap">Radiation dose · {seat[cv.m.id]} · worst storm day, {fmtT(stormDay, false)}</span>
-        <div className="sh-rows">
-          <div className="vrow" data-status="red">
-            <Mark s="red" />
-            <span className="vrow-l">Without shelter</span>
-            <span className="vrow-v sh-big">
-              {storm?.toFixed(2) ?? '--'}
-              <small>mSv</small>
-            </span>
+        <dl className="wx-facts">
+          <div data-status="red">
+            <dd>{storm?.toFixed(1) ?? '--'}</dd>
+            <dt>mSv without shelter</dt>
           </div>
-          <div className="vrow">
-            <Mark s="green" />
-            <span className="vrow-l">
-              In shelter
-              <small>estimate</small>
-            </span>
-            <span className="vrow-v sh-big">
-              {sheltered?.toFixed(2) ?? '--'}
-              <small>mSv</small>
-            </span>
+          <div>
+            <dd>{sheltered?.toFixed(1) ?? '--'}</dd>
+            <dt>mSv in the shelter</dt>
           </div>
-          <div className="vrow">
-            <span />
-            <span className="vrow-l">Dose avoided</span>
-            <span className="vrow-v">
-              {excess != null ? (excess * (1 - SHELTER_KEEPS)).toFixed(2) : '--'}
-              <small>mSv</small>
-            </span>
+          <div>
+            <dd>{excess != null ? (excess * (1 - SHELTER_KEEPS)).toFixed(1) : '--'}</dd>
+            <dt>mSv avoided</dt>
           </div>
-          <div className="vrow">
-            <span />
-            <span className="vrow-l">A normal day</span>
-            <span className="vrow-v">
-              {normal}
-              <small>mSv</small>
-            </span>
-          </div>
-        </div>
-        <span className="cap">Estimate: the shelter is assumed to block half of the extra storm radiation · not measured</span>
-      </section>
+        </dl>
 
-      <div className="pat-actions">
         {phase === 'ready' && (
-          <button type="button" className="solid" onClick={() => { setT(0); setPhase('warning'); }}>
-            Start drill
+          <button type="button" className="solid wx-btn" onClick={() => { setT(0); setSafe(false); setPhase('warning'); }}>
+            Start the drill
           </button>
         )}
         {phase === 'warning' && (
-          <button type="button" className="solid sh-go" onClick={() => setAsk(true)}>
-            Move to shelter
+          <button type="button" className="solid wx-btn sh-go" onClick={() => setAsk(true)}>
+            Move to the shelter
           </button>
         )}
         {(phase === 'sheltered' || phase === 'arrived') && (
-          <button type="button" className="ghost" onClick={() => { setT(0); setPhase('ready'); }}>
-            Run again
+          <button type="button" className="solid wx-btn" onClick={restart}>
+            Run it again
           </button>
         )}
-      </div>
+        <button type="button" className="wx-more" aria-expanded={more} onClick={() => setMore((m) => !m)}>
+          {more ? 'Hide details' : 'Details'}
+        </button>
+        {more && (
+          <dl className="wx-rows">
+            <div className="wx-row">
+              <dt>
+                Solar flare
+                <small>storm began {fmtT(ev.storm_onset_time)} UTC</small>
+              </dt>
+              <dd>{ev.flare_class}</dd>
+            </div>
+            <div className="wx-row">
+              <dt>
+                Storm chance
+                <small>{ev.has_linked_cme && ev.cme_speed_kms ? `eruption at ${Math.round(ev.cme_speed_kms).toLocaleString('en-US')} km/s` : 'no eruption cloud with this flare'}</small>
+              </dt>
+              <dd>{Math.round(ev.p_storm * 100)} %</dd>
+            </div>
+            <div className="wx-row">
+              <dt>
+                A normal day
+                <small>
+                  {seat[cv.m.id]}, dose figures are from the worst storm day of this simulated mission, {fmtT(stormDay, false)}
+                </small>
+              </dt>
+              <dd>{normal} mSv</dd>
+            </div>
+            <div className="wx-row wx-row-src">
+              <dt>
+                <small>In the shelter is an estimate: the shelter is assumed to block half of the extra storm radiation. Not measured. The drill plays the real warning time in {DRILL_SECONDS} seconds.</small>
+              </dt>
+            </div>
+          </dl>
+        )}
+      </section>
+
+      <ol className="sh-steps" aria-label="Drill steps">
+        {steps.map(([l, on], k) => (
+          <li key={l} data-on={on} data-now={!on && (k === 0 || steps[k - 1][1])}>
+            <span className="sh-n">{k + 1}</span>
+            <span className="sh-l">{l}</span>
+          </li>
+        ))}
+      </ol>
 
       <Confirm
         open={ask}
@@ -171,10 +182,11 @@ export default function ShelterPage() {
         danger
         onDone={() => {
           setAsk(false);
-          setPhase('sheltered');
+          setSafe(true);
+          if (phase === 'warning') setPhase('sheltered');
         }}
         onCancel={() => setAsk(false)}
       />
-    </>
+    </div>
   );
 }

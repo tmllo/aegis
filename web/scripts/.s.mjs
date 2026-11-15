@@ -5,7 +5,7 @@ const b = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=metal', 
 const ctx = await b.newContext({ viewport: { width: 1920, height: 1080 } });
 await ctx.addInitScript(() => { try { sessionStorage.setItem('ex-intro', '1'); } catch {} });
 for (const pair of pairs) {
-  const [name, url] = pair.split('=');
+  const i = pair.indexOf('='); const name = pair.slice(0, i), url = pair.slice(i + 1);
   const p = await ctx.newPage();
   const errs = [];
   p.on('pageerror', (e) => errs.push('pageerror ' + e.message));

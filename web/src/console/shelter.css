@@ -1,18 +1,21 @@
-/* Shelter drill: layout only. Type, rows and buttons come from the console pattern classes. */
-.sh-pat-left { left: 56px; top: 160px; width: 380px; }
-.sh-pat-right { right: 56px; top: 160px; width: 380px; }
+/* Shelter drill: the three steps. The read (word, sentence, numbers, button) uses weather.css. */
 .sh-word { font-variant-numeric: tabular-nums; transition: color 200ms ease-out; }
-.sh-rule { color: rgb(var(--crit)); }
-.sh-rows { display: flex; flex-direction: column; margin: 10px 0 6px; border-bottom: 1px solid rgb(255 255 255 / 0.12); }
-.sh-rows .vrow { min-height: 52px; }
-.sh-rows .vrow:hover { background: none; }
-.sh-rows .vrow[data-on='false'] .vrow-l { color: rgb(255 255 255 / 0.55); }
-.sh-rows .vrow .cap { font-size: 10px; }
-.sh-big { font-size: 40px; }
-.solid.sh-go { background: rgb(var(--crit)); color: #fff; }
+.solid.sh-go { background: rgb(255 112 98); color: #fff; }
+.sh-steps { position: absolute; left: 640px; right: 56px; top: 50%; translate: 0 -50%; margin: 0; padding: 0; list-style: none; display: grid; gap: 0; max-width: 620px; }
+.sh-steps li { position: relative; display: grid; grid-template-columns: 72px 1fr; align-items: center; gap: 28px; min-height: 132px; color: rgb(214 226 255 / 0.6); transition: color 200ms ease-out; }
+.sh-steps li + li::before { content: ''; position: absolute; left: 35px; top: -30px; height: 60px; width: 2px; background: rgb(214 226 255 / 0.3); transition: background 200ms ease-out; }
+.sh-steps li[data-on='true'] + li::before { background: rgb(var(--wx)); }
+.sh-n { width: 72px; height: 72px; display: grid; place-items: center; border-radius: 50%; border: 2px solid rgb(214 226 255 / 0.4); font-size: 28px; font-weight: 300; transition: background 200ms ease-out, border-color 200ms ease-out, color 200ms ease-out; }
+.sh-l { font-size: 34px; font-weight: 300; letter-spacing: -0.01em; }
+.sh-steps li[data-now='true'] { color: #fff; }
+.sh-steps li[data-now='true'] .sh-n { border-color: #fff; }
+.sh-steps li[data-on='true'] { color: #fff; }
+.sh-steps li[data-on='true'] .sh-n { background: rgb(var(--wx)); border-color: rgb(var(--wx)); color: #0a1230; }
 @media (max-width: 1100px) {
-  .sh-pat-left { left: 20px; right: 20px; top: 150px; width: auto; }
-  .sh-pat-left .pat-word { font-size: 64px; }
-  .sh-pat-right { position: static; margin: 560px 20px 120px; width: auto; }
+  .sh-steps { position: static; translate: none; max-width: none; }
+  .sh-steps li { min-height: 88px; grid-template-columns: 56px 1fr; gap: 16px; }
+  .sh-steps li + li::before { left: 27px; top: -22px; height: 44px; }
+  .sh-n { width: 56px; height: 56px; font-size: 22px; }
+  .sh-l { font-size: 22px; }
 }
-@media (prefers-reduced-motion: reduce) { .sh-word { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .sh-word, .sh-steps li, .sh-n, .sh-steps li + li::before { transition: none; } }
