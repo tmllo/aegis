@@ -82,6 +82,7 @@ NASA lists "hostile closed environment" as one of the 5 human spaceflight hazard
 | `severity` | `red` if `peak_score ≥ thresholds.red` or `absolute_red` was crossed, else `amber` |
 | `status` | `active` if `end` is null (still ongoing at `mission.today`), else `resolved` |
 | `linked_crew_flags` | crew flags (from `crew_data.json`) this anomaly may explain: the flag's metric is listed for this channel in the link table in `ml/anomaly/CLAUDE.md`, and the flag date falls between the anomaly `start` and (`end`, or `mission.today` if active) + 3 days. `from`/`to` are the first and last matching flag dates. Always worded as "possible", never as a diagnosis |
+| `source` | (v2.1, optional) which detector raised the event: `level`, `residual`, `both`; `null` when the fault was missed |
 | `status.by_channel` | status at the last timestamp: worst of the active anomaly severity and the limit rules |
 
 ## Web usage (Emile)

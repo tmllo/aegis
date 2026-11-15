@@ -47,4 +47,24 @@ Generated 2026-11-15T19:06:42Z by `python -m ml.anomaly.run_validation`. Runtime
 - Ridge: L ∈ {10, 30, 60}, EWMA span ∈ {5, 10, 30}, alpha = 1. HGB: L ∈ {10, 30}, span ∈ {5, 30}, 100 iterations, 15 leaves. IsolationForest: window ∈ {10, 30, 60}, 100 trees.
 - Shared: threshold ∈ [2, 3, 4, 5, 6, 8, 10, 15, 20, 30], min duration ∈ [1, 3, 10], merge gap ∈ [0, 10, 50]. Static 3σ keeps threshold 3.0; its duration and gap are tuned. The tuned static row searches the threshold too.
 
+## v2: level + residual ensemble (second look at SMAP)
+
+**Why:** a one-step forecast-residual detector tracks slow drifts (the forecaster adapts, the residual stays small, and the EWMA span adds lag). It suits abrupt or contextual faults; a level rule suits slow drifts. v1 confirmed this on SMAP (a tuned static rule beat Ridge) and on the simulated habitat (the CO₂ ramp was flagged after the limit).
+
+**What:** union of the two MSL-tuned v1 detectors with their existing configs (no new search): level = static rule, threshold 30, min duration 1, gap 50; residual = Ridge L=60, span=30, threshold 30, min duration 10, gap 50. Overlapping events are merged; each event carries source = level / residual / both.
+
+**Test-set reuse:** SMAP was already scored in v1, and v2 was designed after seeing those results. **The v2 SMAP row is a second look at the test set, not a clean held-out result.** The v1 numbers above remain the pre-registered result.
+
+| detector | MSL F0.5 | SMAP precision | SMAP recall | SMAP F0.5 | SMAP false alarms / 10k | SMAP median delay | hits / labeled |
+|---|---|---|---|---|---|---|---|
+| **v2 ensemble** | 0.64 | 0.38 | 0.53 | 0.40 | 2.09 | 16 | 36 / 68 |
+| v1 Ridge (pre-registered) | 0.76 | 0.43 | 0.49 | 0.44 | 1.17 | 17 | 33 / 68 |
+| static, tuned threshold | 0.54 | 0.56 | 0.41 | 0.52 | 0.92 | 16 | 28 / 68 |
+| static 3σ | 0.33 | 0.22 | 0.41 | 0.25 | 5.16 | 16 | 28 / 68 |
+
+- v2 SMAP F0.5 95% channel-bootstrap CI: 0.30–0.66.
+- Paired difference v2 − static 3σ: -0.06 to 0.40; v2 − v1 Ridge: -0.21 to 0.04; v2 − tuned static: -0.42 to 0.01.
+- SMAP hits by source: {'level': 3, 'residual': 8, 'both': 25}; false alarms by source: {'level': 40, 'residual': 51, 'both': 0}.
+- On this second look, v2 scores F0.5 0.40 on SMAP vs 0.44 for v1 and 0.52 for the tuned static rule. v2 is NOT the best of the four, but because SMAP was reused, treat this as indicative, not as a clean held-out result.
+
 ![PR vs baseline](anomaly_pr_vs_baseline.png)

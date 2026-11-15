@@ -146,6 +146,20 @@ class StaticThreshold:
         return np.abs(np.asarray(x, float) - self.median_) / (MAD_TO_SD * self.mad_)
 
 
+def union_events(level: list[tuple[int, int]], residual: list[tuple[int, int]]) -> list[tuple[int, int, str]]:
+    """v2 ensemble: union of two event lists, overlapping events merged. Each gets a source:
+    'level', 'residual' or 'both' (both = the merged event contains events from each detector)."""
+    tagged = sorted([(a, b, "level") for a, b in level] + [(a, b, "residual") for a, b in residual])
+    out: list[list] = []
+    for a, b, src in tagged:
+        if out and a <= out[-1][1]:  # overlap (inclusive ends) -> merge
+            out[-1][1] = max(out[-1][1], b)
+            out[-1][2].add(src)
+        else:
+            out.append([a, b, {src}])
+    return [(a, b, "both" if len(s) == 2 else next(iter(s))) for a, b, s in out]
+
+
 def to_events(scores: np.ndarray, threshold: float, min_duration: int = 3, gap: int = 0) -> list[tuple[int, int]]:
     """Runs of scores >= threshold (nan = False) lasting >= min_duration; merge if <= gap steps apart."""
     s = np.asarray(scores, dtype=float)

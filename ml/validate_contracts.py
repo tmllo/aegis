@@ -143,6 +143,8 @@ def check_habitat(d, crew):
         miss = [k for k in HAB_ANOM if k not in a]
         if miss: err(f"habitat.anomalies[{aid}] missing {miss}"); continue
         if a["channel"] not in HAB_CHANNELS: err(f"habitat.anomalies[{aid}].channel bad")
+        if "source" in a and a["source"] not in ("level", "residual", "both", None): err(f"habitat.anomalies[{aid}].source bad")
+        if "source" in a and (a["source"] is None) != (not a["detected"]): err(f"habitat.anomalies[{aid}] source/detected mismatch")
         if a["severity"] not in ("amber", "red"): err(f"habitat.anomalies[{aid}].severity bad")
         if a["status"] not in ("active", "resolved"): err(f"habitat.anomalies[{aid}].status bad")
         if (a["status"] == "active") != (a["end"] is None): err(f"habitat.anomalies[{aid}] status/end mismatch")

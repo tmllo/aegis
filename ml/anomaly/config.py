@@ -11,6 +11,7 @@ CREW_JSON = ROOT / "web" / "public" / "data" / "crew_data.json"
 HABITAT_JSON = ROOT / "web" / "public" / "data" / "habitat_telemetry.json"
 THRESHOLDS_JSON = RESULTS / "anomaly_thresholds.json"
 VALIDATION_JSON = RESULTS / "anomaly_validation.json"
+ENSEMBLE_JSON = RESULTS / "anomaly_ensemble_v2.json"   # v2 frozen config + numbers (written by run_v2)
 
 SEED = 20261115
 

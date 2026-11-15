@@ -16,7 +16,7 @@ import pandas as pd
 
 from . import config as C
 from .detector import (ForecastResidualDetector, HGBForecastDetector, IsolationForestDetector,
-                       StaticThreshold, to_events)
+                       StaticThreshold, to_events, union_events)
 from .habitat_sim import simulate
 
 NOTE = ("Habitat telemetry is simulated with planted faults. The detector is validated on real NASA "
@@ -96,13 +96,30 @@ def build(crew: dict | None = None) -> tuple[dict, dict]:
     n = len(times)
     nb = C.BASELINE_DAYS * 24
     exog = hour_exog(times)
-    scores, events = {}, {}
+    scores, events, sources = {}, {}, {}
+    ens = json.loads(C.ENSEMBLE_JSON.read_text(encoding="utf-8")) if C.ENSEMBLE_JSON.exists() else None
     for k in C.CHANNEL_KEYS:
         x = df[k].ffill().bfill().to_numpy()   # dropouts: hold last value for the model; output keeps null
-        det = make_detector(fz).fit(x[:nb], exog[:nb])
-        s = det.score(x, exog)
-        scores[k] = s
-        events[k] = to_events(s, amber, md, gap)
+        if ens:  # v2: level + residual, each on its own frozen MSL config; score = max of score/own amber
+            lv, rs = ens["members"]["level"], ens["members"]["residual"]
+            s_l = StaticThreshold().fit(x[:nb]).score(x)
+            s_r = ForecastResidualDetector(**rs["model"]).fit(x[:nb], exog[:nb]).score(x, exog)
+            ev = union_events(to_events(s_l, lv["amber"], lv["min_duration_steps"], lv["gap"]),
+                              to_events(s_r, rs["amber"], rs["min_duration_steps"], rs["gap"]))
+            scores[k] = np.fmax(s_l / lv["amber"], s_r / rs["amber"])
+            events[k] = [(a, b) for a, b, _ in ev]
+            sources[k] = [s for _, _, s in ev]
+        else:
+            s = make_detector(fz).fit(x[:nb], exog[:nb]).score(x, exog)
+            scores[k] = s
+            events[k] = to_events(s, amber, md, gap)
+            sources[k] = ["residual" if fz["winner"] != "static" else "level"] * len(events[k])
+    if ens:
+        fz = {**fz, "model_name": ens["model_name"], "validation": ens["validation"],
+              "thresholds": {"amber": 1.0, "red": ens["red_over_amber"]},
+              "min_duration_steps": min(ens["members"]["level"]["min_duration_steps"],
+                                        ens["members"]["residual"]["min_duration_steps"])}
+        amber, red, md = 1.0, ens["red_over_amber"], fz["min_duration_steps"]
 
     today = crew["mission"]["today"]
     anomalies = []
@@ -137,7 +154,9 @@ def build(crew: dict | None = None) -> tuple[dict, dict]:
         else:
             msg = f"{ch['label']} outside its normal pattern, flagged {det_i - i0} h after the fault began; limit not crossed"
         end = iso(times[i1]) if f["end"] else None
+        src = {sources[k][j] for j in hits}
         anomalies.append({
+            "source": None if not src else "both" if ("both" in src or len(src) > 1) else src.pop(),
             "channel": k, "fault": f["fault"], "start": iso(times[i0]), "end": end,
             "detected_at": iso(times[det_i]) if det_i is not None else None,
             "limit_crossed_at": iso(times[lc]) if lc is not None else None,
@@ -154,6 +173,7 @@ def build(crew: dict | None = None) -> tuple[dict, dict]:
             end = None if b == n - 1 else iso(times[b])
             ch = C.CHANNELS[k]
             anomalies.append({
+                "source": sources[k][j],
                 "channel": k, "fault": None, "start": iso(times[a]), "end": end, "detected_at": iso(times[a]),
                 "limit_crossed_at": iso(times[lc]) if lc is not None else None,
                 "lead_time_h": None if lc is None else float(lc - a), "peak_score": rnd(peak, 1), "severity": sev,
