@@ -150,6 +150,21 @@ def day(subject: str = "iss", date_: str | None = Query(None, alias="date")):
             "elements_age_h": _age_h(el["epoch"], now), "quality": el["quality"], "model": _model()}
 
 
+def tle_text(el: dict) -> str:
+    """3-line TLE (name, line 1, line 2), the format of web/public/orbits/iss.tle."""
+    return f"{el['name']}\n{el['line1']}\n{el['line2']}\n"
+
+
+@router.get("/orbits/{subject}.tle")
+def station_tle(subject: str):
+    """Emile's useIssTrack (web/src/console/Globe.tsx) fetches `${BASE_URL}orbits/iss.tle` as a static file.
+    When this server serves the app, answer that same path with the newest stored elements instead of the copy
+    baked into web/dist. Registered before the static mount, so it wins. Unknown names: 404."""
+    el = _station(subject)
+    return Response(tle_text(el), media_type="text/plain; charset=utf-8",
+                    headers={"X-Elements-Epoch": el["epoch"], "X-Quality": el["quality"], "Cache-Control": "max-age=3600"})
+
+
 @router.get("/api/orbit/groups")
 def groups():
     now = _now()

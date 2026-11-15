@@ -49,8 +49,12 @@ def stations(cat: Catalog, store: Store, now: datetime | None = None) -> dict:
 
 
 def write(cat: Catalog, store: Store) -> str:
+    """stations.json plus one <subject>.tle per station (same 3-line format as web/public/orbits/iss.tle)."""
     PATH.parent.mkdir(parents=True, exist_ok=True)
-    PATH.write_text(json.dumps(stations(cat, store), indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
+    doc = stations(cat, store)
+    PATH.write_text(json.dumps(doc, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
+    for s in doc["stations"]:
+        (PATH.parent / f"{s['subject']}.tle").write_text(f"{s['name']}\n{s['line1']}\n{s['line2']}\n", encoding="utf-8")
     return str(PATH)
 
 

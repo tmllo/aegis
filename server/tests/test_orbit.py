@@ -137,6 +137,31 @@ def test_replays_emiles_getjson_requests():
         r.json()
 
 
+def _emiles_parse_tle(text: str):
+    """Port of parseTle in web/src/console/Globe.tsx (origin/crew-station 761afc0, lines 226-237)."""
+    lines = [l.rstrip() for l in text.strip().split("\n")]
+    l1 = next((l for l in lines if l.startswith("1 ")), None)
+    l2 = next((l for l in lines if l.startswith("2 ")), None)
+    if not l1 or not l2:
+        return None
+    yy, doy = int(l1[18:20]), float(l1[20:32])
+    return {"year": 2000 + yy if yy < 57 else 1900 + yy, "doy": doy, "i": float(l2[8:16]),
+            "e": float(f"0.{l2[26:33].strip()}"), "n": float(l2[52:63])}
+
+
+def test_replays_emiles_use_iss_track_fetch():
+    """useIssTrack: fetch(`${BASE_URL}orbits/iss.tle`) -> r.ok ? r.text() : '' -> parseTle. With the server in front,
+    that static path now returns the newest stored ISS elements (epoch 14 Nov), not the 9 Nov copy in web/dist."""
+    r = client.get("/orbits/iss.tle")
+    assert r.status_code == 200 and r.text.startswith("ISS (ZARYA)\n")
+    k = _emiles_parse_tle(r.text)
+    assert k and k["year"] == 2026 and k["doy"] > 318      # 26318.17 = 14 Nov; his file is 26313.47
+    assert 51.5 < k["i"] < 51.7 and 15.4 < k["n"] < 15.6 and k["e"] < 0.01
+    assert r.headers["x-elements-epoch"].startswith("2026-11-14")
+    assert _emiles_parse_tle(client.get("/orbits/tiangong.tle").text)["i"] < 42
+    assert client.get("/orbits/nope.tle").status_code == 404
+
+
 # ---- offline / live fallback ---------------------------------------------------------------------
 def test_live_mode_falls_back_to_recorded_without_network(tmp_path):
     def no_network(url, timeout):
@@ -168,3 +193,4 @@ def test_stations_view_written():
     doc = json.loads(PATH.read_text(encoding="utf-8"))
     assert {s["subject"] for s in doc["stations"]} == {"iss", "tiangong"}
     assert doc["saa"]["polygon"] and doc["stations"][0]["track"]["points"]
+    assert _emiles_parse_tle((PATH.parent / "iss.tle").read_text(encoding="utf-8"))["doy"] > 318
