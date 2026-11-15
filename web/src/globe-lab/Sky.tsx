@@ -49,7 +49,7 @@ void main() {
   // size grows with the cube root of flux; faint stars stay 1-2 px and lose alpha instead
   float s = clamp(1.6 + 2.6 * pow(aFlux, 0.33), 1.6, 7.0);
   gl_PointSize = s * uPx;
-  vA = clamp(aFlux * 3.0, 0.07, 1.0);
+  vA = clamp(aFlux * 6.0, 0.16, 1.0);
   vColor = aColor * uGain * (0.6 + 2.2 * clamp(aFlux, 0.0, 1.5));
 }`;
 const starFrag = /* glsl */ `
@@ -130,7 +130,7 @@ export function Sky() {
     milky.colorSpace = THREE.SRGBColorSpace;
     moonMap.colorSpace = THREE.SRGBColorSpace;
     moonMap.anisotropy = 8;
-    const mw = new THREE.ShaderMaterial({ vertexShader: skyVert, fragmentShader: skyFrag, uniforms: { uMap: { value: milky }, uGain: { value: 0.09 } }, side: THREE.BackSide, depthTest: false, depthWrite: false });
+    const mw = new THREE.ShaderMaterial({ vertexShader: skyVert, fragmentShader: skyFrag, uniforms: { uMap: { value: milky }, uGain: { value: 0.16 } }, side: THREE.BackSide, depthTest: false, depthWrite: false });
     const st = new THREE.ShaderMaterial({ vertexShader: starVert, fragmentShader: starFrag, uniforms: { uPx: { value: 1 }, uGain: { value: 1 } }, transparent: false, blending: THREE.AdditiveBlending, depthTest: false, depthWrite: false });
     const glareTex = radialTexture([[0, 'rgba(255,250,240,1)'], [0.06, 'rgba(255,244,225,0.85)'], [0.2, 'rgba(255,226,190,0.22)'], [0.5, 'rgba(255,210,170,0.05)'], [1, 'rgba(255,200,160,0)']]);
     const gm = new THREE.SpriteMaterial({ map: glareTex, blending: THREE.AdditiveBlending, depthTest: false, depthWrite: false, transparent: true, color: new THREE.Color(3, 3, 3) });
@@ -184,7 +184,7 @@ export function Sky() {
     const inAir = 1 - THREE.MathUtils.smoothstep(alt, (60 / R_KM) * 1.6, (160 / R_KM) * 1.6);
     const sunUp = THREE.MathUtils.smoothstep(tmp.cam.clone().normalize().dot(SUN_LOCAL), -0.15, 0.1);
     const dim = 1 - 0.92 * inAir * sunUp;
-    mats.mw.uniforms.uGain.value = 0.09 * dim;
+    mats.mw.uniforms.uGain.value = 0.16 * dim;
     mats.st.uniforms.uGain.value = dim;
     mats.st.uniforms.uPx.value = gl.getPixelRatio();
 

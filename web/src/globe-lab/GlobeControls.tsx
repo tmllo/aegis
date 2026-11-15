@@ -47,6 +47,7 @@ export function GlobeControls({ initial, home = initial, earth, follow }: Props)
   sizeRef.current = size;
 
   const flyTo = (to: LookAt) => {
+    following.current = false;
     omega.current.set(0, 0, 0);
     zoomPending.current.log = 0;
     clampState(to);
@@ -260,10 +261,8 @@ export function GlobeControls({ initial, home = initial, earth, follow }: Props)
       if (k >= 1) fly.current = null;
     } else if (following.current && follow) {
       const p = follow();
-      if (p) {
-        const want = ll(p.lat, p.lon);
-        state.current = rotateState(state.current, grabRotation(state.current.target, want));
-      }
+      // track the sub-satellite point; heading stays as the user set it (north up by default)
+      if (p) state.current.target.copy(ll(p.lat, p.lon));
     }
     // inertia (frame-rate independent decay, ~0.92 per 60 Hz frame)
     const w = omega.current;

@@ -68,7 +68,7 @@ state every frame; nothing else moves the camera.
 | `earth-day-hd-{0,1,2,3}.jpg` | same source at 16384x8192 split into 4 quadrants: 0 = lon -180..0 lat 0..90, 1 = lon 0..180 lat 0..90, 2 = lon -180..0 lat -90..0, 3 = lon 0..180 lat -90..0 | 8192x4096 each |
 | `earth-night-4k.jpg` | NASA Black Marble 2016 | 4096x2048 |
 | `earth-normal-4k.jpg` | tangent-space normal map from topography (or SSS normal map, CC BY 4.0) | 4096x2048 |
-| `earth-water-4k.png` | ocean/water mask, white = water (8-bit gray) | 4096x2048 |
+| `earth-water-8k.png` | ocean/water mask, white = water (8-bit gray) | 8192x4096 |
 | `earth-clouds-8k.jpg` | cloud cover, white = cloud (8-bit gray) | 8192x4096 |
 | `moon-2k.jpg` | NASA CGI Moon Kit (LRO) colour, lon 0 at image centre | 2048x1024 |
 | `milkyway-4k.jpg` | NASA SVS Deep Star Maps 2020, celestial (equatorial) coords, tone-mapped so stars are faint and the Milky Way glow carries; RA 0 at centre, RA increases to the LEFT, Dec +90 at top | 4096x2048 |

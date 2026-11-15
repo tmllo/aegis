@@ -49,3 +49,20 @@ export async function getWeek(subject: string): Promise<Record<string, number> |
     () => null,
   );
 }
+
+export interface Activity {
+  id: string;
+  label: string;
+  minutes?: number;
+}
+
+/** The server's first suggested self-help activity (the ones that help an open alert come first). */
+export async function getActivity(subject: string, date: string): Promise<Activity | null> {
+  if (!(await hasServer())) return null;
+  return getJson<{ activities?: Activity[] }>(`api/activities?subject=${encodeURIComponent(subject)}&date=${date}`).then((a) => a.activities?.[0] ?? null, () => null);
+}
+
+export async function logActivity(id: string, subject: string): Promise<boolean> {
+  if (!(await hasServer())) return false;
+  return postJson(`api/activities/${encodeURIComponent(id)}/events`, { subject }).then(() => true, () => false);
+}

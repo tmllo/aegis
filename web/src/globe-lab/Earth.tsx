@@ -143,7 +143,7 @@ export function Earth() {
     `${base}earth-day-8k.jpg`,
     `${base}earth-night-4k.jpg`,
     `${base}earth-normal-4k.jpg`,
-    `${base}earth-water-4k.png`,
+    `${base}earth-water-8k.png`,
     `${base}earth-clouds-8k.jpg`,
   ]);
   const mesh = useRef<THREE.Mesh>(null);

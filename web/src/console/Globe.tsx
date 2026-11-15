@@ -4,6 +4,7 @@
 // when the crew uses the rotate dial.
 import { Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useFrame } from '@react-three/fiber';
+import { getJson, hasServer } from '../data/http';
 import { Html, useTexture } from '@react-three/drei';
 import * as THREE from 'three';
 
@@ -261,11 +262,30 @@ function propagate(k: Tle, t: number): { lat: number; lon: number; alt: number }
   return { lat: (Math.asin(z / r) * 180) / Math.PI, lon: ((((lon * 180) / Math.PI + 540) % 360) + 360) % 360 - 180, alt: r - RE };
 }
 
-/** One orbit of the ISS ground track from now, from public/orbits/iss.tle. */
+/**
+ * One orbit of the ISS ground track from now. Server up: SGP4 points from /api/orbit (geodetic).
+ * Offline: two-body propagation of the bundled CelesTrak TLE (good for a few days of age).
+ */
 export function useIssTrack(at?: Date): { points: Float32Array; now: [number, number, number] } | null {
-  const [tle, setTle] = useStateTle();
-  void setTle;
-  return useMemo(() => {
+  const [tle] = useStateTle();
+  const [srv, setSrv] = useState<{ points: Float32Array; now: [number, number, number] } | null>(null);
+  useEffect(() => {
+    let alive = true;
+    void hasServer().then((up) => {
+      if (!up) return;
+      getJson<{ points: { lat: number; lon: number; alt_km: number }[] }>('api/orbit?subject=iss&minutes=95&step_s=30', 20000)
+        .then((o) => {
+          if (!alive || !o.points?.length) return;
+          const pts = o.points.flatMap((p) => ll(p.lat, p.lon, 1 + p.alt_km / 6371));
+          setSrv({ points: new Float32Array(pts), now: ll(o.points[0].lat, o.points[0].lon, 1 + o.points[0].alt_km / 6371) });
+        })
+        .catch(() => undefined);
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
+  const local = useMemo(() => {
     if (!tle) return null;
     const t0 = (at ?? new Date()).getTime();
     const period = (2 * Math.PI) / tle.n;
@@ -273,16 +293,17 @@ export function useIssTrack(at?: Date): { points: Float32Array; now: [number, nu
     let now: [number, number, number] = [0, 0, 0];
     for (let s = 0; s <= 180; s++) {
       const p = propagate(tle, t0 + (s / 180) * period * 1000);
-      const v = ll(p.lat, p.lon, 1 + p.alt / RE);
+      const v = ll(p.lat, p.lon, 1 + p.alt / 6371);
       pts.push(...v);
       if (s === 0) now = v;
     }
     return { points: new Float32Array(pts), now };
   }, [tle, at]);
+  return srv ?? local;
 }
 
 let tleCache: Promise<Tle | null> | null = null;
-function useStateTle(): [Tle | null, (t: Tle | null) => void] {
+function useStateTle(): [Tle | null] {
   const [tle, setTle] = useState<Tle | null>(null);
   useEffect(() => {
     tleCache ??= fetch(`${import.meta.env.BASE_URL}orbits/iss.tle`).then((r) => (r.ok ? r.text() : '')).then(parseTle, () => null);
@@ -292,5 +313,5 @@ function useStateTle(): [Tle | null, (t: Tle | null) => void] {
       alive = false;
     };
   }, []);
-  return [tle, setTle];
+  return [tle];
 }
