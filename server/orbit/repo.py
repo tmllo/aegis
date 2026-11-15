@@ -31,8 +31,10 @@ def write_batch(cat: Catalog, store: Store, batch: OrbitBatch) -> int:
             store.db.execute("DELETE FROM orbit_membership WHERE group_id=?", (gid,))
         store.db.executemany(
             "INSERT INTO orbit_object (norad, name, intl_designator) VALUES (?,?,?) "
-            "ON CONFLICT(norad) DO UPDATE SET name=excluded.name, intl_designator=excluded.intl_designator",
-            [(e.norad, e.name, e.intl_designator) for e in sets])
+            "ON CONFLICT(norad) DO UPDATE SET name=excluded.name, intl_designator=excluded.intl_designator "
+            "WHERE (SELECT epoch FROM orbit_elements WHERE norad=excluded.norad) IS NULL "
+            "OR (SELECT epoch FROM orbit_elements WHERE norad=excluded.norad) <= ?",
+            [(e.norad, e.name, e.intl_designator, e.epoch) for e in sets])
         store.db.executemany(
             "INSERT OR IGNORE INTO orbit_membership (norad, group_id) VALUES (?,?)",
             [(e.norad, g) for e in sets for g in sorted(e.groups) if g in known])
@@ -56,7 +58,8 @@ def groups(store: Store) -> list[dict]:
     with store.lock:
         rows = store.db.execute(
             "SELECT g.id, g.label, g.kind, g.default_on, g.credit, COUNT(e.norad) AS objects, "
-            "GROUP_CONCAT(e.epoch) AS epochs, MIN(CASE e.quality WHEN 'recorded' THEN 0 WHEN 'cached' THEN 1 ELSE 2 END) AS q "
+            "GROUP_CONCAT(e.epoch) AS epochs, "
+            "MIN(CASE e.quality WHEN 'recorded' THEN 0 WHEN 'cached' THEN 1 WHEN 'live' THEN 2 END) AS q "
             "FROM orbit_group g LEFT JOIN orbit_membership m ON m.group_id=g.id "
             "LEFT JOIN orbit_elements e ON e.norad=m.norad GROUP BY g.id").fetchall()
     rank = {v: k for k, v in QUALITY_RANK.items()}

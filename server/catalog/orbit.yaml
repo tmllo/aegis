@@ -78,9 +78,11 @@ saa:
     Approximate. The standard SAA exclusion contour NASA uses for the NICER X-ray instrument on the ISS (CALDB file
     nixtisaareg20170601v003.fits, region type SAACONT, valid from 2017-06-01), drawn from where NICER's particle
     background rises at ISS altitude; no numeric flux threshold is published. Vertices copied unchanged, swapped to
-    [lat, lon]. The anomaly drifts about 0.36 deg/yr west and 0.16 deg/yr north (about 3 deg west by 2026), changes
-    with altitude and the solar cycle, and a background-defined edge is not a dose threshold.
+    [lat, lon]. Schaefer et al. (2016) measured the SAA centroid drifting 0.36 +/- 0.06 deg/yr west and
+    0.16 +/- 0.09 deg/yr north at about 850 km (DMSP, 2004-2011). Applied to this 2017 contour, that is about 3 deg
+    west by 2026. Those rates are not an ISS-altitude measurement. The anomaly also changes with altitude and the
+    solar cycle, and a background-defined edge is not a dose threshold. The polygon is not shifted.
   refs:
   - "NASA GSFC HEASARC, NICER XTI CALDB SAA region file nixtisaareg20170601v003.fits (valid from 2017-06-01). https://heasarc.gsfc.nasa.gov/FTP/caldb/data/nicer/xti/bcf/saa/"
   - "NASA HEASARC, niprefilter2 help (NICER_SAA flag, saaregfile). https://heasarc.gsfc.nasa.gov/lheasoft/ftools/headas/niprefilter2.html"
-  - "Schaefer et al. (2016), Space Weather, https://doi.org/10.1002/2016SW001371 (SAA drift rates; full title and authors not yet checked)"
+  - "Schaefer, R. K., L. J. Paxton, C. Selby, B. Ogorzalek, G. Romeo, B. Wolven, and S.-Y. Hsieh (2016), Observation and modeling of the South Atlantic Anomaly in low Earth orbit using photometric instrument data, Space Weather, 14(5), 330-342, doi:10.1002/2016SW001371. SAA centroid drift at about 850 km (DMSP, 2004-2011): 0.36 +/- 0.06 deg/yr west, 0.16 +/- 0.09 deg/yr north."
