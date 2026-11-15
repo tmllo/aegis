@@ -6,6 +6,8 @@ import type { MetricKey, Status } from '../../data/types';
 import { buildView, firstName, fmtV, MOOD_WORD, seatOf, useStationData, WORD, SYSTEMS, RANK } from '../model';
 import { useStation } from '../state';
 import { Chip, cue, Dot, Icon } from '../ui';
+import { CameraScanCard, ReactionCard } from '../sensors';
+import type { Extras } from '../state';
 
 interface Field {
   k: MetricKey;
@@ -15,10 +17,11 @@ interface Field {
   hint: string;
 }
 
-const STEPS: { title: string; sub: string; fields: Field[] }[] = [
+const STEPS: { title: string; sub: string; fields: Field[]; extra?: 'mind' | 'scan' | 'pvt' }[] = [
   {
-    title: 'Sleep & mood',
-    sub: 'From your wrist actigraph, or your best estimate.',
+    title: 'Sleep & mind',
+    sub: 'From your wrist actigraph, or your best estimate. Then how you feel.',
+    extra: 'mind',
     fields: [
       { k: 'sleep_h', step: 0.25, min: 2, max: 11, hint: 'Hours asleep last night' },
       { k: 'mood', step: 1, min: 1, max: 5, hint: 'How do you feel right now?' },
@@ -26,7 +29,8 @@ const STEPS: { title: string; sub: string; fields: Field[] }[] = [
   },
   {
     title: 'Heart',
-    sub: 'Seated, after 5 minutes of rest. Cuff at heart level.',
+    sub: 'Seated, after 5 minutes of rest. Cuff at heart level, or let the camera read your pulse.',
+    extra: 'scan',
     fields: [
       { k: 'hr', step: 1, min: 35, max: 140, hint: 'Resting heart rate' },
       { k: 'bp_sys', step: 1, min: 80, max: 180, hint: 'Upper number' },
@@ -46,6 +50,17 @@ const STEPS: { title: string; sub: string; fields: Field[] }[] = [
     sub: 'Treadmill, bike and resistance device, total today.',
     fields: [{ k: 'exercise_min', step: 5, min: 0, max: 240, hint: 'Minutes of exercise' }],
   },
+  {
+    title: 'Alertness',
+    sub: '30 seconds. Fatigue shows in reaction time before you feel it.',
+    fields: [],
+    extra: 'pvt',
+  },
+];
+
+const MIND: { k: 'stress' | 'energy'; label: string; words: string[] }[] = [
+  { k: 'stress', label: 'Stress', words: ['', 'Calm', 'Mild', 'Some', 'High', 'Very high'] },
+  { k: 'energy', label: 'Energy', words: ['', 'Drained', 'Low', 'Okay', 'Good', 'Full'] },
 ];
 
 const FACES = ['', '😣', '🙁', '😐', '🙂', '😄'];
@@ -62,6 +77,9 @@ export default function Checkin() {
   const v = views.find((x) => x.m.id === id);
   const [step, setStep] = useState(0);
   const [draft, setDraft] = useState<Partial<Record<MetricKey, number>>>({});
+  const [ex, setEx] = useState<Extras>({});
+  const settle = useStation((s) => s.settlePlan);
+  const plans = useStation((s) => s.plans);
 
   // prefill with today's logged value (or the last one), so a check-in is a review, not a form
   useEffect(() => {
@@ -78,6 +96,7 @@ export default function Checkin() {
         }
       }
     setDraft(d);
+    setEx({ stress: 2, energy: 3 });
     setStep(0);
   }, [v?.m.id, data]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -93,8 +112,26 @@ export default function Checkin() {
 
   const set = (k: MetricKey, val: number) => setDraft((d) => ({ ...d, [k]: Math.round(val * 100) / 100 }));
   const finish = () => {
-    save(v.m.id, { at: Date.now(), values: draft, before: before.overall, after: preview.overall, xp: gained });
+    save(v.m.id, { at: Date.now(), values: draft, before: before.overall, after: preview.overall, xp: gained }, ex);
     cue('chime', sound);
+    // close any countermeasure loop for this crew member: back in range = resolved, still flagged = escalate
+    for (const [key, plan] of Object.entries(plans)) {
+      const [cid, metric] = key.split(':');
+      if (cid !== v.m.id || plan.stage !== 'started') continue;
+      const r = preview.rows[metric as MetricKey];
+      if (!r) continue;
+      const ok = r.status === 'green';
+      settle(cid, metric, ok ? 'resolved' : 'escalated');
+      window.setTimeout(
+        () =>
+          toast(
+            ok
+              ? { tone: 'green', title: `Countermeasure worked · ${r.label}`, body: 'Re-measure is back inside the personal baseline. Loop closed.' }
+              : { tone: 'red', title: `Still flagged · ${r.label}`, body: 'Countermeasure did not bring it back. Escalated to the flight surgeon.' },
+          ),
+        900,
+      );
+    }
     const changed = before.overall !== preview.overall;
     toast({
       tone: preview.overall === 'green' ? 'green' : preview.overall,
@@ -139,6 +176,21 @@ export default function Checkin() {
 
       {!last ? (
         <div className="st-ci-fields">
+          {STEPS[step].extra === 'scan' && (
+            <div className="st-field is-wide">
+              <CameraScanCard
+                onResult={(bpm, br, conf) => {
+                  set('hr', bpm);
+                  setEx((e) => ({ ...e, scanBpm: bpm, scanBreathing: br, scanConf: conf }));
+                }}
+              />
+            </div>
+          )}
+          {STEPS[step].extra === 'pvt' && (
+            <div className="st-field is-wide">
+              <ReactionCard subject={v.m.id} onResult={(ms, lapses, st, usual) => setEx((e) => ({ ...e, pvtMs: ms, pvtLapses: lapses, pvtStatus: st, pvtUsual: usual }))} />
+            </div>
+          )}
           {STEPS[step].fields.map((f) => {
             const r = preview.rows[f.k];
             const val = draft[f.k] ?? f.min;
@@ -190,9 +242,28 @@ export default function Checkin() {
               </div>
             );
           })}
+          {STEPS[step].extra === 'mind' &&
+            MIND.map((m) => (
+              <div key={m.k} className={`st-field is-${m.k === 'stress' && (ex.stress ?? 0) >= 4 ? 'amber' : 'green'}`}>
+                <div className="st-field-h">
+                  <div>
+                    <b>{m.label}</b>
+                    <span>Self-report, 1–5 · feeds Neuro & sleep</span>
+                  </div>
+                </div>
+                <div className="st-moods is-words">
+                  {[1, 2, 3, 4, 5].map((n) => (
+                    <button key={n} className={ex[m.k] === n ? 'is-on' : ''} onClick={() => (cue('tick', sound), setEx((e) => ({ ...e, [m.k]: n })))}>
+                      <span>{n}</span>
+                      {m.words[n]}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
         </div>
       ) : (
-        <Review before={before.status} after={preview.status} rows={STEPS.flatMap((s) => s.fields.map((f) => f.k)).map((k) => ({ k, label: data.crew.metrics[k].label, unit: data.crew.metrics[k].unit, val: draft[k] ?? null, was: raw.series.find((r) => r.date === data.crew.mission.today)?.[k] ?? null, status: preview.rows[k].status }))} gained={gained} />
+        <Review ex={ex} before={before.status} after={preview.status} rows={STEPS.flatMap((s) => s.fields.map((f) => f.k)).map((k) => ({ k, label: data.crew.metrics[k].label, unit: data.crew.metrics[k].unit, val: draft[k] ?? null, was: raw.series.find((r) => r.date === data.crew.mission.today)?.[k] ?? null, status: preview.rows[k].status }))} gained={gained} />
       )}
 
       <div className="st-ci-nav">
@@ -213,7 +284,7 @@ export default function Checkin() {
   );
 }
 
-function Review({ before, after, rows, gained }: { before: Record<string, Status>; after: Record<string, Status>; rows: { k: MetricKey; label: string; unit: string; val: number | null; was: number | null; status: Status }[]; gained: number }) {
+function Review({ ex, before, after, rows, gained }: { ex: Extras; before: Record<string, Status>; after: Record<string, Status>; rows: { k: MetricKey; label: string; unit: string; val: number | null; was: number | null; status: Status }[]; gained: number }) {
   return (
     <div className="st-review">
       <div className="st-review-sys">
@@ -247,6 +318,22 @@ function Review({ before, after, rows, gained }: { before: Record<string, Status
           ))}
         </tbody>
       </table>
+      <div className="st-review-extra">
+        <div>
+          <span>Stress / energy</span>
+          <b>
+            {ex.stress ?? '—'}/5 · {ex.energy ?? '—'}/5
+          </b>
+        </div>
+        <div>
+          <span>Camera pulse</span>
+          <b>{ex.scanBpm ? `${ex.scanBpm} bpm` : 'not taken'}</b>
+        </div>
+        <div className={`is-${ex.pvtStatus ?? 'green'}`}>
+          <span>Reaction time</span>
+          <b>{ex.pvtMs ? `${ex.pvtMs} ms · ${ex.pvtLapses ?? 0} lapses` : 'not taken'}</b>
+        </div>
+      </div>
       <div className="st-reward">
         <Icon.star />
         <div>

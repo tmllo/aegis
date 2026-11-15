@@ -10,23 +10,62 @@ import { useStation, type SystemId } from './state';
 export const BRAND = 'AEGIS';
 export const TAGLINE = 'Crew health & radiation early warning';
 
-export const WORD: Record<Status, string> = { green: 'Nominal', amber: 'Watch', red: 'Act now' };
+export const WORD: Record<Status, string> = { green: 'Nominal', amber: 'Caution', red: 'Warning' };
+
+/* Caution & warning classes, after NASA-STD-3001 Vol 2 (Table 10.3-1): the class says who acts.
+   Advisory is our own early band (1.5σ drift) so a trend shows before it becomes a caution. */
+export type CW = 'nominal' | 'advisory' | 'caution' | 'warning' | 'emergency';
+export const CW_RANK: Record<CW, number> = { nominal: 0, advisory: 1, caution: 2, warning: 3, emergency: 4 };
+export const CW_LABEL: Record<CW, string> = { nominal: 'Nominal', advisory: 'Advisory', caution: 'Caution', warning: 'Warning', emergency: 'Emergency' };
+export const CW_OWNER: Record<CW, string> = {
+  nominal: 'No action',
+  advisory: 'Crew · self-care, keep logging',
+  caution: 'Crew re-checks · in daily surgeon report',
+  warning: 'Flight surgeon · review now',
+  emergency: 'All crew · immediate action',
+};
+export const ADVISORY_Z = 1.5;
+export const worstCW = (...c: CW[]): CW => c.reduce<CW>((a, b) => (CW_RANK[b] > CW_RANK[a] ? b : a), 'nominal');
+export function cwOf(status: Status, score: number | null): CW {
+  if (status === 'red') return 'warning';
+  if (status === 'amber') return 'caution';
+  return score != null && score >= ADVISORY_Z ? 'advisory' : 'nominal';
+}
+
+/* Fit for duty: the operational consequence of the health state (team working rule, not a NASA rule). */
+export type Duty = 'cleared' | 'restricted' | 'hold' | 'shelter';
+export const DUTY_LABEL: Record<Duty, string> = { cleared: 'Cleared for EVA', restricted: 'Re-check before EVA', hold: 'Hold: no EVA or safety-critical tasks', shelter: 'In storm shelter' };
+export const dutyOf = (cw: CW, alarm: boolean): Duty => (alarm ? 'shelter' : cw === 'warning' || cw === 'emergency' ? 'hold' : cw === 'caution' ? 'restricted' : 'cleared');
 export const RANK: Record<Status, number> = { green: 0, amber: 1, red: 2 };
 export const worstOf = (...s: Status[]): Status => s.reduce<Status>((a, b) => (RANK[b] > RANK[a] ? b : a), 'green');
+
+export type Hazard = 'radiation' | 'isolation' | 'distance' | 'gravity' | 'environment';
+export const HAZARD_LABEL: Record<Hazard, string> = {
+  radiation: 'Space radiation',
+  isolation: 'Isolation & confinement',
+  distance: 'Distance from Earth',
+  gravity: 'Altered gravity',
+  environment: 'Hostile closed environment',
+};
 
 export interface SystemDef {
   id: SystemId;
   name: string;
+  short: string;
   sub: string;
   metrics: MetricKey[];
+  hazards: Hazard[];
+  /** what this system means for the mission, one line */
+  why: string;
 }
 
+// The five body systems are the spine of the app: every reading, cause and action hangs off one of them.
 export const SYSTEMS: SystemDef[] = [
-  { id: 'brain', name: 'Brain & sleep', sub: 'Sleep, mood', metrics: ['sleep_h', 'mood'] },
-  { id: 'heart', name: 'Heart', sub: 'Heart rate, blood pressure', metrics: ['hr', 'bp_sys', 'bp_dia'] },
-  { id: 'blood', name: 'Blood', sub: 'Blood sugar', metrics: ['glucose'] },
-  { id: 'bones', name: 'Bones & muscle', sub: 'Exercise, bone loss', metrics: ['exercise_min', 'bone_loss_pct'] },
-  { id: 'whole_body', name: 'Whole body', sub: 'Temperature, radiation', metrics: ['temp', 'dose_mSv_day', 'dose_mSv_cum'] },
+  { id: 'heart', name: 'Cardiovascular', short: 'Cardio', sub: 'Heart rate, blood pressure', metrics: ['bp_sys', 'bp_dia', 'hr'], hazards: ['gravity', 'environment'], why: 'Fluids shift headward in low gravity; the heart and vessels adapt and can struggle on return or during EVA.' },
+  { id: 'brain', name: 'Neuro & sleep', short: 'Neuro', sub: 'Sleep, mood, alertness', metrics: ['sleep_h', 'mood'], hazards: ['isolation', 'distance', 'environment'], why: 'Short sleep and low mood erode attention and reaction time: the first line of mission safety.' },
+  { id: 'bones', name: 'Musculoskeletal', short: 'Bone', sub: 'Exercise, bone loss', metrics: ['exercise_min', 'bone_loss_pct'], hazards: ['gravity'], why: 'Without load, weight-bearing bone loses about 1% a month; exercise is the only countermeasure.' },
+  { id: 'blood', name: 'Blood & metabolic', short: 'Blood', sub: 'Blood sugar, immune markers', metrics: ['glucose'], hazards: ['environment', 'radiation'], why: 'Diet, stress hormones and radiation shift metabolism and immune cells; labs catch what vitals miss.' },
+  { id: 'whole_body', name: 'Radiation & thermal', short: 'Exposure', sub: 'Dose, body temperature', metrics: ['dose_mSv_day', 'dose_mSv_cum', 'temp'], hazards: ['radiation', 'environment'], why: 'Dose adds up for a career; a fever in a closed habitat can spread to the crew.' },
 ];
 export const SYSTEM_BY_ID = Object.fromEntries(SYSTEMS.map((s) => [s.id, s])) as Record<SystemId, SystemDef>;
 
@@ -69,7 +108,10 @@ export interface MetricRow {
   unit: string;
   value: number | null;
   status: Status;
+  cw: CW;
   z: number | null;
+  /** directional score: -z for low-side-only metrics, |z| otherwise */
+  score: number | null;
   mean: number | null;
   lo: number | null;
   hi: number | null;
@@ -90,6 +132,10 @@ export interface CrewView {
   /** the single most important issue */
   issue: MetricRow | null;
   issues: MetricRow[];
+  /** advisories: drifting but not yet a caution */
+  drifts: MetricRow[];
+  cw: CW;
+  sys: Record<SystemId, CW>;
   checkedIn: boolean;
 }
 
@@ -122,7 +168,9 @@ export function buildView(cd: CrewData, raw: CrewMember, entries: Partial<Record
       unit: meta.unit,
       value: i >= 0 ? m.series[i][k] : null,
       status: st,
+      cw: cwOf(st, s?.score ?? null),
       z: s?.z ?? null,
+      score: s?.score ?? null,
       mean: b?.mean ?? null,
       lo: b ? b.mean - 2 * b.sd : null,
       hi: b ? b.mean + 2 * b.sd : null,
@@ -137,7 +185,11 @@ export function buildView(cd: CrewData, raw: CrewMember, entries: Partial<Record
     .sort((a, b) => RANK[b.status] - RANK[a.status] || Math.abs(b.z ?? 0) - Math.abs(a.z ?? 0));
   // the paired BP reading counts once
   const dedup = issues.filter((r, idx) => !(r.k === 'bp_dia' && issues.slice(0, idx).some((x) => x.k === 'bp_sys')));
-  return { m, status, overall: status.overall, scores, rows, issue: dedup[0] ?? null, issues: dedup, checkedIn };
+  const sys = {} as Record<SystemId, CW>;
+  for (const d of SYSTEMS) sys[d.id] = worstCW(...d.metrics.map((k) => rows[k].cw));
+  const drifts = Object.values(rows).filter((r) => r.cw === 'advisory');
+  const cw = worstCW(...Object.values(sys));
+  return { m, status, overall: status.overall, scores, rows, issue: dedup[0] ?? null, issues: dedup, drifts, cw, sys, checkedIn };
 }
 
 /** One sentence for a row in trouble: "Sleep 5.4 h, 3.1σ below her usual for 4 days". */
@@ -180,6 +232,7 @@ export const LEVEL_STATUS: Record<'none' | 'watch' | 'warning', Status> = { none
 
 export interface QueueItem {
   id: string;
+  cw?: CW;
   tone: Status | 'info';
   who: string;
   title: string;
@@ -190,20 +243,24 @@ export interface QueueItem {
 
 export function actionQueue(views: CrewView[], sw: SpaceWeather | null, stationAlarm: boolean): QueueItem[] {
   const out: QueueItem[] = [];
-  if (stationAlarm) out.push({ id: 'alarm', tone: 'red', who: 'All crew', title: 'Solar storm warning', detail: 'Suspend EVA. Move to the storm shelter.', cta: 'Open radiation', to: '/radiation' });
+  if (stationAlarm) out.push({ id: 'alarm', cw: 'emergency', tone: 'red', who: 'All crew', title: 'Solar storm warning', detail: 'Suspend EVA. Move to the storm shelter.', cta: 'Open radiation', to: '/radiation' });
   for (const v of views) {
     for (const r of v.issues) {
       out.push({
         id: `${v.m.id}-${r.k}`,
+        cw: r.cw,
         tone: r.status,
         who: `${seatOf(v.m)} · ${firstName(v.m)}`,
         title: issueLine(r),
         detail: r.action ?? '',
-        cta: r.status === 'red' ? 'Review & call surgeon' : 'Review',
+        cta: r.status === 'red' ? 'Open & call surgeon' : 'Open countermeasure',
         to: `/crew/${v.m.id}?s=${metricSystem(r.k)}`,
       });
     }
   }
+  for (const v of views)
+    for (const r of v.drifts)
+      out.push({ id: `${v.m.id}-${r.k}-adv`, cw: 'advisory', tone: 'info', who: `${seatOf(v.m)} · ${firstName(v.m)}`, title: `${r.label} drifting ${r.z! >= 0 ? 'up' : 'down'} · ${Math.abs(r.z!).toFixed(1)}σ`, detail: 'Not a caution yet. Keep logging; the trend is being watched.', cta: 'Open trend', to: `/crew/${v.m.id}?s=${metricSystem(r.k)}` });
   for (const v of views) {
     if (!v.checkedIn) out.push({ id: `${v.m.id}-checkin`, tone: 'info', who: `${seatOf(v.m)} · ${firstName(v.m)}`, title: 'Daily check-in due', detail: 'Sleep, mood and vitals: about a minute.', cta: 'Start check-in', to: `/checkin/${v.m.id}` });
   }

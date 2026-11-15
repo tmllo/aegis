@@ -14,6 +14,27 @@ export interface CheckinRecord {
   xp: number;
 }
 
+/** Countermeasure loop for one flagged reading: detected -> countermeasure -> re-measure -> outcome. */
+export interface Plan {
+  startedAt: number;
+  stage: 'started' | 'resolved' | 'escalated';
+  /** status when the countermeasure started */
+  from: 'green' | 'amber' | 'red';
+}
+
+/** Extra readings the health check captures that are not in crew_data.json (session only). */
+export interface Extras {
+  stress?: number;
+  energy?: number;
+  pvtMs?: number;
+  pvtLapses?: number;
+  pvtStatus?: 'green' | 'amber' | 'red';
+  pvtUsual?: number | null;
+  scanBpm?: number;
+  scanBreathing?: number | null;
+  scanConf?: number;
+}
+
 export type AlarmPhase = 'off' | 'warning' | 'sheltered' | 'arrived';
 
 export interface Alarm {
@@ -43,12 +64,17 @@ interface StationState {
   streak: Record<string, number>;
   /** surgeon calls sent this session, by crew id */
   surgeon: Record<string, number>;
+  /** key `${crewId}:${metric}` */
+  plans: Record<string, Plan>;
+  extras: Record<string, Extras>;
   alarm: Alarm;
   toasts: Toast[];
   sound: boolean;
   demoStep: number | null;
 
-  saveCheckin: (crewId: string, rec: CheckinRecord) => void;
+  saveCheckin: (crewId: string, rec: CheckinRecord, extras?: Extras) => void;
+  startPlan: (crewId: string, metric: string, from: Plan['from']) => void;
+  settlePlan: (crewId: string, metric: string, stage: Plan['stage']) => void;
   seed: (xp: Record<string, number>, streak: Record<string, number>) => void;
   callSurgeon: (crewId: string) => void;
   setAlarm: (a: Alarm) => void;
@@ -66,13 +92,22 @@ export const useStation = create<StationState>((set) => ({
   xp: {},
   streak: {},
   surgeon: {},
+  plans: {},
+  extras: {},
   alarm: { phase: 'off' },
   toasts: [],
   sound: true,
   demoStep: null,
 
-  saveCheckin: (crewId, rec) =>
+  startPlan: (crewId, metric, from) => set((s) => ({ plans: { ...s.plans, [`${crewId}:${metric}`]: { startedAt: Date.now(), stage: 'started', from } } })),
+  settlePlan: (crewId, metric, stage) =>
+    set((s) => {
+      const k = `${crewId}:${metric}`;
+      return s.plans[k] ? { plans: { ...s.plans, [k]: { ...s.plans[k], stage } } } : s;
+    }),
+  saveCheckin: (crewId, rec, extras) =>
     set((s) => ({
+      extras: extras ? { ...s.extras, [crewId]: { ...s.extras[crewId], ...extras } } : s.extras,
       entries: { ...s.entries, [crewId]: { ...s.entries[crewId], ...rec.values } },
       checkins: { ...s.checkins, [crewId]: rec },
       xp: { ...s.xp, [crewId]: (s.xp[crewId] ?? 0) + rec.xp },

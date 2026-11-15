@@ -3,12 +3,15 @@
 import { useNavigate } from 'react-router-dom';
 import { useCabin } from '../../data/cabin';
 import type { Status } from '../../data/types';
-import { LEVEL_STATUS, LEVEL_WORD, SYSTEMS, WORD, firstName, fmtV, issueLine, seatOf, useStationData, worstOf } from '../model';
+import { CW_LABEL, DUTY_LABEL, LEVEL_STATUS, LEVEL_WORD, SYSTEMS, WORD, dutyOf, firstName, fmtV, issueLine, seatOf, useStationData, worstOf } from '../model';
+import { CWChip } from '../health';
 import { useStation } from '../state';
 import { Card, Chip, Dot, Icon, Ring, Spark, STATUS_COLOR } from '../ui';
 
 export default function Overview() {
   const { data, views, sw, doses, queue, env } = useStationData();
+  const alarm = useStation((s) => s.alarm);
+  const alarmOn = alarm.phase === 'warning' || alarm.phase === 'sheltered';
   const xp = useStation((s) => s.xp);
   const streak = useStation((s) => s.streak);
   const { cabin } = useCabin();
@@ -18,14 +21,14 @@ export default function Overview() {
   const counts = { red: views.filter((v) => v.overall === 'red').length, amber: views.filter((v) => v.overall === 'amber').length };
   const done = views.filter((v) => v.checkedIn).length;
   const cabinStatus: Status = cabin ? cabin.readings.reduce<Status>((a, r) => worstOf(a, r.status ?? 'green'), 'green') : 'green';
-  const station: Status = worstOf(...views.map((v) => v.overall), sw ? LEVEL_STATUS[sw.level] : 'green', cabinStatus);
   const summary = [
-    counts.red ? `${counts.red} crew member${counts.red > 1 ? 's' : ''} need${counts.red > 1 ? '' : 's'} action` : null,
-    counts.amber ? `${counts.amber} to watch` : null,
-    !counts.red && !counts.amber ? 'All crew within their own baselines' : null,
+    counts.red ? `${counts.red} on hold for the flight surgeon` : null,
+    counts.amber ? `${counts.amber} to re-check` : null,
+    !counts.red && !counts.amber ? 'Everyone inside their own baseline' : null,
   ]
     .filter(Boolean)
     .join(', ');
+  const cleared = views.filter((v) => dutyOf(v.cw, alarmOn) === 'cleared').length;
   const maxCum = Math.max(...doses.map((d) => d.d.cumulative_mSv ?? 0));
   const limit = data.crew.career_limit_mSv;
 
@@ -33,24 +36,40 @@ export default function Overview() {
     <div className="st-page st-overview">
       <section className="st-hero">
         <div>
-          <p className="st-cap">Today on board</p>
+          <p className="st-cap">Crew health · today</p>
           <h2>
-            <span className={`st-word is-${station}`}>{WORD[station]}</span>
+            <span className={`st-ready is-${cleared === views.length ? 'green' : cleared === 0 ? 'red' : 'amber'}`}>
+              {cleared}/{views.length}
+            </span>
             <span className="st-hero-line">
-              {summary}. Space weather {sw ? LEVEL_WORD[sw.level].toLowerCase() : '—'}. Cabin air {cabinStatus === 'green' ? 'in range' : WORD[cabinStatus].toLowerCase()}.
+              crew cleared for EVA. {summary}. Space weather {sw ? LEVEL_WORD[sw.level].toLowerCase() : '—'}, cabin air {cabinStatus === 'green' ? 'in range' : WORD[cabinStatus].toLowerCase()}.
             </span>
           </h2>
+          <div className="st-cwcount">
+            {(['warning', 'caution', 'advisory'] as const).map((c) => {
+              const n = views.reduce((a, v) => a + Object.values(v.rows).filter((r) => r.cw === c && r.k !== 'bp_dia').length, 0);
+              return (
+                <span key={c} className={`st-cw is-${n ? c : 'nominal'}`}>
+                  <i />
+                  <b>
+                    {n} {CW_LABEL[c]}
+                    {n === 1 ? '' : 's'}
+                  </b>
+                </span>
+              );
+            })}
+          </div>
         </div>
         <div className="st-hero-stats">
           <div>
             <b>
               {done}/{views.length}
             </b>
-            <span>check-ins today</span>
+            <span>health checks today</span>
           </div>
           <div>
             <b>{queue.filter((q) => q.tone === 'red' || q.tone === 'amber').length}</b>
-            <span>open actions</span>
+            <span>open countermeasures</span>
           </div>
           <div>
             <b>{sw ? `${Math.round(sw.p * 100)}%` : '—'}</b>
@@ -65,7 +84,7 @@ export default function Overview() {
             const issue = v.issue;
             const spark = issue ? issue.history.map((h) => h.v) : v.rows.hr.history.map((h) => h.v);
             return (
-              <article key={v.m.id} className={`st-crewcard is-${v.overall}`} onClick={() => nav(`/crew/${v.m.id}`)}>
+              <article key={v.m.id} className={`st-crewcard is-${v.overall} cw-${v.cw}`} onClick={() => nav(`/crew/${v.m.id}`)}>
                 <header>
                   <div className="st-avatar">
                     {seatOf(v.m)}
@@ -77,15 +96,26 @@ export default function Overview() {
                       {v.m.role} · {v.m.age}
                     </p>
                   </div>
-                  <Chip s={v.overall} solid={v.overall !== 'green'} />
                 </header>
-                <p className="st-crewcard-issue">{issue ? issueLine(issue) : 'All readings within their own usual range.'}</p>
+                <div className="st-crewcard-cw">
+                  <CWChip cw={alarmOn ? 'emergency' : v.cw} />
+                  <span className={`st-duty is-${dutyOf(v.cw, alarmOn)}`}>{DUTY_LABEL[dutyOf(v.cw, alarmOn)]}</span>
+                </div>
+                <p className="st-crewcard-issue">{issue ? issueLine(issue) : v.drifts[0] ? `${v.drifts[0].label} drifting ${v.drifts[0].z! >= 0 ? 'up' : 'down'} ${Math.abs(v.drifts[0].z!).toFixed(1)}σ · watching the trend` : 'All readings within their own usual range.'}</p>
                 {issue?.action && <p className="st-crewcard-act">→ {issue.action}</p>}
-                <div className="st-sysrow">
+                <div className="st-sysmatrix">
                   {SYSTEMS.map((s) => (
-                    <span key={s.id} className={`st-sys is-${v.status[s.id]}`} title={`${s.name}: ${WORD[v.status[s.id]]}`}>
-                      <Dot s={v.status[s.id]} size={8} />
-                      {s.id === 'whole_body' ? 'Body' : s.name.split(' ')[0]}
+                    <span
+                      key={s.id}
+                      className={`is-${v.sys[s.id]}`}
+                      title={`${s.name}: ${CW_LABEL[v.sys[s.id]]}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        nav(`/crew/${v.m.id}?s=${s.id}`);
+                      }}
+                    >
+                      <i />
+                      {s.short}
                     </span>
                   ))}
                 </div>
@@ -121,13 +151,15 @@ export default function Overview() {
           })}
         </div>
 
-        <Card title="Action queue" right={<span className="st-muted">{queue.length} items</span>} className="st-queue">
+        <Card title="Countermeasure queue" right={<span className="st-muted">{queue.length} items</span>} className="st-queue">
           <ol>
             {queue.slice(0, 7).map((q) => (
-              <li key={q.id} className={`is-${q.tone}`} onClick={() => nav(q.to)}>
+              <li key={q.id} className={`is-${q.tone} cw-${q.cw ?? 'info'}`} onClick={() => nav(q.to)}>
                 <i />
                 <div>
-                  <p className="st-q-who">{q.who}</p>
+                  <p className="st-q-who">
+                    {q.cw && <b className={`st-q-cw is-${q.cw}`}>{CW_LABEL[q.cw]}</b>} {q.who}
+                  </p>
                   <p className="st-q-title">{q.title}</p>
                   {q.detail && <p className="st-q-detail">{q.detail}</p>}
                 </div>
@@ -139,7 +171,7 @@ export default function Overview() {
           </ol>
         </Card>
 
-        <Card title="Radiation" right={sw && <Chip s={LEVEL_STATUS[sw.level]}>{LEVEL_WORD[sw.level]}</Chip>} className="st-radcard" onClick={() => nav('/radiation')}>
+        <Card title="Radiation exposure" right={sw && <Chip s={LEVEL_STATUS[sw.level]}>{LEVEL_WORD[sw.level]}</Chip>} className="st-radcard" onClick={() => nav('/radiation')}>
           <div className="st-radcard-body">
             <Ring value={maxCum / limit} color={maxCum / limit > 0.5 ? STATUS_COLOR.amber : '#5eead4'} size={118}>
               <b>{((maxCum / limit) * 100).toFixed(1)}%</b>
@@ -171,7 +203,7 @@ export default function Overview() {
           </p>
         </Card>
 
-        <Card title="Cabin air" right={<Chip s={cabinStatus}>{cabinStatus === 'green' ? 'In range' : WORD[cabinStatus]}</Chip>} className="st-cabcard">
+        <Card title="Cabin air · feeds Neuro & sleep" right={<Chip s={cabinStatus}>{cabinStatus === 'green' ? 'In range' : WORD[cabinStatus]}</Chip>} className="st-cabcard">
           <div className="st-cab">
             {(cabin?.readings ?? [])
               .filter((r) => r.value != null)

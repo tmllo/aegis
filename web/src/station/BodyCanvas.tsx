@@ -181,7 +181,7 @@ function viewFor(focus: SystemId | null): View {
   if (!focus || focus === 'whole_body') return { pos: [0, 0.96, 2.95], target: [0, 0.9, 0] };
   const t = TARGETS[SYSTEM_TARGET[focus]];
   const c = t.box.c;
-  const d = Math.max(0.75, Math.hypot(...t.box.h) * 4.2);
+  const d = Math.max(focus === 'blood' ? 1.15 : 0.75, Math.hypot(...t.box.h) * 4.2);
   return { pos: [c[0] + 0.15, c[1] + 0.05, c[2] + d], target: [c[0], c[1], c[2]] };
 }
 
