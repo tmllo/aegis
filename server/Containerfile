@@ -1,7 +1,7 @@
 # AEGIS data core API (FastAPI + uvicorn), single worker: the store is in-process.
 #
 # Build (the context is the repo root):
-#   podman build -f server/Containerfile -t aegis-api .
+#   podman build --format docker -f server/Containerfile -t aegis-api .
 #
 # Run:
 #   podman run --rm -p 8000:8000 aegis-api
@@ -19,6 +19,17 @@
 #   -e AEGIS_STREAM_POLL_S=60 (seconds between re-runs of "stream" adapters),
 #   -e AEGIS_DB=:memory: (do not persist the store).
 # docker accepts the same commands (drop the :Z suffix and --userns).
+# podman's default OCI format ignores HEALTHCHECK: build with --format docker to keep it.
+
+# Stage 1: gather sources and drop local, gitignored state (a dev store in server/data/ holds check-ins
+# and notes; server/out/ and caches are build output). Nothing from this stage's layers reaches the image.
+FROM python:3.12-slim AS src
+WORKDIR /src
+COPY server/ server/
+COPY web/public/data/ web/public/data/
+COPY docs/research/samples/ docs/research/samples/
+COPY data/real/ data/real/
+RUN rm -rf server/data server/out  && find . -name "__pycache__" -type d -prune -exec rm -rf {} +  && find . -name "*.db" -delete
 
 FROM python:3.12-slim
 
@@ -34,11 +45,8 @@ WORKDIR /app
 COPY server/requirements.txt server/requirements.txt
 RUN pip install --no-cache-dir -r server/requirements.txt
 
-# Only what the API reads at runtime, at the same relative paths as in the repo.
-COPY server/ server/
-COPY web/public/data/ web/public/data/
-COPY docs/research/samples/ docs/research/samples/
-COPY data/real/ data/real/
+# Only what the API reads at runtime, at the same relative paths as in the repo, cleaned in stage 1.
+COPY --from=src /src/ /app/
 
 # Unprivileged user; the code stays root-owned (read-only for the app), only /app/var is writable.
 RUN groupadd --system --gid 10001 aegis \

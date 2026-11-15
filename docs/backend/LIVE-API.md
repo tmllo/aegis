@@ -12,18 +12,18 @@ When the API starts, it builds once and then starts one background thread. Every
 | `stream` | `AEGIS_STREAM_POLL_S` (default 60 s) |
 | `on build`, `static`, `on input` | never |
 
-Each pass works like this. `adapter.load()` runs with no lock held, so a slow feed blocks no request. Then `store.write()` takes `store.lock`, and `build.derive()` rebuilds assessments, plugin rows and the three contract views under the same lock. The new `/data/*.json` set is swapped in as a whole. If an adapter fails, its previous rows stay and it is retried on its next cadence. The space-weather adapters (`donki` 15 min, `swpc` 5 min, `hapi` daily) are picked up automatically when they land.
+Each pass works like this. If a recorded or cached batch is identical to the last one (the ISS snapshot every 60 s, for example), it is skipped: no run row is added and nothing is re-derived. `adapter.load()` runs with no lock held, so a slow feed blocks no request. Then `store.write()` takes `store.lock`, and `build.derive()` rebuilds assessments, plugin rows and the three contract views under the same lock. The new `/data/*.json` set is swapped in as a whole. If an adapter fails, its previous rows stay and it is retried on its next cadence. The space-weather adapters (`donki` 15 min, `swpc` 5 min, `hapi` daily) are picked up automatically when they land.
 
 The store is the same SQLite file the whole time. The default is `server/data/aegis.db` (gitignored); set `AEGIS_DB` to change it, or `:memory:` for a throwaway store. At startup every adapter is loaded into that file again with INSERT OR REPLACE on the same keys. A refresh only adds a run. Neither recreates the store or deletes from a fact table (observation, event, forecast, or a plugin's note, task, task_event or sleep_session), so check-ins and notes survive both a refresh and a restart. The only table that is wiped and rebuilt is the derived `assessment` table. `AEGIS_REFRESH=0` turns the thread off. `server/tests/conftest.py` makes tests use `:memory:` with no thread.
 
 ```
 GET /api/refresh
-{"jobs": [{"source": "isslive", "every_s": 60.0, "next_in_s": 59.8, "runs": 0, "last_run": null,
-           "last_rows": null, "last_rejected": null, "last_error": null}]}
+{"running": true, "jobs": [{"source": "isslive", "every_s": 60.0, "next_in_s": 59.8, "runs": 0, "unchanged": 0,
+           "last_run": null, "last_rows": null, "last_rejected": null, "last_error": null}]}
 
 POST /api/refresh                 (all polled sources now; ?source=isslive for one; 404 if not polled)
-{"refreshed": ["isslive"], "jobs": [{"source": "isslive", "every_s": 60.0, "next_in_s": 59.9, "runs": 1,
-           "last_run": 7, "last_rows": 10, "last_rejected": 0, "last_error": null}]}
+{"refreshed": ["isslive"], "running": true, "jobs": [{"source": "isslive", "every_s": 60.0, "next_in_s": 59.9,
+           "runs": 1, "unchanged": 0, "last_run": 7, "last_rows": 10, "last_rejected": 0, "last_error": null}]}
 ```
 
 ## Check-in: `POST /api/observations`
@@ -35,7 +35,12 @@ A check-in goes through `server/adapters/checkin.py` and then the same `store.wr
 - a `t` that is not ISO 8601, or a time with no timezone
 - a value outside the metric's optional `valid: {min, max}`
 
+- a value outside the metric's range: the catalog's `valid`, or 0 to `absolute_red.max` when there is no `valid` (mood 0..5, sleep 0..24 h, exercise 0..600 min), or a number too large to be a float
+- a `t` before the mission `start_date` or after tomorrow (UTC)
+
 `t` defaults to now and is stored in UTC.
+
+**For Emile:** a check-in sits next to the simulated value for the same day, so `GET /api/observations?subject=c1&metric=self.mood` can return two rows for 2026-11-15, one with `quality: "simulated"` and one with `quality: "live"`. Prefer `live`. A date-only check-in (`2026-11-15`) and a timed one (`2026-11-15T08:30:00Z`) are separate rows.
 
 ```
 POST /api/observations
@@ -58,5 +63,5 @@ POST /api/observations
 ```
 powershell -ExecutionPolicy Bypass -File server/run.ps1                    # http://127.0.0.1:8000, store server/data/aegis.db
 powershell -ExecutionPolicy Bypass -File server/run.ps1 -Db server/data/demo.db -Port 8001
-podman build -f server/Containerfile -t aegis-api .  ;  podman run -p 8000:8000 aegis-api
+podman build --format docker -f server/Containerfile -t aegis-api .  ;  podman run -p 8000:8000 aegis-api
 ```

@@ -94,7 +94,7 @@ def test_only_polled_sources_get_jobs(client):
 # ---- refresh -------------------------------------------------------------------
 def test_refresh_runs_on_cadence_and_updates_views(client):
     clock, swapped = Clock(), []
-    r = Refresher(deps.cat(), deps.store(), [FakeIss()], lambda f: (swapped.append(f), deps._set_files(f)),
+    r = Refresher(deps.cat(), deps.raw_store(), [FakeIss()], lambda f: (swapped.append(f), deps._set_files(f)),
                   stream_poll_s=60, clock=clock)
     assert r.tick() == []                                       # not due yet: build just loaded it
     clock.t += 61
@@ -109,7 +109,7 @@ def test_refresh_runs_on_cadence_and_updates_views(client):
 def test_refresh_failure_keeps_old_rows(client):
     clock = Clock()
     before = client.get("/api/observations", params={"subject": "iss", "kind": "cabin"}).json()
-    r = Refresher(deps.cat(), deps.store(), [FakeIss(fail=True)], deps._set_files, clock=clock)
+    r = Refresher(deps.cat(), deps.raw_store(), [FakeIss(fail=True)], deps._set_files, clock=clock)
     clock.t += 61
     assert r.tick() == []
     assert r.status()[0]["last_error"] == "ConnectionError: feed down"
@@ -118,7 +118,7 @@ def test_refresh_failure_keeps_old_rows(client):
 
 def test_slow_adapter_does_not_block_requests(client):
     gate, clock = threading.Event(), Clock()
-    r = Refresher(deps.cat(), deps.store(), [FakeIss(gate=gate)], deps._set_files, clock=clock)
+    r = Refresher(deps.cat(), deps.raw_store(), [FakeIss(gate=gate)], deps._set_files, clock=clock)
     clock.t += 61
     worker = threading.Thread(target=r.tick)
     worker.start()
@@ -134,7 +134,7 @@ def test_slow_adapter_does_not_block_requests(client):
 
 def test_background_thread_ticks(client):
     done = threading.Event()
-    r = Refresher(deps.cat(), deps.store(), [FakeIss()], lambda f: done.set(), stream_poll_s=0.01)
+    r = Refresher(deps.cat(), deps.raw_store(), [FakeIss()], lambda f: done.set(), stream_poll_s=0.01)
     r.start()
     try:
         assert done.wait(5)
@@ -174,8 +174,8 @@ def test_checkin_returns_assessments_for_that_day(client, monkeypatch):
     a = Assessment("c1", "self.mood", "2026-11-15", "baseline_z@3d", "amber", -2.1, "low", "call home")
     real = deps.rederive
 
-    def rederive_with_flag():
-        files = real()
+    def rederive_with_flag(*args):
+        files = real(*args)
         deps.store().replace_assessments([*deps.store().assessments(), a])
         return files
 
@@ -196,6 +196,11 @@ def test_checkin_returns_assessments_for_that_day(client, monkeypatch):
     ({"subject": "c1", "metric": "self.mood", "value": 3, "unit": "kg"}, "unit"),
     ({"subject": "c1", "metric": "self.mood", "value": 3, "t": "yesterday"}, "ISO 8601"),
     ({"subject": "c1", "metric": "self.mood", "value": 3, "t": "2026-11-15T08:00:00"}, "timezone"),
+    ({"subject": "c1", "metric": "self.mood", "value": 10 ** 400}, "finite number"),
+    ({"subject": "c1", "metric": "self.mood", "value": -1e300}, "outside"),
+    ({"subject": "c1", "metric": "self.sleep_h", "value": 25}, "outside"),
+    ({"subject": "c1", "metric": "self.mood", "value": 3, "t": "2099-01-01"}, "outside the mission"),
+    ({"subject": "c1", "metric": "self.mood", "value": 3, "t": "0001-01-01"}, "outside the mission"),
 ])
 def test_checkin_rejected(client, payload, why):
     n_runs = len(deps.store().runs())
@@ -213,7 +218,7 @@ def test_checkin_survives_refresh(client):
 
 def test_refresh_reuses_store_and_wipes_no_fact_table(client, monkeypatch):
     import server.core.store as store_mod
-    store = deps.store()
+    store = deps.raw_store()
     _seed_plugin_tables(store)
     client.post("/api/observations", json=MOOD)
     before = _snapshot(store)
@@ -227,7 +232,7 @@ def test_refresh_reuses_store_and_wipes_no_fact_table(client, monkeypatch):
     clock.t += 61
     assert r.tick() == ["isslive"]
     assert client.post("/api/refresh").status_code == 200       # the real isslive adapter too
-    assert deps.store() is store
+    assert deps.raw_store() is store
     after = _snapshot(store)
     for table, rows in before.items():                          # every old row still there, unchanged
         assert set(rows) <= set(after[table]), table
@@ -269,3 +274,49 @@ def test_default_db_is_under_server_data(monkeypatch):
     path = deps.db_path()
     assert path.replace("\\", "/").endswith("server/data/aegis.db")
     assert deps.db_path(":memory:") == ":memory:"
+
+
+# ---- reviewer findings ----------------------------------------------------------
+def test_unchanged_recorded_batch_is_skipped(client):
+    first = client.post("/api/refresh").json()
+    second = client.post("/api/refresh").json()
+    assert first["refreshed"] == ["isslive"] and second["refreshed"] == []      # same snapshot: no run, no derive
+    job = second["jobs"][0]
+    assert job["runs"] == 1 and job["unchanged"] == 1 and second["running"] is False
+
+
+def test_concurrent_reads_are_safe(client):
+    """Two threads reading at once used to share the sqlite connection unlocked (500s, short results)."""
+    expected = len(client.get("/api/observations", params={"subject": "iss", "kind": "cabin"}).json())
+    bad, stop = [], threading.Event()
+
+    def reader():
+        while not stop.is_set():
+            r = client.get("/api/observations", params={"subject": "iss", "kind": "cabin"})
+            if r.status_code != 200 or len(r.json()) != expected:
+                bad.append((r.status_code, r.text[:80]))
+
+    def poster():
+        i = 0
+        while not stop.is_set():
+            i += 1
+            client.post("/api/observations", json={"subject": "c2", "metric": "self.mood",
+                                                   "t": f"2026-11-15T00:{i // 60 % 60:02d}:{i % 60:02d}Z", "value": 3})
+
+    threads = [threading.Thread(target=reader), threading.Thread(target=reader), threading.Thread(target=poster),
+               threading.Thread(target=lambda: [deps.refresher().tick(force=True) for _ in iter(stop.is_set, True)])]
+    for t in threads:
+        t.start()
+    stop.wait(3)
+    stop.set()
+    for t in threads:
+        t.join(10)
+    assert bad == []
+
+
+def test_stale_store_cannot_publish_views(client):
+    old = deps.raw_store()
+    marker = {"stale": True}
+    deps.init(":memory:", refresh=False)                      # a reload replaced the store
+    deps._set_files(marker, old)
+    assert deps.files() is not marker

@@ -8,8 +8,9 @@
 
 One daemon thread. For each due adapter: load() runs with no lock held (a slow feed blocks nobody),
 store.write() takes store.lock, then build.derive() rebuilds assessments, plugin rows and the contract
-views under the same lock, and the new views are swapped in whole. Requests keep reading the store the
-whole time. An adapter that raises keeps its previous rows and is retried on its next cadence; adapters
+views under the same lock, and the new views are swapped in whole before the lock is released. Requests
+read through deps.LockedStore, so they wait at most one write or derive (~0.1 s), never a fetch. A
+recorded or cached batch identical to the last one is skipped (no run row, no derive). An adapter that raises keeps its previous rows and is retried on its next cadence; adapters
 are expected to fall back to their recorded copy themselves (AGENT-RULES section 3).
 """
 from __future__ import annotations
@@ -53,7 +54,7 @@ class Refresher:
             if every is not None:              # build() already ran it once: first re-run one cadence from now
                 self.jobs.append({"adapter": a, "source": a.source, "every_s": every, "due": now + every,
                                   "runs": 0, "last_run": None, "last_rows": None, "last_rejected": None,
-                                  "last_error": None})
+                                  "last_error": None, "unchanged": 0, "sig": None})
         self._tick = threading.Lock()          # one refresh pass at a time (thread or POST /api/refresh)
         self._stop = threading.Event()
         self._thread: threading.Thread | None = None
@@ -69,18 +70,25 @@ class Refresher:
                 if not force and now < job["due"]:
                     continue
                 job["due"] = now + job["every_s"]
+                if self._stop.is_set():                        # replaced by a new init(): write nothing more
+                    return wrote
                 try:
                     batch = job["adapter"].load(self.cat)      # network or file read, no lock held
+                    sig = signature(batch)
+                    if batch.quality in ("recorded", "cached") and sig == job["sig"]:
+                        job.update(unchanged=job["unchanged"] + 1, last_error=None)   # same fallback file: no new run
+                        continue
                     run_id = self.store.write(batch)           # takes store.lock
-                    run = next(r for r in reversed(self.store.runs()) if r["id"] == run_id)
-                    job.update(runs=job["runs"] + 1, last_run=run_id, last_error=None,
+                    run = run_info(self.store, run_id)
+                    job.update(runs=job["runs"] + 1, last_run=run_id, last_error=None, sig=sig,
                                last_rows=run["n_rows"], last_rejected=run["rejected"])
                     wrote.append(job["source"])
                 except Exception as e:                         # keep old rows, retry next cadence
                     job["last_error"] = f"{type(e).__name__}: {e}"
                     log.warning("refresh %s failed: %s", job["source"], job["last_error"])
-            if wrote:
-                self.on_files(derive(self.cat, self.store))
+            if wrote and not self._stop.is_set():
+                with self.store.lock:                          # publish before a check-in can derive newer views
+                    self.on_files(derive(self.cat, self.store))
             return wrote
 
     # ---- background thread ------------------------------------------------------
@@ -106,8 +114,27 @@ class Refresher:
             except Exception:                                  # derive failed: log, keep serving old views
                 log.exception("refresh pass failed")
 
+    @property
+    def running(self) -> bool:
+        return self._thread is not None and self._thread.is_alive()
+
     def status(self) -> list[dict]:
         now = self.clock()
         return [{"source": j["source"], "every_s": j["every_s"], "next_in_s": round(max(0.0, j["due"] - now), 1),
-                 "runs": j["runs"], "last_run": j["last_run"], "last_rows": j["last_rows"],
+                 "runs": j["runs"], "unchanged": j["unchanged"], "last_run": j["last_run"], "last_rows": j["last_rows"],
                  "last_rejected": j["last_rejected"], "last_error": j["last_error"]} for j in self.jobs]
+
+
+def signature(batch) -> int:
+    """Identity of a batch's facts, to skip re-storing an unchanged recorded fallback every cadence."""
+    return hash(repr((
+        [(o.subject, o.metric, o.t, o.value, o.unit, o.quality) for o in batch.observations],
+        [(e.id, e.type, e.t_start, e.t_peak, sorted(e.attrs.items(), key=str)) for e in batch.events],
+        [(k.from_id, k.to_id, k.relation) for k in batch.links],
+        [(f.event_id, f.model_id, f.p, f.level, f.split) for f in batch.forecasts])))
+
+
+def run_info(store, run_id: int) -> dict:
+    """One run row by id (the store has no such read yet; see docs/backend/REQUESTS.md)."""
+    with store.lock:
+        return dict(store.db.execute("SELECT * FROM run WHERE id=?", (run_id,)).fetchone())

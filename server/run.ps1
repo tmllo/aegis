@@ -56,7 +56,8 @@ $ErrorActionPreference = "Stop"
 
 $python = Get-Command python -ErrorAction SilentlyContinue
 if ($null -eq $python) {
-    Write-Error "python was not found on PATH. Install Python 3.12 (https://www.python.org/downloads/) or activate your virtual environment, then run this script again."
+    # Not Write-Error: with ErrorActionPreference Stop it throws and the exit code below never runs.
+    [Console]::Error.WriteLine("python was not found on PATH. Install Python 3.12 (https://www.python.org/downloads/) or activate your virtual environment, then run this script again.")
     exit 1
 }
 
@@ -82,8 +83,9 @@ try {
         Write-Host "Installing server/requirements.txt ..."
         & python -m pip install -r server/requirements.txt
         if ($LASTEXITCODE -ne 0) {
-            Write-Error "pip install failed with exit code $LASTEXITCODE."
-            exit $LASTEXITCODE
+            $code = $LASTEXITCODE
+            [Console]::Error.WriteLine("pip install failed with exit code $code.")
+            exit $code
         }
     }
 
