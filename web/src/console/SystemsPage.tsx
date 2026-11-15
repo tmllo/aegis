@@ -19,8 +19,6 @@ export default function SystemsPage() {
   if (!data) return <p className="cx-error cx-wait">Loading</p>;
 
   const checks = views.reduce((n, v) => n + v.scores.length, 0);
-  const m = data.storm.meta.metrics_test;
-  const caught = Math.round(m.hit_rate * m.n_storms);
   const crewShown = views.reduce((n, v) => n + v.scores.filter((s) => s.status !== 'green').length, 0);
   const flagged = views.reduce((n, v) => n + v.scores.filter((s) => s.status === 'red').length, 0);
   const rows: [string, string, string][] = src
@@ -30,15 +28,15 @@ export default function SystemsPage() {
   return (
     <>
       <i className="safe safe-left" aria-hidden />
-      <section className="pat sys-left">
+      <section className="one sys-one">
         <span className="cap">How readings reach you</span>
-        <b className="pat-word">{checks} readings checked today</b>
-        <span className="cap pat-line">
-          {PLACEMENTS.length} sensors · {checks} readings checked · {crewShown} shown to the crew · {flagged} sent to Earth
+        <b className="one-word">{checks} readings</b>
+        <span className="one-do">
+          {PLACEMENTS.length} sensors were checked today. {crewShown} {crewShown === 1 ? 'reading was' : 'readings were'} shown to the crew and {flagged} sent to Earth.
         </span>
-        <span className="cap">
-          e{'\u02e3'} storm model warned before {caught} of {m.n_storms} storms
-        </span>
+        <button type="button" className="solid one-btn" aria-pressed={open} onClick={() => setOpen((o) => !o)}>
+          {open ? 'Hide data sources' : 'Data sources'}
+        </button>
       </section>
 
       {open && (
@@ -55,29 +53,24 @@ export default function SystemsPage() {
               ))}
             </tbody>
           </table>
+        {open && src && (
+            <button
+              type="button"
+              className="ghost"
+              disabled={busy}
+              onClick={async () => {
+                setBusy(true);
+                await refreshSources();
+                setSrc(await getSources());
+                setBusy(false);
+              }}
+            >
+              {busy ? 'Refreshing' : 'Refresh'}
+            </button>
+          )}
         </section>
       )}
 
-      <div className="pat-actions">
-        <button type="button" className="ghost" aria-pressed={open} onClick={() => setOpen((o) => !o)}>
-          {open ? 'Hide data sources' : 'Data sources'}
-        </button>
-        {open && src && (
-          <button
-            type="button"
-            className="ghost"
-            disabled={busy}
-            onClick={async () => {
-              setBusy(true);
-              await refreshSources();
-              setSrc(await getSources());
-              setBusy(false);
-            }}
-          >
-            {busy ? 'Refreshing' : 'Refresh'}
-          </button>
-        )}
-      </div>
     </>
   );
 }

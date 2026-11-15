@@ -10,7 +10,7 @@ import type { MetricKey, Status } from '../data/types';
 import { useWristband } from '../wearable';
 import { AlarmStrip, type Alarm } from './Monitor';
 import { fmt, METRIC_TARGET, RANK, rowOf, SHORT, STATUS_WORD, TARGET_METRICS, toSteps, type Row } from './model';
-import { useEntries } from './entries';
+import { saveEntry, useEntries, VITAL } from './entries';
 import { Confirm } from './ui';
 import { CheckinPanel } from './CheckinPanel';
 import { HandoffPanel } from './HandoffPanel';
@@ -21,7 +21,6 @@ import { Mark } from './ui';
 import { fmtDate, LINK_DELAY } from './model';
 
 const ALL: MetricKey[] = ['hr', 'bp_sys', 'bp_dia', 'glucose', 'temp', 'sleep_h', 'mood', 'exercise_min', 'bone_loss_pct', 'dose_mSv_day'];
-const VITAL: Partial<Record<MetricKey, string>> = { bp_sys: 'vital.bp_sys', bp_dia: 'vital.bp_dia', hr: 'vital.hr', temp: 'vital.temp', glucose: 'vital.glucose' };
 const IDLE_MS = 20000;
 
 /** Idle after 20 s without input; any input ends it. Drives a slow orbit through the shared yaw. */
@@ -104,7 +103,6 @@ export default function CrewPage() {
   const [edit, setEdit] = useState<MetricKey | null>(null);
   const [draft, setDraft] = useState('');
   const entries = useEntries((s) => s.byMember);
-  const put = useEntries((s) => s.put);
   const setBodyTips = useHud((s) => s.setBodyTips);
   const panel = params.get('p');
   const rawT = params.get('t');
@@ -155,16 +153,13 @@ export default function CrewPage() {
   const organRow = target ? all.find((r) => r.k === TARGET_METRICS[target][0]) : null;
   const one = organRow ?? flagged[0] ?? null;
   const red = one?.status === 'red';
-  const caption = one ? `${SHORT[one.k]} ${fmt(one.value, one.digits)} ${one.unit}${one.mean != null ? ` · your usual ${fmt(one.mean, one.digits)}` : ''}` : 'All readings in range';
   const top = flagged[0] ?? null;
   const typed = entries[cv.m.id]?.[cd.mission.today] ?? {};
   const save = (k: MetricKey) => {
     const v = Number(draft.replace(',', '.'));
     if (!draft.trim() || !Number.isFinite(v)) return;
-    put(cv.m.id, cd.mission.today, k, v);
+    saveEntry(cv.m.id, cd.mission.today, k, v);
     setEdit(null);
-    const metric = VITAL[k];
-    if (metric) void postMeasure(cv.m.id, metric, `${cd.mission.today}T${new Date().toISOString().slice(11, 19)}Z`, v);
   };
 
   const live = band.status === 'connected' && band.reading;
@@ -188,133 +183,161 @@ export default function CrewPage() {
     setResult(reply == null ? 'Logged on this device' : reply.closed_tasks.length ? 'Measured · task closed' : reply.assessment ? `Measured · ${STATUS_WORD[reply.assessment.severity]}` : 'Measured · in range');
   };
 
+  const details = panel === 'details';
+  const facts = (flagged.length ? flagged : all.filter((r) => r.k === 'hr' || r.k === 'bp_sys' || r.k === 'sleep_h')).slice(0, 3);
+  const days = top ? Math.max(1, top.running) : 0;
+  const sentence = top ? `${SHORT[top.k]} is ${top.value != null && top.mean != null && top.value < top.mean ? 'low' : 'high'} for ${days} day${days === 1 ? '' : 's'}` : 'All readings are in your usual range';
+  const close = () => setParams({}, { replace: true });
+
+  const vitals = (
+    <div className="vlist" aria-label="Vitals">
+      <span className="cap">Vitals · {fmtDate(cd.mission.today)} · tap a number to enter it</span>
+      {all.map((r) => (
+        <div key={r.k} className="vrow" data-status={r.status !== 'green' ? r.status : undefined} data-editing={edit === r.k || undefined}>
+          <button type="button" className="vrow-main" aria-pressed={sheetK === r.k} onClick={() => METRIC_TARGET[r.k] && setParams({ t: METRIC_TARGET[r.k]!, k: r.k }, { replace: true })}>
+            <Mark s={r.status} size={9} />
+            <span className="vrow-l">
+              {SHORT[r.k]}
+              <small>
+                {r.k in typed ? 'entered by crew · ' : ''}
+                {r.lo != null && r.hi != null ? `your usual ${fmt(r.lo, r.digits)}-${fmt(r.hi, r.digits)}` : r.status === 'green' ? 'in range' : STATUS_WORD[r.status]}
+              </small>
+            </span>
+            <Spark r={r} />
+          </button>
+          {edit === r.k ? (
+            <form
+              className="vrow-edit"
+              onSubmit={(e) => {
+                e.preventDefault();
+                save(r.k);
+              }}
+            >
+              <input type="number" inputMode="decimal" step="any" autoFocus value={draft} onChange={(e) => setDraft(e.target.value)} onKeyDown={(e) => e.key === 'Escape' && setEdit(null)} aria-label={`${SHORT[r.k]} in ${r.unit}`} />
+              <small>{r.unit}</small>
+              <button type="submit" className="solid">
+                Save
+              </button>
+              <button type="button" className="ghost" onClick={() => setEdit(null)}>
+                Cancel
+              </button>
+            </form>
+          ) : (
+            <button
+              type="button"
+              className="vrow-v"
+              aria-label={`Enter a new ${SHORT[r.k].toLowerCase()} value`}
+              onClick={() => {
+                setEdit(r.k);
+                setDraft(r.value != null ? String(r.value) : '');
+              }}
+            >
+              {fmt(r.value, r.digits)}
+              <small>{r.unit}</small>
+            </button>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+
   return (
     <div className="crew" data-idle={idle || undefined} data-status={cv.overall}>
+      <i className="safe safe-left" aria-hidden />
+      {/* one look: status word, one sentence, at most three numbers, one white button, Details */}
+      <section className="one" aria-live="polite">
+        <span className="cap">
+          {seat[cv.m.id]} · {cv.m.role}
+        </span>
+        <b className="one-word">{STATUS_WORD[cv.overall]}</b>
+        <span className="one-do">{sentence}</span>
+        <dl className="one-facts">
+          {facts.map((r) => (
+            <div key={r.k} data-status={r.status !== 'green' ? r.status : undefined}>
+              <dd>
+                {fmt(r.value, r.digits)}
+                <small>{r.unit}</small>
+              </dd>
+              <dt>
+                {SHORT[r.k]}
+                {r.mean != null ? ` · your usual ${fmt(r.mean, r.digits)}` : ''}
+              </dt>
+            </div>
+          ))}
+        </dl>
+        {red ? (
+          <button type="button" className="solid one-btn" onClick={() => setAsk(true)}>
+            {result ?? 'Call surgeon'}
+          </button>
+        ) : (
+          /* the full check (feelings, camera, wrist band, reaction test) runs at /checkup; saved values return through the entries store */
+          <button type="button" className="solid one-btn" onClick={() => navigate('/checkup')}>
+            Start daily check
+          </button>
+        )}
+        <button type="button" className="one-more" aria-expanded={details} onClick={() => setParams(details ? {} : { p: 'details' }, { replace: true })}>
+          {details ? 'Hide details' : 'Details'}
+        </button>
+      </section>
+
       {panel === 'checkin' ? (
         <CheckinPanel className="crew-right" />
       ) : panel === 'handoff' || handoff ? (
         <HandoffPanel className="crew-right" />
       ) : sheetRow ? (
-        <InfoSheet r={sheetRow} target={target} cd={cd} m={cv.m} onClose={() => setParams({}, { replace: true })} />
-      ) : (
-        <div className="vlist" aria-label="Vitals">
-          <span className="cap">
-            Vitals · {seat[cv.m.id]} · {fmtDate(cd.mission.today)}
-          </span>
+        <InfoSheet r={sheetRow} target={target} cd={cd} m={cv.m} onClose={close} />
+      ) : details ? (
+        <aside className="crew-details" aria-label="Details">
+          <button type="button" className="one-more crew-details-close" onClick={close}>
+            Close
+          </button>
+          <p className="crew-esc">{escalation}</p>
+          <p className="cap">
+            {measuredToday ? 'Next check tomorrow morning' : 'Check due now'} · {streak} days in a row
+          </p>
           {live && (
-            <span className="cap vlist-live">
-              {`Live now · heart ${Math.round(band.reading!.hr)}\u00a0bpm · blood oxygen ${Math.round(band.reading!.spo2)}\u00a0% (demo)`}
-              {heartBpm != null ? ` · camera ${Math.round(heartBpm)}\u00a0bpm` : ''}
-            </span>
+            <p className="cap">
+              {`Live now · heart ${Math.round(band.reading!.hr)} bpm · blood oxygen ${Math.round(band.reading!.spo2)} % (demo)`}
+              {heartBpm != null ? ` · camera ${Math.round(heartBpm)} bpm` : ''}
+            </p>
           )}
-          {all.map((r) => (
-            <div key={r.k} className="vrow" data-status={r.status !== 'green' ? r.status : undefined} data-editing={edit === r.k || undefined}>
-              <button type="button" className="vrow-main" aria-pressed={sheetK === r.k} onClick={() => METRIC_TARGET[r.k] && setParams({ t: METRIC_TARGET[r.k]!, k: r.k }, { replace: true })}>
-                <Mark s={r.status} size={9} />
-                <span className="vrow-l">
-                  {SHORT[r.k]}
-                  <small>
-                    {r.k in typed ? 'entered by crew · ' : ''}
-                    {r.lo != null && r.hi != null ? `your usual ${fmt(r.lo, r.digits)}-${fmt(r.hi, r.digits)}` : r.status === 'green' ? 'in range' : STATUS_WORD[r.status]}
-                  </small>
-                </span>
-                <Spark r={r} />
-              </button>
-              {edit === r.k ? (
-                <form
-                  className="vrow-edit"
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    save(r.k);
-                  }}
-                >
-                  <input type="number" inputMode="decimal" step="any" autoFocus value={draft} onChange={(e) => setDraft(e.target.value)} onKeyDown={(e) => e.key === 'Escape' && setEdit(null)} aria-label={`${SHORT[r.k]} in ${r.unit}`} />
-                  <small>{r.unit}</small>
-                  <button type="submit" className="solid">
-                    Save
-                  </button>
-                  <button type="button" className="ghost" onClick={() => setEdit(null)}>
-                    Cancel
-                  </button>
-                </form>
-              ) : (
-                <button
-                  type="button"
-                  className="vrow-v"
-                  aria-label={`Enter a new ${SHORT[r.k].toLowerCase()} value`}
-                  onClick={() => {
-                    setEdit(r.k);
-                    setDraft(r.value != null ? String(r.value) : '');
-                  }}
-                >
-                  {fmt(r.value, r.digits)}
-                  <small>{r.unit}</small>
-                </button>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
-      <section className="crew-read brk" aria-live="polite">
-        <span className="cap cap-u">
-          {seat[cv.m.id]} · {cv.m.role}
-        </span>
-        <b className="crew-word">{STATUS_WORD[cv.overall]}</b>
-        {!flagged.length && <span className="cap crew-line">{caption}</span>}
-        {heartBpm != null && <span className="cap">Heart {Math.round(heartBpm)} bpm · camera estimate</span>}
-        <span className="cap crew-esc">{escalation}</span>
-        <span className="cap">
-          {measuredToday ? 'Next check tomorrow morning' : 'Check due now'} · {streak} days in a row
-        </span>
-        {(band.status !== 'connected' || (band.reading && band.reading.battery < 20)) && (
-          <span className="cap crew-band">
-            {band.deviceName ?? 'Wrist band (simulated)'} · {band.status === 'connected' ? `battery low · ${Math.round(band.reading!.battery)}\u00a0%` : band.status}
+          <p className="cap crew-band">
+            {band.deviceName ?? 'Wrist band (simulated)'} · {band.status === 'connected' ? `connected${band.reading ? ` · battery ${Math.round(band.reading.battery)} %` : ''}` : band.status}
             {band.status !== 'connected' && band.status !== 'pairing' && (
               <button type="button" className="ghost crew-connect" onClick={() => band.connect('sim')}>
                 Connect
               </button>
             )}
-          </span>
-        )}
-        <AlarmStrip alarms={alarms} acked={acked} onAck={(id) => setAcked((a) => ({ ...a, [id]: true }))} />
-        {top && (
-          <div className="crew-do">
-            <span className="cap">What to do now</span>
-            <ol className="crew-steps">
-              {toSteps(top.action).map((s) => (
-                <li key={s}>{s}</li>
-              ))}
-            </ol>
-            <button type="button" className="ghost crew-how" aria-expanded={how} onClick={() => setHow((h) => !h)}>
-              How to measure
-            </button>
-            {how && (
+          </p>
+          <AlarmStrip alarms={alarms} acked={acked} onAck={(id) => setAcked((a) => ({ ...a, [id]: true }))} />
+          {top && (
+            <div className="crew-do">
+              <h3 className="cap">What to do now</h3>
               <ol className="crew-steps">
-                {toSteps(cd.metrics[top.k].how_to_measure).map((s) => (
+                {toSteps(top.action).map((s) => (
                   <li key={s}>{s}</li>
                 ))}
               </ol>
-            )}
-          </div>
-        )}
-      </section>
-
-      <div className="crew-actions">
-        {red && (
-          <button type="button" className="solid" onClick={() => setAsk(true)}>
-            {result ?? 'Call surgeon'}
-          </button>
-        )}
-        {/* the full check (feelings, camera, wrist band, reaction test) runs at /checkup; saved values come back through the entries store */}
-        <button type="button" className={red ? 'ghost' : 'solid'} onClick={() => navigate('/checkup')}>
-          Start daily check
-        </button>
-        {target && (
-          <button type="button" className="ghost" onClick={() => setParams({}, { replace: true })}>
-            Whole body
-          </button>
-        )}
-      </div>
+              <button type="button" className="one-more" aria-expanded={how} onClick={() => setHow((h) => !h)}>
+                How to measure
+              </button>
+              {how && (
+                <ol className="crew-steps">
+                  {toSteps(cd.metrics[top.k].how_to_measure).map((s) => (
+                    <li key={s}>{s}</li>
+                  ))}
+                </ol>
+              )}
+            </div>
+          )}
+          {vitals}
+          {red && (
+            <button type="button" className="ghost" onClick={() => navigate('/checkup')}>
+              Start daily check
+            </button>
+          )}
+        </aside>
+      ) : null}
 
       {/* keyboard: Tab reaches each body region, Enter focuses it, Esc returns */}
       <nav className="hot-keys" aria-label="Body regions">

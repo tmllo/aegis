@@ -27,6 +27,7 @@ export function Shell() {
   const [server, setServer] = useState<boolean | null>(null);
   const nav = useNavigate();
   const [credits, setCredits] = useState(false);
+  const [menu, setMenu] = useState(false);
   const env = useMissionStore((s) => s.environment);
   const setEnv = useMissionStore((s) => s.setEnvironment);
   // ring reticle over hotspots: organs (from the scene), buttons and links
@@ -130,20 +131,36 @@ export function Shell() {
           ))}
         </nav>
         <div className="cx-icons">
-          <DemoButton />
-          <span className="cx-dayloc">
-            <span className="cx-day">Day {day ?? '--'}</span>
-            {/* mission location is a setting, not health: it changes the daily radiation and signal delay */}
-            <select className="cx-loc" aria-label="Mission location" value={env ?? ''} onChange={(e) => setEnv(e.target.value as EnvironmentId)}>
-              <option value="iss">ISS</option>
-              <option value="moon">Moon</option>
-              <option value="transit">Transit to Mars</option>
-              <option value="mars">Mars</option>
-            </select>
-          </span>
-          <span className="cx-live" data-on={server || undefined} title={server ? 'Server live' : 'Offline'}>
-            <i /> {server ? 'Live' : 'Offline'}
-          </span>
+          {/* day, data link, mission location and the demo sit in one small menu: the bar is tabs and seats only */}
+          <button type="button" className="cx-menu-btn" aria-expanded={menu} onClick={() => setMenu((m) => !m)}>
+            Menu
+          </button>
+          {menu && (
+            <div className="cx-menu" role="dialog" aria-label="Menu">
+              <p className="cx-menu-row">
+                <span>Mission day</span>
+                <b>{day ?? '--'}</b>
+              </p>
+              <p className="cx-menu-row">
+                <span>Data</span>
+                <b className="cx-live" data-on={server || undefined}>
+                  <i /> {server ? 'Live from the server' : 'Offline, recorded files'}
+                </b>
+              </p>
+              <label className="cx-menu-row">
+                <span>Mission location</span>
+                <select className="cx-loc" value={env ?? ''} onChange={(e) => setEnv(e.target.value as EnvironmentId)}>
+                  <option value="iss">ISS</option>
+                  <option value="moon">Moon</option>
+                  <option value="transit">Transit to Mars</option>
+                  <option value="mars">Mars</option>
+                </select>
+              </label>
+              <span className="cx-menu-demo" onClick={() => setMenu(false)}>
+                <DemoButton />
+              </span>
+            </div>
+          )}
         </div>
       </header>
 
