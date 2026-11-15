@@ -1,6 +1,6 @@
 // The console frame: mark, centred section tabs, telemetry and square action buttons on top;
 // crew selection on the left; the page (hero scene + glass cards) behind; credits at the foot.
-import { Suspense, useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useCabin } from '../data/cabin';
 import { hasServer } from '../data/http';
@@ -8,21 +8,15 @@ import { DISCLAIMERS } from '../components/Footer';
 import { Confirm, Icon, Mark, statusWord } from './ui';
 import { LINK_DELAY, rowOf, SHORT } from './model';
 import { useConsole } from './useConsole';
-import { World } from './World';
+// three.js and the scene load only after the intro, so nothing competes with the video
+const World = lazy(() => import('./World').then((m) => ({ default: m.World })));
 import { useHud } from './hud';
 import './console.css';
 
 export const SECTIONS = [
   { to: '/', name: 'Crew' },
-  { to: '/vitals', name: 'Vitals' },
-  { to: '/cabin', name: 'Cabin' },
-  { to: '/storm', name: 'Storm' },
+  { to: '/environment', name: 'Environment' },
   { to: '/systems', name: 'Systems' },
-  { to: '/mind', name: 'Mind' },
-  { to: '/timeline', name: 'Timeline' },
-  { to: '/shelter', name: 'Shelter' },
-  { to: '/compare', name: 'Compare' },
-  { to: '/handoff', name: 'Handoff' },
 ] as const;
 
 export function Shell() {
@@ -37,6 +31,19 @@ export function Shell() {
   useEffect(() => {
     void hasServer().then(setServer);
   }, []);
+  // mount the 3D world once the loading screen has handed off
+  const [worldOn, setWorldOn] = useState(() => !document.getElementById('boot') || document.documentElement.classList.contains('boot-done'));
+  useEffect(() => {
+    if (worldOn) return;
+    const html = document.documentElement;
+    const mo = new MutationObserver(() => html.classList.contains('boot-done') && setWorldOn(true));
+    mo.observe(html, { attributes: true, attributeFilter: ['class'] });
+    const id = window.setTimeout(() => setWorldOn(true), 6000); // never wait longer than this
+    return () => {
+      mo.disconnect();
+      window.clearTimeout(id);
+    };
+  }, [worldOn]);
   // keys 1-6 switch sections
   useEffect(() => {
     const k = (e: KeyboardEvent) => {
@@ -50,7 +57,7 @@ export function Shell() {
       else if (e.key === 'ArrowRight') h.setYaw(h.yaw + 0.15);
       else if (e.key === '+' || e.key === '=') h.setZoom(h.zoom * 1.15);
       else if (e.key === '-') h.setZoom(h.zoom / 1.15);
-      else if (e.key === 'Escape' && h.focus) nav('/vitals');
+      else if (e.key === 'Escape' && h.focus) nav('/');
     };
     addEventListener('keydown', k);
     return () => removeEventListener('keydown', k);
@@ -62,7 +69,11 @@ export function Shell() {
   return (
     <div className="cx">
       <div className="cx-world">
-        <World />
+        {worldOn && (
+          <Suspense fallback={null}>
+            <World />
+          </Suspense>
+        )}
       </div>
       {/* HUD framing: corner brackets and the centre reticle */}
       <div className="hud-frame" aria-hidden>
@@ -118,14 +129,14 @@ export function Shell() {
             </div>
             <div>
               <dt>Cabin</dt>
-              <dd>REC</dd>
+              <dd>{cabin ? (cabin.readings.some((r) => r.quality === 'live') ? 'LIVE' : 'REC') : '--'}</dd>
             </div>
             <div>
               <dt>Server</dt>
               <dd>{server == null ? '--' : server ? 'LIVE' : 'OFFLINE'}</dd>
             </div>
           </dl>
-          <button type="button" className="sq" aria-label="Check-in" title="Check-in" onClick={() => nav('/mind')}>
+          <button type="button" className="sq" aria-label="Check-in" title="Check-in" onClick={() => nav('/?p=checkin')}>
             <Icon name="checkin" size={20} />
           </button>
           <button type="button" className="sq" aria-label="Re-measure" title="Re-measure" disabled={!issue} aria-pressed={!!sent.measure} onClick={() => setAsk('measure')}>

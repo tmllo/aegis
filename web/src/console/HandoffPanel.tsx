@@ -4,13 +4,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import { doseSummary, sortedEvents } from '../core/radiation';
 import { LINK_DELAY, rowOf, SHORT, STATUS_WORD } from './model';
-import { KV, Panel } from './ui';
+import { Panel } from './ui';
 import { useConsole } from './useConsole';
 
 /** One-way light time in seconds for the progress animation (physics; Mars uses its mean). */
 const DELAY_S: Record<string, number> = { iss: 0.1, moon: 1.3, transit: 300, mars: 750 };
 
-export default function HandoffPage() {
+export function HandoffPanel({ className = "" }: { className?: string }) {
   const { data, cd, cv, seat } = useConsole();
   const [built, setBuilt] = useState(false);
   const [sent, setSent] = useState<number | null>(null);
@@ -53,41 +53,29 @@ export default function HandoffPage() {
   } Dose today ${bundle.radiation.dose_today_mSv ?? '--'} mSv.`;
 
   return (
-    <>
-      <Panel label="Case bundle" icon="note" aside="Prepared for an onboard AI medical assistant such as NASA's CMO-DA" className="ho-mid">
-        {!built ? (
-          <div style={{ display: 'grid', placeItems: 'center', flex: 1 }}>
-            <button type="button" className="cf-go" style={{ marginTop: 0 }} onClick={() => setBuilt(true)}>
-              Build
-            </button>
-          </div>
-        ) : (
-          <>
-            <p style={{ fontSize: 17, lineHeight: 1.5 }}>{summary}</p>
-            <pre className="ho-json">{JSON.stringify(bundle, null, 2)}</pre>
-          </>
-        )}
-      </Panel>
-
-      <Panel label="Link to Earth" icon="ground" aside={`One way ~${LINK_DELAY[cd.mission.environment] ?? '--'}`} className="ho-right">
-        <dl className="kvs">
-          <KV k="Crew member" v={seat[cv.m.id]} />
-          <KV k="Drifted" v={bundle.drifted.length} status={bundle.drifted.length ? 'amber' : null} />
-          <KV k="Site" v={bundle.mission.site} />
-          <KV k="Report arrives in" v={`~${LINK_DELAY[cd.mission.environment] ?? '--'}`} />
-        </dl>
-        <div className="ho-path gap">
-          <span className="label">Station</span>
-          <div className="meter-bar" style={{ flex: 1 }}>
-            <i style={{ width: `${progress * 100}%` }} />
-          </div>
-          <span className="label">Earth</span>
-        </div>
-        <p className="note">{sent == null ? 'Not sent' : progress >= 1 ? 'Delivered to the flight surgeon queue' : `In transit${scale > 1 ? ' (shown 1 s per minute)' : ''}`}</p>
-        <button type="button" className="btn btn-primary mt-auto" disabled={!built} onClick={() => { setSent(performance.now()); setNow(performance.now()); }}>
-          {sent == null ? 'Send report' : progress >= 1 ? 'Send again' : 'Sending'}
+    <Panel label="Handoff" icon="ground" aside={`One way ~${LINK_DELAY[cd.mission.environment] ?? '--'}`} className={className}>
+      <span className="label">Prepared for an onboard AI medical assistant such as NASA's CMO-DA</span>
+      {!built ? (
+        <button type="button" className="btn btn-primary gap" onClick={() => setBuilt(true)}>
+          Build case bundle
         </button>
-      </Panel>
-    </>
+      ) : (
+        <>
+          <p style={{ fontSize: 15, lineHeight: 1.5, marginTop: 10 }}>{summary}</p>
+          <pre className="ho-json">{JSON.stringify(bundle, null, 2)}</pre>
+          <div className="ho-path gap">
+            <span className="label">Station</span>
+            <div className="meter-bar" style={{ flex: 1 }}>
+              <i style={{ width: `${progress * 100}%` }} />
+            </div>
+            <span className="label">Earth</span>
+          </div>
+          <p className="note">{sent == null ? `Report arrives in ~${LINK_DELAY[cd.mission.environment] ?? '--'}` : progress >= 1 ? 'Delivered to the flight surgeon queue' : `In transit${scale > 1 ? ' (shown 1 s per minute)' : ''}`}</p>
+          <button type="button" className="btn btn-primary" style={{ marginTop: 10 }} onClick={() => { setSent(performance.now()); setNow(performance.now()); }}>
+            {sent == null ? 'Send report' : progress >= 1 ? 'Send again' : 'Sending'}
+          </button>
+        </>
+      )}
+    </Panel>
   );
 }

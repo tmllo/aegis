@@ -35,6 +35,11 @@ function paint() {
 function close() {
   if (closed || !el || hold) return;
   closed = true;
+  try {
+    performance.mark('handoff');
+  } catch {
+    /* ignore */
+  }
   line?.style.setProperty('--p', '1');
   el.classList.add('boot-out');
   document.documentElement.classList.add('boot-done'); // console bars animate in now

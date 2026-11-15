@@ -60,6 +60,7 @@ export interface ServerTask {
   done: boolean;
   status: string | null;
   streak: number;
+  attrs?: { severity?: 'amber' | 'red'; message?: string; z?: number };
 }
 
 /** GET /api/progress (subset we show). */

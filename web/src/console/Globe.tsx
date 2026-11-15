@@ -82,7 +82,7 @@ export const sunLocal = (d = new Date()) => {
 export const SUN_VIEW = { value: new THREE.Vector3(0, 0, 1) };
 
 function Earth({ yaw, onDouble }: { yaw: number; onDouble?: (p: THREE.Vector3) => void }) {
-  const [day, night, clouds] = useTexture([`${base}blue-marble-4k.jpg`, `${base}black-marble-2k.jpg`, `${base}clouds-2k.jpg`]);
+  const [day, night, clouds, spec] = useTexture([`${base}blue-marble-4k.jpg`, `${base}black-marble-2k.jpg`, `${base}clouds-2k.jpg`, `${base}specular-2k.jpg`]);
   useMemo(() => {
     day.colorSpace = THREE.SRGBColorSpace;
     night.colorSpace = THREE.SRGBColorSpace;
@@ -90,16 +90,20 @@ function Earth({ yaw, onDouble }: { yaw: number; onDouble?: (p: THREE.Vector3) =
   }, [day, night]);
   // city lights only on the night side, fading across the terminator
   const surface = useMemo(() => {
-    const m = new THREE.MeshStandardMaterial({ map: day, emissiveMap: night, emissive: new THREE.Color('#ffc98a'), emissiveIntensity: 1.1, roughness: 0.9, metalness: 0 });
+    const m = new THREE.MeshStandardMaterial({ map: day, emissiveMap: night, emissive: new THREE.Color('#ffc98a'), emissiveIntensity: 1.1, roughness: 0.92, roughnessMap: spec, metalness: 0 });
     m.onBeforeCompile = (sh) => {
       sh.uniforms.uSunView = SUN_VIEW;
       sh.fragmentShader = 'uniform vec3 uSunView;\n' + sh.fragmentShader.replace(
         '#include <emissivemap_fragment>',
         '#include <emissivemap_fragment>\n totalEmissiveRadiance *= smoothstep(0.08, -0.18, dot(normalize(normal), normalize(uSunView)));',
+      ).replace(
+        '#include <roughnessmap_fragment>',
+        // the specular map is white over water: oceans get a sun glint, land stays matte
+        'float roughnessFactor = roughness; vec4 texelRoughness = texture2D( roughnessMap, vRoughnessMapUv ); roughnessFactor *= 1.0 - 0.72 * texelRoughness.r;',
       );
     };
     return m;
-  }, [day, night]);
+  }, [day, night, spec]);
   const cloud = useRef<THREE.Mesh>(null);
   useFrame((_, dt) => {
     if (cloud.current) cloud.current.rotation.y += Math.min(dt, 0.05) * 0.004; // slow drift
@@ -111,7 +115,7 @@ function Earth({ yaw, onDouble }: { yaw: number; onDouble?: (p: THREE.Vector3) =
       </mesh>
       <mesh ref={cloud} scale={1.008} raycast={() => null}>
         <sphereGeometry args={[1, 96, 96]} />
-        <meshStandardMaterial alphaMap={clouds} transparent depthWrite={false} color="#ffffff" opacity={0.7} />
+        <meshStandardMaterial alphaMap={clouds} transparent depthWrite={false} color="#ffffff" opacity={0.9} />
       </mesh>
       <Mesh />
     </group>

@@ -20,11 +20,10 @@ const NODES = (lineage as { nodes: LNode[] }).nodes;
 const ST: Record<string, Status | null> = { live: 'green', simulated: 'amber', 'offline-sample': 'amber', planned: null };
 
 const GROUPS: { id: string; name: string; does: string; pick: (n: LNode) => boolean }[] = [
-  { id: 'sensors', name: 'Sensors', does: 'Suit, head, wrist, pocket, lab and self-report readings (simulated)', pick: (n) => n.kind === 'device' || n.id === 'crew' || n.id === 'ad_manual' },
-  { id: 'cabin', name: 'Cabin', does: 'ISS cabin air and tanks, recorded on 14 Nov', pick: (n) => n.id === 'api_isslive' },
+  { id: 'sensors', name: 'Sensors', does: 'Suit, head, wrist, pocket, lab and self-report (simulated), plus the recorded ISS cabin', pick: (n) => n.kind === 'device' || n.id === 'crew' || n.id === 'ad_manual' || n.id === 'api_isslive' },
   { id: 'core', name: 'e^x', does: 'Score each reading against her own baseline', pick: (n) => n.kind === 'core' && !['core_handoff', 'core_link'].includes(n.id) },
-  { id: 'hud', name: 'Crew HUD', does: 'Show status, the issue and the one action', pick: (n) => ['sf_console', 'sf_radiation', 'sf_systems', 'sf_wrist'].includes(n.id) },
-  { id: 'esc', name: 'Escalation', does: 'Queue a report for the flight surgeon', pick: (n) => ['core_escalation', 'core_link', 'core_handoff', 'person_surgeon', 'ext_cmo_da', 'person_cmo'].includes(n.id) },
+  { id: 'hud', name: 'Crew', does: 'Show status, the issue and the one action', pick: (n) => ['sf_console', 'sf_radiation', 'sf_systems', 'sf_wrist'].includes(n.id) },
+  { id: 'esc', name: 'Ground', does: 'Queue a report for the flight surgeon', pick: (n) => ['core_escalation', 'core_link', 'core_handoff', 'person_surgeon', 'ext_cmo_da', 'person_cmo'].includes(n.id) },
 ];
 
 export default function SystemsPage() {
@@ -43,8 +42,7 @@ export default function SystemsPage() {
   const worst = views.reduce<Status>((w, v) => (v.overall === 'red' || w === 'red' ? 'red' : v.overall === 'amber' || w === 'amber' ? 'amber' : 'green'), 'green');
   const delay = LINK_DELAY[cd.mission.environment] ?? 'unknown';
   const value: Record<string, { big: string; sub: string; status: Status | null; kv: [string, string][] }> = {
-    sensors: { big: String(PLACEMENTS.length - 1), sub: 'placements', status: 'green', kv: PLACEMENTS.filter((p) => p.id !== 'cabin').map((p) => [p.name, p.reads]) },
-    cabin: { big: String(cabin?.readings.filter((r) => r.value != null).length ?? 0), sub: 'readings', status: cabin ? 'green' : null, kv: [['Source', 'ISS Live, recorded'], ['Not connected', String(cabin?.readings.filter((r) => r.value == null).length ?? 0)]] },
+    sensors: { big: String(PLACEMENTS.length), sub: 'sources', status: 'green', kv: PLACEMENTS.map((p) => [p.name, p.reads]) },
     core: { big: String(checks), sub: 'checks today', status: flagged ? 'amber' : 'green', kv: [['Flagged', String(flagged)], ['Crew scored', String(views.length)], ['Rule', 'Own baseline, 3-day mean'], ['Server', server == null ? 'Checking' : server ? 'Live' : 'Offline']] },
     hud: { big: String(views.length), sub: 'crew', status: worst, kv: views.map((v) => [v.m.role, STATUS_WORD[v.overall]]) },
     esc: { big: String(flagged), sub: 'in queue', status: flagged ? 'amber' : 'green', kv: [['Report arrives in', `~${delay}`], ['Site', cd.environments[cd.mission.environment]?.label ?? '']] },
@@ -58,7 +56,7 @@ export default function SystemsPage() {
       <Panel label="Sensors" icon="systems" aside="Simulated" className="sy-left">
         <div className="steps">
           {PLACEMENTS.map((p, i) => (
-            <button key={p.id} type="button" className="step" aria-pressed={(sel === 'cabin' && p.id === 'cabin') || (sel === 'sensors' && p.id !== 'cabin')} onClick={() => { setSel(p.id === 'cabin' ? 'cabin' : 'sensors'); setDeep(false); }}>
+            <button key={p.id} type="button" className="step" aria-pressed={sel === 'sensors'} onClick={() => { setSel('sensors'); setDeep(false); }}>
               <span className="step-n">{String(i + 1).padStart(2, '0')}</span>
               <Mark s={p.id === 'cabin' ? (cabin ? 'green' : null) : 'green'} />
               <span className="step-t">

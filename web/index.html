@@ -5,7 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="color-scheme" content="dark" />
     <title>e^x Crew Station</title>
-    <link rel="preload" as="image" href="/loading/loading-crew-poster.jpg" />
+    <link rel="preload" as="image" href="/loading/loading-crew-poster.jpg" fetchpriority="high" />
+    <link rel="preload" as="video" href="/loading/loading-crew-1080.webm" type="video/webm" fetchpriority="high" />
+    <link rel="prefetch" href="/models/body.glb" />
+    <link rel="prefetch" href="/refs/earth/blue-marble-4k.jpg" />
     <style>
       /* Loading screen, first paint. Order: inline placeholder, poster, then the intro clip
          (once per session, plays once, holds its last frame). Graded to the console navy; the
@@ -44,6 +47,11 @@
     <div id="boot" role="status" aria-label="Loading">
       <div class="boot-layer boot-lqip"></div>
       <img class="boot-layer boot-poster" alt="" src="/loading/loading-crew-poster.jpg" decoding="async" fetchpriority="high" />
+      <video class="boot-layer" muted playsinline autoplay preload="auto" poster="/loading/loading-crew-poster.jpg" aria-hidden="true">
+        <source src="/loading/loading-crew-720.mp4" type="video/mp4" media="(max-width: 1440px)" />
+        <source src="/loading/loading-crew-1080.webm" type="video/webm" />
+        <source src="/loading/loading-crew-1080.mp4" type="video/mp4" />
+      </video>
       <div class="boot-grade"></div>
       <div class="boot-shade"></div>
       <div class="boot-mark">e<span>x</span></div>
@@ -68,23 +76,13 @@
         var seen = false;
         try { seen = sessionStorage.getItem('ex-intro') === '1'; sessionStorage.setItem('ex-intro', '1'); } catch (e) {}
         var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
-        if (seen || reduce) { boot.dataset.intro = 'done'; return; }
+        if (seen || reduce) { boot.dataset.intro = 'done'; var sv = boot.querySelector('video'); if (sv) { sv.pause(); sv.remove(); } return; }
         boot.dataset.intro = 'playing';
 
-        var v = document.createElement('video');
-        v.className = 'boot-layer';
-        v.muted = true; v.defaultMuted = true; v.playsInline = true; v.preload = 'auto';
-        v.setAttribute('muted', ''); v.setAttribute('playsinline', ''); v.setAttribute('aria-hidden', 'true');
-        v.poster = '/loading/loading-crew-poster.jpg';
-        var small = Math.max(screen.width, innerWidth) <= 1280;
-        var srcs = small
-          ? [['/loading/loading-crew-720.mp4', 'video/mp4']]
-          : [['/loading/loading-crew-1080.webm', 'video/webm'], ['/loading/loading-crew-1080.mp4', 'video/mp4']];
-        srcs.forEach(function (s, i) {
-          var e = document.createElement('source'); e.src = s[0]; e.type = s[1];
-          if (i === srcs.length - 1) e.addEventListener('error', done); // last source failed: poster stays
-          v.appendChild(e);
-        });
+        var v = boot.querySelector('video');
+        var srcs = v.querySelectorAll('source');
+        srcs[srcs.length - 1].addEventListener('error', done); // last source failed: poster stays
+        v.addEventListener('playing', function () { try { performance.mark('intro-playing'); } catch (e) {} }, { once: true });
         var started = false;
         var start = function () {
           if (started || boot.dataset.intro === 'done') return;
@@ -102,8 +100,6 @@
         boot.querySelector('.boot-skip').addEventListener('click', skip);
         var onKey = function (e) { if (!document.getElementById('boot')) return removeEventListener('keydown', onKey); if (e.key === 'Enter' || e.key === 'Escape') skip(); };
         addEventListener('keydown', onKey);
-        boot.insertBefore(v, boot.querySelector('.boot-grade'));
-        v.load();
       })();
     </script>
     <div id="root"></div>
