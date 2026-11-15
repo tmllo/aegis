@@ -46,10 +46,11 @@ For each crew_sim subject (or just `subject`):
 1. `repo.replace_assessments_for(store, s, self_report_keys, score_self_report(...))`.
 2. System tasks: from `store.assessments(s)` (all metrics), the latest assessment per metric. Task id
    `f"sys-{s}-{metric}-{t[:10]}"`, kind `todo`, origin `system`, label = assessment.action, metric, created = t[:10],
-   due = next day, attrs `{"severity", "z", "message", "assessment_t": t, "rule"}`. `repo.put_task(..., replace=False)`;
+   due = next day, attrs `{"severity", "z", "message", "assessment_t": t, "evidence_t", "rule"}`, where evidence_t =
+   the newest stored reading of that metric when the task opens. `repo.put_task(..., replace=False)`;
    ids actually written go in "opened".
 3. Close: each system task of s with no event yet: if `store.observations(subject=s, metric=task.metric)` has any row
-   with `o.t > task.attrs["assessment_t"]` (plain string compare, so "2026-11-14T21:00:00Z" > "2026-11-14"), add
+   with `o.t > task.attrs["evidence_t"]` (plain string compare, so "2026-11-14T21:00:00Z" > "2026-11-14T10:00:00Z"), add
    `TaskEvent(id, <earliest such o.t>, "closed")`; id goes in "closed".
 
 ### ensure_routines
@@ -82,6 +83,8 @@ journal_day x days with notes. level = 1 + xp // level_every.
  "system_tasks_closed","journal_days",
  "badges": [{"id","label","earned": bool}]}
 ```
+best_habit_streak = the best streak among habits that are not auto (check-in and journal habits have their own XP and
+badges). level_xp / next_level_xp = (level-1)*level_every / level*level_every.
 checkin_streak = consecutive days ending at date (or date-1 if date has no check-in yet). Badge rules (routines.yaml):
 checkin_days, checkin_streak, system_tasks_closed, best_habit_streak: earned when the value >= the threshold.
 
