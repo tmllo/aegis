@@ -51,10 +51,9 @@ export default function Care() {
   const plan = plans[`${v.m.id}:${r.k}`];
   const sys = SYSTEM_BY_ID[metricSystem(r.k)];
   const stage = !plan ? 1 : plan.stage === 'started' ? 2 : 3;
-  const firstDay = r.history[r.history.length - r.running]?.date;
   const steps = [
-    { t: 'Detected', d: r.running > 1 ? `${r.running} days, since ${firstDay?.slice(5)}` : 'Today' },
-    { t: 'Countermeasure', d: plan ? 'Started' : 'Not started' },
+    { t: 'Detected', d: r.running > 1 ? `For ${r.running} days` : 'Today' },
+    { t: 'Action', d: plan ? 'Started' : 'Not started' },
     { t: 'Re-measure', d: plan?.stage === 'started' ? 'At the next check' : plan ? 'Done' : '—' },
     { t: 'Outcome', d: plan?.stage === 'resolved' ? 'Back in range' : plan?.stage === 'escalated' ? 'To the surgeon' : '—' },
   ];
@@ -111,7 +110,7 @@ export default function Care() {
             onClick={() => {
               start(v.m.id, r.k, r.status);
               cue('chime', sound);
-              toast({ tone: 'info', title: 'Countermeasure started', body: `${r.label}: re-measure at the next daily check.` });
+              toast({ tone: 'info', title: 'Action started', body: `${r.label}: re-measure at the next daily check.` });
             }}
           >
             Start countermeasure

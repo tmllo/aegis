@@ -4,8 +4,10 @@
 
 /* the frame replaces the old top bar: brand and menu sit in the corners */
 .ds.is-frame {
-  grid-template-rows: 1fr auto;
-  grid-template-areas: 'main' 'foot';
+  /* 'alert' must exist: the shelter bar is placed there; without it the grid adds a column and squeezes the page */
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-areas: 'alert' 'main' 'foot';
 }
 .ds.is-frame .ds-top {
   display: none;
@@ -14,6 +16,9 @@
   position: absolute;
   z-index: 40;
   top: 20px;
+}
+.ds.is-alarm .fr-corner {
+  top: 62px;
 }
 .fr-corner.is-l {
   left: 32px;
@@ -953,4 +958,137 @@ button.fr-vital:active {
 }
 .ck .ds-field-h span:only-child {
   margin-left: auto;
+}
+
+/* cabin view (Radiation > Cabin): the five life-support readings stacked in the centre */
+.fr-panel.cb {
+  align-content: start;
+  gap: 8px;
+  width: min(640px, 100%);
+}
+/* four views (Radiation) fit beside the dock */
+.fr-seg button:first-child:nth-last-child(4),
+.fr-seg button:first-child:nth-last-child(4) ~ button {
+  min-width: 104px;
+  padding: 0 16px;
+}
+
+/* ================================================================ Cockpit Glass (Emile, 2026-11-15 23:20)
+   The earlier Cockpit Glass concept (docs/shots/cockpit-glass-*.png): flat deep-navy screen inside a dark
+   bezel, hairline rows instead of cards, cyan for interaction only, green / amber / red for status only.
+   Overrides only; loaded last so it wins over ds.css and the rules above. */
+html,
+body {
+  background: #101114;
+}
+.st.ds {
+  --sky-0: #020838;
+  --sky-1: #070d3d;
+  --sky-2: #11194a;
+  --sky: #020838;
+  --surface: #070d3d;
+  --surface-hi: #11194a;
+  --line: rgb(80 94 172 / 0.28);
+  --line-2: rgb(80 94 172 / 0.55);
+  --ink: #f8fcfd;
+  --ink-2: #a9b5d6;
+  --ink-3: #7c89b3;
+  --cg-accent: #2bdbe3;
+  --calm: #3ddc97;
+  --watch: #f5b83d;
+  --act: #ff4d4f;
+  --accent: var(--cg-accent);
+  --blue: var(--cg-accent);
+  --panel-solid: #070d3d;
+  background: #020838;
+  border-radius: 24px;
+  box-shadow: 0 0 0 10px #101114;
+  margin: 10px;
+  height: calc(100dvh - 20px);
+  overflow: hidden;
+}
+.ds :focus-visible {
+  outline-color: var(--cg-accent);
+}
+
+/* readings: hairline rows, no cards */
+.fr-vital,
+button.fr-vital:hover,
+.fr-vital.is-on {
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  padding: 14px 0 12px;
+}
+button.fr-vital:hover {
+  background: rgb(43 219 227 / 0.05);
+}
+.fr-vital.is-on {
+  box-shadow: inset 3px 0 0 var(--cg-accent);
+  padding-left: 12px;
+  background: rgb(43 219 227 / 0.06);
+}
+.fr-v-icon {
+  border-color: var(--line-2);
+}
+.fr-v-icon.is-amber {
+  border-color: rgb(245 184 61 / 0.55);
+}
+.fr-v-icon.is-red {
+  border-color: rgb(255 77 79 / 0.6);
+}
+
+/* right column: the instrument panel, set off by one rule like the concept */
+.fr-right {
+  border-left: 1px solid var(--line);
+  padding-left: 32px;
+  background: linear-gradient(to right, #070d3d, #070d3d00 85%);
+}
+
+/* buttons: cyan-framed primary, hairline secondary, red-framed danger */
+.ds-btn.is-primary {
+  background: #11194a;
+  color: var(--ink);
+  border-color: var(--cg-accent);
+}
+.ds-btn.is-primary:hover:not(:disabled) {
+  background: #182461;
+}
+.ds-btn.is-secondary:hover:not(:disabled) {
+  border-color: var(--cg-accent);
+  background: rgb(43 219 227 / 0.06);
+}
+.ds-btn.is-danger {
+  background: #2a0d1f;
+  color: #ffd9d9;
+  border-color: var(--act);
+}
+.ds-btn.is-danger:hover:not(:disabled) {
+  background: #3a1026;
+}
+
+/* selected states use the concept's cyan frame instead of a white fill */
+.fr-seg button.is-on,
+.ds-scale button.is-on,
+.ds-chips button.is-on {
+  background: #11194a;
+  color: var(--ink);
+  border-color: var(--cg-accent);
+  box-shadow: inset 0 0 0 1px var(--cg-accent);
+}
+.ds-scale button.is-on b {
+  color: var(--ink);
+}
+.fr-loop li.is-now {
+  background: #11194a;
+  box-shadow: inset 0 -3px 0 var(--cg-accent);
+}
+.fr-right:empty {
+  border-left: 0;
+  background: none;
+}
+/* the sun render carries its own dark square; screen-blend it into the navy */
+.fr-object .fc-svg {
+  mix-blend-mode: screen;
 }

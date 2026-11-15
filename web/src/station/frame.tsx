@@ -106,6 +106,16 @@ export const DOCK_ICON = {
       <path d="M19 19c0 1.6-2 2.5-5 2.5" />
     </svg>
   ),
+  mind: (
+    <svg viewBox="0 0 24 24" {...I}>
+      <path d="M9 20v-3.2A6.5 6.5 0 1 1 18.5 11l1.5 3h-2v2.5a1.5 1.5 0 0 1-1.5 1.5H14v2" />
+    </svg>
+  ),
+  cabin: (
+    <svg viewBox="0 0 24 24" {...I}>
+      <path d="M4 9h11a3 3 0 1 0-3-3M4 15h14a3 3 0 1 1-3 3M4 12h8" />
+    </svg>
+  ),
   environment: (
     <svg viewBox="0 0 24 24" {...I}>
       <circle cx="12" cy="12" r="4" />

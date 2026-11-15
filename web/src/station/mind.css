@@ -1,0 +1,80 @@
+/* Mind tab: one question at a time, big word buttons (64 px, gloves). */
+.mi-q {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  max-width: 640px;
+  text-align: center;
+}
+.mi-q h2 {
+  margin: 0;
+  font-size: clamp(28px, 3vw, 40px);
+  font-weight: 300;
+}
+.mi-q-cap {
+  margin: 0;
+  font-size: 15px;
+  color: var(--ink-2, currentColor);
+  opacity: 0.75;
+}
+.mi-q-sub {
+  margin: 0;
+  font-size: 17px;
+  max-width: 36ch;
+  opacity: 0.85;
+}
+.mi-q-word.is-amber { color: var(--amber, #fbbf24); }
+.mi-q-word.is-red { color: var(--red, #f87171); }
+.mi-q-opts {
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+.mi-q-opts button {
+  min-height: 64px;
+  min-width: 96px;
+  padding: 0 14px;
+  white-space: nowrap;
+  border: 1px solid var(--line-2, rgba(255, 255, 255, 0.25));
+  font-size: 16px;
+  color: var(--ink, #fff);
+  transition: background-color 160ms ease, color 160ms ease;
+}
+.mi-q-opts button:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+.mi-q-opts button.is-on {
+  background: var(--ink, #fff);
+  color: var(--sky-0, #0b1030);
+}
+.mi-try {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+  font-size: 15px;
+}
+.mi-try b {
+  font-weight: 500;
+  font-size: 16px;
+}
+.mi-try span {
+  opacity: 0.75;
+}
+
+/* Talk it through (MindTalk.tsx): demo chat under today's word */
+.mt { width: min(560px, 100%); display: flex; flex-direction: column; gap: 10px; text-align: left; }
+.mt-log { display: flex; flex-direction: column; gap: 8px; max-height: 260px; overflow-y: auto; }
+.mt-hint { margin: 0; opacity: 0.75; font-size: 16px; }
+.mt-msg { margin: 0; padding: 10px 14px; font-size: 16px; line-height: 1.45; max-width: 85%; border: 1px solid var(--line-2, rgba(255, 255, 255, 0.25)); }
+.mt-msg.is-user { align-self: flex-end; background: rgba(255, 255, 255, 0.06); }
+.mt-msg.is-model { align-self: flex-start; }
+.mt-wait { opacity: 0.6; }
+.mt-in { display: flex; gap: 8px; }
+.mt-in input, .mt-key { flex: 1; min-height: 48px; padding: 0 14px; font-size: 16px; color: var(--ink, #fff); background: transparent; border: 1px solid var(--line-2, rgba(255, 255, 255, 0.25)); }
+.mt-foot { margin: 0; font-size: 13px; opacity: 0.7; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.mt-key { flex: 1 1 220px; min-height: 32px; font-size: 13px; }
+.mt-link { background: none; border: 0; padding: 0; color: inherit; text-decoration: underline; font-size: 13px; cursor: pointer; }

@@ -253,8 +253,8 @@ export default function Forecast({ replay }: { replay: ReactNode }) {
           {(
             [
               ['forecast', 'Forecast'],
-              ['test', 'Test a flare'],
-              ['replay', 'Replay 2024'],
+              ['test', 'Test'],
+              ['replay', 'Replay'],
             ] as const
           ).map(([k, label]) => (
             <button key={k} type="button" role="tab" aria-selected={mode === k} className={mode === k ? 'is-on' : ''} onClick={() => (cue('tick', sound), setMode(k))}>

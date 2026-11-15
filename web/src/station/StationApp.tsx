@@ -23,8 +23,10 @@ const Check = lazy(() => import('./pages/Checkin'));
 const Care = lazy(() => import('./pages/Care'));
 const Surgeon = lazy(() => import('./pages/Surgeon'));
 const Environment = lazy(() => import('./pages/Radiation'));
+const Mind = lazy(() => import('./pages/Mind'));
+const Cabin = lazy(() => import('./pages/Cabin'));
 
-const KEYS = ['/check', '/', '/care', '/radiation', '/surgeon'];
+const KEYS = ['/check', '/', '/mind', '/care', '/radiation', '/cabin'];
 
 function Shell() {
   const { data, loadState, error, env, views, sw, day, queue } = useStationData();
@@ -113,13 +115,16 @@ function Shell() {
               ? [
                   { to: '/', label: 'Crew', icon: 'crew', alert: crewS, end: true },
                   { to: '/radiation', label: 'Radiation', icon: 'environment', alert: envS },
+                  { to: '/cabin', label: 'Cabin', icon: 'cabin' },
                   { to: '/surgeon', label: 'Surgeon', icon: 'surgeon' },
                 ]
               : [
                   { to: '/check', label: 'Check in', icon: 'check', alert: mine && !mine.checkedIn ? 'amber' : undefined },
                   { to: '/', label: 'Me', icon: 'body', alert: mine?.overall, end: true },
+                  { to: '/mind', label: 'Mind', icon: 'mind' },
                   { to: '/care', label: 'Care', icon: 'care', alert: careS },
                   { to: '/radiation', label: 'Radiation', icon: 'environment', alert: envS },
+                  { to: '/cabin', label: 'Cabin', icon: 'cabin' },
                 ]
           }
         />
@@ -215,6 +220,8 @@ export function StationApp() {
           <Route path="/care" element={<Care />} />
           <Route path="/surgeon" element={<Surgeon />} />
           <Route path="/radiation" element={<Environment />} />
+          <Route path="/mind" element={<Mind />} />
+          <Route path="/cabin" element={<Cabin />} />
           <Route path="/environment" element={<Navigate to="/radiation" replace />} />
           <Route path="/crew/:id" element={<Moved to="/body" />} />
           <Route path="/checkin" element={<Moved to="/check" />} />
