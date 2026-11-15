@@ -735,3 +735,23 @@ button.wg:hover { border-color: rgb(255 255 255 / 0.22); }
 }
 .vrow-v { width: 116px; }
 @media (max-width: 760px) { .tip, .pin { display: none; } }
+/* gloved hands: big targets everywhere, nothing under 56 px */
+.solid, .ghost, .btn { height: 72px; min-height: 72px; padding: 0 28px; font-size: 14px; }
+.solid.long, .ghost.long { font-size: 14px; }
+.sq, .cx-crew .sq { min-width: 64px; min-height: 64px; height: 64px; }
+.cx-tabs a { height: 64px; }
+.vrow, .vrow-main { min-height: 64px; }
+.vrow-v { height: 64px; }
+.crew-how, .crew-connect, .sheet-close, .crew-env .ghost, .vrow-edit .solid, .vrow-edit .ghost, .alarm-ack { height: 56px; min-height: 56px; }
+.alarm { height: auto; min-height: 64px; }
+.alarm-ack { align-self: stretch; height: auto; }
+.vrow-edit input { height: 56px; }
+.cx-credits-btn { height: 56px; padding: 0 16px; font-size: 12px; }
+.cx-credits { bottom: 0; }
+.cx-dayloc { flex-direction: row; align-items: center; gap: 12px; }
+.cx-loc { height: 56px; min-width: 120px; font-size: 13px; padding: 0 8px; }
+.env-back { height: 64px; padding: 0 20px; }
+.cab-acts { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 8px; }
+.cab-main { flex: 1 0 100%; }
+.crew-actions, .pat-actions { bottom: 76px; }
+button.gm.gm { min-height: 56px; }

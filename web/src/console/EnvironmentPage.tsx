@@ -2,7 +2,7 @@
 // recorded ISS snapshot) and radiation on the body (cumulative dose vs the career limit, the
 // sensitive tissues lit). Right: the storm forecast from our model, its test scores, and the
 // May 2024 replay and shelter drill. Every number from the data files, core or the cabin feed.
-import { useMemo } from 'react';
+import { lazy, Suspense, useMemo, type ComponentType } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useCabin } from '../data/cabin';
 import { cabinOverall } from '../core/cabin';
@@ -15,6 +15,11 @@ import { StormChart } from './StormChart';
 import ReplayPage from './ReplayPage';
 import ShelterPage from './ShelterPage';
 import { useConsole } from './useConsole';
+
+// the forecast screen (weather map of where the radiation comes from and goes) is built by session ab
+// in ./weather; the glob keeps the build passing until that file lands, and hides the button meanwhile
+const forecastMod = import.meta.glob<{ default: ComponentType }>('./weather/Forecast.tsx')['./weather/Forecast.tsx'];
+const ForecastPage = forecastMod ? lazy(forecastMod) : null;
 
 const AIR = [
   { key: 'cabin.ppco2', label: 'Carbon dioxide' },
@@ -51,13 +56,21 @@ export default function EnvironmentPage() {
   const [params, setParams] = useSearchParams();
   const events = useMemo(() => (data ? sortedEvents(data.storm).slice(-60) : []), [data]);
   const mode = params.get('mode');
-  if (mode === 'replay' || mode === 'shelter')
+  if (mode === 'replay' || mode === 'shelter' || (mode === 'forecast' && ForecastPage))
     return (
       <>
         <button type="button" className="ghost env-back" onClick={() => setParams({}, { replace: true })}>
           <Icon name="back" size={14} /> Cabin
         </button>
-        {mode === 'replay' ? <ReplayPage /> : <ShelterPage />}
+        {mode === 'replay' ? (
+          <ReplayPage />
+        ) : mode === 'shelter' ? (
+          <ShelterPage />
+        ) : ForecastPage ? (
+          <Suspense fallback={<p className="cx-error cx-wait">Loading</p>}>
+            <ForecastPage />
+          </Suspense>
+        ) : null}
       </>
     );
   if (!data || !cd || !cv) return <p className="cx-error cx-wait">Loading</p>;
@@ -114,16 +127,21 @@ export default function EnvironmentPage() {
           e{'\u02e3'} model, tested on {data.storm.meta.test_period.map((d) => d.slice(0, 4)).join('-')} · warned before {caught} of {m.n_storms} storms · about {Math.round(m.false_alarms_per_month)} false alarm{Math.round(m.false_alarms_per_month) === 1 ? '' : 's'} a month · typically {m.median_lead_time_h.toFixed(1)} h of warning
         </span>
         <span className="cap">Space weather data: NASA CCMC DONKI</span>
+        <div className="cab-acts">
+          {ForecastPage && (
+            <button type="button" className="solid cab-main" onClick={() => setParams({ mode: 'forecast' }, { replace: true })}>
+              Open forecast
+            </button>
+          )}
+          <button type="button" className={`${ForecastPage ? 'ghost' : 'solid'} long`} onClick={() => setParams({ mode: 'replay' }, { replace: true })}>
+            Replay the May 2024 storm
+          </button>
+          <button type="button" className="ghost long" onClick={() => setParams({ mode: 'shelter' }, { replace: true })}>
+            Run a storm drill
+          </button>
+        </div>
       </section>
 
-      <div className="pat-actions">
-        <button type="button" className="solid long" onClick={() => setParams({ mode: 'replay' }, { replace: true })}>
-          Replay the May 2024 storm
-        </button>
-        <button type="button" className="ghost long" onClick={() => setParams({ mode: 'shelter' }, { replace: true })}>
-          Run a storm drill
-        </button>
-      </div>
     </div>
   );
 }
