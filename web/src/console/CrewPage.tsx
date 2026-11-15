@@ -9,22 +9,16 @@ import { postMeasure } from '../data/live';
 import type { MetricKey, Status } from '../data/types';
 import { useWristband } from '../wearable';
 import { AlarmStrip, type Alarm } from './Monitor';
-import { fmt, METRIC_TARGET, RANK, rowOf, SHORT, STATUS_WORD, TARGET_METRICS, toSteps, type Row } from './model';
-import { saveEntry, useEntries, VITAL } from './entries';
-import type { ComponentType } from 'react';
-
-// 1f's VitalsPanel (every metric as an editable slider) replaces the vitals list below once
-// ./vitals/VitalsPanel.tsx lands (TODO: then delete the local list, Spark and edit state)
-const vitalsMod = Object.values(import.meta.glob<{ VitalsPanel?: ComponentType; default?: ComponentType }>('./vitals/VitalsPanel.tsx', { eager: true }))[0];
-const VitalsPanel = vitalsMod?.VitalsPanel ?? vitalsMod?.default ?? null;
+import { fmt, METRIC_TARGET, RANK, rowOf, SHORT, STATUS_WORD, TARGET_METRICS, toSteps } from './model';
+import { VITAL } from './entries';
+import { VitalsPanel } from './vitals';
 import { Confirm } from './ui';
 import { CheckinPanel } from './CheckinPanel';
 import { HandoffPanel } from './HandoffPanel';
 import { useConsole } from './useConsole';
 import { useHud } from './hud';
 import { InfoSheet } from './InfoSheet';
-import { Mark } from './ui';
-import { fmtDate, LINK_DELAY } from './model';
+import { LINK_DELAY } from './model';
 
 const ALL: MetricKey[] = ['hr', 'bp_sys', 'bp_dia', 'glucose', 'temp', 'sleep_h', 'mood', 'exercise_min', 'bone_loss_pct', 'dose_mSv_day'];
 const IDLE_MS = 20000;
@@ -64,31 +58,6 @@ function useIdle() {
   return idle;
 }
 
-/** 14 days of one reading, the person's usual band shaded, today as a dot. */
-function Spark({ r }: { r: Row }) {
-  const v = r.history.slice(-14);
-  const nums = v.filter((x): x is number => x != null);
-  if (nums.length < 2) return <i className="vspark" aria-hidden />;
-  const lo0 = Math.min(...nums, r.lo ?? Infinity);
-  const hi0 = Math.max(...nums, r.hi ?? -Infinity);
-  const pad = (hi0 - lo0 || 1) * 0.08;
-  const lo = lo0 - pad;
-  const hi = hi0 + pad;
-  const W = 72;
-  const H = 24;
-  const y = (x: number) => H - ((x - lo) / (hi - lo)) * H;
-  const x = (i: number) => (i / (v.length - 1)) * W;
-  const pts = v.map((val, i) => (val == null ? null : `${x(i).toFixed(1)},${y(val).toFixed(1)}`)).filter(Boolean).join(' ');
-  const last = v.length - 1;
-  return (
-    <svg className="vspark" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" aria-hidden>
-      {r.lo != null && r.hi != null && <rect x="0" width={W} y={y(r.hi)} height={Math.max(1, y(r.lo) - y(r.hi))} fill="rgb(255 255 255 / 0.1)" />}
-      <polyline points={pts} fill="none" stroke="currentColor" strokeWidth="1.2" vectorEffect="non-scaling-stroke" />
-      {v[last] != null && <circle cx={x(last)} cy={y(v[last]!)} r="2" fill="currentColor" />}
-    </svg>
-  );
-}
-
 export default function CrewPage() {
   const { cd, cv, seat } = useConsole();
   const [params, setParams] = useSearchParams();
@@ -106,9 +75,6 @@ export default function CrewPage() {
   const [result, setResult] = useState<string | null>(null);
   const [handoff, setHandoff] = useState(false);
   const [how, setHow] = useState(false);
-  const [edit, setEdit] = useState<MetricKey | null>(null);
-  const [draft, setDraft] = useState('');
-  const entries = useEntries((s) => s.byMember);
   const setBodyTips = useHud((s) => s.setBodyTips);
   const panel = params.get('p');
   const rawT = params.get('t');
@@ -149,7 +115,6 @@ export default function CrewPage() {
   useEffect(() => {
     setResult(null);
     setHandoff(false);
-    setEdit(null);
     setHow(false);
   }, [cv?.m.id]);
 
@@ -160,13 +125,6 @@ export default function CrewPage() {
   const one = flagged[0] ?? organRow ?? null;
   const red = one?.status === 'red';
   const top = flagged[0] ?? null;
-  const typed = entries[cv.m.id]?.[cd.mission.today] ?? {};
-  const save = (k: MetricKey) => {
-    const v = Number(draft.replace(',', '.'));
-    if (!draft.trim() || !Number.isFinite(v)) return;
-    saveEntry(cv.m.id, cd.mission.today, k, v);
-    setEdit(null);
-  };
 
   const live = band.status === 'connected' && band.reading;
   const iToday = cv.m.series.findIndex((x) => x.date === cd.mission.today);
@@ -194,58 +152,6 @@ export default function CrewPage() {
   const days = top ? Math.max(1, top.running) : 0;
   const sentence = top ? `${SHORT[top.k]} is ${top.value != null && top.mean != null && top.value < top.mean ? 'low' : 'high'} for ${days} day${days === 1 ? '' : 's'}` : 'All readings are in your usual range';
   const close = () => setParams({}, { replace: true });
-
-  const vitals = (
-    <div className="vlist" aria-label="Vitals">
-      <span className="cap">Vitals · {fmtDate(cd.mission.today)} · tap a number to enter it</span>
-      {all.map((r) => (
-        <div key={r.k} className="vrow" data-status={r.status !== 'green' ? r.status : undefined} data-editing={edit === r.k || undefined}>
-          <button type="button" className="vrow-main" aria-pressed={sheetK === r.k} onClick={() => METRIC_TARGET[r.k] && setParams({ t: METRIC_TARGET[r.k]!, k: r.k }, { replace: true })}>
-            <Mark s={r.status} size={9} />
-            <span className="vrow-l">
-              {SHORT[r.k]}
-              <small>
-                {r.k in typed ? 'entered by crew · ' : ''}
-                {r.lo != null && r.hi != null ? `your usual ${fmt(r.lo, r.digits)}-${fmt(r.hi, r.digits)}` : r.status === 'green' ? 'in range' : STATUS_WORD[r.status]}
-              </small>
-            </span>
-            <Spark r={r} />
-          </button>
-          {edit === r.k ? (
-            <form
-              className="vrow-edit"
-              onSubmit={(e) => {
-                e.preventDefault();
-                save(r.k);
-              }}
-            >
-              <input type="number" inputMode="decimal" step="any" autoFocus value={draft} onChange={(e) => setDraft(e.target.value)} onKeyDown={(e) => e.key === 'Escape' && setEdit(null)} aria-label={`${SHORT[r.k]} in ${r.unit}`} />
-              <small>{r.unit}</small>
-              <button type="submit" className="solid">
-                Save
-              </button>
-              <button type="button" className="ghost" onClick={() => setEdit(null)}>
-                Cancel
-              </button>
-            </form>
-          ) : (
-            <button
-              type="button"
-              className="vrow-v"
-              aria-label={`Enter a new ${SHORT[r.k].toLowerCase()} value`}
-              onClick={() => {
-                setEdit(r.k);
-                setDraft(r.value != null ? String(r.value) : '');
-              }}
-            >
-              {fmt(r.value, r.digits)}
-              <small>{r.unit}</small>
-            </button>
-          )}
-        </div>
-      ))}
-    </div>
-  );
 
   return (
     <div className="crew" data-idle={idle || undefined} data-status={cv.overall}>
@@ -336,7 +242,7 @@ export default function CrewPage() {
               )}
             </div>
           )}
-          {VitalsPanel ? <VitalsPanel /> : vitals}
+          <VitalsPanel memberId={cv.m.id} />
           {red && (
             <button type="button" className="ghost" onClick={() => navigate('/checkup')}>
               Start daily check
