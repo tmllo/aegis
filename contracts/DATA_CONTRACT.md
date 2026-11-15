@@ -214,3 +214,6 @@ Times are not calendar dates. Each draw has a `timepoint` id (`L-92`, `L-44`, `L
 | `variation` | Within-person sd from the pre-flight draws. These draws are weeks apart, so this is not a day-to-day sd. `glucose.synthetic_day_to_day_sd` copies the stated and realized sds from the synthetic crew report. The generator is not fit to this file. |
 
 The findings note is `ml/results/real_crew.md`. The slide is `ml/results/slide_real_crew.png`.
+
+## v2 addition
+Habitat telemetry (`habitat_telemetry.json`, additive) is specified in [HABITAT_CONTRACT.md](HABITAT_CONTRACT.md).
