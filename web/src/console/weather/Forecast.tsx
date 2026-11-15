@@ -21,7 +21,8 @@ export default function ForecastPage() {
   const [, setParams] = useSearchParams();
   const [pick, setPick] = useState<string | null>(null);
 
-  const recent = useMemo(() => (data ? sortedEvents(data.storm).slice(-4).reverse() : []), [data]);
+  const [more, setMore] = useState(false);
+  const recent = useMemo(() => (data ? sortedEvents(data.storm).slice(-1) : []), [data]);
   // the first verified warning of the May 2024 storm: a known bad day to compare with
   const may = useMemo(() => (data ? replayEvents(data.storm).find((e) => e.alert_level === 'warning' && e.actual_storm) ?? null : null), [data]);
 
@@ -40,89 +41,79 @@ export default function ForecastPage() {
   return (
     <div className="wx" data-status={status}>
       <section className="wx-read" aria-live="polite">
-        <span className="cap">{isNow ? `Space weather · next ${horizon} hours` : `Space weather · ${when(flare.peak_time)} UTC, ${new Date(flare.peak_time).getUTCFullYear()}`}</span>
+        <span className="cap">{isNow ? `Space weather · next ${horizon} hours` : `Space weather · ${when(flare.peak_time).split(',')[0]} ${new Date(flare.peak_time).getUTCFullYear()}`}</span>
         <b className={`pat-word wx-word st-${status}`}>{LEVEL_WORD[f.level]}</b>
         <span className="wx-do">{LEVEL_DO[f.level]}</span>
 
-        <dl className="wx-rows">
-          <div className="wx-row" data-status={status !== 'green' ? status : undefined}>
-            <dt>
-              Storm chance
-              <small>radiation storm within {horizon} h of this flare</small>
-            </dt>
+        <dl className="wx-facts">
+          <div data-status={status !== 'green' ? status : undefined}>
             <dd>{f.chancePct} %</dd>
+            <dt>Storm chance</dt>
           </div>
-          <div className="wx-row">
-            <dt>
-              Path to the crew
-              <small>{f.conn ? `flare ${lonText(flare.longitude_deg)}, the crew's magnetic line starts ${Math.round(f.conn.footDeg)}° W` : 'flare position not known'}</small>
-            </dt>
-            <dd>{f.conn ? PATH_WORD[f.conn.path] : 'Unknown'}</dd>
-          </div>
-          <div className="wx-row">
-            <dt>
-              Eruption
-              <small>{f.front ? `cloud reaches the crew's distance about ${Math.round(f.front.hours)} h after the flare` : 'no eruption cloud linked to this flare'}</small>
-            </dt>
-            <dd>{f.front ? `${Math.round(f.front.kms).toLocaleString('en-US')} km/s` : 'None'}</dd>
-          </div>
-          <div className="wx-row">
-            <dt>
-              Warning time
-              <small>typical, from the e{'ˣ'} model's test on real storms</small>
-            </dt>
+          <div>
             <dd>{f.typicalWarningH.toFixed(1)} h</dd>
+            <dt>Warning time</dt>
           </div>
-          <div className="wx-row">
-            <dt>
-              Extra dose, no shelter
-              <small>{dose ? `${seat[cv.m.id]}, worst storm day of this simulated mission` : 'no storm day in this crew record'}</small>
-            </dt>
-            <dd>{dose ? `+${dose.extra.toFixed(1)} mSv` : '--'}</dd>
-          </div>
-          <div className="wx-row">
-            <dt>
-              Shield here
-              <small>
-                {PLACE[env]}: {SHIELD[env].why}
-              </small>
-            </dt>
+          <div>
             <dd>{SHIELD[env].word}</dd>
+            <dt>Shield on {PLACE[env] === 'Mars transit' ? 'the way' : PLACE[env] === 'ISS' ? 'the ISS' : PLACE[env] === 'Moon' ? 'the Moon' : PLACE[env]}</dt>
           </div>
         </dl>
+
+        <button type="button" className="solid wx-btn" onClick={() => setParams({ mode: 'shelter' }, { replace: true })}>
+          Practise the shelter drill
+        </button>
+        <button type="button" className="wx-more" aria-expanded={more} onClick={() => setMore((m) => !m)}>
+          {more ? 'Hide details' : 'Details'}
+        </button>
+        {more && (
+          <dl className="wx-rows">
+            <div className="wx-row">
+              <dt>
+                Path to the crew
+                <small>{f.conn ? `flare ${lonText(flare.longitude_deg)}, the crew's magnetic line starts ${Math.round(f.conn.footDeg)}° W` : 'flare position not known'}</small>
+              </dt>
+              <dd>{f.conn ? PATH_WORD[f.conn.path] : 'Unknown'}</dd>
+            </div>
+            <div className="wx-row">
+              <dt>
+                Eruption
+                <small>{f.front ? `reaches the crew's distance about ${Math.round(f.front.hours)} h after the flare` : 'no eruption cloud with this flare'}</small>
+              </dt>
+              <dd>{f.front ? `${Math.round(f.front.kms).toLocaleString('en-US')} km/s` : 'None'}</dd>
+            </div>
+            <div className="wx-row">
+              <dt>
+                Extra dose, no shelter
+                <small>{dose ? `${seat[cv.m.id]}, worst storm day of this simulated mission` : 'no storm day in this crew record'}</small>
+              </dt>
+              <dd>{dose ? `+${dose.extra.toFixed(1)} mSv` : '--'}</dd>
+            </div>
+            <div className="wx-row wx-row-src">
+              <dt>
+                <small>
+                  Real solar flares: NASA DONKI. Forecast: e{'\u02e3'} model, not an official forecast. Warning time is typical for real storms in the model's test. Route drawn for a 400 km/s solar wind.
+                </small>
+              </dt>
+            </div>
+          </dl>
+        )}
       </section>
 
       <section className="wx-chart">
         <SunMap f={f} env={env} />
-        <div className="wx-picks" role="group" aria-label="Flare shown on the map">
-          {recent.map((e, k) => (
-            <button key={e.flare_id} type="button" className="wx-pick" aria-pressed={e.flare_id === flare.flare_id} data-status={e.alert_level !== 'none' ? LEVEL_STATUS[e.alert_level as 'watch' | 'warning'] : undefined} onClick={() => setPick(e.flare_id)}>
-              <b>{k === 0 ? 'Latest' : when(e.peak_time).split(',')[0]}</b>
-              <span>
-                {e.flare_class} · {Math.round(e.p_storm * 100)} %
-              </span>
+        {may && (
+          <div className="wx-picks" role="group" aria-label="Day shown on the map">
+            <button type="button" className="wx-pick" aria-pressed={isNow} onClick={() => setPick(null)}>
+              Now
             </button>
-          ))}
-          {may && (
-            <button type="button" className="wx-pick wx-pick-may" aria-pressed={may.flare_id === flare.flare_id} data-status="red" onClick={() => setPick(may.flare_id)}>
-              <b>May 2024 storm</b>
-              <span>
-                {may.flare_class} · {Math.round(may.p_storm * 100)} %
-              </span>
+            <button type="button" className="wx-pick" aria-pressed={!isNow} onClick={() => setPick(may.flare_id)}>
+              A real storm · May 2024
             </button>
-          )}
-        </div>
+          </div>
+        )}
       </section>
 
-      <div className="wx-actions">
-        <button type="button" className="solid wx-btn" onClick={() => setParams({ mode: 'shelter' }, { replace: true })}>
-          Run a storm drill
-        </button>
-        <button type="button" className="ghost wx-btn" onClick={() => setParams({ mode: 'replay' }, { replace: true })}>
-          Replay May 2024
-        </button>
-      </div>
-      <span className="wx-src">Real solar flares: NASA DONKI · forecast: e{'ˣ'} model, not an official forecast · route drawn for a 400 km/s solar wind</span>
     </div>
   );
 }

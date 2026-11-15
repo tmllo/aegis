@@ -3,7 +3,7 @@
 // eruption speed (storm_forecast.json) with the Parker-spiral geometry in model.ts.
 import { useMemo } from 'react';
 import type { EnvironmentId } from '../../data/types';
-import { CREW_AU, footpointDeg, LEVEL_STATUS, lonText, PLACE, spiralDeg, type Forecast } from './model';
+import { CREW_AU, LEVEL_STATUS, lonText, PLACE, spiralDeg, type Forecast } from './model';
 
 const W = 960;
 const H = 600;
@@ -40,12 +40,10 @@ export function SunMap({ f, env }: { f: Forecast; env: EnvironmentId }) {
 
   const status = LEVEL_STATUS[f.level];
   const lon = f.flare.longitude_deg;
-  const foot = footpointDeg(crewAu);
   const crew = at(crewAu, 0);
   const earth = at(1, 0);
   const flareP = lon != null ? rim(lon) : null;
   const flareL = lon != null ? rim(lon, 1.9) : null;
-  const footP = rim(foot);
 
   // eruption: a 60 deg wide wedge from the flare site out to the crew's distance
   const wedge = (() => {
@@ -60,7 +58,7 @@ export function SunMap({ f, env }: { f: Forecast; env: EnvironmentId }) {
     return {
       area: `M${p0.x} ${p0.y} L${p1.x} ${p1.y} A${rr} ${rr} 0 0 0 ${p2.x} ${p2.y} L${p3.x} ${p3.y} Z`,
       front: `M${p1.x} ${p1.y} A${rr} ${rr} 0 0 0 ${p2.x} ${p2.y}`,
-      label: at(crewAu * 0.62, lon),
+      label: at(crewAu * 0.66, lon - 17),
       hits: Math.abs(lon) <= 30,
     };
   })();
@@ -68,45 +66,73 @@ export function SunMap({ f, env }: { f: Forecast; env: EnvironmentId }) {
   const active = f.level !== 'none';
   return (
     <svg className="wx-map" viewBox={`0 0 ${W} ${H}`} data-status={status} role="img" aria-label={`Map from the Sun to the crew. Solar flare ${f.flare.flare_class} at ${lonText(lon)}. ${f.conn ? `Path to the crew: ${f.conn.path}.` : ''}`}>
+      <defs>
+        <radialGradient id="wx-glow" cx={SUN.x} cy={SUN.y} r="290" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stopColor="#ffc46b" stopOpacity="0.55" />
+          <stop offset="0.22" stopColor="#ff9a4d" stopOpacity="0.22" />
+          <stop offset="0.6" stopColor="#7a5cff" stopOpacity="0.08" />
+          <stop offset="1" stopColor="#7a5cff" stopOpacity="0" />
+        </radialGradient>
+        <radialGradient id="wx-sun" cx="0.42" cy="0.4" r="0.7">
+          <stop offset="0" stopColor="#fffdf2" />
+          <stop offset="0.45" stopColor="#ffd98a" />
+          <stop offset="1" stopColor="#ff8f3d" />
+        </radialGradient>
+        <radialGradient id="wx-earth" cx="0.38" cy="0.35" r="0.75">
+          <stop offset="0" stopColor="#bfe6ff" />
+          <stop offset="0.55" stopColor="#4a9dff" />
+          <stop offset="1" stopColor="#1c4fc4" />
+        </radialGradient>
+        <filter id="wx-blur" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="9" />
+        </filter>
+        <filter id="wx-soft" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="3" />
+        </filter>
+      </defs>
+      <circle cx={SUN.x} cy={SUN.y} r="290" fill="url(#wx-glow)" />
+
       {/* orbits */}
       <circle cx={SUN.x} cy={SUN.y} r={S} className="wx-orbit" />
       {crewAu > 1 && <circle cx={SUN.x} cy={SUN.y} r={crewAu * S} className="wx-orbit" />}
 
       {/* the Sun's magnetic field, wound into a spiral by the solar wind */}
-      {[-150, -100, -50, 50, 100, 150].map((d) => (
-        <path key={d} d={spiral(d)} className="wx-field" />
+      {[-160, -128, -96, -64, -32, 32, 64, 96, 128, 160].map((d, k) => (
+        <path key={d} d={spiral(d)} className="wx-field" style={{ animationDelay: `${-k * 0.7}s` }} />
       ))}
 
       {/* eruption cloud */}
       {wedge && (
         <g>
-          <path d={wedge.area} className="wx-cloud" />
+          <path d={wedge.area} className="wx-cloud" filter="url(#wx-soft)" />
           <path d={wedge.front} className="wx-front" />
           <text x={wedge.label.x} y={wedge.label.y} className="wx-t wx-t-status" textAnchor="middle">
             <tspan x={wedge.label.x}>Eruption cloud</tspan>
-            <tspan x={wedge.label.x} dy="18">
-              {Math.round(f.front!.kms).toLocaleString('en-US')} km/s · {Math.round(f.front!.hours)} h to the crew’s distance
+            <tspan x={wedge.label.x} dy="20">
+              arrives in about {Math.round(f.front!.hours)} h
             </tspan>
           </text>
         </g>
       )}
 
       {/* the field line that ends at the crew: the road fast particles take */}
+      <path d={crewLine} className="wx-road-glow" filter="url(#wx-blur)" />
       <path d={crewLine} className="wx-road" />
-      {active && <path d={crewLine} className="wx-flow" />}
+      <path d={crewLine} className="wx-flow" data-active={active} />
 
       {/* the Sun */}
-      <circle cx={SUN.x} cy={SUN.y} r={SUN.r} className="wx-sun" />
-      <text x={SUN.x} y={SUN.y + 5} className="wx-t" textAnchor="middle">
+      <circle cx={SUN.x} cy={SUN.y} r={SUN.r * 1.7} fill="#ffb054" opacity="0.35" filter="url(#wx-blur)" />
+      <circle cx={SUN.x} cy={SUN.y} r={SUN.r} fill="url(#wx-sun)" />
+      <text x={SUN.x} y={SUN.y + SUN.r + 30} className="wx-t" textAnchor="middle">
         Sun
       </text>
-      <circle cx={footP.x} cy={footP.y} r="6" className="wx-foot" />
       {flareP && flareL && (
         <g>
           <line x1={flareP.x} y1={flareP.y} x2={flareL.x} y2={flareL.y} className="wx-lead" />
+          <circle cx={flareP.x} cy={flareP.y} r="16" className="wx-flare-glow" filter="url(#wx-soft)" />
           <circle cx={flareP.x} cy={flareP.y} r="8" className="wx-flare" />
           <text x={flareL.x} y={flareL.y + (lon! >= 0 ? -10 : 22)} className="wx-t wx-t-status" textAnchor={Math.abs(lon!) > 100 ? 'end' : 'start'}>
-            Flare {f.flare.flare_class} · {lonText(lon)}
+            Solar flare {f.flare.flare_class}
           </text>
         </g>
       )}
@@ -114,36 +140,28 @@ export function SunMap({ f, env }: { f: Forecast; env: EnvironmentId }) {
       {/* Earth and the crew */}
       {crewAu > 1 && (
         <g>
-          <circle cx={earth.x} cy={earth.y} r="6" className="wx-earth" />
+          <circle cx={earth.x} cy={earth.y} r="9" fill="url(#wx-earth)" />
           <text x={earth.x} y={earth.y + 26} className="wx-t wx-t-dim" textAnchor="middle">
             Earth
           </text>
         </g>
       )}
       <g>
-        <rect x={crew.x - 13} y={crew.y - 13} width="26" height="26" className="wx-crew-box" />
-        <circle cx={crew.x} cy={crew.y} r="6" className="wx-crew" />
-        <text x={crew.x + 24} y={crew.y - 4} className="wx-t">
+        <circle cx={crew.x} cy={crew.y} r="22" className="wx-crew-ring" />
+        <circle cx={crew.x} cy={crew.y} r="22" className="wx-crew-ping" data-active={active} />
+        {crewAu === 1 ? <circle cx={crew.x} cy={crew.y} r="11" fill="url(#wx-earth)" /> : <circle cx={crew.x} cy={crew.y} r="6" className="wx-crew" />}
+        <text x={crew.x + 34} y={crew.y - 4} className="wx-t">
           Crew
         </text>
-        <text x={crew.x + 24} y={crew.y + 15} className="wx-t wx-t-dim">
+        <text x={crew.x + 34} y={crew.y + 15} className="wx-t wx-t-dim">
           {PLACE[env]}
           {crewAu === 1 ? ' · at Earth' : ''}
         </text>
       </g>
 
-      {/* reading aids */}
-      <text x={at(crewAu * 0.5, spiralDeg(crewAu * 0.5, crewAu)).x + 14} y={at(crewAu * 0.5, spiralDeg(crewAu * 0.5, crewAu)).y - 14} className="wx-t wx-t-dim">
-        Radiation follows this magnetic line
+      <text x={at(crewAu * 0.5, spiralDeg(crewAu * 0.5, crewAu)).x + 14} y={at(crewAu * 0.5, spiralDeg(crewAu * 0.5, crewAu)).y - 16} className="wx-t wx-t-dim">
+        Radiation travels along this line
       </text>
-      <g className="wx-scale">
-        <line x1={SUN.x} y1={H - 34} x2={SUN.x + S} y2={H - 34} />
-        <line x1={SUN.x} y1={H - 40} x2={SUN.x} y2={H - 28} />
-        <line x1={SUN.x + S} y1={H - 40} x2={SUN.x + S} y2={H - 28} />
-        <text x={SUN.x + S / 2} y={H - 12} className="wx-t wx-t-dim" textAnchor="middle">
-          150 million km · Sun to Earth
-        </text>
-      </g>
     </svg>
   );
 }
