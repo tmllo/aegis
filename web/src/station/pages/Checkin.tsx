@@ -3,9 +3,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import type { MetricKey, Status } from '../../data/types';
-import { buildView, firstName, fmtV, MOOD_WORD, seatOf, useStationData, WORD, SYSTEMS, RANK } from '../model';
+import { buildView, firstName, fmtV, MOOD_WORD, seatOf, useStationData, SYSTEMS, RANK, CW_LABEL, type CW } from '../model';
 import { useStation } from '../state';
-import { Chip, cue, Dot, Icon } from '../ui';
+import { Chip, cue, Icon } from '../ui';
 import { CameraScanCard, ReactionCard } from '../sensors';
 import type { Extras } from '../state';
 
@@ -132,11 +132,11 @@ export default function Checkin() {
         900,
       );
     }
-    const changed = before.overall !== preview.overall;
+    const changed = before.cw !== preview.cw;
     toast({
       tone: preview.overall === 'green' ? 'green' : preview.overall,
       title: `${firstName(v.m)} checked in · +${gained} XP`,
-      body: changed ? `Status ${WORD[before.overall]} → ${WORD[preview.overall]}. Every screen is updated.` : `Status stays ${WORD[preview.overall]}. Readings logged against the personal baseline.`,
+      body: changed ? `${CW_LABEL[before.cw]} → ${CW_LABEL[preview.cw]}. Every screen is updated.` : `Stays ${CW_LABEL[preview.cw]}. Readings logged against the personal baseline.`,
     });
     const worst = SYSTEMS.map((s) => s.id).sort((a, b) => RANK[preview.status[b]] - RANK[preview.status[a]])[0];
     nav(`/crew/${v.m.id}${preview.overall !== 'green' ? `?s=${worst}` : ''}`);
@@ -160,7 +160,7 @@ export default function Checkin() {
             <Icon.star /> {xp[v.m.id] ?? 0} XP
           </span>
           <span className="st-ci-live">
-            Live status <Chip s={preview.overall} solid={preview.overall !== 'green'} />
+            Live status <span className={`st-sysbtn-cw is-${preview.cw}`}>{CW_LABEL[preview.cw]}</span>
           </span>
         </div>
       </div>
@@ -263,7 +263,7 @@ export default function Checkin() {
             ))}
         </div>
       ) : (
-        <Review ex={ex} before={before.status} after={preview.status} rows={STEPS.flatMap((s) => s.fields.map((f) => f.k)).map((k) => ({ k, label: data.crew.metrics[k].label, unit: data.crew.metrics[k].unit, val: draft[k] ?? null, was: raw.series.find((r) => r.date === data.crew.mission.today)?.[k] ?? null, status: preview.rows[k].status }))} gained={gained} />
+        <Review ex={ex} before={before.sys} after={preview.sys} rows={STEPS.flatMap((s) => s.fields.map((f) => f.k)).map((k) => ({ k, label: data.crew.metrics[k].label, unit: data.crew.metrics[k].unit, val: draft[k] ?? null, was: raw.series.find((r) => r.date === data.crew.mission.today)?.[k] ?? null, status: preview.rows[k].status }))} gained={gained} />
       )}
 
       <div className="st-ci-nav">
@@ -284,19 +284,19 @@ export default function Checkin() {
   );
 }
 
-function Review({ ex, before, after, rows, gained }: { ex: Extras; before: Record<string, Status>; after: Record<string, Status>; rows: { k: MetricKey; label: string; unit: string; val: number | null; was: number | null; status: Status }[]; gained: number }) {
+function Review({ ex, before, after, rows, gained }: { ex: Extras; before: Record<string, CW>; after: Record<string, CW>; rows: { k: MetricKey; label: string; unit: string; val: number | null; was: number | null; status: Status }[]; gained: number }) {
   return (
     <div className="st-review">
       <div className="st-review-sys">
         {SYSTEMS.map((s) => (
-          <div key={s.id} className={`is-${after[s.id]}`}>
+          <div key={s.id}>
             <span>{s.name}</span>
             <p>
-              <Dot s={before[s.id] as Status} /> {WORD[before[s.id] as Status]}
+              <span className={`st-sysbtn-cw is-${before[s.id]}`}>{CW_LABEL[before[s.id]]}</span>
               {before[s.id] !== after[s.id] && (
                 <>
                   {' '}
-                  → <Dot s={after[s.id] as Status} /> <b>{WORD[after[s.id] as Status]}</b>
+                  → <span className={`st-sysbtn-cw is-${after[s.id]}`}>{CW_LABEL[after[s.id]]}</span>
                 </>
               )}
             </p>

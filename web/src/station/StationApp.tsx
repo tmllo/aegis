@@ -2,10 +2,10 @@
 // each other. Overview -> Crew health -> Check-in -> back to Crew health; Radiation -> replay -> alarm.
 import { lazy, Suspense, useEffect } from 'react';
 import { BrowserRouter, Navigate, NavLink, Outlet, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
-import { DISCLAIMERS } from '../components/Footer';
+import { ANATOMY_CREDIT, DISCLAIMERS } from '../components/Footer';
 import type { EnvironmentId } from '../data/types';
 import Overview from './pages/Overview';
-import { BRAND, LEVEL_STATUS, LEVEL_WORD, PLACE, TAGLINE, WORD, fmtDay, seatOf, useStationData } from './model';
+import { BRAND, LEVEL_STATUS, LEVEL_WORD, LINK_DELAY, TAGLINE, WORD, fmtDay, seatOf, useStationData } from './model';
 import { useStation } from './state';
 import { cue, Dot, Icon } from './ui';
 import { Demo, DemoButton } from './Demo';
@@ -158,7 +158,8 @@ function Shell() {
         <span>{DISCLAIMERS[0]}</span>
         <span>{DISCLAIMERS[1]}</span>
         <span>Space weather data: {data.storm.meta.data_credit}</span>
-        <span>Signal delay to Earth from {PLACE[env].toLowerCase()} ~ {env === 'moon' ? '1.3 s' : env === 'iss' ? '< 1 s' : 'minutes'}</span>
+        <span>Signal delay to Earth ~ {LINK_DELAY[env]}</span>
+        <span title={ANATOMY_CREDIT}>Anatomy: BodyParts3D, CC BY 4.0</span>
       </footer>
 
       {alarmOn && <Shelter onAck={() => setAlarm({ ...alarm, phase: 'sheltered' })} phase={alarm.phase} flare={alarm.flare} p={alarm.p} onOpen={() => nav('/radiation')} here={loc.pathname.startsWith('/radiation')} />}
@@ -189,7 +190,7 @@ function Shelter({ phase, flare, p, onAck, onOpen, here }: { phase: string; flar
   return (
     <div className="st-shelter" role="alertdialog" aria-label="Solar storm warning">
       <div className="st-shelter-box">
-        <p className="st-cap">Solar radiation storm warning</p>
+        <p className="st-cap">Emergency · solar radiation storm · NASA-STD-3001 class</p>
         <h2>All crew to the storm shelter</h2>
         <p className="st-shelter-sub">
           Flare {flare} · storm chance {p != null ? Math.round(p * 100) : '—'}% in the next 72 h. Suspend EVA, move to the shielded area, wear dosimeters.

@@ -2,7 +2,7 @@
 // what to point at. Arrow keys move between beats, Esc closes. Built from the live data, nothing scripted.
 import { useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { SYSTEMS, RANK, firstName, issueLine, useStationData } from './model';
+import { CW_RANK, SYSTEMS, RANK, firstName, issueLine, useStationData } from './model';
 import { useStation } from './state';
 import { Icon } from './ui';
 
@@ -19,16 +19,18 @@ export function useBeats(): Beat[] {
     const byRank = [...views].sort((a, b) => RANK[b.overall] - RANK[a.overall]);
     const red = byRank.find((v) => v.overall === 'red');
     const amber = byRank.find((v) => v.overall === 'amber');
-    const sysOf = (v: (typeof views)[number]) => SYSTEMS.map((s) => s.id).sort((a, b) => RANK[v.status[b]] - RANK[v.status[a]])[0];
     const mt = data.storm.meta.metrics_test;
+    const sysOfCW = (v: (typeof views)[number]) => SYSTEMS.map((s) => s.id).sort((a, b) => CW_RANK[v.sys[b]] - CW_RANK[v.sys[a]])[0];
+    const cleared = views.filter((v) => v.cw === 'nominal' || v.cw === 'advisory').length;
     const beats: Beat[] = [
-      { to: '/', title: 'Today on board', say: `One screen for the whole crew at ${data.crew.mission.name.replace(' (sim)', '')}. Status comes from each astronaut's own baseline, not population averages.` },
+      { to: '/', title: 'Crew health today', say: `${cleared} of ${views.length} crew cleared for EVA. Every reading is judged against that astronaut's own baseline, and every alert uses NASA's caution & warning classes, which say who has to act.` },
     ];
-    if (amber) beats.push({ to: `/crew/${amber.m.id}?s=${sysOf(amber)}`, title: `${firstName(amber.m)}: watch`, say: `${amber.issue ? issueLine(amber.issue) : ''}. Fine by textbook ranges, flagged because it is not normal for this astronaut.` });
-    if (red) beats.push({ to: `/crew/${red.m.id}?s=${sysOf(red)}`, title: `${firstName(red.m)}: act now`, say: `${red.issue ? issueLine(red.issue) : ''}. Red means a clear action and one tap to the flight surgeon.` });
-    beats.push({ to: `/checkin/${(red ?? byRank[0]).m.id}`, title: 'Daily check-in', say: 'About a minute. Every value is scored live against the personal baseline; saving updates the body, the overview and the queue.' });
-    beats.push({ to: '/radiation', title: 'Radiation early warning', say: `Trained on ${Number(data.storm.meta.train_period[1].slice(0, 4)) - Number(data.storm.meta.train_period[0].slice(0, 4)) + 1} years of NASA DONKI data, scored once on unseen 2024–2026: ${Math.round(mt.hit_rate * mt.n_storms)} of ${mt.n_storms} storms warned, ~${mt.false_alarms_per_month.toFixed(0)} false alarm a month.` });
-    beats.push({ to: '/radiation#replay', title: 'May 2024 superstorm', say: 'Press play. The model never saw 2024. Watch the shelter order go out, then the particles arrive hours later.' });
+    if (amber) beats.push({ to: `/crew/${amber.m.id}?s=${sysOfCW(amber)}`, title: `${firstName(amber.m)} · caution`, say: `${amber.issue ? issueLine(amber.issue) : ''}. Fine by textbook ranges, flagged because it is not normal for this astronaut. Countermeasure loop: act, re-measure, close.` });
+    if (red) beats.push({ to: `/crew/${red.m.id}?s=${sysOfCW(red)}`, title: `${firstName(red.m)} · warning`, say: `${red.issue ? issueLine(red.issue) : ''}. A warning puts them on hold for safety-critical tasks and opens a line to the flight surgeon.` });
+    beats.push({ to: `/checkin/${(red ?? byRank[0]).m.id}`, title: 'Daily health check', say: 'About a minute: sleep and mind, a camera pulse scan, vitals, and a 30-second reaction test. Saving re-scores everything and closes the countermeasure loop.' });
+    if (data.real) beats.push({ to: `/crew/${(byRank[byRank.length - 1] ?? byRank[0]).m.id}?s=blood`, title: 'Proof on real NASA data', say: `On the published Inspiration4 blood panels, a personal baseline flags ${data.real.flags.filter((f) => f.kind === 'inside_lab_far_from_baseline').length} shifts that standard lab ranges call normal.` });
+    beats.push({ to: '/radiation', title: 'Radiation early warning', say: `Radiation is the hazard that can't be felt. Trained on ${Number(data.storm.meta.train_period[1].slice(0, 4)) - Number(data.storm.meta.train_period[0].slice(0, 4)) + 1} years of NASA DONKI data, scored once on unseen 2024–2026: ${Math.round(mt.hit_rate * mt.n_storms)} of ${mt.n_storms} storms warned, about ${mt.false_alarms_per_month.toFixed(0)} false alarm a month.` });
+    beats.push({ to: '/radiation#replay', title: 'May 2024 superstorm', say: 'Press play. The model never saw 2024. Watch the emergency shelter order go out, then the particles arrive hours later.' });
     return beats;
   }, [data, views]);
 }
