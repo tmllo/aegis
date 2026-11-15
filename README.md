@@ -29,6 +29,17 @@ That serves the app at <http://127.0.0.1:5630>.
 
 To serve the built app from the API instead, stay in `web`, run `npm run build`, then start uvicorn as above. It serves `web/dist` at <http://127.0.0.1:8000>.
 
+## Smoke
+
+From the repo root:
+
+```bash
+bash scripts/smoke_e2e.sh
+bash scripts/serve_demo.sh
+```
+
+`smoke_e2e.sh` starts the API on a free port, against a copy of the store, and checks every call in `contracts/frontend_reads.json`. `--lanes` also checks the EVA and organ endpoints when they are mounted. `--web DIST` checks that `/`, `/environment`, `/systems`, `/mind`, `/checkup` and `/?demo=1` return `index.html`. `serve_demo.sh` builds `origin/crew-station` outside this repo and serves that build from the API, so a reload on `/environment` still works.
+
 ## Credits
 
 Official challenge resources:
