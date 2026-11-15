@@ -1,0 +1,34 @@
+# Cabin lane: cabin metrics the app shows but no ISS Live! item feeds yet (Emile's 02 Cabin, "not connected").
+metrics:
+- key: cabin.co
+  label: Carbon monoxide
+  unit: ppm
+  kind: habitat_telemetry
+  hazard: closed_environment
+  body_region: whole_body
+  connected: false
+  rule:
+    type: display_only
+    source: Planned
+    basis: not connected, no public ISS Live! item
+  display:
+    order: 4
+    label: Carbon monoxide
+    short: CO
+    digits: 1
+- key: cabin.humidity
+  label: Relative humidity
+  unit: '%'
+  kind: habitat_telemetry
+  hazard: closed_environment
+  body_region: whole_body
+  connected: false
+  rule:
+    type: display_only
+    source: Planned
+    basis: not connected, no public ISS Live! item
+  display:
+    order: 6
+    label: Relative humidity
+    short: Humidity
+    digits: 0
