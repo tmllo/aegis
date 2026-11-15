@@ -544,3 +544,45 @@ html:has(.st[data-theme='dark']) body {
     font-size: 52px;
   }
 }
+
+/* ================================================================ Body on the page (16 Nov, Emile)
+   The 3D body is part of the screen, not a picture in a box: no panel, page colours and type around it.
+   The sun and the replay keep their stage. */
+:root .st.ds .fr-object:has(canvas) {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  margin: 0;
+}
+:root .st.ds[data-theme='light'] .fr-object:has(canvas) {
+  color-scheme: light;
+  --canvas: #f3f4f7;
+  --sky: #f3f4f7;
+  --sky-0: #f3f4f7;
+  --card: #ffffff;
+  --card-2: #eceef2;
+  --line: rgb(22 26 43 / 0.1);
+  --line-2: rgb(22 26 43 / 0.22);
+  --ink: #161a2b;
+  --ink-2: #474e66;
+  --ink-3: #636a82;
+  --accent: #2563eb;
+  --calm: #15803d;
+  --watch: #b45309;
+  --act: #d92d20;
+  --adv: #4f46e5;
+}
+:root .st.ds[data-theme='dark'] .fr-object:has(canvas) {
+  border: 0;
+  background: transparent;
+  --canvas: #0b0f1e;
+  --sky: #0b0f1e;
+  --sky-0: #0b0f1e;
+}
+/* body dots in light theme: white chips with a hairline, not dark blots */
+:root .st.ds[data-theme='light'] .st-hs.is-dot {
+  background: #ffffff;
+  border: 1px solid rgb(22 26 43 / 0.16) !important;
+  box-shadow: 0 1px 4px rgb(22 26 43 / 0.12);
+}

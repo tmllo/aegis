@@ -47,7 +47,40 @@ async function loadBody(): Promise<THREE.Group> {
     buf = await (await fetch(import.meta.env.VITE_MODEL_URL ?? "/models/body.glb")).arrayBuffer();
   }
   const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder());
-  return bakeQuantized((await loader.parseAsync(buf, "")).scene);
+  const scene = bakeQuantized((await loader.parseAsync(buf, "")).scene);
+  await swapSkeleton(scene, loader);
+  return scene;
+}
+
+/** The detailed skeleton (Z-Anatomy, CC BY-SA 4.0, aligned to this body in Blender:
+ *  blender-assets/_scripts/skeleton/build_skeleton.py) replaces the two bone nodes when it loads.
+ *  If it is missing, the original BodyParts3D bones stay, so the body always renders. */
+async function swapSkeleton(scene: THREE.Group, loader: GLTFLoader) {
+  try {
+    const res = await fetch(import.meta.env.VITE_SKELETON_URL ?? "/models/skeleton.glb");
+    if (!res.ok) return;
+    const sk = (await loader.parseAsync(await res.arrayBuffer(), "")).scene;
+    sk.updateMatrixWorld(true);
+    const repl: Record<string, THREE.BufferGeometry> = {};
+    sk.traverse((o) => {
+      const m = o as THREE.Mesh;
+      if (!m.isMesh) return;
+      const g = m.geometry.clone().applyMatrix4(m.matrixWorld);
+      g.computeBoundingBox();
+      g.computeBoundingSphere();
+      repl[m.name in NODE_LAYER ? m.name : m.parent?.name ?? m.name] = g;
+    });
+    scene.traverse((o) => {
+      const m = o as THREE.Mesh;
+      const g = m.isMesh ? repl[nodeName(m)] : undefined;
+      if (g) {
+        m.geometry.dispose();
+        m.geometry = g;
+      }
+    });
+  } catch {
+    /* keep the original bones */
+  }
 }
 
 /** The GLB ships meshopt-compressed with quantized positions/normals (19 MB -> 3.7 MB); each node then

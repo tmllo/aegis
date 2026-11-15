@@ -3,7 +3,6 @@
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { Canvas, useFrame, useThree, type ThreeEvent } from '@react-three/fiber';
 import { ContactShadows, Environment, Html, Lightformer, OrbitControls } from '@react-three/drei';
-import { Bloom, EffectComposer, N8AO } from '@react-three/postprocessing';
 import * as THREE from 'three';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import { bodyGeometries, useBody } from '../components/body3d/BodyScene';
@@ -21,6 +20,8 @@ const TINT: Record<Status, THREE.Color> = {
 };
 const WHITE = new THREE.Color('#eef1f7');
 const BONE = new THREE.Color('#e6d9bf');
+const BONE_LIGHT = new THREE.Color('#d6c29b');
+const SHELL_LIGHT = new THREE.Color('#8f99b3');
 const BLACK = new THREE.Color(0, 0, 0);
 const UP = new THREE.Vector3(0, 1, 0);
 const REDUCE = typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -72,7 +73,7 @@ const SPOTS: Record<SystemId, { p: [number, number, number]; side: 'l' | 'r' }> 
   whole_body: { p: [-0.25, 1.38, 0.04], side: 'l' },
 };
 
-function Model({ tint, focus, onPick }: { tint: Record<SystemId, Status>; focus: SystemId | null; onPick: (s: SystemId) => void }) {
+function Model({ tint, focus, onPick, bone }: { tint: Record<SystemId, Status>; focus: SystemId | null; onPick: (s: SystemId) => void; bone: THREE.Color }) {
   const scene = useBody();
   const geo = useMemo(() => bodyGeometries(scene), [scene]);
   const mats = useMemo(() => {
@@ -98,7 +99,7 @@ function Model({ tint, focus, onPick }: { tint: Record<SystemId, Status>; focus:
     for (const n of Object.keys(geo)) {
       let o = BASE[n] ?? 0.3;
       if (focus && focus !== 'whole_body') o = focusNodes.has(n) ? 0.95 : n === 'skin' ? 0.05 : n.startsWith('bones') ? 0.25 : Math.min(o, 0.12);
-      g[n] = { o, c: n.startsWith('bones') ? BONE : WHITE };
+      g[n] = { o, c: n.startsWith('bones') ? bone : bone === BONE_LIGHT ? SHELL_LIGHT : WHITE };
     }
     for (const sys of Object.keys(SYSTEM_NODES) as SystemId[]) {
       const s = tint[sys];
@@ -110,7 +111,7 @@ function Model({ tint, focus, onPick }: { tint: Record<SystemId, Status>; focus:
           g[n] = { o: s === 'green' ? 0.18 : 0.28, c: WHITE.clone().lerp(TINT[s], 0.7), e: TINT[s].clone().multiplyScalar(0.25) };
           continue;
         }
-        g[n] = { o: n === 'muscle_antigravity' ? 0.45 : 0.95, c: (n.startsWith('bones') ? BONE : WHITE).clone().lerp(TINT[s], s === 'green' ? 0.5 : 0.55), top: s !== 'green', e: TINT[s].clone().multiplyScalar(s === 'green' ? 0.12 : 0.55) };
+        g[n] = { o: n === 'muscle_antigravity' ? 0.45 : 0.95, c: (n.startsWith('bones') ? bone : WHITE).clone().lerp(TINT[s], s === 'green' ? 0.5 : 0.55), top: s !== 'green', e: TINT[s].clone().multiplyScalar(s === 'green' ? 0.12 : 0.55) };
       }
     }
     if (hover && hover !== focus)
@@ -120,7 +121,7 @@ function Model({ tint, focus, onPick }: { tint: Record<SystemId, Status>; focus:
         g[n] = { o: Math.max(g[n].o, n === 'muscle_antigravity' ? 0.5 : 0.9), c: WHITE.clone().lerp(c, 0.6), top: true, e: c.clone().multiplyScalar(0.55) };
       }
     return g;
-  }, [geo, tint, focus, hover]);
+  }, [geo, tint, focus, hover, bone]);
 
   const meshes = useRef<Record<string, THREE.Mesh | null>>({});
   const group = useRef<THREE.Group>(null);
@@ -306,6 +307,20 @@ function Particles({ on }: { on: boolean }) {
   );
 }
 
+/** The app theme (light / dark) from the station root, live: the body is lit and backed to match the page. */
+function usePageTheme(): 'light' | 'dark' {
+  const read = () => ((document.querySelector('.st[data-theme]') as HTMLElement | null)?.dataset.theme === 'dark' ? 'dark' : 'light');
+  const [t, setT] = useState<'light' | 'dark'>(read);
+  useEffect(() => {
+    const el = document.querySelector('.st[data-theme]');
+    if (!el) return;
+    const mo = new MutationObserver(() => setT(read()));
+    mo.observe(el, { attributes: true, attributeFilter: ['data-theme'] });
+    return () => mo.disconnect();
+  }, []);
+  return t;
+}
+
 export default function BodyCanvas({
   tint,
   focus,
@@ -320,11 +335,14 @@ export default function BodyCanvas({
   storm?: boolean;
 }) {
   const v0 = viewFor(focus);
+  const theme = usePageTheme();
+  const light = theme === 'light';
   return (
     <Canvas dpr={[1, 1.6]} camera={{ position: v0.pos, fov: 34, near: 0.01, far: 50 }} gl={{ antialias: true, alpha: true }}>
-      <hemisphereLight args={['#f4efe6', '#1a1f3a', 0.45]} />
-      <directionalLight position={[-2, 4, 3]} intensity={2.4} color="#fff3e2" />
-      <directionalLight position={[2.5, 2, -3]} intensity={1.6} color="#c9dcff" />
+      {/* the body sits on the page itself: same background colour, no panel */}
+      <hemisphereLight args={['#f4efe6', light ? '#8d93a8' : '#1a1f3a', light ? 0.6 : 0.45]} />
+      <directionalLight position={[-2, 4, 3]} intensity={light ? 1.7 : 2.4} color="#fff3e2" />
+      <directionalLight position={[2.5, 2, -3]} intensity={light ? 1.1 : 1.6} color="#c9dcff" />
       <Environment resolution={128}>
         <Lightformer form="rect" intensity={3} position={[-2.5, 3.5, 3]} rotation={[-0.7, -0.5, 0]} scale={[6, 4, 1]} color="#ffffff" />
         <Lightformer form="rect" intensity={0.8} position={[3, 1, 2.5]} rotation={[0, 0.9, 0]} scale={[3, 5, 1]} color="#dfe8ff" />
@@ -337,17 +355,12 @@ export default function BodyCanvas({
           </Html>
         }
       >
-        <Model tint={tint} focus={focus} onPick={onPick} />
+        <Model tint={tint} focus={focus} onPick={onPick} bone={light ? BONE_LIGHT : BONE} />
         <Labels tint={tint} focus={focus} values={values} onPick={onPick} />
       </Suspense>
       <Particles on={storm} />
-      <ContactShadows position={[0, 0.002, 0]} opacity={0.45} scale={2.2} blur={2.4} far={1.2} frames={1} />
+      <ContactShadows position={[0, 0.002, 0]} opacity={light ? 0.3 : 0.45} scale={2.2} blur={2.4} far={1.2} frames={1} color={light ? '#3a4060' : '#000000'} />
       <Rig focus={focus} />
-      {/* contact shading between bones (ambient occlusion) and a soft bloom only on the red glow */}
-      <EffectComposer multisampling={0}>
-        <N8AO aoRadius={0.06} distanceFalloff={0.6} intensity={2.2} quality="medium" />
-        <Bloom intensity={0.55} luminanceThreshold={0.85} luminanceSmoothing={0.2} mipmapBlur />
-      </EffectComposer>
     </Canvas>
   );
 }

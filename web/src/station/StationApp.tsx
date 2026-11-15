@@ -163,7 +163,7 @@ function Shell() {
         <span>{DISCLAIMERS[1]}</span>
         <span>Space weather data: {data.storm.meta.data_credit}</span>
         <span>Signal delay to Earth ~ {LINK_DELAY[env]}</span>
-        <span title={ANATOMY_CREDIT}>Anatomy: BodyParts3D, CC BY 4.0</span>
+        <span title={ANATOMY_CREDIT}>Anatomy: BodyParts3D, CC BY 4.0 · Skeleton: Z-Anatomy, CC BY-SA 4.0</span>
       </footer>
 
       {alarmOn && <Shelter onAck={() => setAlarm({ ...alarm, phase: 'sheltered' })} phase={alarm.phase} flare={alarm.flare} p={alarm.p} onOpen={() => nav('/radiation')} here={loc.pathname.startsWith('/radiation')} />}

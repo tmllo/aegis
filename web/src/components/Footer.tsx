@@ -2,7 +2,7 @@ import { useMissionData } from '../data/store';
 
 /** Required credit for the body model (CC BY 4.0). Keep the wording. */
 export const ANATOMY_CREDIT =
-  'Anatomy: BodyParts3D 4.0, © The Database Center for Life Science, licensed CC BY 4.0. Packaged via human-atlas (github.com/ashemag/human-atlas, MIT).';
+  'Anatomy: BodyParts3D 4.0, © The Database Center for Life Science, licensed CC BY 4.0. Packaged via human-atlas (github.com/ashemag/human-atlas, MIT). Skeleton: Z-Anatomy (z-anatomy.com), licensed CC BY-SA 4.0, aligned and simplified for e^x.';
 
 /** Disclaimers every surface must show. */
 export const DISCLAIMERS = [
