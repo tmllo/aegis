@@ -376,3 +376,18 @@ def checkin_form(cat: Catalog, store: Store, subject: str, date: str | None = No
                     "scale": {"min": sc.get("min"), "max": sc.get("max"), "words": list(sc.get("words") or [])},
                     "value": latest.value if latest else None})
     return {"subject": subject, "date": d, "metrics": out}
+
+
+def resolve_task_id(cat: Catalog, task_id: str) -> str:
+    """routine-<subject>-<alias> -> routine-<subject>-<id>, using each routine's `aliases` in routines.yaml.
+    Lets an app that names default habits its own way (Emile's 'routine-c1-check-in') tick the server's habit."""
+    if not task_id.startswith("routine-"):
+        return task_id
+    for s in cat.subjects_of("crew_sim"):
+        prefix = f"routine-{s['id']}-"
+        if task_id.startswith(prefix):
+            name = task_id[len(prefix):]
+            for r in cat.extra.get("routines", {}).get("routines", []):
+                if name == r["id"] or name in r.get("aliases", []):
+                    return prefix + r["id"]
+    return task_id

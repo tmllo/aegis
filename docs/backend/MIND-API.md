@@ -200,3 +200,8 @@ oldest first. `mean` averages the daily values, and `n` is the number of days wi
    "message": "Stress (1–5) 3-day average 4.0σ above your own baseline"}, "..."],
  "journal_text_included": false}
 ```
+
+## App compatibility (added 2026-11-15 04:25)
+- `POST /api/tasks` accepts an optional `id` (1-64 letters, digits, `-`, `_`). Offline-first apps make the id on the device; the server keeps it, and sending the same task twice returns the existing one instead of a duplicate. Another crew member's id gives 409.
+- `POST /api/tasks/{id}/events` accepts the app's routine names: `routine-c1-check-in`, `-exercise-block`, `-sleep-window`, `-hydration`, `-journal-line`, `-call-home` map to the server's routines through `aliases` in `server/catalog/routines.yaml`.
+- Tested by `server/tests/test_mind_app_compat.py`, which replays `web/src/data/mind.ts`.
