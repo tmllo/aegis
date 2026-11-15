@@ -807,14 +807,14 @@
 }
 .st-sysrow {
   display: flex;
-  gap: 6px;
+  gap: 5px;
   flex-wrap: wrap;
 }
 .st-sys {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 9px;
+  gap: 5px;
+  padding: 3px 7px;
   border-radius: 8px;
   font-size: 12px;
   color: var(--dim);
@@ -1152,9 +1152,8 @@
 .st-bodyhint {
   position: absolute;
   z-index: 40;
-  left: 50%;
-  bottom: 14px;
-  transform: translateX(-50%);
+  left: 16px;
+  top: 14px;
   font-size: 12px;
   color: var(--faint);
 }

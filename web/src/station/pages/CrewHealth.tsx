@@ -168,8 +168,9 @@ function SystemPanel({ v, sys, onSurgeon }: { v: CrewView; sys: SystemId; onSurg
   const st = v.status[sys];
   const called = useStation((s) => s.surgeon[v.m.id]);
   if (!data) return null;
-  const rows = def.metrics.map((k) => v.rows[k]);
-  const lead = [...rows].sort((a, b) => rank(b.status) - rank(a.status))[0];
+  // the reading in trouble first; calm ones get a short chart
+  const rows = def.metrics.map((k) => v.rows[k]).sort((a, b) => rank(b.status) - rank(a.status));
+  const lead = rows[0];
   const meta = data.crew.metrics[lead.k];
   return (
     <div className="st-panel">
@@ -203,7 +204,7 @@ function SystemPanel({ v, sys, onSurgeon }: { v: CrewView; sys: SystemId; onSurg
               {r.entered && <em>entered today</em>}
               {r.running > 1 && <em className={`is-${r.status}`}>{r.running} days flagged</em>}
             </div>
-            {r.k !== 'dose_mSv_cum' && <TrendChart points={r.history} lo={r.lo} hi={r.hi} mean={r.mean} unit={r.unit} digits={r.k === 'temp' || r.k === 'sleep_h' ? 1 : 0} height={r.status === 'green' ? 86 : 118} />}
+            {r.k !== 'dose_mSv_cum' && <TrendChart points={r.history} lo={r.lo} hi={r.hi} mean={r.mean} unit={r.unit} digits={r.k === 'temp' || r.k === 'sleep_h' ? 1 : 0} height={r.status === 'green' ? (st === 'green' ? 86 : 64) : 118} />}
           </div>
         ))}
 

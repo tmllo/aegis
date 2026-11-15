@@ -178,7 +178,7 @@ function Labels({ tint, focus, values, onPick }: { tint: Record<SystemId, Status
 
 type View = { pos: [number, number, number]; target: [number, number, number] };
 function viewFor(focus: SystemId | null): View {
-  if (!focus || focus === 'whole_body') return { pos: [0, 0.98, 2.7], target: [0, 0.9, 0] };
+  if (!focus || focus === 'whole_body') return { pos: [0, 0.96, 2.95], target: [0, 0.9, 0] };
   const t = TARGETS[SYSTEM_TARGET[focus]];
   const c = t.box.c;
   const d = Math.max(0.75, Math.hypot(...t.box.h) * 4.2);
