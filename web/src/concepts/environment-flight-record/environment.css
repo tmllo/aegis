@@ -91,14 +91,15 @@
 .ev-plate {
   position: relative; align-self: stretch; min-height: 0; min-width: 0;
   margin: -8px 0 0;
+  overflow: hidden;
 }
 .ev-img, .ev-overlay { position: absolute; inset: 0; width: 100%; height: 100%; }
 .ev-img {
   object-fit: cover; object-position: 50% 50%;
   animation: ev-plate-in 420ms var(--ev-out) both;
   /* soft vignette so the plate sits in the page instead of on it */
-  -webkit-mask-image: radial-gradient(75% 75% at 50% 50%, #000 62%, transparent 100%);
-  mask-image: radial-gradient(75% 75% at 50% 50%, #000 62%, transparent 100%);
+  -webkit-mask-image: radial-gradient(closest-side, #000 80%, transparent 100%);
+  mask-image: radial-gradient(closest-side, #000 80%, transparent 100%);
 }
 .ev-overlay { overflow: visible; }
 .ev-arc {
@@ -110,7 +111,7 @@
 .ev-craft-label { font: 500 30px var(--ev-sans); fill: var(--ev-paper); letter-spacing: 0.02em; paint-order: stroke; stroke: var(--ev-ink-0); stroke-width: 8px; stroke-linejoin: round; }
 .ev-signal { fill: var(--ev-paper); }
 .ev-signal-static { fill: var(--ev-paper); }
-.ev-caption { position: absolute; left: 0; bottom: -4px; color: var(--ev-paper-3); }
+.ev-caption { position: absolute; left: 0; bottom: 0; color: var(--ev-paper-3); }
 
 /* the numbers */
 .ev-right { display: flex; flex-direction: column; min-width: 0; padding-top: 8px; animation: ev-rise 320ms var(--ev-out) 60ms both; position: relative; z-index: 1; }
@@ -189,5 +190,6 @@
   .ev-changes > div { grid-template-columns: 104px minmax(0, 1fr); }
   .ev-tab-main b { font-size: 18px; line-height: 24px; }
   .ev-tab-hint { display: none; }
+  .ev-craft-label { font-size: 52px; stroke-width: 12px; }
   .ev-brand span { display: none; }
 }

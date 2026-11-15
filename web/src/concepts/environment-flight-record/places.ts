@@ -46,7 +46,7 @@ export const PLACES: Record<EnvironmentId, Place> = {
       { label: 'Radiation', value: "Inside Earth's magnetic field" },
       { label: 'Exercise', value: 'About 2 h a day' },
     ],
-    craft: { x: 700, y: 430, name: 'Station' },
+    craft: { x: 640, y: 560, name: 'Station' },
     earth: null,
   },
   moon: {
@@ -64,7 +64,7 @@ export const PLACES: Record<EnvironmentId, Place> = {
       { label: 'Exercise', value: 'Daily, one sixth gravity' },
     ],
     craft: { x: 800, y: 1060, name: 'Base' },
-    earth: { x: 1410, y: 190, r: 64 },
+    earth: { x: 1250, y: 200, r: 60 },
   },
   transit: {
     id: 'transit',
@@ -81,7 +81,7 @@ export const PLACES: Record<EnvironmentId, Place> = {
       { label: 'Exercise', value: 'Daily, months without gravity' },
     ],
     craft: { x: 520, y: 800, name: 'Craft' },
-    earth: { x: 1430, y: 170, r: 30 },
+    earth: { x: 1230, y: 250, r: 30 },
   },
   mars: {
     id: 'mars',
@@ -98,14 +98,14 @@ export const PLACES: Record<EnvironmentId, Place> = {
       { label: 'Exercise', value: 'Daily, 0.38 g' },
     ],
     craft: { x: 720, y: 640, name: 'Base' },
-    earth: { x: 1450, y: 160, r: 24 },
+    earth: { x: 1270, y: 190, r: 24 },
   },
 };
 
 /** Curved path from the craft to Earth (or down to the ground station for the ISS). */
 export function signalPath(p: Place): string {
   const a = p.craft;
-  const b = p.earth ?? { x: 1080, y: 812 };
+  const b = p.earth ?? { x: 1010, y: 792 };
   const mx = (a.x + b.x) / 2;
   const my = (a.y + b.y) / 2;
   // bow the arc away from the plate centre

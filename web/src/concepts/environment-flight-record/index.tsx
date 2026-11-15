@@ -51,7 +51,7 @@ export default function EnvironmentConcept() {
   const go = useCallback(
     (id: EnvironmentId, focus = false) => {
       setEnvironment(id);
-      if (focus) tabs.current[ORDER.indexOf(id)]?.focus();
+      if (focus) requestAnimationFrame(() => tabs.current[ORDER.indexOf(id)]?.focus());
     },
     [setEnvironment],
   );
