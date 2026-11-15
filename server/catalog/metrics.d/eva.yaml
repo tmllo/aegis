@@ -1,0 +1,43 @@
+# Suit channels the EVA screen can name. display_only: they never enter crew_data.json.
+# Thresholds the sim uses live in eva.yaml, not here.
+metrics:
+- key: eva.hr
+  label: EVA heart rate
+  unit: bpm
+  kind: eva_sim
+  hazard: gravity
+  body_region: heart
+  rule:
+    type: display_only
+    source: server/catalog/eva.yaml
+    basis: Simulated. Thresholds are the HR_HIGH bands in eva.yaml. Not real astronaut data.
+- key: eva.ppco2
+  label: EVA helmet ppCO2
+  unit: mmHg
+  kind: eva_sim
+  hazard: closed_environment
+  body_region: whole_body
+  rule:
+    type: display_only
+    source: server/catalog/eva.yaml
+    basis: Simulated. Thresholds are the PPCO2_HIGH bands in eva.yaml.
+- key: eva.o2
+  label: EVA oxygen remaining
+  unit: '%'
+  kind: eva_sim
+  hazard: closed_environment
+  body_region: whole_body
+  rule:
+    type: display_only
+    source: server/catalog/eva.yaml
+    basis: Simulated tank percent, not suit atmosphere. Thresholds are the O2_LOW bands in eva.yaml.
+- key: eva.dose_rate
+  label: EVA dose rate
+  unit: uSv/h
+  kind: eva_sim
+  hazard: radiation
+  body_region: whole_body
+  rule:
+    type: display_only
+    source: server/catalog/eva.yaml
+    basis: Quiet rate from the habitat dose. Storm multiplier and the abort cutoff are in eva.yaml.

@@ -1,0 +1,331 @@
+# EVA suit simulation. Every number the engine uses lives here.
+# quality is simulated: no real astronaut physiology. Hand-set numbers say "working value".
+quality: simulated
+
+# Returned on every EVA response. id + credit, nothing else.
+sources:
+- id: eva_sim
+  credit: Simulated suit and crew physiology. Not real astronaut data. Not medical advice.
+- id: nasa_emu
+  credit: 'Suit pressure 4.3 psi and the 16.8 V battery: NASA EMU public facts. Drain time and tank size are working values.'
+- id: nasa_std_3001
+  credit: 'Alert colours follow the EVA contract mapping of NASA-STD-3001 Volume 2 Table 10.3-1 (https://www.nasa.gov/wp-content/uploads/2025/05/nasa-std-3001-vol-2.pdf). Numeric cutoffs in eva.yaml are working values.'
+- id: habitat_dose
+  credit: 'Quiet surface dose is the habitat assumed_dose_mSv_day in subjects.yaml, as uSv/h. Moon 1.4 mSv/day is Zhang et al. 2020 (Sci Adv, doi:10.1126/sciadv.aaz1334). Mars 0.65 mSv/day is Hassler et al. 2014 (Science, doi:10.1126/science.1244797).'
+- id: crew_baseline
+  credit: Resting heart rate is the simulated crew baseline in crew_data.json (first 14 mission days). Not a real astronaut.
+
+# NASA-STD-3001 Vol 2 Table 10.3-1, as the EVA contract names the colours.
+# nominal is the idle colour in that contract, not an alert class.
+colours:
+  emergency: flashing red
+  warning: red
+  caution: yellow
+  advisory: blue
+  nominal: green
+colours_basis: 'EVA contract (GitHub issue 4). It maps NASA-STD-3001 Volume 2 Table 10.3-1 to emergency flashing red, warning red, caution yellow, advisory blue. Nominal is green.'
+
+# An emergency alert is status abort. Advisory does not raise the status.
+status_from_level:
+  emergency: abort
+  warning: warning
+  caution: caution
+  advisory: nominal
+
+limits:
+  minutes_max: 240
+  step_s_min: 1
+  step_s_max: 60
+  max_frames: 5000
+
+# Clock on a sim response. Mission day at noon UTC, so two calls match. Not the server clock.
+start_time: '12:00:00Z'
+
+offline:
+  subject: c1
+  profile: traverse
+  minutes: 60
+  step_s: 5
+  storm: 1
+  sites: [moon, mars]
+
+sites:
+  moon:
+    label: Moon
+    habitat_id: moon_base
+    gravity_g: 0.166
+    gravity_basis: 'Lunar surface gravity is about 1.62 m/s2 (0.165 g). The contract value is 0.166.'
+    ext_temp_c: {min: -180, max: 120}
+    ext_temp_basis: 'Working values. Lunar surface temperatures are about -180 C in shadow and 120 C in sunlight (NASA Moon facts, rounded).'
+    sol_hours: 708.7
+    sol_basis: 'A lunar day is about 29.5 Earth days, 708.7 hours. Working value.'
+    light_delay_s: {min: 1.25, max: 1.35}
+    light_delay_basis: 'One-way light time to the Moon is about 1.3 seconds.'
+    habitat:
+      name: Artemis Base Camp
+      lat: -89.5
+      lon: 0.0
+      basis: 'Working value. A south-pole site near Shackleton, not a surveyed pin. The name matches the simulated mission.'
+    waypoints:
+    - {id: m1, name: Ridge, distance_m: 180, bearing_deg: 40, task: Inspect the ridge}
+    - {id: m2, name: Crater rim, distance_m: 420, bearing_deg: 110, task: Photograph the rim}
+    - {id: m3, name: Sample trench, distance_m: 700, bearing_deg: 200, task: Collect a regolith sample}
+  mars:
+    label: Mars
+    habitat_id: mars_surface
+    gravity_g: 0.38
+    gravity_basis: 'Mars surface gravity is about 3.71 m/s2 (0.38 g).'
+    ext_temp_c: {min: -125, max: 20}
+    ext_temp_basis: 'Working values. Mars surface temperatures run from about -125 C to 20 C (NASA Mars facts, rounded).'
+    sol_hours: 24.66
+    sol_basis: 'A Mars sol is 24 hours 39.6 minutes, 24.66 hours.'
+    light_delay_s: {min: 240, max: 1440}
+    light_delay_basis: 'The EVA contract uses 4 to 24 minutes. Earth-Mars one-way light time is about 3 to 22 minutes.'
+    habitat:
+      name: Jezero Base
+      lat: 18.4
+      lon: 77.5
+      basis: 'Working value. Jezero crater is near 18.4 N, 77.5 E. Not a surveyed habitat pin.'
+    waypoints:
+    - {id: a1, name: Fan edge, distance_m: 220, bearing_deg: 25, task: Walk the delta fan}
+    - {id: a2, name: Outcrop, distance_m: 480, bearing_deg: 95, task: Photograph the outcrop}
+    - {id: a3, name: Cache, distance_m: 760, bearing_deg: 160, task: Collect a core sample}
+
+# Heart rate, metabolic rate, oxygen, CO2 and heat. Same formulas for every profile.
+physiology:
+  o2_kj_per_L: 20.9
+  o2_kj_basis: 'About 20.9 kJ per litre of oxygen. Working conversion from metabolic watts to oxygen volume.'
+  rq: 0.85
+  rq_basis: 'Working value. A mixed-work respiratory quotient is about 0.85, so CO2 production is 0.85 times oxygen use.'
+  hr:
+    suit_overhead_bpm: 22
+    locomotion_bpm_at_1g: 55
+    basis: 'Working values. Heart rate starts at the member resting baseline and rises with activity. The locomotion term is multiplied by gravity in g, so the same task costs less on the Moon than on Mars. The suit term stays, because the suit is work in any gravity.'
+  metabolic:
+    rest_w: 120
+    suit_w: 160
+    locomotion_w_at_1g: 350
+    basis: 'Working values. Suited rest is about 100-150 W and a busy EVA is a few hundred watts, in the range NASA quotes for EVA work. These three numbers are hand-set.'
+  spo2:
+    rest_pct: 98
+    per_mmHg_above: 8
+    per_mmHg: 0.15
+    per_o2_below: 40
+    per_o2: 0.05
+    floor_pct: 88
+    basis: 'Demo trace, not a sensor and not a published EMU measurement. Working values.'
+  resp:
+    rest_bpm: 12
+    per_activity: 16
+    per_mmHg_above: 6
+    per_mmHg: 0.35
+    basis: 'Working values. Breathing quickens with work and with a rising helmet CO2.'
+  core:
+    rest_c: 37.0
+    above_w: 150
+    per_w: 0.003
+    coolant_above_c: 18
+    per_coolant: 0.02
+    basis: 'Working values. Core temperature stays near 37 C unless heat production or a hot coolant loop gets ahead of cooling.'
+
+suit:
+  pressure_psi: 4.3
+  pressure_basis: 'NASA EMU operating pressure is 4.3 psia. Held constant. The emergency oxygen drop is tank quantity, not a suit leak.'
+  o2:
+    tank_L: 700
+    basis: 'Working value. A one-hour nominal EVA uses a small fraction. The emergency leak reaches the warning band and does not empty the tank.'
+  co2:
+    setpoint_mmHg: 3.8
+    gain_mmHg_per_L: 0.60
+    removal: {NOMINAL: 0.98, DEGRADED: 0.50, FAULT: 0.05}
+    basis: 'Working values. A healthy scrubber holds helmet ppCO2 near a few mmHg. Removal is the fraction of produced CO2 the canister takes. The gain turns the litres it misses into a ppCO2 rise.'
+  coolant:
+    base_c: 16
+    per_w: 0.01
+    basis: 'Working values. The loop sits in the mid-teens at a quiet work rate.'
+  battery:
+    full_v: 16.8
+    empty_v: 14.0
+    duration_min: 420
+    basis: 'The EMU battery is a 16.8 V silver-zinc pack (NASA EMU). The 14.0 V empty point and the 7-hour drain are working values.'
+
+motion:
+  speed_m_s: 1.1
+  activity_floor: 0.45
+  wobble_period_s: 37
+  basis: 'Working values. Ground speed is speed_m_s times the profile scale times (activity_floor + (1 - activity_floor) * activity). A small seeded wobble makes two crew members differ. The seed is subject|site|profile.'
+
+env_trace:
+  sunlit: true
+  day_fraction: 0.82
+  swing: 0.04
+  basis: 'Working value. An EVA is planned in daylight, so sunlit stays true. The exterior temperature sits in the warm part of the site range.'
+
+# Dose is the quiet habitat rate until start_fraction of the EVA, then multiplied.
+# 30 is hand-set so the gauge jumps. It is not a measured solar particle event.
+storm:
+  start_fraction: 0.4
+  dose_multiplier: 30
+  basis: 'Working values. From 40% of the way through, the surface dose rate is multiplied by 30, standing in for an unshielded solar particle event.'
+
+profiles:
+  walk:
+    motion: steady
+    base: 0.32
+    wobble: 0.04
+    speed_scale: 0.15
+    basis: 'Easy walk near the habitat. Working values.'
+  traverse:
+    motion: legs
+    base: 0.55
+    leg_amp: 0.08
+    legs: 3
+    wobble: 0.04
+    speed_scale: 0.45
+    basis: 'A steady walk out to the waypoints. Working values.'
+  sample:
+    motion: burst
+    base: 0.30
+    burst: 0.85
+    burst_every_s: 180
+    burst_for_s: 50
+    wobble: 0.03
+    speed_scale: 0.25
+    basis: 'Short high-effort geology bursts. Working values.'
+  emergency:
+    motion: legs
+    base: 0.55
+    leg_amp: 0.08
+    legs: 3
+    wobble: 0.04
+    speed_scale: 0.40
+    degrade_after_s: 900
+    fault_after_s: 2100
+    o2_leak_pct_per_min: 1.7
+    o2_leak_after_s: 900
+    coolant_rise_c_per_min: 0.32
+    coolant_rise_after_s: 900
+    basis: 'Same walk as a traverse, with a planted scrubber failure, an oxygen leak and a rising coolant loop. Working values, tuned so a 60-minute run reaches warning and does not reach abort.'
+
+# Worst band first. high: value >= at. low: value <= at. One alert per code.
+# Actions are the plain sentence a crew member can follow.
+alerts:
+  rules:
+  - kind: bands
+    code: HR_HIGH
+    field: hr_bpm
+    side: high
+    bands:
+    - {level: emergency, at: 180}
+    - {level: warning, at: 160}
+    - {level: caution, at: 140}
+    - {level: advisory, at: 120}
+    text:
+      emergency: 'Heart rate is {value} bpm.'
+      warning: 'Heart rate is {value} bpm.'
+      caution: 'Heart rate is {value} bpm.'
+      advisory: 'Heart rate is {value} bpm.'
+    action:
+      emergency: 'Stop. Tell the crew. Return to the habitat now.'
+      warning: 'Stop work and rest. Return if it does not fall.'
+      caution: 'Slow down and watch the heart rate.'
+      advisory: 'Ease the pace.'
+    basis: 'Working values for suited work. Not a copy of a NASA-STD-3001 table cell.'
+  - kind: bands
+    code: PPCO2_HIGH
+    field: ppco2_mmHg
+    side: high
+    bands:
+    - {level: emergency, at: 20}
+    - {level: warning, at: 12}
+    - {level: caution, at: 8}
+    - {level: advisory, at: 5}
+    text:
+      emergency: 'Helmet CO2 is {value} mmHg.'
+      warning: 'Helmet CO2 is {value} mmHg.'
+      caution: 'Helmet CO2 is {value} mmHg.'
+      advisory: 'Helmet CO2 is {value} mmHg.'
+    action:
+      emergency: 'Abort the EVA and return to the habitat now.'
+      warning: 'Stop the task and return to the habitat.'
+      caution: 'Finish the task and start back. Watch CO2.'
+      advisory: 'Watch the CO2 gauge.'
+    basis: 'Working values. A healthy EMU holds helmet CO2 near a few mmHg. The public caution and warning numbers for the suit are not copied here.'
+  - kind: bands
+    code: O2_LOW
+    field: o2_pct
+    side: low
+    bands:
+    - {level: emergency, at: 10}
+    - {level: warning, at: 25}
+    - {level: caution, at: 40}
+    - {level: advisory, at: 55}
+    text:
+      emergency: 'Oxygen remaining is {value}%.'
+      warning: 'Oxygen remaining is {value}%.'
+      caution: 'Oxygen remaining is {value}%.'
+      advisory: 'Oxygen remaining is {value}%.'
+    action:
+      emergency: 'Abort the EVA and return to the habitat now.'
+      warning: 'Stop the task and return to the habitat.'
+      caution: 'Finish the task and start back.'
+      advisory: 'Watch the oxygen gauge.'
+    basis: 'Working values. o2_pct is remaining tank, not the suit atmosphere mix. 100% is a full tank.'
+  - kind: bands
+    code: COOLANT_HOT
+    field: coolant_c
+    side: high
+    bands:
+    - {level: emergency, at: 40}
+    - {level: warning, at: 30}
+    - {level: caution, at: 24}
+    - {level: advisory, at: 20}
+    text:
+      emergency: 'Coolant is {value} C.'
+      warning: 'Coolant is {value} C.'
+      caution: 'Coolant is {value} C.'
+      advisory: 'Coolant is {value} C.'
+    action:
+      emergency: 'Abort the EVA and return to the habitat now.'
+      warning: 'Stop the task and return to the habitat.'
+      caution: 'Ease the work and watch the coolant.'
+      advisory: 'Watch the coolant temperature.'
+    basis: 'Working values for the liquid cooling loop.'
+  - kind: bands
+    code: BATTERY_LOW
+    field: battery_pct
+    side: low
+    bands:
+    - {level: caution, at: 15}
+    - {level: advisory, at: 30}
+    text:
+      caution: 'Battery is {value}%.'
+      advisory: 'Battery is {value}%.'
+    action:
+      caution: 'End the EVA and return to the habitat.'
+      advisory: 'Watch the battery and plan the walk back.'
+    basis: 'Working values. A one-hour EVA on a 7-hour pack does not reach these.'
+  - kind: match
+    code: SCRUBBER
+    field: scrubber
+    when:
+      DEGRADED:
+        level: caution
+        text: 'CO2 scrubber is degraded.'
+        action: 'Finish the task and start back. Watch CO2.'
+      FAULT:
+        level: warning
+        text: 'CO2 scrubber has failed.'
+        action: 'Stop the task and return to the habitat.'
+    basis: 'Working values. NOMINAL is silent. The emergency profile plants DEGRADED, then FAULT.'
+  - kind: bands
+    code: ABORT_TO_HABITAT
+    field: dose_uSv_h
+    side: high
+    bands:
+    - {level: emergency, at: 150}
+    text:
+      emergency: 'Solar particle event. Dose rate is {value} uSv/h.'
+    action:
+      emergency: 'ABORT TO HABITAT'
+    basis: 'Working value, 150 uSv/h. Above either quiet surface rate and below the storm rate, so only storm=1 fires it.'

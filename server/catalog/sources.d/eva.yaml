@@ -1,0 +1,9 @@
+# EVA lane. No adapter: the suit is computed on request, not loaded from a feed.
+sources:
+- id: eva_sim
+  label: Simulated EVA suit
+  org: e^x (server/eva)
+  real: false
+  cadence: on input
+  input: server/catalog/eva.yaml
+  credit: Simulated suit and crew physiology. Not real astronaut data. Not medical advice.
