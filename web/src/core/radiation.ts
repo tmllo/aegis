@@ -1,10 +1,6 @@
 // Radiation: forecast feed, alert levels, dose against the career limit and
 // the May 2024 replay timeline. Pure functions, no React.
 //
-// OWNER: core builder. The functions marked WORKING are used by shared code and
-// their signatures are frozen. The functions marked TODO return an empty,
-// safe value until the core builder fills them in (with tests).
-//
 // Rules (BUILD-KICKOFF section 4):
 //   - feed = storm_forecast.events sorted by peak_time
 //   - headline numbers come from meta.metrics_test only, never recomputed
@@ -91,48 +87,4 @@ export function doseSummary(member: Pick<CrewMember, 'series'>, data: CrewData, 
     environmentDaily_mSv: envDaily,
     daysToLimit: cumulative === null || envDaily <= 0 ? null : Math.max(0, (data.career_limit_mSv - cumulative) / envDaily),
   };
-}
-
-/** One storm in the replay: the flares that share a storm_onset_time. */
-export interface ReplayStorm {
-  onsetTime: string;
-  /** Flares linked to this storm, oldest first. */
-  flares: FlareEvent[];
-  /** First flare with alert_level 'warning', or null when the storm was missed. */
-  firstWarning: FlareEvent | null;
-  /** Hours from firstWarning.peak_time to onsetTime ("from flare peak"). null when missed. */
-  leadTime_h: number | null;
-}
-
-/** One step of the replay clock. */
-export interface ReplayFrame {
-  time: string;
-  kind: 'flare' | 'particles_arrive';
-  event: FlareEvent | null;
-  storm: ReplayStorm | null;
-  outcome: Outcome | null;
-}
-
-/**
- * TODO(core builder): group the replay events by storm_onset_time and compute
- * the lead time of each storm from its first warning flare.
- */
-export function replayStorms(_events: readonly FlareEvent[]): ReplayStorm[] {
-  return [];
-}
-
-/**
- * TODO(core builder): flares and particle arrivals merged into one timeline,
- * oldest first, for the replay scrubber.
- */
-export function replayTimeline(_events: readonly FlareEvent[]): ReplayFrame[] {
-  return [];
-}
-
-/**
- * TODO(core builder): the highest alert level in force at time t (a warning
- * stays in force for meta.horizon_hours after the flare's peak_time).
- */
-export function alertAt(_events: readonly FlareEvent[], _t: number, _horizonHours: number): { level: AlertLevel; event: FlareEvent | null } {
-  return { level: 'none', event: null };
 }
