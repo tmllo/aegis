@@ -203,7 +203,7 @@ export default function CrewPage() {
           </span>
           {live && (
             <span className="cap vlist-live">
-              {`Live now · heart ${Math.round(band.reading!.hr)}\u00a0bpm · blood oxygen ${Math.round(band.reading!.spo2)}\u00a0%`}
+              {`Live now · heart ${Math.round(band.reading!.hr)}\u00a0bpm · blood oxygen ${Math.round(band.reading!.spo2)}\u00a0% (demo)`}
               {heartBpm != null ? ` · camera ${Math.round(heartBpm)}\u00a0bpm` : ''}
             </span>
           )}

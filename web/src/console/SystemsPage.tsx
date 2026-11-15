@@ -37,7 +37,7 @@ export default function SystemsPage() {
           {PLACEMENTS.length} sensors · {checks} readings checked · {crewShown} shown to the crew · {flagged} sent to Earth
         </span>
         <span className="cap">
-          Storm forecast warned before {caught} of {m.n_storms} storms
+          e{'\u02e3'} storm model warned before {caught} of {m.n_storms} storms
         </span>
       </section>
 

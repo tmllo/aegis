@@ -111,7 +111,7 @@ export default function EnvironmentPage() {
           <StormChart events={events} meta={data.storm.meta} height={150} />
         </div>
         <span className="cap">
-          Tested on {data.storm.meta.test_period.map((d) => d.slice(0, 4)).join('-')} · warned before {caught} of {m.n_storms} storms · about {Math.round(m.false_alarms_per_month)} false alarm{Math.round(m.false_alarms_per_month) === 1 ? '' : 's'} a month · typically {m.median_lead_time_h.toFixed(1)} h of warning
+          e{'\u02e3'} model, tested on {data.storm.meta.test_period.map((d) => d.slice(0, 4)).join('-')} · warned before {caught} of {m.n_storms} storms · about {Math.round(m.false_alarms_per_month)} false alarm{Math.round(m.false_alarms_per_month) === 1 ? '' : 's'} a month · typically {m.median_lead_time_h.toFixed(1)} h of warning
         </span>
         <span className="cap">Space weather data: NASA CCMC DONKI</span>
       </section>
