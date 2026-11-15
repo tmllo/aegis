@@ -1,0 +1,421 @@
+# Organ dose, cancer-risk share, shielding stages and the forecast explainer.
+# Every number is {value, source}. source is S1..S12 from RADIATION-ORGAN-DATA.md, or HAND-SET.
+# tag DERIVED means arithmetic on a cited number. tag HAND-SET means we chose the working value.
+# Doses are NASA dose equivalent (mSv) unless a stage block says otherwise. No real astronaut doses.
+
+iss_trapped_share: {value: 0.4, source: HAND-SET, tag: HAND-SET, basis: "Inside the ISS, 40% of dose equivalent uses the trapped-proton profile and 60% the uniform GCR profile. Outside, MTR-DOSTEL saw trapped about 60% of dose equivalent (S6); inside it is lower."}
+reid_per_mSv_pct: {value: 0.005, source: S10, tag: DERIVED, basis: "600 mSv effective is about 3% REID, so 3 / 600 = 0.005 percent per mSv. Linear scaling, not NSCR-2012."}
+remainder_d_rel: {value: 0.198, source: S8}
+remainder_w_T: {value: 0.12, source: S7}
+risk_remainder_ids: [brain, salivary, heart, kidney, pancreas, spleen]
+effective_remainder_ids: [heart, kidney, pancreas, spleen]
+limit_note: "Limits are mGy-Eq; organ values are NASA dose equivalent (mSv). Comparison approximate."
+level_green_below_pct: {value: 50, source: HAND-SET}
+level_red_at_pct: {value: 100, source: HAND-SET}
+level_bg_days: {value: 30, source: S10, basis: "The 30-day limit column. spe and storm compare the event dose plus this many days of background."}
+
+paper_effective_mSv:
+  aug1972:
+    hull: {value: 204.2, source: S4}
+    vest: {value: 85.3, source: S4}
+  oct1989:
+    hull: {value: 219.0, source: S4}
+    vest: {value: 138.2, source: S4}
+
+limits:
+  career_effective_mSv: {value: 600, source: S10, unit: mSv}
+  design_ref_spe_mSv: {value: 250, source: S10, unit: mSv}
+  lens:
+    organ: eye_lens
+    unit: mGy-Eq
+    d30: {value: 1000, source: S10}
+    y1: {value: 2000, source: S10}
+    career: {value: 4000, source: S10}
+  skin:
+    organ: skin
+    unit: mGy-Eq
+    d30: {value: 1500, source: S10}
+    y1: {value: 3000, source: S10}
+    career: {value: 6000, source: S10}
+  bfo:
+    organ: red_marrow
+    unit: mGy-Eq
+    d30: {value: 250, source: S10}
+    y1: {value: 500, source: S10}
+    career: {value: null, source: S10}
+  circulatory:
+    organ: heart
+    unit: mGy-Eq
+    d30: {value: 250, source: S10}
+    y1: {value: 500, source: S10}
+    career: {value: 1000, source: S10}
+  cns:
+    organ: brain
+    unit: mGy
+    d30: {value: 500, source: S10}
+    y1: {value: 1000, source: S10}
+    career: {value: 1500, source: S10}
+
+gcr:
+  profile_uniform: {value: 1.0, source: S3, basis: "Artemis I GCR-phase organ doses spread under 8%, so Moon, transit and Mars use a flat profile."}
+  artemis_i_mGy:
+    skin_front: {value: 9.38, source: S3}
+    lung: {value: 9.44, source: S3}
+    stomach: {value: 9.42, source: S3}
+    uterus: {value: 10.07, source: S3}
+    spine: {value: 9.56, source: S3}
+    skin_back: {value: 10.17, source: S3}
+  rate_mGy_day: {value: 0.379, source: S4}
+  quality_factor: {value: 3.1, source: S4}
+  rate_mSv_day: {value: 1.18, source: S4, tag: DERIVED}
+  thicker_shield_note: "For GCR, thicker shielding can raise absorbed dose because of secondaries (S6): about 85 uGy/day behind 20 g/cm2 Al versus 100 uGy/day behind 35 g/cm2."
+
+body_gradient:
+  skin_to_deep: {value: 20, source: S1}
+  note: "ISS EVA phantom. Skin dose was about 20 times the deep-organ dose."
+
+# spe doses are mSv, NASA dose equivalent, whole-body phantom, hull = Orion with no vest (S4).
+# shelter_oct1989_mSv is hull times the S9 water factor, rounded as in Table A. DERIVED estimate.
+organs:
+- id: skin
+  label: Skin
+  w_T: {value: 0.01, source: S7}
+  d_rel: {value: 0.007, source: S8}
+  trapped_ratio: {value: 1.31, source: S4, tag: DERIVED}
+  aug1972: {hull: {value: 708.4, source: S4}, vest: {value: 508.0, source: S4}}
+  oct1989: {hull: {value: 494.4, source: S4}, vest: {value: 382.4, source: S4}}
+  shelter_factor: {value: 0.36, source: S9, tag: HAND-SET, proxy: skin}
+  shelter_oct1989_mSv: {value: 180, source: S9, tag: DERIVED}
+  mesh: [skin]
+  pos: {value: [0, 1.31, 0.146], source: HAND-SET}
+  r: {value: null, source: HAND-SET}
+  approx: false
+  remainder: false
+  limit: skin
+- id: eye_lens
+  label: Eye lens
+  w_T: {value: null, source: S7}
+  d_rel: {value: null, source: S8}
+  trapped_ratio: {value: 1.12, source: S4, tag: DERIVED}
+  aug1972: {hull: {value: 235.7, source: S4}, vest: {value: 229.3, source: S4}}
+  oct1989: {hull: {value: 234.0, source: S4}, vest: {value: 228.2, source: S4}}
+  shelter_factor: {value: 0.38, source: S9, tag: HAND-SET, proxy: eye}
+  shelter_oct1989_mSv: {value: 88, source: S9, tag: DERIVED}
+  mesh: [eyes]
+  pos: {value: [0, 1.596, 0.050], source: HAND-SET}
+  r: {value: 0.03, source: HAND-SET}
+  approx: false
+  remainder: false
+  limit: lens
+- id: brain
+  label: Brain
+  w_T: {value: 0.01, source: S7}
+  d_rel: {value: null, source: S8}
+  trapped_ratio: {value: 0.73, source: S4, tag: DERIVED}
+  aug1972: {hull: {value: 143.0, source: S4}, vest: {value: 140.1, source: S4}}
+  oct1989: {hull: {value: 184.3, source: S4}, vest: {value: 180.6, source: S4}}
+  shelter_factor: {value: 0.48, source: S9, tag: HAND-SET, proxy: "BFO proxy"}
+  shelter_oct1989_mSv: {value: 89, source: S9, tag: DERIVED}
+  mesh: [brain]
+  pos: {value: [0, 1.623, -0.021], source: HAND-SET}
+  r: {value: 0.08, source: HAND-SET}
+  approx: false
+  remainder: false
+  limit: cns
+- id: salivary
+  label: Salivary glands
+  w_T: {value: 0.01, source: S7}
+  d_rel: {value: null, source: S8}
+  trapped_ratio: {value: 1.07, source: S4, tag: DERIVED}
+  aug1972: {hull: {value: 223.2, source: S4}, vest: {value: 194.7, source: S4}}
+  oct1989: {hull: {value: 224.1, source: S4}, vest: {value: 202.2, source: S4}}
+  shelter_factor: {value: 0.39, source: S9, tag: HAND-SET, proxy: "thyroid proxy"}
+  shelter_oct1989_mSv: {value: 88, source: S9, tag: DERIVED}
+  mesh: null
+  pos: {value: [0, 1.53, 0.03], source: HAND-SET}
+  r: {value: 0.03, source: HAND-SET}
+  approx: true
+  remainder: false
+  limit: null
+- id: thyroid
+  label: Thyroid
+  w_T: {value: 0.04, source: S7}
+  d_rel: {value: 0.022, source: S8}
+  trapped_ratio: {value: 0.99, source: S4, tag: DERIVED}
+  aug1972: {hull: {value: 158.6, source: S4}, vest: {value: 114.3, source: S4}}
+  oct1989: {hull: {value: 189.5, source: S4}, vest: {value: 163.5, source: S4}}
+  shelter_factor: {value: 0.39, source: S9, tag: HAND-SET, proxy: thyroid}
+  shelter_oct1989_mSv: {value: 75, source: S9, tag: DERIVED}
+  mesh: null
+  pos: {value: [0, 1.44, 0.03], source: HAND-SET}
+  r: {value: 0.025, source: HAND-SET}
+  approx: false
+  remainder: false
+  limit: null
+- id: oesophagus
+  label: Oesophagus
+  w_T: {value: 0.04, source: S7}
+  d_rel: {value: 0.023, source: S8}
+  trapped_ratio: {value: 0.76, source: S4, tag: DERIVED}
+  aug1972: {hull: {value: 84.5, source: S4}, vest: {value: 48.3, source: S4}}
+  oct1989: {hull: {value: 149.8, source: S4}, vest: {value: 111.9, source: S4}}
+  shelter_factor: {value: 0.41, source: S9, tag: HAND-SET, proxy: oesophagus}
+  shelter_oct1989_mSv: {value: 62, source: S9, tag: DERIVED}
+  mesh: null
+  pos: {value: [0, 1.36, -0.02], source: HAND-SET}
+  r: {value: 0.02, source: HAND-SET}
+  approx: true
+  remainder: false
+  limit: null
+- id: breast
+  label: Breast
+  w_T: {value: 0.12, source: S7}
+  d_rel: {value: 0.139, source: S8}
+  trapped_ratio: {value: 1.57, source: S4, tag: DERIVED}
+  aug1972: {hull: {value: 520.3, source: S4}, vest: {value: 129.7, source: S4}}
+  oct1989: {hull: {value: 404.6, source: S4}, vest: {value: 181.3, source: S4}}
+  shelter_factor: {value: 0.41, source: S9, tag: HAND-SET, proxy: "breast, CAF"}
+  shelter_oct1989_mSv: {value: 164, source: S9, tag: DERIVED}
+  mesh: null
+  pos: {value: [0, 1.30, 0.12], source: HAND-SET}
+  r: {value: 0.07, source: HAND-SET}
+  approx: true
+  remainder: false
+  limit: null
+- id: lung
+  label: Lungs
+  w_T: {value: 0.12, source: S7}
+  d_rel: {value: 0.157, source: S8}
+  trapped_ratio: {value: 1.09, source: S4, tag: DERIVED}
+  aug1972: {hull: {value: 245.0, source: S4}, vest: {value: 95.5, source: S4}}
+  oct1989: {hull: {value: 254.5, source: S4}, vest: {value: 153.5, source: S4}}
+  shelter_factor: {value: 0.48, source: S9, tag: HAND-SET, proxy: lung}
+  shelter_oct1989_mSv: {value: 122, source: S9, tag: DERIVED}
+  mesh: [lung_left, lung_right]
+  pos: {value: [-0.018, 1.318, 0.001], source: HAND-SET}
+  r: {value: 0.11, source: HAND-SET}
+  approx: false
+  remainder: false
+  limit: null
+- id: heart
+  label: Heart
+  w_T: {value: null, source: S7}
+  d_rel: {value: null, source: S8}
+  trapped_ratio: {value: 0.86, source: S4, tag: DERIVED}
+  aug1972: {hull: {value: 93.2, source: S4}, vest: {value: 40.7, source: S4}}
+  oct1989: {hull: {value: 153.2, source: S4}, vest: {value: 106.2, source: S4}}
+  shelter_factor: {value: 0.48, source: S9, tag: HAND-SET, proxy: "BFO proxy"}
+  shelter_oct1989_mSv: {value: 74, source: S9, tag: DERIVED}
+  mesh: [heart]
+  pos: {value: [0.022, 1.305, 0.023], source: HAND-SET}
+  r: {value: 0.06, source: HAND-SET}
+  approx: false
+  remainder: false
+  limit: circulatory
+- id: liver
+  label: Liver
+  w_T: {value: 0.04, source: S7}
+  d_rel: {value: 0.046, source: S8}
+  trapped_ratio: {value: 0.93, source: S4, tag: DERIVED}
+  aug1972: {hull: {value: 120.9, source: S4}, vest: {value: 43.2, source: S4}}
+  oct1989: {hull: {value: 168.7, source: S4}, vest: {value: 105.2, source: S4}}
+  shelter_factor: {value: 0.56, source: S9, tag: HAND-SET, proxy: liver}
+  shelter_oct1989_mSv: {value: 95, source: S9, tag: DERIVED}
+  mesh: null
+  pos: {value: [-0.07, 1.17, 0.03], source: HAND-SET}
+  r: {value: 0.07, source: HAND-SET}
+  approx: true
+  remainder: false
+  limit: null
+- id: stomach
+  label: Stomach
+  w_T: {value: 0.12, source: S7}
+  d_rel: {value: 0.118, source: S8}
+  trapped_ratio: {value: 0.95, source: S4, tag: DERIVED}
+  aug1972: {hull: {value: 122.2, source: S4}, vest: {value: 43.2, source: S4}}
+  oct1989: {hull: {value: 167.4, source: S4}, vest: {value: 106.1, source: S4}}
+  shelter_factor: {value: 0.57, source: S9, tag: HAND-SET, proxy: stomach}
+  shelter_oct1989_mSv: {value: 96, source: S9, tag: DERIVED}
+  mesh: null
+  pos: {value: [0.06, 1.17, 0.03], source: HAND-SET}
+  r: {value: 0.05, source: HAND-SET}
+  approx: true
+  remainder: false
+  limit: null
+- id: colon
+  label: Colon
+  w_T: {value: 0.12, source: S7}
+  d_rel: {value: 0.083, source: S8}
+  trapped_ratio: {value: 0.99, source: S4, tag: DERIVED}
+  aug1972: {hull: {value: 136.2, source: S4}, vest: {value: 49.3, source: S4}}
+  oct1989: {hull: {value: 176.1, source: S4}, vest: {value: 109.0, source: S4}}
+  shelter_factor: {value: 0.52, source: S9, tag: HAND-SET, proxy: intestine}
+  shelter_oct1989_mSv: {value: 92, source: S9, tag: DERIVED}
+  mesh: null
+  pos: {value: [0, 1.02, 0.03], source: HAND-SET}
+  r: {value: 0.09, source: HAND-SET}
+  approx: true
+  remainder: false
+  limit: null
+- id: bladder
+  label: Bladder
+  w_T: {value: 0.04, source: S7}
+  d_rel: {value: 0.029, source: S8}
+  trapped_ratio: {value: 0.86, source: S4, tag: DERIVED}
+  aug1972: {hull: {value: 82.7, source: S4}, vest: {value: 33.5, source: S4}}
+  oct1989: {hull: {value: 136.0, source: S4}, vest: {value: 95.6, source: S4}}
+  shelter_factor: {value: 0.53, source: S9, tag: HAND-SET, proxy: bladder}
+  shelter_oct1989_mSv: {value: 72, source: S9, tag: DERIVED}
+  mesh: null
+  pos: {value: [0, 0.90, 0.05], source: HAND-SET}
+  r: {value: 0.04, source: HAND-SET}
+  approx: true
+  remainder: false
+  limit: null
+- id: gonads
+  label: Gonads
+  w_T: {value: 0.08, source: S7}
+  d_rel: {value: 0.044, source: S8}
+  trapped_ratio: {value: 0.79, source: S4, tag: DERIVED}
+  aug1972: {hull: {value: 52.7, source: S4}, vest: {value: 26.2, source: S4}}
+  oct1989: {hull: {value: 115.9, source: S4}, vest: {value: 86.6, source: S4}}
+  shelter_factor: {value: 0.55, source: S9, tag: HAND-SET, proxy: "ovary, CAF"}
+  shelter_oct1989_mSv: {value: 64, source: S9, tag: DERIVED}
+  mesh: null
+  pos: {value: [0, 0.86, 0.02], source: HAND-SET}
+  r: {value: 0.04, source: HAND-SET}
+  approx: true
+  remainder: false
+  limit: null
+- id: red_marrow
+  label: Red bone marrow
+  w_T: {value: 0.12, source: S7}
+  d_rel: {value: 0.107, source: S8}
+  trapped_ratio: {value: 0.78, source: S4, tag: DERIVED}
+  aug1972: {hull: {value: 105.9, source: S4}, vest: {value: 64.6, source: S4}}
+  oct1989: {hull: {value: 154.6, source: S4}, vest: {value: 116.8, source: S4}}
+  shelter_factor: {value: 0.48, source: S9, tag: HAND-SET, proxy: BFO}
+  shelter_oct1989_mSv: {value: 75, source: S9, tag: DERIVED}
+  mesh: [bones_loadbearing]
+  pos: {value: [0, 0.91, -0.035], source: HAND-SET}
+  r: {value: 0.12, source: HAND-SET}
+  approx: false
+  remainder: false
+  limit: bfo
+- id: bone_surface
+  label: Bone surface
+  w_T: {value: 0.01, source: S7}
+  d_rel: {value: 0.009, source: S8}
+  trapped_ratio: {value: 0.71, source: S4, tag: DERIVED}
+  aug1972: {hull: {value: 172.9, source: S4}, vest: {value: 151.8, source: S4}}
+  oct1989: {hull: {value: 195.8, source: S4}, vest: {value: 176.7, source: S4}}
+  shelter_factor: {value: 0.48, source: S9, tag: HAND-SET, proxy: "BFO proxy"}
+  shelter_oct1989_mSv: {value: 95, source: S9, tag: DERIVED}
+  mesh: [bones]
+  pos: {value: [0, 0.87, 0], source: HAND-SET}
+  r: {value: null, source: HAND-SET}
+  approx: true
+  remainder: false
+  limit: null
+- id: kidney
+  label: Kidney
+  w_T: {value: null, source: S7}
+  d_rel: {value: null, source: S8}
+  trapped_ratio: {value: 0.71, source: S4, tag: DERIVED}
+  aug1972: {hull: {value: 97.4, source: S4}, vest: {value: 40.5, source: S4}}
+  oct1989: {hull: {value: 154.1, source: S4}, vest: {value: 100.5, source: S4}}
+  shelter_factor: {value: 0.53, source: S9, tag: HAND-SET, proxy: kidney}
+  shelter_oct1989_mSv: {value: 81, source: S9, tag: DERIVED}
+  mesh: null
+  pos: {value: [0.002, 1.107, -0.015], source: HAND-SET}
+  r: {value: 0.06, source: HAND-SET}
+  approx: false
+  remainder: true
+  limit: null
+- id: pancreas
+  label: Pancreas
+  w_T: {value: null, source: S7}
+  d_rel: {value: null, source: S8}
+  trapped_ratio: {value: 0.77, source: S4, tag: DERIVED}
+  aug1972: {hull: {value: 59.5, source: S4}, vest: {value: 27.3, source: S4}}
+  oct1989: {hull: {value: 130.8, source: S4}, vest: {value: 91.5, source: S4}}
+  shelter_factor: {value: 0.50, source: S9, tag: HAND-SET, proxy: pancreas}
+  shelter_oct1989_mSv: {value: 65, source: S9, tag: DERIVED}
+  mesh: null
+  pos: {value: [0.02, 1.13, 0.0], source: HAND-SET}
+  r: {value: 0.04, source: HAND-SET}
+  approx: true
+  remainder: true
+  limit: null
+- id: spleen
+  label: Spleen
+  w_T: {value: null, source: S7}
+  d_rel: {value: null, source: S8}
+  trapped_ratio: {value: 0.81, source: S4, tag: DERIVED}
+  aug1972: {hull: {value: 135.3, source: S4}, vest: {value: 49.5, source: S4}}
+  oct1989: {hull: {value: 179.4, source: S4}, vest: {value: 110.7, source: S4}}
+  shelter_factor: {value: 0.48, source: S9, tag: HAND-SET, proxy: "BFO proxy"}
+  shelter_oct1989_mSv: {value: 87, source: S9, tag: DERIVED}
+  mesh: null
+  pos: {value: [0.09, 1.16, -0.02], source: HAND-SET}
+  r: {value: 0.035, source: HAND-SET}
+  approx: true
+  remainder: true
+  limit: null
+
+# Aug 1972 aluminium stages, Wilson 1997 Table 5. Doses stored in cSv; the engine converts x10 to mSv.
+stages:
+  aug1972:
+    source: S5
+    dose_unit: cSv
+    mSv_per_unit: {value: 10, source: S5, basis: "1 cSv = 10 mSv."}
+    items:
+    - {id: space, label: "Open space", areal_g_cm2: {value: 0, source: S5}, skin: {value: null, source: S5}, lens: {value: null, source: S5}, bfo: {value: null, source: S5}}
+    - {id: suit, label: "Space suit (EVA)", areal_g_cm2: {value: 0.4, source: S5}, skin: {value: 9350, source: S5}, lens: {value: 3830, source: S5}, bfo: {value: 217, source: S5}}
+    - {id: vessel, label: "Pressure vessel", areal_g_cm2: {value: 1, source: S5}, skin: {value: 3560, source: S5}, lens: {value: 2140, source: S5}, bfo: {value: 180, source: S5}}
+    - {id: room, label: "Equipment room", areal_g_cm2: {value: 5, source: S5}, skin: {value: 427, source: S5}, lens: {value: 367, source: S5}, bfo: {value: 65, source: S5}}
+    - {id: shelter, label: "Storm shelter", areal_g_cm2: {value: 10, source: S5}, skin: {value: 110, source: S5}, lens: {value: 101, source: S5}, bfo: {value: 24, source: S5}}
+    orion:
+      id: orion
+      label: "Orion cabin"
+      areal_g_cm2: {value: 24.8, source: S4}
+      skin_mSv: {value: 708.4, source: S4}
+      bfo_mSv: {value: 105.9, source: S4}
+      basis: "Aug 1972 whole-body hull, no vest. Different model from the aluminium slab table."
+  oct1989:
+    source: S9
+    dose_unit: cGy
+    mSv_per_unit: {value: 10, source: S9, tag: HAND-SET, basis: "Absorbed dose in cGy, shown x10 as mGy. Not NASA dose equivalent."}
+    items:
+    - {id: space, label: "Open space", areal_g_cm2: {value: 0, source: S9}, skin: {value: null, source: S9}, bfo: {value: null, source: S9}}
+    - {id: w05, label: "0.5 cm water", areal_g_cm2: {value: 0.5, source: S9}, skin: {value: 721, source: S9}, bfo: {value: 80, source: S9}}
+    - {id: w2, label: "2 cm water", areal_g_cm2: {value: 2, source: S9}, skin: {value: 298, source: S9}, bfo: {value: 55, source: S9}}
+    - {id: w5, label: "5 cm water", areal_g_cm2: {value: 5, source: S9}, skin: {value: 96, source: S9}, bfo: {value: 31, source: S9}}
+    - {id: w10, label: "10 cm water", areal_g_cm2: {value: 10, source: S9}, skin: {value: 35, source: S9}, bfo: {value: 15, source: S9}}
+
+actions:
+  none: "No action needed"
+  watch: "Stay within reach of the shelter"
+  warning: "Go to the shelter"
+
+how_it_works:
+- "Every solar flare NASA DONKI reports is scored the moment it peaks."
+- "Inputs: flare class, where it sits on the Sun (western flares are magnetically connected to us), and whether a fast CME left with it."
+- "A logistic model trained on 2010-2023 gives the chance of a >=10 MeV proton storm within 72 h."
+- "Above the watch line: stay near the shelter. Above the warning line: go to the shelter."
+- "Tested only on 2024-2026 flares it never saw."
+
+sources:
+- {id: S1, label: "Reitz et al. 2009, Radiation Research (ISS EVA phantom)", url: "https://doi.org/10.1667/rr1559.1"}
+- {id: S2, label: "Reitz, MATROSHKA phantom platform", url: "https://three.jsc.nasa.gov/articles/PhantomsReitz.pdf"}
+- {id: S3, label: "Artemis I MARE/HERA team 2024, Nature", url: "https://doi.org/10.1038/s41586-024-07927-7"}
+- {id: S4, label: "Houri, Berger et al. 2026, Sci. Adv. (Artemis I MARE)", url: "https://doi.org/10.1126/sciadv.adz1892"}
+- {id: S5, label: "Wilson et al. 1997, NASA TP-3668", url: "https://www.cs.odu.edu/~mln/ltrs-pdfs/NASA-97-tp3668.pdf"}
+- {id: S6, label: "Labrenz et al. 2015, Matroshka DOSTEL on the ISS", url: "https://www.swsc-journal.org/articles/swsc/full_html/2015/01/swsc150028/swsc150028.html"}
+- {id: S7, label: "ICRP Publication 103 (2007) tissue weighting factors", url: "https://en.wikipedia.org/wiki/Effective_dose_(radiation)"}
+- {id: S8, label: "ICRP 103 detriment, as reproduced in Breckow 2020", url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC7368864/"}
+- {id: S9, label: "Simonsen et al. 1992, NASA TP-3237 (October 1989)", url: "https://ntrs.nasa.gov/citations/19930003688"}
+- {id: S10, label: "NASA-STD-3001 Volume 1 Revision C, section 4.8", url: "https://standards.nasa.gov/sites/default/files/standards/NASA/C/nasa-std-3001-vol-1-rev-c-signature.pdf"}
+- {id: S11, label: "Space Medicine Foundation quick reference (V1 4031)", url: "https://spacemedicinefoundation.org/reference/quick-reference/"}
+- {id: S12, label: "Townsend et al., October 1989 SPE crew exposures (ICES)", url: "https://hdl.handle.net/2346/74193"}
+- {id: DONKI, label: "NASA CCMC DONKI", url: "https://kauai.ccmc.gsfc.nasa.gov/DONKI/"}
