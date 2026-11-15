@@ -22,3 +22,12 @@ def test_emiles_cabin_request_exact_shape():
 def test_contract_files_served():
     for name in ("crew_data.json", "storm_forecast.json", "real_crew.json"):
         assert client.get(f"/data/{name}").status_code == 200
+
+
+def test_cabin_catalog_endpoint_equals_emiles_file():
+    import json
+    from server.build import ROOT
+    from server.build import diff as _diff
+    mine = client.get("/api/cabin/catalog").json()
+    his = json.loads((ROOT / "web/public/samples/cabin_catalog.json").read_text(encoding="utf-8"))
+    assert _diff(mine, his) == []
