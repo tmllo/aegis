@@ -15,9 +15,11 @@
 
 **What it does well, and what it doesn't:** It is good at changes in *behaviour*: oscillations, spikes, a signal that stops following its daily rhythm. It is weak on *slow, smooth drifts*: the forecast follows the drift, so the error stays small until the drift speeds up. In the simulated habitat it caught the thermal oscillation, missed the slow leak, and flagged the CO₂ scrubber fault **15 h after** the 3 mmHg limit. A plain level rule would have caught the CO₂ fault 21 h *before* the limit. That's why the product keeps the hard limit rules next to the model, and why the next version should combine the two (validated properly first).
 
+**v2 (what ships now):** the Ridge residual detector plus a level rule (raw value vs its normal median), both with their MSL-tuned settings, and an alarm when either fires. The strip shows the larger of the two scores, each divided by its own amber threshold (1.0 = amber). On SMAP (a second look, so indicative only) it catches more anomalies but raises more false alarms: F0.5 0.40. On the habitat it behaves exactly like v1, because the level threshold learned on MSL is far too high for a smooth cabin sensor.
+
 ---
 
-## The 5 hardest judge questions, with honest answers
+## The hardest judge questions, with honest answers
 
 **1. "SMAP and MSL are known to be flawed. Why should I trust these numbers?"**
 You're right to ask. Wu & Keogh (2021) showed that many anomalies in these datasets can be found with a one-line rule, that some labels are doubtful, and that point-adjusted scoring makes almost anything look good. So we (a) score event-wise with no point-adjust, (b) report against a trivial static baseline *and* a tuned static baseline, (c) tune on one spacecraft and test on the other, once. Under those rules a tuned one-line threshold actually beats our model on SMAP (0.52 vs 0.44 F0.5). We report that rather than claim state of the art. What the benchmark shows is that our pipeline is honest and transfers across spacecraft. It doesn't prove that ML beats rules.
@@ -33,3 +35,6 @@ Three reasons: we can explain it in one sentence, it runs in milliseconds on a l
 
 **5. "Does high CO₂ really cause the poor sleep you link it to?"**
 We don't claim it does. Elevated cabin CO₂ is a documented NASA concern linked to headaches and poor sleep on the ISS, and NASA-STD-3001 sets the 3 mmHg one-hour limit for that reason. In our simulation, the engineer's low-sleep flags happen to start three days after the planted CO₂ fault, and the app shows that as a "possible environmental cause", never a diagnosis. In a real mission it would be a prompt for the flight surgeon to look, not an answer.
+
+**6. "Why not just ML?"**
+Because the fair test said not to. When we tuned everything on one spacecraft and tested on another, a simple threshold rule beat our ML model on SMAP (F0.5 0.52 vs 0.44). The ML model catches what rules miss (oscillations, broken daily rhythms), and rules catch what it misses (slow drifts). So the product combines them: hard safety limits always on, plus a level rule and the residual model. Our v2 ensemble didn't beat the best single rule on the benchmark, and we report that too. The value of the model is the fault types it adds, not a bigger score.

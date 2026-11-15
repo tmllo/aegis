@@ -78,6 +78,30 @@ Built unattended on 2026-11-15 (about 19:56 to 20:40 local) while Tomas was away
 
 **Shadow check (printed by the export, not shipped):** the static 3σ baseline with its own frozen MSL config, run on the same stream, flags F3 at 11 Nov 12:00, **21 h before** the limit. It also catches F2 (4 Oct 06:00) and misses F1, with 0 false alarms. The two detectors complement each other: the forecast-residual model catches *changes in behaviour* (oscillation), and the static rule catches *slow level drift* (leak, scrubber). **We did not switch to it or combine them tonight.** Choosing the detector after seeing its results on the demo scenario would be tuning on the test. Next step: validate "residual OR static" as one detector, tuned on MSL, on data neither has seen.
 
+## v1 → v2: level + residual ensemble (deliberate, documented iteration, Tomas's call)
+
+**Root cause of v1's misses.** A one-step forecast-residual detector tracks slow drifts: the forecaster adapts to the new level, so the residual stays small, and the EWMA span of 30 adds lag on top. It suits abrupt or contextual faults (spikes, oscillations, a broken daily rhythm). A level detector suits slow drifts. This is a known property of the method, and v1 confirmed it twice: on SMAP a tuned static rule beat Ridge, and on the habitat the CO₂ ramp and the leak got past the model.
+
+| # | Decision | Taken | Rejected, and why |
+|---|---|---|---|
+| E-1 | Members | Level = the MSL-tuned static rule (**its tuned threshold z = 30**, min duration 1, gap 50; not 3σ). Residual = the v1 Ridge (L 60, span 30, amber 30, min duration 10, gap 50). **Configs unchanged, no new grid search** | Re-tuning the pair jointly: a new search after seeing SMAP would be more test-set reuse |
+| E-2 | Combination | Event = union of both members' events, overlapping events merged. `source` = level / residual / both | Voting (both must fire): it would lose the very drifts the level rule is there for |
+| E-3 | Habitat score | Per channel, max(level score / level amber, residual score / residual amber), so **1.0 = amber for both**; red = 2.0 (v1's red/amber ratio). `meta.min_duration_steps` = 1 (the shorter rule). Logged in `contracts/CHANGELOG.md`. Also added an optional `anomalies[].source` field | Keeping raw scores: two different scales in one strip |
+| E-4 | **Test-set reuse** | SMAP was already scored in v1, and v2 was designed *because* of those results. **The v2 SMAP numbers are a second look at the test set.** The v1 SMAP numbers stay the clean, pre-registered result. `meta.validation.protocol` in the JSON says so | Presenting v2's SMAP numbers as held-out |
+
+**v2 results.**
+
+| detector | MSL F0.5 | SMAP precision | SMAP recall | SMAP F0.5 | SMAP false alarms / 10k |
+|---|---|---|---|---|---|
+| v2 ensemble (second look) | 0.64 | 0.38 | 0.53 | **0.40** (CI 0.30–0.66) | 2.09 |
+| v1 Ridge (pre-registered) | 0.76 | 0.43 | 0.49 | **0.44** | 1.17 |
+| static, tuned threshold | 0.54 | 0.56 | 0.41 | **0.52** | 0.92 |
+| static 3σ | 0.33 | 0.22 | 0.41 | **0.25** | 5.16 |
+
+- v2 catches the most SMAP anomalies (36 of 68; 25 by both members, 8 by residual only, 3 by level only), but it also adds both members' false alarms (91 = 40 level + 51 residual). Precision drops, so **F0.5 falls below v1 and below the tuned static rule**. Paired CIs: v2 − v1 −0.21 to +0.04; v2 − tuned static −0.42 to +0.01; v2 − 3σ −0.06 to +0.40.
+- **Habitat: v2 changes nothing.** The level rule's MSL threshold (z = 30 on the raw value) never fires on the smooth simulated signal: CO₂ at 3.9 mmHg is only about z ≈ 11 above its baseline. MSL/SMAP channels are normalised and step-like with heavy tails, so a raw-value z threshold tuned there does not transfer to a smooth habitat sensor. The residual z transfers better, because it measures surprise rather than level. So: F1 caught 2 h after onset (residual), F2 missed, F3 flagged **15 h after** the 3 mmHg limit, 0 false alarms. Shipped anyway, per Tomas's rule (faults and thresholds untouched).
+- Lesson to say out loud: in this data, simple rules are strong, and **thresholds for level rules are sensor-specific**: they should come from each sensor's own engineering limits and noise, not from another spacecraft. The honest next step is a level rule set from the habitat's own limits (as the 3.0 mmHg rule already is), validated on fresh data.
+
 ## What changed in shared files
 - `contracts/CHANGELOG.md`: one v2 line. `contracts/DATA_CONTRACT.md`: one pointer line at the end. `storm_forecast.json` and `crew_data.json` untouched.
 - `ml/validate_contracts.py`: `check_habitat()` added; existing checks unchanged. The habitat file is now required in `web/public/data/`.
