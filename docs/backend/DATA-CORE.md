@@ -97,8 +97,8 @@ server/
 ## 8. Build order
 | Step | What | Who |
 |---|---|---|
-| S0 spine | `core/models.py`, `core/catalog.py`, `core/store.py`, `adapters/base.py`, the three catalog files populated from today's data | Claude (first, everything else imports it) |
-| S1 | `simcrew.py` + `osdr.py` adapters wrapping today's outputs, `views/contract_v1.py`, golden test: rebuilt files equal the current ones | Tomas terminal |
+| S0 spine | **Done (2026-11-15 03:20).** `core/records.py`, `core/catalog.py`, `core/store.py`, `adapters/` (simcrew, ml_forecast, osdr, isslive snapshot), `engine/scoring.py` + `engine/labs.py`, `views/contract_v1.py`, `build.py`. All 3 rebuilt files equal today's; 7 tests pass | Claude |
+| S1 | Commit `data/real/cmp.csv` + `cbc.csv` so the OSDR adapter reads the originals; make `ml/make_sample_data.py` read metric definitions from `server/catalog/metrics.yaml`; point `ml/crew_flags.py` at `server/engine/scoring.py` | Tomas terminal |
 | S2 | `donki.py`, `swpc.py`, `engine/forecast.py`, live split | Claude |
 | S3 | `isslive.py`, `hapi.py`, `engine/dose.py` | Tomas terminal |
 | S4 | `api/app.py` (generic + now views, static app), `api/ws.py`, `jobs/scheduler.py`, Containerfile | Tomas terminal |

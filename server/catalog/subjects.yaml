@@ -1,0 +1,80 @@
+# Single source of truth. Edit here, rebuild with: python -m server.build
+# Everything that is measured: crew (simulated and real), habitats, the Sun. Crew inherit habitat data through located_in.
+subjects:
+- id: c1
+  kind: crew_sim
+  label: Cmdr. Ana Silva
+  role: Commander
+  age: 44
+  located_in: moon_base
+  real: false
+- id: c2
+  kind: crew_sim
+  label: Eng. Kenji Mori
+  role: Flight Engineer
+  age: 38
+  located_in: moon_base
+  real: false
+- id: c3
+  kind: crew_sim
+  label: Dr. Léa Martin
+  role: Mission Scientist
+  age: 35
+  located_in: moon_base
+  real: false
+- id: i4-c001
+  kind: crew_real
+  label: Inspiration4 crew C001
+  study_id: C001
+  mission: Inspiration4
+  real: true
+- id: i4-c002
+  kind: crew_real
+  label: Inspiration4 crew C002
+  study_id: C002
+  mission: Inspiration4
+  real: true
+- id: i4-c003
+  kind: crew_real
+  label: Inspiration4 crew C003
+  study_id: C003
+  mission: Inspiration4
+  real: true
+- id: i4-c004
+  kind: crew_real
+  label: Inspiration4 crew C004
+  study_id: C004
+  mission: Inspiration4
+  real: true
+- id: iss
+  kind: habitat
+  label: ISS
+  environment: iss
+  real: true
+  assumed_dose_mSv_day: 0.5
+  assumed_dose_basis: hand-set working value (PROJECT_CONTEXT section 10)
+- id: moon_base
+  kind: habitat
+  label: Lunar surface
+  environment: moon
+  real: false
+  assumed_dose_mSv_day: 1.4
+  assumed_dose_basis: hand-set working value (PROJECT_CONTEXT section 10)
+- id: mars_transit
+  kind: habitat
+  label: Mars transit
+  environment: transit
+  real: false
+  assumed_dose_mSv_day: 1.8
+  assumed_dose_basis: hand-set working value (PROJECT_CONTEXT section 10)
+- id: mars_surface
+  kind: habitat
+  label: Mars surface
+  environment: mars
+  real: false
+  assumed_dose_mSv_day: 0.65
+  assumed_dose_basis: hand-set working value (PROJECT_CONTEXT section 10)
+- id: sun
+  kind: star
+  label: Sun
+  real: true

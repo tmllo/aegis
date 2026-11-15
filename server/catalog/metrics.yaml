@@ -1,0 +1,443 @@
+# Single source of truth. Edit here, rebuild with: python -m server.build
+# Every measurable thing: unit, hazard, body region, alert rule, explanation, actions. contract_key = name in the v1 JSON files.
+metrics:
+- key: vital.hr
+  contract_key: hr
+  label: Resting heart rate
+  unit: bpm
+  kind: crew_daily
+  hazard: gravity
+  body_region: heart
+  absolute_red:
+    min: 40
+    max: 110
+  rule:
+    type: baseline_z
+    low_side_only: false
+    sd_floor: 3
+  explain: Fluid shifts toward the head and less work against gravity change how the heart works in space. A resting rate
+    that drifts from your normal can signal fatigue, dehydration, illness or cardiovascular deconditioning.
+  how_to_measure: Seated, after 5 minutes of rest, first thing in the morning. Use the wrist monitor or count your pulse for
+    60 seconds.
+  actions:
+    amber: Re-measure tonight at rest. Check hydration and sleep. Avoid heavy exercise until it settles.
+    red: Stop strenuous activity, re-measure in 15 min, and contact the flight surgeon.
+- key: vital.bp_sys
+  contract_key: bp_sys
+  label: Systolic blood pressure
+  unit: mmHg
+  kind: crew_daily
+  hazard: gravity
+  body_region: heart
+  absolute_red:
+    min: 85
+    max: 150
+  rule:
+    type: baseline_z
+    low_side_only: false
+    sd_floor: 4
+  explain: Blood pressure changes as fluids redistribute in microgravity and after returning to gravity. A sustained rise
+    above your own baseline deserves attention.
+  how_to_measure: Cuff on the upper arm, seated and still, arm at heart level. Take two readings 1 minute apart and log the
+    average.
+  actions:
+    amber: Repeat the measurement tonight. Review salt and fluid intake.
+    red: Repeat now. If it's still high, contact the flight surgeon.
+- key: vital.bp_dia
+  contract_key: bp_dia
+  label: Diastolic blood pressure
+  unit: mmHg
+  kind: crew_daily
+  hazard: gravity
+  body_region: heart
+  absolute_red:
+    min: 50
+    max: 95
+  rule:
+    type: baseline_z
+    low_side_only: false
+    sd_floor: 3
+  explain: The pressure in your arteries between heartbeats. It's read together with systolic pressure.
+  how_to_measure: Same reading as systolic.
+  actions:
+    amber: Repeat the measurement tonight.
+    red: Contact the flight surgeon.
+- key: lab.glucose
+  contract_key: glucose
+  label: Blood glucose (fasting)
+  unit: mg/dL
+  kind: crew_daily
+  hazard: gravity
+  body_region: blood
+  absolute_red:
+    min: 60
+    max: 180
+  rule:
+    type: baseline_z
+    low_side_only: false
+    sd_floor: 7
+  explain: Spaceflight can reduce insulin sensitivity. Tracking fasting glucose helps spot metabolic changes and diet issues
+    early.
+  how_to_measure: Finger-prick meter, before breakfast.
+  actions:
+    amber: Review meals and exercise for the last 2 days. Re-test tomorrow morning.
+    red: 'If below 60: take fast sugar now and re-test in 15 min. If above 180: contact the flight surgeon.'
+- key: vital.temp
+  contract_key: temp
+  label: Body temperature
+  unit: °C
+  kind: crew_daily
+  hazard: closed_environment
+  body_region: whole_body
+  absolute_red:
+    min: 35.5
+    max: 38.3
+  rule:
+    type: baseline_z
+    low_side_only: false
+    sd_floor: 0.15
+  explain: Core temperature tends to run slightly higher in space. A jump above your baseline can be an early sign of infection,
+    since the immune system changes in flight.
+  how_to_measure: Thermometer under the tongue or in the ear, at rest.
+  actions:
+    amber: Re-measure in 4 hours and watch for symptoms.
+    red: Isolate if possible, hydrate, and contact the flight surgeon.
+- key: self.sleep_h
+  contract_key: sleep_h
+  label: Sleep
+  unit: h
+  kind: crew_daily
+  hazard: isolation
+  body_region: brain
+  absolute_red:
+    min: 4.0
+    max: 24
+  rule:
+    type: baseline_z
+    low_side_only: true
+    sd_floor: 0.4
+  explain: Light-dark cycles, noise and workload disrupt sleep in space. Chronic short sleep hurts mood, reaction time and
+    mission safety.
+  how_to_measure: Log the hours slept, or sync your wearable each morning.
+  actions:
+    amber: 'Protect tonight''s sleep window: dim lights and no screens 1 h before bed. Ask for a lighter schedule tomorrow
+      if needed.'
+    red: Flag to the commander and flight surgeon. Avoid safety-critical tasks.
+- key: self.mood
+  contract_key: mood
+  label: Mood (1–5)
+  unit: /5
+  kind: crew_daily
+  hazard: isolation
+  body_region: brain
+  absolute_red:
+    min: 1.5
+    max: 5
+  rule:
+    type: baseline_z
+    low_side_only: true
+    sd_floor: 0.6
+  explain: Isolation and confinement are among the five hazards of spaceflight. A downward trend in self-rated mood is an
+    early signal worth acting on.
+  how_to_measure: 'Daily self-rating: 1 = very low, 5 = great.'
+  actions:
+    amber: Schedule a private call home or a crew social activity. Try the guided breathing module.
+    red: Book a private conference with the flight psychologist.
+- key: self.exercise_min
+  contract_key: exercise_min
+  label: Exercise
+  unit: min
+  kind: crew_daily
+  hazard: gravity
+  body_region: bones
+  absolute_red:
+    min: 30
+    max: 600
+  rule:
+    type: baseline_z
+    low_side_only: true
+    sd_floor: 12
+  explain: Without gravity, bones and muscles weaken quickly. Daily resistance and aerobic exercise is the main countermeasure.
+  how_to_measure: Logged automatically by the exercise devices, or entered manually.
+  actions:
+    amber: Make up the missed volume over the next 2 days, prioritising resistance work.
+    red: 'Talk to the strength coach today: bone loss risk is rising.'
+- key: est.bone_loss
+  contract_key: bone_loss_pct
+  label: Estimated bone loss
+  unit: '%'
+  kind: crew_daily
+  hazard: gravity
+  body_region: bones
+  absolute_red:
+    min: -100
+    max: 5
+  rule:
+    type: absolute
+    amber_above: 3
+  explain: An estimate of cumulative loss in bone mineral density at weight-bearing sites, driven by mission days and exercise
+    compliance.
+  how_to_measure: Estimated from mission day and exercise logs. Confirmed with scans when available.
+  actions:
+    amber: Increase resistance exercise and check calcium and vitamin D intake.
+    red: Flight surgeon review of countermeasures.
+- key: dose.daily
+  contract_key: dose_mSv_day
+  label: Radiation dose (daily)
+  unit: mSv
+  kind: crew_daily
+  hazard: radiation
+  body_region: whole_body
+  absolute_red:
+    min: 0
+    max: 10
+  rule:
+    type: absolute
+    amber_if_above_x_habitat_rate: 3
+  explain: Measured by your personal dosimeter. It jumps during solar radiation storms.
+  how_to_measure: Automatic from your personal dosimeter.
+  actions:
+    amber: Limit time outside shielded areas today.
+    red: Go to the storm shelter now. Postpone all EVAs.
+- key: dose.cumulative
+  contract_key: dose_mSv_cum
+  label: Radiation dose (mission total)
+  unit: mSv
+  kind: crew_daily
+  hazard: radiation
+  body_region: whole_body
+  absolute_red:
+    min: 0
+    max: 600
+  rule:
+    type: absolute
+    amber_if_above_fraction_of_career_limit: 0.5
+  explain: Your total dose so far, compared against NASA's career limit.
+  how_to_measure: Sum of your daily dosimeter readings.
+  actions:
+    amber: Review the EVA plan with the flight surgeon.
+    red: 'Career limit reached: no further exposure allowed.'
+- key: lab.i4.lymphocytes
+  contract_key: lymphocytes
+  label: Absolute lymphocytes
+  unit: cells/µL
+  kind: lab_draw
+  panel: cbc
+  source_column: absolute_lymphocytes_value_cells_per_microliter
+  hazard: multiple
+  body_region: blood
+  rule:
+    type: pre_flight_baseline
+    far_z: 2
+- key: lab.i4.neutrophils
+  contract_key: neutrophils
+  label: Absolute neutrophils
+  unit: cells/µL
+  kind: lab_draw
+  panel: cbc
+  source_column: absolute_neutrophils_value_cells_per_microliter
+  hazard: multiple
+  body_region: blood
+  rule:
+    type: pre_flight_baseline
+    far_z: 2
+- key: lab.i4.wbc
+  contract_key: wbc
+  label: White blood cells
+  unit: 10³/µL
+  kind: lab_draw
+  panel: cbc
+  source_column: white_blood_cell_count_value_thousand_per_microliter
+  hazard: multiple
+  body_region: blood
+  rule:
+    type: pre_flight_baseline
+    far_z: 2
+- key: lab.i4.glucose
+  contract_key: glucose
+  label: Glucose
+  unit: mg/dL
+  kind: lab_draw
+  panel: cmp
+  source_column: glucose_value_milligram_per_deciliter
+  hazard: multiple
+  body_region: blood
+  rule:
+    type: pre_flight_baseline
+    far_z: 2
+- key: lab.i4.potassium
+  contract_key: potassium
+  label: Potassium
+  unit: mmol/L
+  kind: lab_draw
+  panel: cmp
+  source_column: potassium_value_millimol_per_liter
+  hazard: multiple
+  body_region: blood
+  rule:
+    type: pre_flight_baseline
+    far_z: 2
+- key: lab.i4.platelets
+  contract_key: platelets
+  label: Platelets
+  unit: 10³/µL
+  kind: lab_draw
+  panel: cbc
+  source_column: platelet_count_value_thousand_per_microliter
+  hazard: multiple
+  body_region: blood
+  rule:
+    type: pre_flight_baseline
+    far_z: 2
+- key: lab.i4.hemoglobin
+  contract_key: hemoglobin
+  label: Hemoglobin
+  unit: g/dL
+  kind: lab_draw
+  panel: cbc
+  source_column: hemoglobin_value_percent
+  hazard: multiple
+  body_region: blood
+  rule:
+    type: pre_flight_baseline
+    far_z: 2
+  unit_note: The source column is named hemoglobin_value_percent. The numbers and the printed interval match g/dL, not percent.
+    Hematocrit is the percent column and is not used here.
+- key: lab.i4.calcium
+  contract_key: calcium
+  label: Calcium
+  unit: mg/dL
+  kind: lab_draw
+  panel: cmp
+  source_column: calcium_value_milligram_per_deciliter
+  hazard: multiple
+  body_region: blood
+  rule:
+    type: pre_flight_baseline
+    far_z: 2
+- key: cabin.pressure
+  label: Cabin pressure (US Lab)
+  unit: mmHg
+  kind: habitat_telemetry
+  source_item: USLAB000058
+  hazard: closed_environment
+  body_region: whole_body
+  rule:
+    type: display_only
+    basis: no sourced limit yet
+- key: cabin.temp
+  label: Cabin temperature (US Lab)
+  unit: degC
+  kind: habitat_telemetry
+  source_item: USLAB000059
+  hazard: closed_environment
+  body_region: whole_body
+  rule:
+    type: display_only
+    basis: no sourced limit yet
+- key: cabin.ppo2
+  label: Oxygen partial pressure (US Lab)
+  unit: mmHg
+  kind: habitat_telemetry
+  source_item: USLAB000053
+  hazard: closed_environment
+  body_region: whole_body
+  rule:
+    type: display_only
+    basis: no sourced limit yet
+- key: cabin.ppco2
+  label: CO2 partial pressure (US Lab)
+  unit: mmHg
+  kind: habitat_telemetry
+  source_item: USLAB000055
+  hazard: closed_environment
+  body_region: brain
+  rule:
+    type: absolute
+    amber_above: 3.0
+    basis: 'NASA limit: 1-hour average at or below 3 mmHg (NASA OCHMO CO2 technical brief)'
+- key: cabin.ppo2_node3
+  label: Oxygen partial pressure (Node 3)
+  unit: mmHg
+  kind: habitat_telemetry
+  source_item: NODE3000001
+  hazard: closed_environment
+  body_region: whole_body
+  rule:
+    type: display_only
+    basis: no sourced limit yet
+- key: cabin.ppn2_node3
+  label: Nitrogen partial pressure (Node 3)
+  unit: mmHg
+  kind: habitat_telemetry
+  source_item: NODE3000002
+  hazard: closed_environment
+  body_region: whole_body
+  rule:
+    type: display_only
+    basis: no sourced limit yet
+- key: cabin.ppco2_node3
+  label: CO2 partial pressure (Node 3)
+  unit: mmHg
+  kind: habitat_telemetry
+  source_item: NODE3000003
+  hazard: closed_environment
+  body_region: brain
+  rule:
+    type: absolute
+    amber_above: 3.0
+    basis: 'NASA limit: 1-hour average at or below 3 mmHg (NASA OCHMO CO2 technical brief)'
+- key: cabin.urine_tank
+  label: Urine tank
+  unit: '%'
+  kind: habitat_telemetry
+  source_item: NODE3000005
+  hazard: closed_environment
+  body_region: whole_body
+  rule:
+    type: display_only
+    basis: no sourced limit yet
+- key: cabin.waste_water
+  label: Waste water tank
+  unit: '%'
+  kind: habitat_telemetry
+  source_item: NODE3000008
+  hazard: closed_environment
+  body_region: whole_body
+  rule:
+    type: display_only
+    basis: no sourced limit yet
+- key: cabin.water_clean
+  label: Clean water tank
+  unit: '%'
+  kind: habitat_telemetry
+  source_item: NODE3000009
+  hazard: closed_environment
+  body_region: whole_body
+  rule:
+    type: display_only
+    basis: no sourced limit yet
+- key: sw.goes_p10
+  label: GOES proton flux above 10 MeV
+  unit: pfu
+  kind: environment
+  hazard: radiation
+  body_region: whole_body
+  rule:
+    type: display_only
+- key: sw.kp
+  label: Planetary K index
+  unit: index
+  kind: environment
+  hazard: radiation
+  body_region: whole_body
+  rule:
+    type: display_only
+- key: dose.habitat_rate
+  label: Measured habitat dose rate
+  unit: mSv/d
+  kind: environment
+  hazard: radiation
+  body_region: whole_body
+  rule:
+    type: display_only

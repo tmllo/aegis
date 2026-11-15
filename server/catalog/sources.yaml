@@ -1,0 +1,124 @@
+# Single source of truth. Edit here, rebuild with: python -m server.build
+# Every origin of data: realness, adapter, cadence, offline fallback, footer credit.
+sources:
+- id: sim_crew
+  label: Simulated crew generator
+  org: e^x (ml/make_sample_data.py)
+  real: false
+  adapter: simcrew
+  cadence: on build
+  input: web/public/data/crew_data.json
+  credit: Simulated crew data, not real astronaut records
+- id: ml_forecast
+  label: Storm model v1 held-out predictions
+  org: e^x (ml/run_test_and_export.py) on NASA CCMC DONKI
+  real: true
+  adapter: ml_forecast
+  cadence: on build
+  input: web/public/data/storm_forecast.json
+  credit: 'Space weather data: NASA CCMC DONKI'
+- id: osdr
+  label: NASA OSDR Inspiration4 blood panels
+  org: NASA Open Science Data Repository
+  real: true
+  adapter: osdr
+  cadence: static
+  input: data/real/cmp.csv (OSD-575), data/real/cbc.csv (OSD-569); fallback web/public/data/real_crew.json
+  url: https://osdr.nasa.gov/bio/repo/data/studies/OSD-575
+  credit: 'Inspiration4 blood panels: NASA OSDR OSD-575 and OSD-569'
+  study:
+    mission: Inspiration4
+    schema_version: 1
+    source_label: NASA OSDR OSD-575
+    note: De-identified published CBC and chemistry for Inspiration4 crew C001–C004. Not the simulated AEGIS crew, and not
+      an input to the live check-in scorer. Not medical advice. n = 4. Pre-flight and post-flight draws only; no in-flight
+      sample. Baselines use 2 or 3 pre-flight draws.
+    day_meaning: L timepoints are days before launch and are stored negative. R timepoints are days after return and are stored
+      positive. The mission sits between L-3 and R+1. This file has no in-flight sample, so day is not one continuous mission
+      clock.
+    baseline_rule: Mean of the available L timepoints for that person and analyte. C003 CBC uses L-44 and L-3 only.
+    far_rule: far_from_baseline is true only for a post-flight value that is inside the lab range printed on that draw, is
+      not an R+45 sample-handling artefact, and has |z| >= 2 with z = (value - pre-flight mean) / pre-flight sample sd. The
+      sd uses n - 1 and has no floor. far_from_baseline is null for pre-flight draws, excluded rows, and artefacts.
+    artefact_rule: 'At R+45 only: glucose under 50 mg/dL, or potassium over 5.5 mmol/L. Treated as sample handling, not biology.
+      Percent change is still reported.'
+  timepoints:
+  - id: L-92
+    phase: pre
+    day: -92
+  - id: L-44
+    phase: pre
+    day: -44
+  - id: L-3
+    phase: pre
+    day: -3
+  - id: R+1
+    phase: post
+    day: 1
+  - id: R+45
+    phase: post
+    day: 45
+  - id: R+82
+    phase: post
+    day: 82
+  - id: R+194
+    phase: post
+    day: 194
+  synthetic_comparison:
+    stated_mg_dl: 5.0
+    realized_mg_dl:
+    - crew: c1
+      sd: 5.11
+    - crew: c2
+      sd: 4.85
+    - crew: c3
+      sd: 4.83
+    note: Stated and realized day-to-day sds from ml/results/synthetic_crew.md. Inspiration4 sds are weeks-apart pre-flight
+      draws, not day-to-day.
+- id: isslive
+  label: ISS Live! public telemetry
+  org: NASA via Lightstreamer
+  real: true
+  adapter: isslive
+  cadence: stream
+  url: https://push.lightstreamer.com
+  adapter_set: ISSLIVE
+  fallback: docs/research/samples/isslive_lightstreamer_eclss_snapshot.json
+  credit: 'ISS telemetry: NASA ISS Live!'
+- id: donki
+  label: NASA CCMC DONKI
+  org: NASA CCMC
+  real: true
+  adapter: donki
+  cadence: 15 min
+  url: https://kauai.ccmc.gsfc.nasa.gov/DONKI/
+  fallback: docs/research/samples/donki_ccmc_FLR.json
+  credit: 'Space weather data: NASA CCMC DONKI'
+  status: planned (S2)
+- id: swpc
+  label: NOAA SWPC GOES feeds
+  org: NOAA Space Weather Prediction Center
+  real: true
+  adapter: swpc
+  cadence: 5 min
+  url: https://services.swpc.noaa.gov/json/
+  fallback: docs/research/samples/swpc_goes_integral_protons_6hour.json
+  credit: 'GOES data: NOAA SWPC'
+  status: planned (S2)
+- id: hapi
+  label: CCMC iSWA HAPI (Curiosity RAD, LRO CRaTER)
+  org: NASA CCMC
+  real: true
+  adapter: hapi
+  cadence: daily
+  url: https://iswa.gsfc.nasa.gov/IswaSystemWebApp/hapi/
+  fallback: docs/research/samples/iswa_hapi_msl_rad_dosimetry_2026-11.csv
+  credit: 'Mars and Moon dose: NASA CCMC iSWA (MSL RAD, LRO CRaTER)'
+  status: planned (S3)
+- id: checkin
+  label: Astronaut check-in
+  org: e^x app
+  real: false
+  adapter: checkin
+  cadence: on input
+  status: planned (S5)

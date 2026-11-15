@@ -1,0 +1,35 @@
+# Single source of truth. Edit here, rebuild with: python -m server.build
+# Model cards. Headline numbers are copied from the export, never recomputed here.
+models:
+- id: storm_v1
+  kind: storm_forecast
+  name: logistic_C10
+  artifact: ml/models/v1.pkl
+  horizon_hours: 72
+  train_period:
+  - '2010-01-01'
+  - '2023-12-31'
+  test_period:
+  - '2024-01-01'
+  - '2026-11-15'
+  thresholds:
+    watch: 0.030784668546445
+    warning: 0.1588648007726645
+  metrics_test:
+    n_flares: 1528
+    n_storms: 17
+    hit_rate: 0.941176
+    false_alarms_per_month: 1.0
+    median_lead_time_h: 3.83
+    brier_skill_vs_climatology: 0.412519
+  feature_importance:
+  - feature: log10_cme_speed
+    importance: 0.009011
+  - feature: longitude_deg
+    importance: 0.003473
+  - feature: log10_class_flux
+    importance: 0.003072
+  - feature: has_linked_cme
+    importance: 0.002953
+  data_credit: NASA CCMC DONKI
+  card: ml/results/DECISIONS.md, ml/results/scorecard_v1.md
