@@ -1,0 +1,477 @@
+/* e^x clean theme (e7, 15 Nov): one token set, light and dark. Loaded last.
+   canvas near-white · white cards with a hairline · navy ink · one blue accent (interaction only) ·
+   green / indigo / amber / red for status only. The 3D object keeps a deep-navy stage in both themes. */
+
+/* ---- tokens: light */
+:root .st.ds[data-theme='light'] {
+  color-scheme: light;
+  --canvas: #f3f4f7;
+  --card: #ffffff;
+  --card-2: #eceef2;
+  --line: rgb(22 26 43 / 0.1);
+  --line-2: rgb(22 26 43 / 0.22);
+  --ink: #161a2b;
+  --ink-2: #474e66;
+  --ink-3: #636a82;
+  --accent: #2563eb;
+  --accent-soft: rgb(37 99 235 / 0.1);
+  --calm: #15803d;
+  --watch: #b45309;
+  --act: #d92d20;
+  --adv: #4f46e5;
+  --shadow-1: 0 1px 2px rgb(22 26 43 / 0.06);
+  --shadow-2: 0 8px 24px rgb(22 26 43 / 0.1), 0 1px 2px rgb(22 26 43 / 0.06);
+}
+/* ---- tokens: dark (also the stage that holds the body, the sun and the Earth) */
+:root .st.ds[data-theme='dark'],
+:root .st.ds .fr-object:has(canvas),
+:root .st.ds .fr-object:has(.fc-svg),
+:root .st.ds .fr-object:has(.fr-replay) {
+  color-scheme: dark;
+  --canvas: #0b0f1e;
+  --card: #141a2e;
+  --card-2: #1c2338;
+  --line: rgb(255 255 255 / 0.09);
+  --line-2: rgb(255 255 255 / 0.2);
+  --ink: #f4f6fb;
+  --ink-2: #b4bcd2;
+  --ink-3: #8a93ad;
+  --accent: #8fb0ff;
+  --accent-soft: rgb(143 176 255 / 0.14);
+  --calm: #4fd67a;
+  --watch: #f5b83d;
+  --act: #ff6b6b;
+  --adv: #9fb0ff;
+  --shadow-1: 0 1px 2px rgb(0 0 0 / 0.3);
+  --shadow-2: 0 10px 28px rgb(0 0 0 / 0.45);
+}
+/* ---- aliases the older rules read (resolved per element, so repeated for the stage) */
+:root .st.ds[data-theme],
+:root .st.ds .fr-object:has(canvas),
+:root .st.ds .fr-object:has(.fc-svg),
+:root .st.ds .fr-object:has(.fr-replay) {
+  --accent-fill: #2563eb;
+  --sky-0: var(--canvas);
+  --sky-1: var(--card);
+  --sky-2: var(--card-2);
+  --sky: var(--canvas);
+  --surface: var(--card);
+  --surface-hi: var(--card-2);
+  --panel: var(--card);
+  --panel-solid: var(--card);
+  --bg: var(--canvas);
+  --bg2: var(--card);
+  --line2: var(--line-2);
+  --text: var(--ink);
+  --dim: var(--ink-2);
+  --faint: var(--ink-3);
+  --cg-accent: var(--accent);
+  --blue: var(--accent);
+  --green: var(--calm);
+  --amber: var(--watch);
+  --red: var(--act);
+  color: var(--ink);
+}
+html:has(.st[data-theme='light']),
+html:has(.st[data-theme='light']) body {
+  background: #f3f4f7;
+}
+html:has(.st[data-theme='dark']),
+html:has(.st[data-theme='dark']) body {
+  background: #0b0f1e;
+}
+
+/* ---- screen: no bezel */
+:root .st.ds[data-theme] {
+  background: var(--canvas);
+  margin: 0;
+  height: 100dvh;
+  border-radius: 0;
+  box-shadow: none;
+  -webkit-font-smoothing: antialiased;
+}
+:root .st.ds :focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+/* ---- the stage: one deep-navy viewport for the 3D object */
+:root .st.ds .fr-object:has(canvas),
+:root .st.ds .fr-object:has(.fc-svg),
+:root .st.ds .fr-object:has(.fr-replay) {
+  --canvas: #0a0f2a;
+  --sky: #0a0f2a;
+  --sky-0: #0a0f2a;
+  background: #0a0f2a;
+  border-radius: 24px;
+  margin: 8px 0 16px;
+  box-shadow: var(--shadow-1);
+}
+:root .st.ds[data-theme='dark'] .fr-object:has(canvas),
+:root .st.ds[data-theme='dark'] .fr-object:has(.fc-svg),
+:root .st.ds[data-theme='dark'] .fr-object:has(.fr-replay) {
+  border: 1px solid rgb(255 255 255 / 0.08);
+}
+
+/* ---- type: thin, dark, readable */
+:root .st.ds .fr-title h1 {
+  font-size: 28px;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+:root .st.ds .fr-title p,
+:root .st.ds .fr-cap {
+  color: var(--ink-3);
+}
+:root .st.ds .fr-cap {
+  font-size: 13px;
+}
+:root .st.ds .fr-v-t b,
+:root .st.ds .fr-bar-v {
+  font-weight: 300;
+  font-variant-numeric: tabular-nums;
+}
+:root .st.ds .ds-brand {
+  color: var(--ink);
+}
+
+/* ---- buttons */
+:root .st.ds .ds-btn {
+  border-radius: 16px;
+  padding: 0 28px;
+  font-size: 16px;
+  transition: background-color 180ms ease-out, border-color 180ms ease-out, box-shadow 180ms ease-out, transform 120ms ease-out;
+}
+:root .st.ds .ds-btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+:root .st.ds .ds-btn.is-primary {
+  background: var(--accent-fill);
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 1px 2px rgb(37 99 235 / 0.35), inset 0 1px 0 rgb(255 255 255 / 0.18);
+}
+:root .st.ds .ds-btn.is-primary:hover:not(:disabled) {
+  background: #1d4fd7;
+}
+:root .st.ds .ds-btn.is-secondary {
+  background: var(--card);
+  color: var(--ink);
+  border-color: var(--line-2);
+  box-shadow: var(--shadow-1);
+}
+:root .st.ds .ds-btn.is-secondary:hover:not(:disabled) {
+  background: var(--card-2);
+  border-color: var(--line-2);
+}
+:root .st.ds .ds-btn.is-danger {
+  background: #d92d20;
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 1px 2px rgb(217 45 32 / 0.35);
+}
+:root .st.ds .ds-btn.is-danger:hover:not(:disabled) {
+  background: #b9251a;
+}
+
+/* ---- menu, toasts */
+:root .st.ds .ds-menu-pop,
+:root .st.ds .st-toast,
+:root .st.ds .st-demo {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: var(--shadow-2);
+  color: var(--ink);
+}
+
+/* ---- left list: quiet rows, the selected one lifts */
+:root .st.ds .fr-left {
+  gap: 4px;
+}
+:root .st.ds .fr-check {
+  padding: 10px 12px;
+  border-radius: 14px;
+  margin-left: -12px;
+  width: calc(100% + 12px);
+  transition: background-color 180ms ease-out, box-shadow 180ms ease-out;
+}
+:root .st.ds button.fr-check:hover {
+  background: var(--card-2);
+}
+:root .st.ds .fr-check.is-on {
+  background: var(--card);
+  box-shadow: var(--shadow-1), 0 0 0 1px var(--line);
+}
+:root .st.ds button.fr-check:hover .fr-check-t b {
+  text-decoration: none;
+}
+:root .st.ds .fr-check-t b {
+  font-weight: 500;
+}
+:root .st.ds .fr-check-mark {
+  background: var(--card-2);
+}
+:root .st.ds .fr-check-mark.is-amber {
+  background: color-mix(in srgb, var(--watch) 16%, transparent);
+}
+:root .st.ds .fr-check-mark.is-red {
+  background: color-mix(in srgb, var(--act) 16%, transparent);
+}
+:root .st.ds .fr-check.is-on .fr-check-mark {
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+:root .st.ds .fr-check-mark.is-plain {
+  background: transparent;
+  border-color: var(--line-2);
+  color: var(--ink-3);
+}
+:root .st.ds .fr-check.is-on .fr-check-mark.is-plain {
+  background: var(--accent-fill);
+  border-color: transparent;
+  color: #fff;
+  box-shadow: none;
+}
+
+/* ---- right column: reading cards */
+:root .st.ds .fr-right {
+  gap: 12px;
+}
+:root .st.ds .fr-vital,
+:root .st.ds button.fr-vital:hover,
+:root .st.ds .fr-vital.is-on {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 14px 16px;
+  gap: 10px;
+  box-shadow: var(--shadow-1);
+}
+:root .st.ds button.fr-vital:hover {
+  border-color: var(--line-2);
+}
+:root .st.ds .fr-vital.is-on {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent), var(--shadow-1);
+}
+:root .st.ds .fr-v-icon {
+  border: 0;
+  background: var(--card-2);
+  color: var(--ink-2);
+}
+:root .st.ds .fr-v-icon.is-amber {
+  background: color-mix(in srgb, var(--watch) 14%, transparent);
+  color: var(--watch);
+}
+:root .st.ds .fr-v-icon.is-red {
+  background: color-mix(in srgb, var(--act) 14%, transparent);
+  color: var(--act);
+}
+:root .st.ds .fr-v-band {
+  fill: var(--accent-soft);
+}
+:root .st.ds .fr-v-bar {
+  fill: color-mix(in srgb, var(--ink-3) 45%, transparent);
+}
+:root .st.ds .fr-v-bar.is-today {
+  fill: var(--ink);
+}
+:root .st.ds .fr-v-bar.is-amber {
+  fill: var(--watch);
+}
+:root .st.ds .fr-v-bar.is-red {
+  fill: var(--act);
+}
+:root .st.ds .fr-bar-track {
+  background: var(--card-2);
+  border-radius: 99px;
+  overflow: hidden;
+}
+:root .st.ds .fr-v-range {
+  background: radial-gradient(circle, var(--line-2) 1px, transparent 1.5px) 0 50% / 6px 6px repeat-x;
+}
+
+/* ---- dock: a floating bar */
+:root .st.ds .fr-dock {
+  bottom: 16px;
+  padding: 6px;
+  gap: 2px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  clip-path: none;
+  box-shadow: var(--shadow-2);
+}
+:root .st.ds .fr-dock a {
+  min-width: 78px;
+  padding: 8px 8px 9px;
+  border-radius: 18px;
+  font-size: 13px;
+  color: var(--ink-3);
+  transition: color 180ms ease-out, background-color 180ms ease-out;
+}
+:root .st.ds .fr-dock a:hover {
+  color: var(--ink);
+  background: var(--card-2);
+}
+:root .st.ds .fr-dock a.is-on {
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+:root .st.ds .fr-dock a.is-on::after {
+  display: none;
+}
+:root .st.ds .fr-dock-i,
+:root .st.ds .fr-dock-i svg:first-child {
+  width: 26px;
+  height: 26px;
+}
+:root .st.ds .fr-dock a.is-on .fr-dock-i svg:first-child {
+  color: var(--accent);
+}
+
+/* ---- choices: segments, scales, chips, steppers, fields */
+:root .st.ds .fr-seg {
+  padding: 4px;
+  gap: 2px;
+  background: var(--card-2);
+  border-radius: 18px;
+}
+:root .st.ds .fr-seg button {
+  min-height: 56px;
+  min-width: 104px;
+  border: 0;
+  border-radius: 14px;
+  color: var(--ink-2);
+  transition: background-color 180ms ease-out, color 180ms ease-out, box-shadow 180ms ease-out;
+}
+:root .st.ds .fr-seg button:hover {
+  background: transparent;
+  color: var(--ink);
+}
+:root .st.ds .fr-seg button.is-on {
+  background: var(--card);
+  color: var(--ink);
+  box-shadow: var(--shadow-1), 0 0 0 1px var(--line);
+}
+:root .st.ds .ds-scale button,
+:root .st.ds .ds-chips button,
+:root .st.ds .ds-step,
+:root .st.ds .mi-q-opts button {
+  background: var(--card);
+  border: 1px solid var(--line-2);
+  border-radius: 16px;
+  color: var(--ink);
+  box-shadow: var(--shadow-1);
+  transition: background-color 180ms ease-out, border-color 180ms ease-out, color 180ms ease-out, transform 120ms ease-out;
+}
+:root .st.ds .ds-scale button:hover,
+:root .st.ds .ds-chips button:hover,
+:root .st.ds .ds-step:hover,
+:root .st.ds .mi-q-opts button:hover {
+  background: var(--card-2);
+}
+:root .st.ds .ds-scale button:active,
+:root .st.ds .ds-chips button:active,
+:root .st.ds .ds-step:active,
+:root .st.ds .mi-q-opts button:active {
+  transform: scale(0.97);
+}
+:root .st.ds .ds-scale button.is-on,
+:root .st.ds .ds-chips button.is-on,
+:root .st.ds .mi-q-opts button.is-on {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+:root .st.ds .ds-scale button.is-on b {
+  color: var(--accent);
+}
+:root .st.ds .ds-range {
+  accent-color: var(--accent-fill);
+}
+:root .st.ds .fr-soap textarea,
+:root .st.ds .ds-text,
+:root .st.ds .mt-in input,
+:root .st.ds .mt-key {
+  background: var(--card);
+  border: 1px solid var(--line-2);
+  border-radius: 14px;
+  color: var(--ink);
+}
+:root .st.ds .fr-loop li.is-now {
+  background: var(--accent-soft);
+  box-shadow: inset 0 -3px 0 var(--accent);
+}
+:root .st.ds .mt-msg {
+  border-radius: 16px;
+  border-color: var(--line);
+  background: var(--card);
+}
+:root .st.ds .mt-msg.is-user {
+  background: var(--accent-soft);
+}
+:root .st.ds .cb-chip.is-on {
+  border-top-color: var(--accent);
+}
+:root .st.ds .st-foot {
+  border-top-color: var(--line);
+  color: var(--ink-3);
+}
+
+/* ---- motion: rows rise in once per page, bars grow from the baseline, the line draws in */
+@keyframes th-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+@keyframes th-grow-y {
+  from {
+    transform: scaleY(0);
+  }
+}
+@keyframes th-grow-x {
+  from {
+    transform: scaleX(0);
+  }
+}
+@keyframes th-draw {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+:root .st.ds .fr-left > *,
+:root .st.ds .fr-right > * {
+  animation: th-rise 320ms ease-out backwards;
+}
+:root .st.ds :is(.fr-left, .fr-right) > :nth-child(2) { animation-delay: 40ms; }
+:root .st.ds :is(.fr-left, .fr-right) > :nth-child(3) { animation-delay: 80ms; }
+:root .st.ds :is(.fr-left, .fr-right) > :nth-child(4) { animation-delay: 120ms; }
+:root .st.ds :is(.fr-left, .fr-right) > :nth-child(5) { animation-delay: 160ms; }
+:root .st.ds :is(.fr-left, .fr-right) > :nth-child(6) { animation-delay: 200ms; }
+:root .st.ds :is(.fr-left, .fr-right) > :nth-child(n + 7) { animation-delay: 240ms; }
+:root .st.ds .fr-v-bar {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: th-grow-y 400ms ease-out backwards;
+}
+:root .st.ds .fr-bar-track i {
+  animation: th-grow-x 400ms ease-out backwards;
+}
+:root .st.ds .cb-hero-chart {
+  animation: th-draw 600ms ease-out backwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  :root .st.ds .fr-left > *,
+  :root .st.ds .fr-right > *,
+  :root .st.ds .fr-v-bar,
+  :root .st.ds .fr-bar-track i,
+  :root .st.ds .cb-hero-chart {
+    animation: none;
+  }
+}

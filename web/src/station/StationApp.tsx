@@ -18,6 +18,7 @@ import './station.css';
 import './ds.css';
 import './frame.css';
 import './palette.css';
+import './theme.css';
 
 const Body = lazy(() => import('./pages/CrewHealth'));
 const Check = lazy(() => import('./pages/Checkin'));
@@ -42,6 +43,23 @@ function Shell() {
   const nav = useNavigate();
   const loc = useLocation();
   const [menu, setMenu] = useState(false);
+  // light or dark, remembered on this device
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    try {
+      return localStorage.getItem('ex-theme') === 'dark' ? 'dark' : 'light';
+    } catch {
+      return 'light';
+    }
+  });
+  const flipTheme = () => {
+    const next = theme === 'light' ? 'dark' : 'light';
+    setTheme(next);
+    try {
+      localStorage.setItem('ex-theme', next);
+    } catch {
+      /* private window: keep it for this session only */
+    }
+  };
 
   // number keys 1-6 open the pages (not while typing)
   useEffect(() => {
@@ -72,7 +90,7 @@ function Shell() {
   const careS: Status = mine ? (mine.issues.some((r) => r.status === 'red') ? 'red' : mine.issues.length ? 'amber' : 'green') : worst(queue.filter((q) => q.tone !== 'info').map((q) => q.tone as Status));
 
   return (
-    <div className={`st ds is-frame ${alarmOn ? 'is-alarm' : ''}`}>
+    <div className={`st ds is-frame ${alarmOn ? 'is-alarm' : ''}`} data-theme={theme}>
       <button type="button" className="fr-corner is-l ds-brand" onClick={() => (cue('tick', sound), nav('/'))} aria-label="e to the x, crew status">
         e<sup>x</sup>
       </button>
@@ -99,6 +117,10 @@ function Shell() {
                 {day} · {fmtDay(data.crew.mission.today)}
               </b>
             </div>
+            <button type="button" className="ds-menu-row" onClick={flipTheme}>
+              <span>Theme</span>
+              <b>{theme === 'light' ? 'Light' : 'Dark'}</b>
+            </button>
             <button type="button" className="ds-menu-row" onClick={() => { setMenu(false); setDemo(0); }}>
               <span>Guided demo</span>
               <b>Start</b>
