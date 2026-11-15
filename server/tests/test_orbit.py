@@ -55,9 +55,9 @@ def test_after_build_is_idempotent(stored):
     assert store.db.execute("SELECT COUNT(*) FROM orbit_membership").fetchone()[0] == before
 
 
-def _one(norad: int, name: str, epoch: str) -> OrbitBatch:
+def _one(norad: int, name: str, epoch: str, designator: str = "1998-067A") -> OrbitBatch:
     e = ElementSet(
-        norad=norad, name=name, intl_designator="1998-067A",
+        norad=norad, name=name, intl_designator=designator,
         line1="1 25544U 98067A   26318.17500000  .00000000  00000-0  00000-0 0  9992",
         line2="2 25544  51.6400  12.3456 0001000  10.0000  20.0000 15.50000000000000",
         epoch=epoch, source="celestrak", quality="recorded", fetched_at=epoch, groups={"stations"},
@@ -76,13 +76,15 @@ def test_empty_group_quality_is_recorded():
 def test_older_load_does_not_overwrite_a_newer_name():
     cat = Catalog.load()
     store = Store(":memory:", cat)
-    repo.write_batch(cat, store, _one(25544, "ISS (ZARYA)", "2026-11-14T04:00:00Z"))
-    repo.write_batch(cat, store, _one(25544, "OLD NAME", "2020-01-01T00:00:00Z"))
+    repo.write_batch(cat, store, _one(25544, "ISS (ZARYA)", "2026-11-14T04:00:00Z", "1998-067A"))
+    repo.write_batch(cat, store, _one(25544, "OLD NAME", "2020-01-01T00:00:00Z", "1998-067B"))
     kept = repo.element(store, 25544)
-    assert kept["name"] == "ISS (ZARYA)" and kept["epoch"] == "2026-11-14T04:00:00Z"
-    repo.write_batch(cat, store, _one(25544, "ISS (ZARYA) NEW", "2026-11-15T04:00:00Z"))
+    assert kept["name"] == "ISS (ZARYA)" and kept["intl_designator"] == "1998-067A"
+    assert kept["epoch"] == "2026-11-14T04:00:00Z"
+    repo.write_batch(cat, store, _one(25544, "ISS (ZARYA) NEW", "2026-11-15T04:00:00Z", "1998-067C"))
     newer = repo.element(store, 25544)
-    assert newer["name"] == "ISS (ZARYA) NEW" and newer["epoch"] == "2026-11-15T04:00:00Z"
+    assert newer["name"] == "ISS (ZARYA) NEW" and newer["intl_designator"] == "1998-067C"
+    assert newer["epoch"] == "2026-11-15T04:00:00Z"
 
 
 # ---- physics ------------------------------------------------------------------------------------
