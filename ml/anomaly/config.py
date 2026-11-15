@@ -77,6 +77,11 @@ FAULTS = [
      "fault": "CO₂ scrubber degradation (simulated)"},
 ]
 
+# v3 site calibration (fixed before seeing results): per channel and detector, on the baseline period only
+SITECAL_MARGIN = 1.25        # amber = 1.25 x the smallest threshold giving zero events in the baseline
+SITECAL_RED_FACTOR = 2.0     # red = 2 x amber
+SITECAL_MAX_FALSE_ALARMS = 3 # more false alarms than this over the mission -> revert the export to v1
+
 LINK_TABLE = {
     "ppco2_mmhg": ["sleep_h", "mood"],
     "ppo2_kpa": ["hr"],

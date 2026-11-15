@@ -102,6 +102,21 @@ Built unattended on 2026-11-15 (about 19:56 to 20:40 local) while Tomas was away
 - **Habitat: v2 changes nothing.** The level rule's MSL threshold (z = 30 on the raw value) never fires on the smooth simulated signal: CO₂ at 3.9 mmHg is only about z ≈ 11 above its baseline. MSL/SMAP channels are normalised and step-like with heavy tails, so a raw-value z threshold tuned there does not transfer to a smooth habitat sensor. The residual z transfers better, because it measures surprise rather than level. So: F1 caught 2 h after onset (residual), F2 missed, F3 flagged **15 h after** the 3 mmHg limit, 0 false alarms. Shipped anyway, per Tomas's rule (faults and thresholds untouched).
 - Lesson to say out loud: in this data, simple rules are strong, and **thresholds for level rules are sensor-specific**: they should come from each sensor's own engineering limits and noise, not from another spacecraft. The honest next step is a level rule set from the habitat's own limits (as the 3.0 mmHg rule already is), validated on fresh data.
 
+## v2 → v3: habitat-site calibration, then reverted to v1 by a pre-set rule (Tomas's call)
+
+**Root cause addressed.** Robust-z thresholds don't carry over across domains. MSL telemetry is jumpy, so its tuned thresholds land at z ≈ 30; the cabin sensors are smooth, so CO₂ at 3.9 mmHg only reaches z ≈ 11. Real deployments calibrate on their own nominal data.
+
+| # | Decision | Taken | Rejected, and why |
+|---|---|---|---|
+| C-1 | Calibration rule (fixed before any result) | Per channel and per detector: amber = **1.25 × the smallest threshold with zero events on the baseline period** (first 14 days, before any fault; same min duration); red = 2 × amber. Code: `zero_event_threshold()` in `export_habitat.py`; constants in `config.py` | Looking at the fault windows, or tuning the margin after seeing the result |
+| C-2 | Kept fixed | L, span, min duration, gap from MSL; faults unchanged; normalised score (1.0 = amber) | — |
+| C-3 | Safety valve (fixed before any result) | More than 3 false alarms over the mission → revert the export to v1 | Shipping a noisy detector to a crew screen |
+| C-4 | `meta.validation` | Headline = v1 Ridge on SMAP (clean). v2 numbers are in the `protocol` text as the second look. v3 doesn't touch spacecraft validation | — |
+
+**What happened.** v3 raised **19 false alarms**, all from the residual member (ppO₂ 5, temperature 5, pressure 5, RH 3, CO₂ 1; the level member raised none). The rule fired and **the shipped export is v1** (`forecast_residual_ridge_v1`, amber 30, red 60). v3's per-fault "detections" are not real: every one **started before its fault** (F1: 20 Sep vs 22 Sep; F2: 2 Oct vs 3 Oct; F3: 14 Oct vs 8 Nov, a meaningless 689 h "lead"). They are false-alarm runs, chained by the 50-step merge gap, that happened to overlap the faults. Most likely cause: 14 days (276 usable residual scores after the 60-step warm-up) can't bound the tail of the residual score over the next 61 days, and a 1.25 margin on a sample maximum is thin. We did not change the margin or the rule after seeing this.
+
+**What ships, and what we'd do next.** The v1 export: F1 caught 2 h after onset, F2 missed, F3 flagged 15 h after the 3 mmHg limit, 0 false alarms. The hard 3.0 mmHg limit rule is always on. Next (not tonight): calibrate on a longer nominal period, or set the threshold from a target false-alarm rate (an extreme-value fit of the baseline scores) instead of the sample maximum, and validate it on a second simulated mission with different seeds before it reaches a crew screen.
+
 ## What changed in shared files
 - `contracts/CHANGELOG.md`: one v2 line. `contracts/DATA_CONTRACT.md`: one pointer line at the end. `storm_forecast.json` and `crew_data.json` untouched.
 - `ml/validate_contracts.py`: `check_habitat()` added; existing checks unchanged. The habitat file is now required in `web/public/data/`.

@@ -68,3 +68,14 @@ Generated 2026-11-15T19:06:42Z by `python -m ml.anomaly.run_validation`. Runtime
 - On this second look, v2 scores F0.5 0.40 on SMAP vs 0.44 for v1 and 0.52 for the tuned static rule. v2 is NOT the best of the four, but because SMAP was reused, treat this as indicative, not as a clean held-out result.
 
 ![PR vs baseline](anomaly_pr_vs_baseline.png)
+
+## v3: habitat-site calibration (habitat thresholds only; spacecraft validation unchanged)
+
+**Why:** robust-z thresholds don't carry over across domains. MSL telemetry is jumpy, so its tuned thresholds are z ≈ 30; the cabin sensors are smooth, so CO₂ at 3.9 mmHg only reaches z ≈ 11. Real deployments calibrate on their own nominal data.
+
+**Rule (fixed before seeing results):** per channel and per detector, amber = 1.25 × the smallest threshold that gives zero events in the habitat baseline period (first 14 mission days, before any fault), with the same min duration; red = 2 × amber. L, span, min duration and gap stay as tuned on MSL. If v3 raises more than 3 false alarms over the mission, the export reverts to v1.
+
+**Result: 19 false alarms, so the export was reverted to v1** (`forecast_residual_ridge_v1`, amber 30, red 60).
+- All 19 false alarms came from the residual member: ppO₂ 5, temperature 5, pressure 5, RH 3, CO₂ 1. The level member raised none.
+- v3's three "detections" are not real: each merged event **started before its fault** (F1 on 20 Sep vs 22 Sep; F2 on 2 Oct vs 3 Oct; F3 on 14 Oct vs 8 Nov, a meaningless "689 h lead"). They are false-alarm runs, chained by the 50-step merge gap, that happen to overlap the faults.
+- Likely cause: 14 days (276 usable residual scores after the 60-step warm-up) is too short to bound the tail of the residual score over the next 61 days, and a 1.25 margin on the baseline maximum is thin.

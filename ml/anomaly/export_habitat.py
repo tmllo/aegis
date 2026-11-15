@@ -86,7 +86,16 @@ def link_flags(crew: dict, channel: str, start: str, end_or_today: str) -> list[
     return out
 
 
-def build(crew: dict | None = None) -> tuple[dict, dict]:
+def zero_event_threshold(s_base: np.ndarray, min_duration: int) -> float:
+    """Smallest threshold giving ZERO events on the baseline scores: just above the largest value that some
+    run of `min_duration` consecutive steps stays at or above (max over windows of the window minimum)."""
+    s = np.where(np.isfinite(s_base), s_base, -np.inf)
+    worst = np.max(np.lib.stride_tricks.sliding_window_view(s, min_duration).min(axis=1))
+    return float(np.nextafter(max(worst, 0.0), np.inf))
+
+
+def build(crew: dict | None = None, mode: str = "v3") -> tuple[dict, dict]:
+    """mode: 'v3' site-calibrated ensemble, 'v2' MSL-threshold ensemble, 'v1' Ridge only."""
     crew = crew or json.loads(C.CREW_JSON.read_text(encoding="utf-8"))
     fz = load_frozen()
     amber, red = fz["thresholds"]["amber"], fz["thresholds"]["red"]
@@ -97,16 +106,22 @@ def build(crew: dict | None = None) -> tuple[dict, dict]:
     nb = C.BASELINE_DAYS * 24
     exog = hour_exog(times)
     scores, events, sources = {}, {}, {}
-    ens = json.loads(C.ENSEMBLE_JSON.read_text(encoding="utf-8")) if C.ENSEMBLE_JSON.exists() else None
+    ens = json.loads(C.ENSEMBLE_JSON.read_text(encoding="utf-8")) if C.ENSEMBLE_JSON.exists() and mode != "v1" else None
+    sitecal = {}
     for k in C.CHANNEL_KEYS:
         x = df[k].ffill().bfill().to_numpy()   # dropouts: hold last value for the model; output keeps null
-        if ens:  # v2: level + residual, each on its own frozen MSL config; score = max of score/own amber
+        if ens:  # v2/v3: level + residual on their MSL configs; score = max of score/own amber
             lv, rs = ens["members"]["level"], ens["members"]["residual"]
             s_l = StaticThreshold().fit(x[:nb]).score(x)
             s_r = ForecastResidualDetector(**rs["model"]).fit(x[:nb], exog[:nb]).score(x, exog)
-            ev = union_events(to_events(s_l, lv["amber"], lv["min_duration_steps"], lv["gap"]),
-                              to_events(s_r, rs["amber"], rs["min_duration_steps"], rs["gap"]))
-            scores[k] = np.fmax(s_l / lv["amber"], s_r / rs["amber"])
+            a_l, a_r = lv["amber"], rs["amber"]
+            if mode == "v3":  # site calibration: baseline period only, never the fault windows
+                a_l = C.SITECAL_MARGIN * zero_event_threshold(s_l[:nb], lv["min_duration_steps"])
+                a_r = C.SITECAL_MARGIN * zero_event_threshold(s_r[:nb], rs["min_duration_steps"])
+                sitecal[k] = {"level_amber": round(a_l, 3), "residual_amber": round(a_r, 3)}
+            ev = union_events(to_events(s_l, a_l, lv["min_duration_steps"], lv["gap"]),
+                              to_events(s_r, a_r, rs["min_duration_steps"], rs["gap"]))
+            scores[k] = np.fmax(s_l / a_l, s_r / a_r)
             events[k] = [(a, b) for a, b, _ in ev]
             sources[k] = [s for _, _, s in ev]
         else:
@@ -115,11 +130,21 @@ def build(crew: dict | None = None) -> tuple[dict, dict]:
             events[k] = to_events(s, amber, md, gap)
             sources[k] = ["residual" if fz["winner"] != "static" else "level"] * len(events[k])
     if ens:
-        fz = {**fz, "model_name": ens["model_name"], "validation": ens["validation"],
-              "thresholds": {"amber": 1.0, "red": ens["red_over_amber"]},
+        val = ens["validation"]
+        name, red_ratio = ens["model_name"], ens["red_over_amber"]
+        if mode == "v3":
+            name, red_ratio = "level_residual_ensemble_v3_sitecal", C.SITECAL_RED_FACTOR
+            v1v = fz["validation"]  # headline = v1 Ridge SMAP (clean, pre-registered)
+            val = {**v1v, "protocol": (
+                "event-wise, no point-adjust. Headline = v1 Ridge, scored once on SMAP (pre-registered). "
+                f"v2 ensemble on SMAP (second look at the test set): precision {ens['smap']['precision']:.2f}, "
+                f"recall {ens['smap']['recall']:.2f}, F0.5 {ens['smap']['f0_5']:.2f}. "
+                "v3 only recalibrates the habitat thresholds on the habitat baseline period; spacecraft validation unchanged")}
+        fz = {**fz, "model_name": name, "validation": val,
+              "thresholds": {"amber": 1.0, "red": red_ratio},
               "min_duration_steps": min(ens["members"]["level"]["min_duration_steps"],
                                         ens["members"]["residual"]["min_duration_steps"])}
-        amber, red, md = 1.0, ens["red_over_amber"], fz["min_duration_steps"]
+        amber, red, md = 1.0, red_ratio, fz["min_duration_steps"]
 
     today = crew["mission"]["today"]
     anomalies = []
@@ -216,7 +241,8 @@ def build(crew: dict | None = None) -> tuple[dict, dict]:
     }
     out = {"meta": meta, "channels": C.CHANNELS, "series": series, "anomalies": anomalies,
            "status": {"overall": max(by_channel.values(), key=SEV_RANK.get), "by_channel": by_channel}}
-    debug = {"df": df, "scores": scores, "events": events, "faults": faults, "frozen": fz, "crew": crew}
+    debug = {"df": df, "scores": scores, "events": events, "faults": faults, "frozen": fz, "crew": crew,
+             "sitecal": sitecal, "mode": mode}
     return out, debug
 
 
@@ -305,7 +331,21 @@ def shadow_baseline(dbg: dict) -> list[str]:
 
 
 def main():
-    out, dbg = build()
+    out, dbg = build(mode="v3")
+    n_fa = sum(not a["planted"] for a in out["anomalies"])
+    print(f"v3 site-calibrated thresholds: {dbg['sitecal']}  ->  {n_fa} false alarms")
+    for a in out["anomalies"]:
+        if a["planted"]:
+            print(f"  v3 {a['channel']}: detected={a['detected']} at {a['detected_at']} source={a['source']} "
+                  f"limit={a['limit_crossed_at']} lead={a['lead_time_h']}")
+    fa_by = {}
+    for a in out["anomalies"]:
+        if not a["planted"]:
+            fa_by[a["channel"]] = fa_by.get(a["channel"], []) + [f"{a['start'][5:13]} {a['source']}"]
+    print("  v3 false alarms by channel:", fa_by)
+    if n_fa > C.SITECAL_MAX_FALSE_ALARMS:  # fixed rule, decided before seeing results
+        print(f"v3 raised {n_fa} > {C.SITECAL_MAX_FALSE_ALARMS} false alarms: reverting the export to v1")
+        out, dbg = build(mode="v1")
     for line in shadow_baseline(dbg):
         print(line)
     C.HABITAT_JSON.write_text(json.dumps(out, ensure_ascii=False, separators=(",", ":"), allow_nan=False), encoding="utf-8")
