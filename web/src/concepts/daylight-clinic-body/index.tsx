@@ -1,6 +1,6 @@
 // Daylight Clinic: body surface. A porcelain body on bone-white; status sits inside
-// the body where it occurs, a height ruler says "where" without the body, and one
-// bottom sheet holds the value against the person's own baseline.
+// the body where it occurs, each region's lead value sits at its height beside the body,
+// and one bottom sheet holds the value against the person's own baseline.
 // Every value comes from crew_data.json through core/scoring; positions from docs/body-map.json.
 import { Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
@@ -23,6 +23,7 @@ import { REGIONS } from '../../data/types';
 import {
   BM,
   BODY_H,
+  BODY_HALF_FRAC,
   DETAIL_WORD,
   FOV,
   ORDER,
@@ -31,6 +32,8 @@ import {
   STATUS_WORD,
   daysRunning,
   decimalsOf,
+  canRemeasure,
+  focusPoint,
   focusRanges,
   homeY,
   hotRadius,
@@ -61,40 +64,56 @@ const VIEWS = [
 type ViewId = (typeof VIEWS)[number]['id'];
 const MAX_ISSUES = 5;
 const DOSE_KEYS: MetricKey[] = ['dose_mSv_day', 'dose_mSv_cum'];
-/** Bottom sheet height, px (mirrored in daylight.css). */
-const SHEET_H = 312;
-/** Whole-body issues point at the figure as a whole: just above the head, no point marker. */
-const WHOLE_ANCHOR: Vec3 = [0, BODY_H + 0.03, 0];
+/** Row pitch: a 72 px gloved target plus a gap. */
+const PITCH = 76;
+const ROW_TOP = 52;
+
 
 interface Issue {
   key: MetricKey;
   status: Status;
   region: Region;
-  anchor: Vec3;
+  /** Point on the body; null for whole-body issues, which sit on the ring around the figure. */
+  anchor: Vec3 | null;
   /** "126 mmHg" */
   reading: string;
-  /** "above", "below", "over limit" */
+  /** "+2.5 sd", "Above watch", "Over limit" */
   side: string;
 }
 
-interface VitalCell {
-  key: MetricKey;
-  text: string;
-  unit: string;
-  status: Status;
-}
-interface VitalRow {
+interface RegionRow {
   region: Region;
   status: Status;
-  cells: VitalCell[];
+  /** Body height in metres; null for the whole body. */
+  m: number | null;
+  text: string;
+  unit: string;
 }
 
 const withUnit = (text: string, unit: string): string => `${text}${unit.startsWith('/') ? '' : ' '}${unit}`;
+const clamp = (v: number, lo: number, hi: number): number => Math.min(hi, Math.max(lo, v));
 
 const firstSentence = (s: string): string => {
   const i = s.indexOf('. ');
   return i < 0 ? s : s.slice(0, i + 1);
 };
+
+/** Rows at their body height, pushed apart to stay 72 px targets. null = no height: stacked from the top. */
+function stack(ys: (number | null)[], stageH: number): number[] {
+  const order = ys.map((y, i) => ({ y, i })).sort((a, b) => (a.y ?? -Infinity) - (b.y ?? -Infinity));
+  const out: number[] = [];
+  let prev = ROW_TOP - PITCH;
+  for (const o of order) {
+    prev = Math.max(o.y ?? ROW_TOP, prev + PITCH, ROW_TOP);
+    out[o.i] = prev;
+  }
+  let next = stageH - 44 + PITCH;
+  for (let k = order.length - 1; k >= 0; k--) {
+    next = Math.min(out[order[k].i], next - PITCH);
+    out[order[k].i] = next;
+  }
+  return out;
+}
 
 function useReducedMotion(): boolean {
   const [r, setR] = useState(() => window.matchMedia('(prefers-reduced-motion: reduce)').matches);
@@ -107,15 +126,10 @@ function useReducedMotion(): boolean {
   return r;
 }
 
-function useBox<T extends HTMLElement>(): [(el: T | null) => void, { w: number; h: number }, React.MutableRefObject<T | null>] {
+function useBox<T extends HTMLElement>(): [(el: T | null) => void, { w: number; h: number }] {
   // Callback ref: the element mounts only after the data has loaded.
   const [el, setEl] = useState<T | null>(null);
-  const ref = useRef<T | null>(null);
   const [box, setBox] = useState({ w: 0, h: 0 });
-  const attach = useCallback((node: T | null) => {
-    ref.current = node;
-    setEl(node);
-  }, []);
   useLayoutEffect(() => {
     if (!el) return;
     const read = () => setBox({ w: el.clientWidth, h: el.clientHeight });
@@ -124,71 +138,72 @@ function useBox<T extends HTMLElement>(): [(el: T | null) => void, { w: number; 
     read();
     return () => ro.disconnect();
   }, [el]);
-  return [attach, box, ref];
+  return [setEl, box];
 }
 
-/* ------------------------------------------------------------------ ruler */
+/* ---------------------------------------------------------------- regions */
 
-interface Tick {
-  region: Region;
-  status: Status;
-  /** Body height in metres; null for the whole body (the cap above the ruler). */
-  m: number | null;
+interface RegionsProps {
+  rows: RegionRow[];
+  stageH: number;
+  freeH: number;
+  /** Right edge of the column, px from the left of the field. */
+  right: number;
+  width: number;
+  selected: Region | null;
+  onPick: (r: Region) => void;
 }
 
-function Ruler({ ticks, stageH, freeH, selected, onPick }: { ticks: Tick[]; stageH: number; freeH: number; selected: Region | null; onPick: (r: Region) => void }) {
-  const top = homeY(BODY_H, stageH);
-  const floor = homeY(0, stageH);
+/** One row per region at its height beside the body: name, lead value, status shape. */
+function Regions({ rows, stageH, freeH, right, width, selected, onPick }: RegionsProps) {
   const focused = selected !== null;
-  const minor: number[] = [];
-  for (let cm = 0; cm < BODY_H * 100; cm += 10) minor.push(cm);
-
-  // One fixed height per region. Label, shape and tick share one row, so they cannot drift apart.
-  // While a sheet is open the ticks close up into the free height and act as a region switch.
   const placed = useMemo(() => {
-    const rows = ticks.map((t) => ({ ...t, y: t.m === null ? Math.max(top - 52, 40) : homeY(t.m, stageH) })).sort((a, b) => a.y - b.y);
-    if (focused && rows.length > 1) {
-      const y0 = rows[0].y;
-      const y1 = rows[rows.length - 1].y;
-      const lim = freeH - 48;
-      if (y1 > lim) for (const r of rows) r.y = y0 + ((r.y - y0) * (lim - y0)) / (y1 - y0);
-    }
-    return rows.map((r, i) => {
-      const gap = Math.min(i > 0 ? r.y - rows[i - 1].y : Infinity, i < rows.length - 1 ? rows[i + 1].y - r.y : Infinity);
-      return { ...r, h: Math.max(44, Math.min(72, gap)) };
-    });
-  }, [ticks, stageH, top, focused, freeH]);
-  const sel = placed.find((t) => t.region === selected);
+    const ys = rows.map((r) => (r.m === null ? null : homeY(r.m, stageH)));
+    const by = stack(ys, stageH);
+    // While a sheet is open the scale is gone: the rows close up into a plain region switch.
+    const pitch = Math.min(PITCH, (freeH - ROW_TOP - 44) / Math.max(1, rows.length - 1));
+    const rank = by.map((y, i) => ({ y, i })).sort((a, b) => a.y - b.y);
+    const compact: number[] = [];
+    rank.forEach((o, k) => (compact[o.i] = ROW_TOP + k * pitch));
+    return { rows: rows.map((r, i) => ({ ...r, y: ys[i], by: focused ? compact[i] : by[i] })), pitch };
+  }, [rows, stageH, freeH, focused]);
 
-  if (stageH === 0) return null;
+  if (stageH === 0 || (focused && placed.pitch < 60)) return null;
+  const axis = right + 18;
   return (
-    <div className="dcb-ruler">
-      <span className="dcb-ruler-scale" data-off={focused}>
-        <span className="dcb-ruler-line" style={{ top, height: floor - top }} />
-        {minor.map((cm) => (
-          <span key={cm} className="dcb-ruler-minor" data-major={cm % 50 === 0} style={{ top: homeY(cm / 100, stageH) }} />
-        ))}
-        <span className="dcb-ruler-minor" data-major="true" style={{ top }} />
-        <span className="dcb-mono dcb-ruler-num" style={{ top }}>
-          {Math.round(BODY_H * 100)} cm
-        </span>
-      </span>
-      {placed.map((t) => (
+    <div className="dcb-regions">
+      <svg className="dcb-axis" data-off={focused} aria-hidden="true">
+        <line x1={axis} x2={axis} y1={homeY(BODY_H, stageH)} y2={homeY(0, stageH)} />
+        <line x1={axis - 6} x2={axis + 6} y1={homeY(BODY_H, stageH)} y2={homeY(BODY_H, stageH)} />
+        <line x1={axis - 6} x2={axis + 6} y1={homeY(0, stageH)} y2={homeY(0, stageH)} />
+        {placed.rows.map(
+          (t) =>
+            t.y !== null && (
+              <polyline key={t.region} points={`${right + 2},${t.by} ${right + 9},${t.by} ${axis},${t.y} ${axis + 14},${t.y}`} />
+            ),
+        )}
+      </svg>
+      {placed.rows.map((t) => (
         <button
           key={t.region}
           type="button"
-          className="dcb-tick"
-          style={{ height: t.h, transform: `translateY(${(t.y - t.h / 2).toFixed(1)}px)` }}
+          className="dcb-region"
+          data-stacked={width < 270}
+          style={{ left: right - width, width, transform: `translateY(${(t.by - 36).toFixed(1)}px)` }}
           aria-pressed={selected === t.region}
-          aria-label={`${REGION_NAME[t.region]}, ${STATUS_WORD[t.status]}`}
+          aria-label={`${REGION_NAME[t.region]}, ${withUnit(t.text, t.unit)}, ${STATUS_WORD[t.status]}`}
           onClick={() => onPick(t.region)}
         >
-          <span className="dcb-mono dcb-tick-name">{REGION_NAME[t.region]}</span>
-          <Shape status={t.status} size={14} />
-          <span className="dcb-tick-mark" data-cap={t.m === null} />
+          <span className="dcb-region-text">
+            <span className="dcb-region-name">{REGION_NAME[t.region]}</span>
+            <span className="dcb-region-val">
+              {t.text}
+              <i>{t.unit}</i>
+            </span>
+          </span>
+          <Shape status={t.status} size={16} />
         </button>
       ))}
-      <span className="dcb-ruler-marker" data-on={sel !== undefined} style={{ transform: `translateY(${sel ? sel.y : top}px)` }} />
     </div>
   );
 }
@@ -199,88 +214,73 @@ interface OverlayApi {
   frame: (camera: THREE.Camera, w: number, h: number) => void;
 }
 
+interface Leader {
+  status: Status;
+  anchor: Vec3 | null;
+  /** Place on the whole-body ring, for issues with no anchor. */
+  slot: number;
+  /** Where the issue row starts, px in the field. */
+  x: number;
+  y: number;
+}
+
 interface OverlayProps {
   api: React.MutableRefObject<OverlayApi>;
-  issues: Issue[];
-  /** The issues list; rows are found by [data-issue] so a re-keyed list can never leave a stale ref. */
-  listEl: React.MutableRefObject<HTMLElement | null>;
-  stageEl: React.MutableRefObject<HTMLDivElement | null>;
+  leaders: Leader[];
+  ring: Status;
   selection: { box: Box; title: string; sub: string } | null;
-  /** Height of the stage left free above the sheet, px. */
+  /** Height of the field left free above the sheet, px. */
   freeH: number;
 }
 
-/** Leader lines and the selection bracket: one SVG, written through refs each frame. */
-function Overlay({ api, issues, listEl, stageEl, selection, freeH }: OverlayProps) {
+/** Whole-body ring, leader lines and the selection bracket: written through refs each frame. */
+function Overlay({ api, leaders, ring, selection, freeH }: OverlayProps) {
   const lines = useRef<(SVGPolylineElement | null)[]>([]);
   const marks = useRef<(SVGGElement | null)[]>([]);
+  const halo = useRef<SVGEllipseElement>(null);
   const bracket = useRef<SVGPathElement>(null);
   const bLine = useRef<SVGLineElement>(null);
   const callout = useRef<HTMLDivElement>(null);
-  const rows = useRef<({ x: number; y: number } | null)[]>([]);
-  const dirty = useRef(true);
-  const live = useRef({ issues, selection, freeH });
-  live.current = { issues, selection, freeH };
-
-  // Rows are measured inside the frame loop, after React has committed the new list,
-  // and again whenever the list or the stage changes size.
-  useLayoutEffect(() => {
-    dirty.current = true;
-    rows.current = [];
-  }, [issues]);
-  useEffect(() => {
-    const mark = () => (dirty.current = true);
-    const ro = new ResizeObserver(mark);
-    if (listEl.current) ro.observe(listEl.current);
-    if (stageEl.current) ro.observe(stageEl.current);
-    window.addEventListener('resize', mark);
-    return () => {
-      ro.disconnect();
-      window.removeEventListener('resize', mark);
-    };
-  }, [listEl, stageEl]);
-
-  const measure = useCallback(() => {
-    const stage = stageEl.current?.getBoundingClientRect();
-    const list = listEl.current;
-    if (!stage || !list) return;
-    const els = list.querySelectorAll<HTMLElement>('[data-issue]');
-    rows.current = live.current.issues.map((it, i) => {
-      const el = els[i];
-      if (!el || el.dataset.issue !== it.key) return null;
-      const r = el.getBoundingClientRect();
-      return r.height > 0 ? { x: r.left - stage.left - 12, y: r.top - stage.top + r.height / 2 } : null;
-    });
-    dirty.current = rows.current.some((r) => r === null);
-  }, [listEl, stageEl]);
+  const live = useRef({ leaders, selection, freeH });
+  live.current = { leaders, selection, freeH };
 
   useEffect(() => {
     const v = new THREE.Vector3();
     api.current.frame = (camera, w, h) => {
-      const { issues: list, selection: sel, freeH: free } = live.current;
-      if (dirty.current) measure();
+      const { leaders: list, selection: sel, freeH: free } = live.current;
       const px = (p: Vec3): [number, number] => {
         v.set(p[0], p[1], p[2]).project(camera);
         return [(v.x * 0.5 + 0.5) * w, (-v.y * 0.5 + 0.5) * h];
       };
+      // The ring follows the figure, so it frames the whole body in every view and zoom.
+      const [cx, cy] = px([0, BODY_H / 2, 0]);
+      const tall = px([0, 0, 0])[1] - px([0, BODY_H, 0])[1];
+      const rx = tall * 0.25;
+      const ry = tall * 0.56;
+      const el = halo.current;
+      if (el) {
+        el.setAttribute('cx', cx.toFixed(1));
+        el.setAttribute('cy', cy.toFixed(1));
+        el.setAttribute('rx', rx.toFixed(1));
+        el.setAttribute('ry', ry.toFixed(1));
+      }
       for (let i = 0; i < MAX_ISSUES; i++) {
         const line = lines.current[i];
         const mark = marks.current[i];
         const it = list[i];
-        const row = rows.current[i];
-        if (!line || !mark) continue;
-        if (!it || !row) {
-          // Unmeasured row: no line at all, never a line to the corner of the screen.
-          line.style.opacity = mark.style.opacity = '0';
-          continue;
+        if (!line || !mark || !it) continue;
+        let ax: number;
+        let ay: number;
+        if (it.anchor) [ax, ay] = px(it.anchor);
+        else {
+          const a = THREE.MathUtils.degToRad(60 - it.slot * 15);
+          ax = cx + rx * Math.cos(a);
+          ay = cy - ry * Math.sin(a);
         }
-        const [ax, ay] = px(it.anchor);
-        const elbow = Math.max(ax + 24, row.x - 56);
-        line.setAttribute('points', `${row.x},${row.y} ${elbow},${row.y} ${ax},${ay}`);
+        const elbow = Math.min(it.x, Math.max(ax + 24, it.x - 56));
+        line.setAttribute('points', `${it.x},${it.y} ${elbow.toFixed(1)},${it.y} ${ax.toFixed(1)},${ay.toFixed(1)}`);
         mark.setAttribute('transform', `translate(${ax.toFixed(1)} ${ay.toFixed(1)})`);
-        const show = sel ? '0' : '1';
-        line.style.opacity = show;
-        mark.style.opacity = show;
+        line.style.opacity = mark.style.opacity = sel ? '0' : '1';
       }
       const br = bracket.current;
       const bl = bLine.current;
@@ -311,8 +311,7 @@ function Overlay({ api, issues, listEl, stageEl, selection, freeH }: OverlayProp
         'd',
         `M${x1} ${y1 + k}V${y1}H${x1 + k}M${x2 - k} ${y1}H${x2}V${y1 + k}M${x2} ${y2 - k}V${y2}H${x2 - k}M${x1 + k} ${y2}H${x1}V${y2 - k}`,
       );
-      // The callout line leaves from the bracket's top-right corner, so it always touches ink.
-      const my = Math.min(Math.max(y1, 30), free - 40);
+      const my = clamp((y1 + y2) / 2, 40, free - 40);
       const lx = x2 + 72;
       bl.setAttribute('x1', String(x2));
       bl.setAttribute('x2', String(lx - 12));
@@ -321,20 +320,27 @@ function Overlay({ api, issues, listEl, stageEl, selection, freeH }: OverlayProp
       co.style.transform = `translate(${lx.toFixed(1)}px, ${my.toFixed(1)}px) translateY(-50%)`;
       br.style.opacity = bl.style.opacity = co.style.opacity = '1';
     };
-  }, [api, measure]);
+  }, [api]);
 
   return (
     <>
+      <svg className="dcb-halo" data-level={ring} aria-hidden="true">
+        <defs>
+          <radialGradient id="dcb-halo-fill">
+            <stop offset="0.5" stopOpacity="0" />
+            <stop offset="1" stopOpacity="0.3" />
+          </radialGradient>
+        </defs>
+        <ellipse ref={halo} fill="url(#dcb-halo-fill)" />
+      </svg>
       <svg className="dcb-overlay" aria-hidden="true">
         {Array.from({ length: MAX_ISSUES }, (_, i) => {
-          const it = issues[i];
+          const it = leaders[i];
           return (
             <g key={i} style={{ display: it ? undefined : 'none' }}>
-              <polyline className="dcb-leader" ref={(el) => (lines.current[i] = el)} />
-              <g className="dcb-marker" ref={(el) => (marks.current[i] = el)}>
-                {it?.region === 'whole_body' ? (
-                  <circle r={5} style={{ fill: 'var(--dc-bone-0)', stroke: 'var(--dc-ink-1)', strokeWidth: 1.5 }} />
-                ) : it?.status === 'red' ? (
+              <polyline className="dcb-leader" ref={(el) => (lines.current[i] = el)} style={{ opacity: 0 }} />
+              <g className="dcb-marker" ref={(el) => (marks.current[i] = el)} style={{ opacity: 0 }}>
+                {it?.status === 'red' ? (
                   <rect x={-7} y={-7} width={14} height={14} fill="var(--dc-crit)" />
                 ) : (
                   <path d="M0 -8.5 8.5 7H-8.5Z" fill="var(--dc-warn)" />
@@ -372,8 +378,7 @@ export default function DaylightClinicBody() {
   const [flip, setFlip] = useState<'a' | 'b'>('a');
 
   const [rootRef, root] = useBox<HTMLDivElement>();
-  const [stageRef, stage, stageEl] = useBox<HTMLDivElement>();
-  const listEl = useRef<HTMLElement | null>(null);
+  const [fieldRef, field] = useBox<HTMLDivElement>();
   const overlay = useRef<OverlayApi>({ frame: () => {} });
 
   // Deep link: ?crew=c2&metric=sleep_h&view=left&date=peak
@@ -423,9 +428,9 @@ export default function DaylightClinicBody() {
           key: s.metric,
           status: s.status,
           region,
-          anchor: region === 'whole_body' ? WHOLE_ANCHOR : BM.metrics[s.metric].anchor,
+          anchor: region === 'whole_body' ? null : focusPoint(s.metric),
           reading: withUnit(s.value.toFixed(places[s.metric] ?? 0), data.crew.metrics[s.metric].unit),
-          side: s.z !== null ? (s.z >= 0 ? 'above' : 'below') : 'over limit',
+          side: s.z !== null ? `${s.z >= 0 ? '+' : '-'}${Math.abs(s.z).toFixed(1)} sd` : s.status === 'red' ? 'Over limit' : 'Above watch',
         };
       });
   }, [scored, data, places]);
@@ -485,7 +490,7 @@ export default function DaylightClinicBody() {
   const selected = metric && scored?.by.has(metric) ? metric : null;
   const selRegion = selected ? BM.metrics[selected].region : null;
 
-  /* ---- body state: where the tint sits */
+  /* ---- body state: where the status sits */
   const bodyState: BodyState = useMemo(() => {
     const nodeStatus: Record<string, Status> = {};
     const focus: BodyState['focus'] = {};
@@ -494,7 +499,7 @@ export default function DaylightClinicBody() {
     for (const it of issues) {
       const bm = BM.metrics[it.key];
       if (it.region === 'whole_body') {
-        // Dose shows as the halo behind the figure; temperature tints the skin itself.
+        // Whole-body issues show as the ring around the figure; temperature also tints the skin.
         if (!DOSE_KEYS.includes(it.key)) skinStatus = worst(skinStatus, it.status);
         continue;
       }
@@ -502,7 +507,8 @@ export default function DaylightClinicBody() {
       for (const [node, ranges] of Object.entries(focusRanges(it.key))) {
         if (!focus[node] || ORDER[it.status] > ORDER[focus[node].status]) focus[node] = { ranges, status: it.status };
       }
-      if (hots.length < 4) hots.push({ pos: bm.anchor, radius: hotRadius(it.key), status: it.status, lit: !selRegion || selRegion === it.region });
+      // The diffusion is centred on the structure that is drawn, never beside it.
+      if (hots.length < 4) hots.push({ pos: focusPoint(it.key), radius: hotRadius(it.key), status: it.status, lit: !selRegion });
     }
     let selectedNodes: string[] | null = null;
     if (selected) {
@@ -510,27 +516,30 @@ export default function DaylightClinicBody() {
       const st = scored!.by.get(selected)!.status;
       for (const [node, ranges] of Object.entries(focusRanges(selected))) focus[node] = { ranges, status: st };
     }
+    // The ghost skeleton opens in front of the selected structure.
     let hole: BodyState['hole'] = null;
     if (selected && selRegion !== 'whole_body') {
-      const [a, b] = metricBox(selected);
-      hole = {
-        pos: [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2],
-        radius: Math.min(0.24, Math.max(0.07, 0.6 * Math.max(b[0] - a[0], b[1] - a[1]))),
-      };
+      const [lo, hi] = metricBox(selected);
+      hole = { pos: focusPoint(selected), radius: clamp(0.6 * Math.max(hi[0] - lo[0], hi[1] - lo[1]), 0.07, 0.24) };
     }
     return { nodeStatus, focus, selectedNodes, skinStatus, hots, hole };
   }, [issues, selected, selRegion, scored]);
 
-  const haloLevel: Status = useMemo(
-    () => issues.filter((i) => DOSE_KEYS.includes(i.key)).reduce<Status>((acc, i) => worst(acc, i.status), 'green'),
-    [issues],
-  );
-
   const regionBoxes = useMemo(() => Object.fromEntries(REGIONS.map((r) => [r, regionBox(r)])) as Record<Region, Box>, []);
 
-  /* ---- camera */
-  const occlude = selected && stage.h ? Math.min(0.6, SHEET_H / stage.h) : 0;
-  const freeH = stage.h - (selected ? SHEET_H : 0);
+  /* ---- layout: header | regions | body | issues, sheet above the bar */
+  const barH = root.h - field.h;
+  const sheetH = Math.max(380, Math.round(root.h * 0.36));
+  const freeH = field.h - (selected ? sheetH : 0);
+  const occlude = selected && field.h ? Math.min(0.6, sheetH / field.h) : 0;
+  const cx = field.w / 2;
+  const off = BODY_HALF_FRAC * field.h + 64;
+  const regionW = clamp(cx - off - 12, 168, 300);
+  // Zoomed in, the torso is wider than the home figure: the switch steps aside.
+  const regionRight = cx - off - (selected ? clamp(cx - off - regionW - 12, 0, field.h * 0.12) : 0);
+  const issuesX = cx + off;
+  const issuesW = clamp(field.w - issuesX - 24, 168, 340);
+
   const az = VIEWS.find((v) => v.id === view)!.az;
   const selBox = useMemo(() => (selected ? metricBox(selected) : null), [selected]);
   const pose: Pose = useMemo(() => ({ box: selBox, azimuth: az, occlude }), [selBox, az, occlude]);
@@ -538,38 +547,36 @@ export default function DaylightClinicBody() {
   const onFrame = useCallback((camera: THREE.Camera, w: number, h: number) => overlay.current.frame(camera, w, h), []);
   const onReady = useCallback(() => setReady(true), []);
 
-  /* ---- ruler ticks */
-  const ticks: Tick[] = useMemo(() => {
-    if (!scored) return [];
-    // One fixed height per region (its first metric in the body map), the same for every crew member.
-    return REGIONS.map((region) => ({
-      region,
-      status: scored.status[region],
-      m: region === 'whole_body' ? null : BM.metrics[BM.contract_regions[region].metrics[0]].anchor[1],
-    }));
-  }, [scored]);
-
-  /* ---- latest vitals, one row per region */
-  const vitals: VitalRow[] = useMemo(() => {
+  /* ---- one row per region: its lead value at its height */
+  const regionRows: RegionRow[] = useMemo(() => {
     if (!scored || !data) return [];
-    const regions = [...new Set(flat.map((k) => BM.metrics[k].region))];
-    return regions.map((region) => {
-      const cells: VitalCell[] = [];
-      for (const k of BM.contract_regions[region].metrics) {
-        const s = scored.by.get(k);
-        if (!s) continue;
-        const unit = data.crew.metrics[k].unit;
-        const text = s.value.toFixed(places[k] ?? 0);
-        const prev = cells[cells.length - 1];
-        // Systolic over diastolic reads as one pressure.
-        if (k === 'bp_dia' && prev?.key === 'bp_sys' && prev.unit === unit) {
-          prev.text = `${prev.text}/${text}`;
-          prev.status = worst(prev.status, s.status);
-        } else cells.push({ key: k, text, unit, status: s.status });
-      }
-      return { region, status: scored.status[region], cells };
+    return REGIONS.map((region) => {
+      // The flagged metric leads; otherwise the region's first metric in the body map.
+      const w = worstIn(region);
+      const first = BM.contract_regions[region].metrics.find((k) => scored.by.has(k));
+      const k = w && scored.by.get(w)!.status !== 'green' ? w : (first ?? w)!;
+      const fix = (key: MetricKey) => scored.by.get(key)!.value.toFixed(places[key] ?? 0);
+      // Systolic over diastolic reads as one pressure.
+      const pair = (k === 'bp_sys' || k === 'bp_dia') && scored.by.has('bp_sys') && scored.by.has('bp_dia');
+      return {
+        region,
+        status: scored.status[region],
+        m: region === 'whole_body' ? null : focusPoint(k)[1],
+        text: pair ? `${fix('bp_sys')}/${fix('bp_dia')}` : fix(k),
+        unit: data.crew.metrics[k].unit,
+      };
     });
-  }, [scored, data, flat, places]);
+  }, [scored, data, worstIn, places]);
+
+  /* ---- issue rows sit at the height of what they point at, so leaders run level */
+  const leaders: Leader[] = useMemo(() => {
+    const ys = stack(
+      issues.map((it) => (it.anchor ? homeY(it.anchor[1], field.h) : null)),
+      field.h,
+    );
+    let slot = 0;
+    return issues.map((it, i) => ({ status: it.status, anchor: it.anchor, slot: it.anchor ? 0 : slot++, x: issuesX - 10, y: ys[i] }));
+  }, [issues, field.h, issuesX]);
 
   /* ---- sheet content */
   const detail: Detail | null = useMemo(() => {
@@ -587,28 +594,25 @@ export default function DaylightClinicBody() {
           : selected === 'bone_loss_pct'
             ? BONE_LOSS_AMBER_PCT
             : null;
-    const inBand = s.z !== null && s.status === 'green' && Math.abs(s.z) < 1;
-    const direction = inBand ? 'Within band' : s.z !== null ? (s.z >= 0 ? 'Above' : 'Below') : s.status === 'green' ? 'Under limit' : 'Over limit';
     return {
       id: `${crew.id}:${selected}:${date}`,
       metric: selected,
       label: m.label,
-      short: SHORT[selected],
       regionName: REGION_NAME[m.body_region],
       status: s.status,
       statusWord: DETAIL_WORD[s.status],
       value: s.value,
       unit: m.unit,
       decimals: places[selected] ?? decimalsOf(trace),
-      direction,
-      delta: s.z !== null && !inBand ? `${s.z >= 0 ? '+' : '-'}${Math.abs(s.z).toFixed(1)} sd` : '',
+      direction: s.z !== null ? (s.z >= 0 ? 'Above' : 'Below') : s.status === 'red' ? 'Over limit' : 'Above watch level',
+      delta: s.z !== null ? `${s.z >= 0 ? '+' : '-'}${Math.abs(s.z).toFixed(1)} sd` : '',
       days: daysRunning(crew, data.crew, selected, scored.i, scored.ctx),
+      remeasure: canRemeasure(selected),
       band: base ? { mean: base.mean, sd: base.sd, windowMean: s.windowMean } : null,
       limit: !base && amber !== null ? { amber, red: m.absolute_red.max } : null,
       trace,
       explain: firstSentence(m.explain),
       action: s.status === 'green' ? null : m.actions[s.status],
-      illustrative: isIllustrative(selected),
     };
   }, [selected, scored, data, crew, date, places]);
 
@@ -618,7 +622,7 @@ export default function DaylightClinicBody() {
         ? {
             box: selBox,
             title: REGION_NAME[BM.metrics[selected].region],
-            sub: `${SHORT[selected]}${isIllustrative(selected) ? ' · illustrative' : ''}`,
+            sub: `${SHORT[selected]}${isIllustrative(selected) ? ' · placement illustrative' : ''}`,
           }
         : null,
     [selected, selBox, data],
@@ -633,33 +637,57 @@ export default function DaylightClinicBody() {
   const overall = scored.status.overall;
   const day = scored.i + 1;
   const peakDay = peakDate ? dayIndex(crew, peakDate) + 1 : null;
-  const foot = [...DISCLAIMERS, `Space weather data: ${data.storm.meta.data_credit}`].join('  ·  ');
+  const foot = [...DISCLAIMERS, `Space weather data: ${data.storm.meta.data_credit}`, `Model: ${data.storm.meta.model}`].join('  ·  ');
+  const vars = { '--dcb-bar-h': `${barH}px`, '--dcb-sheet-h': `${sheetH}px` } as React.CSSProperties;
 
   return (
-    <div className="dcb" ref={rootRef}>
-      <div className="dcb-stage" ref={stageRef}>
-        <div className="dcb-halo" data-level={haloLevel} />
-        {!ready && <p className="dcb-mono dcb-loading">Loading anatomy</p>}
-        <div className="dcb-canvas" data-flip={flip}>
-          <Canvas flat dpr={[1, 2]} camera={{ fov: FOV, near: 0.1, far: 40, position: [0, 0.82, 4.3] }} gl={{ antialias: true, alpha: true }}>
-            <Suspense fallback={null}>
-              <PorcelainScene
-                state={bodyState}
-                pose={pose}
-                regionBoxes={regionBoxes}
-                scanKey={crew.id}
-                reduced={reduced}
-                onPick={pickRegion}
-                onFrame={onFrame}
-                onReady={onReady}
-              />
-            </Suspense>
-          </Canvas>
+    <div className="dcb" ref={rootRef} style={vars}>
+      <div className="dcb-stage">
+        <div className="dcb-field" ref={fieldRef}>
+          {!ready && <p className="dcb-mono dcb-loading">Loading anatomy</p>}
+          <div className="dcb-canvas" data-flip={flip}>
+            <Canvas flat dpr={[1, 2]} camera={{ fov: FOV, near: 0.1, far: 40, position: [0, 0.82, 4.3] }} gl={{ antialias: true, alpha: true }}>
+              <Suspense fallback={null}>
+                <PorcelainScene state={bodyState} pose={pose} regionBoxes={regionBoxes} reduced={reduced} onPick={pickRegion} onFrame={onFrame} onReady={onReady} />
+              </Suspense>
+            </Canvas>
+          </div>
+
+          <Overlay api={overlay} leaders={leaders} ring={scored.status.whole_body} selection={selection} freeH={freeH} />
+
+          <Regions rows={regionRows} stageH={field.h} freeH={freeH} right={regionRight} width={regionW} selected={selRegion} onPick={pickRegion} />
+
+          <aside className="dcb-issues" data-off={selected !== null} aria-label="Issues" aria-hidden={selected !== null}>
+            {issues.length === 0 && field.h > 0 && (
+              <div className="dcb-issue dcb-issue-none" style={{ left: issuesX, width: issuesW, transform: `translateY(${ROW_TOP - 36}px)` }}>
+                <Shape status="green" size={20} />
+                <span className="dcb-issue-main">
+                  <span className="dcb-issue-word">Clear</span>
+                  <span className="dcb-mono">All regions</span>
+                </span>
+              </div>
+            )}
+            {field.h > 0 &&
+              issues.map((it, i) => (
+                <button
+                  key={it.key}
+                  type="button"
+                  className="dcb-issue"
+                  data-compact={issuesW < 280}
+                  style={{ left: issuesX, width: issuesW, transform: `translateY(${(leaders[i].y - 36).toFixed(1)}px)` }}
+                  tabIndex={selected ? -1 : 0}
+                  onClick={() => select(it.key)}
+                >
+                  <Shape status={it.status} size={20} />
+                  <span className="dcb-issue-main">
+                    <span className="dcb-issue-word">{SHORT[it.key]}</span>
+                    <span className="dcb-mono">{it.side}</span>
+                  </span>
+                  <span className="dcb-issue-val">{it.reading}</span>
+                </button>
+              ))}
+          </aside>
         </div>
-
-        <Overlay api={overlay} issues={issues} listEl={listEl} stageEl={stageEl} selection={selection} freeH={freeH} />
-
-        <Ruler ticks={ticks} stageH={stage.h} freeH={freeH} selected={selRegion} onPick={pickRegion} />
 
         <header className="dcb-id">
           <div className="dcb-crew" role="group" aria-label="Crew">
@@ -687,61 +715,13 @@ export default function DaylightClinicBody() {
             {STATUS_WORD[overall]}
           </p>
           <p className="dcb-mono dcb-meta">
-            Day {day} · {data.crew.environments[environment].label} · {date}
+            <span>
+              Day {day} · {data.crew.environments[environment].label}
+            </span>
+            <span>{date}</span>
+            {atPeak && <span className="dcb-replay">Replay day, not today</span>}
           </p>
-          {atPeak && <p className="dcb-mono dcb-replay">Replay day · not today</p>}
-
-          <div className="dcb-vitals" role="group" aria-label="Latest vitals">
-            {vitals.map((row) => (
-              <button
-                key={row.region}
-                type="button"
-                className="dcb-vital"
-                aria-pressed={selRegion === row.region}
-                onClick={() => pickRegion(row.region)}
-              >
-                <Shape status={row.status} size={14} />
-                <span className="dcb-mono dcb-vital-name">{REGION_NAME[row.region]}</span>
-                <span className="dcb-vital-cells">
-                  {row.cells.map((c) => (
-                    <span key={c.key} className="dcb-vital-cell" data-status={c.status}>
-                      {c.text}
-                      <i>{c.unit}</i>
-                    </span>
-                  ))}
-                </span>
-              </button>
-            ))}
-          </div>
         </header>
-
-        <aside className="dcb-issues" aria-label="Issues" ref={listEl}>
-          <p className="dcb-mono dcb-issues-head">
-            <span>Issues</span>
-            <span>{issues.length}</span>
-          </p>
-          {issues.length === 0 && (
-            <div className="dcb-issue dcb-issue-none">
-              <Shape status="green" size={20} />
-              <span className="dcb-issue-main">
-                <span className="dcb-issue-word">Clear</span>
-                <span className="dcb-mono">All regions in range</span>
-              </span>
-            </div>
-          )}
-          {issues.map((it) => (
-            <button key={it.key} type="button" className="dcb-issue" data-issue={it.key} aria-pressed={selected === it.key} onClick={() => select(it.key)}>
-              <Shape status={it.status} size={20} />
-              <span className="dcb-issue-main">
-                <span className="dcb-issue-word">{SHORT[it.key]}</span>
-                <span className="dcb-mono">
-                  {REGION_NAME[it.region]} · {it.side}
-                </span>
-              </span>
-              <span className="dcb-issue-val">{it.reading}</span>
-            </button>
-          ))}
-        </aside>
       </div>
 
       <div className="dcb-bar">
@@ -760,16 +740,14 @@ export default function DaylightClinicBody() {
                 <span className="dcb-mono">Today</span>
               </button>
               <button type="button" className="dcb-view" data-wide="true" aria-pressed={atPeak} onClick={() => setAtPeak(true)}>
-                <span className="dcb-mono">Day {peakDay} peak</span>
+                <span className="dcb-mono">Dose peak</span>
               </button>
             </div>
           </>
         )}
         <p className="dcb-foot">
           <span>{foot}</span>
-          <span className="dcb-foot-credit">
-            Model: {data.storm.meta.model} · {ANATOMY_CREDIT}
-          </span>
+          <span>{ANATOMY_CREDIT}</span>
         </p>
       </div>
 

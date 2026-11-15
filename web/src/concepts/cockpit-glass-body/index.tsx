@@ -50,6 +50,9 @@ const READOUT_GAP = 88;
 /** Width kept free for a parked readout: flagged ones carry a value line. */
 const READOUT_W = { lit: 208, quiet: 132 };
 const STAGE_PAD = 16;
+/** Space between the focus box and its brackets, and between the brackets and the docked readout. */
+const BRACKET_PAD = 14;
+const DOCK_GAP = 44;
 
 /* ------------------------------------------------------------------ stage */
 
@@ -134,11 +137,12 @@ function Stage(props: {
   const dots = useRef<(SVGGElement | null)[]>([]);
   const bracket = useRef<SVGPathElement>(null);
   const rect = useRef<Float32Array | null>(null);
-  const live = useRef({ layout, region });
-  live.current = { layout, region };
+  const tags = useRef<(HTMLButtonElement | null)[]>([]);
+  const live = useRef({ layout, region, w, h, view });
+  live.current = { layout, region, w, h, view };
 
   const onFrame = useCallback((dt: number) => {
-    const { layout: L, region: sel } = live.current;
+    const { layout: L, region: sel, w: W, h: Hh, view: V } = live.current;
     if (!L) return;
     const a = frame.current.anchors;
     const path = bracket.current;
@@ -154,14 +158,32 @@ function Stage(props: {
       const i = REGIONS.indexOf(p.region);
       // The open region's leader ends on the framed anatomy, not on the resting anchor.
       const onSel = r && p.region === sel;
-      const ax = onSel && r ? (r[0] + r[2]) / 2 : a[i * 2];
-      const ay = onSel && r ? (r[1] + r[3]) / 2 : a[i * 2 + 1];
+      const tag = tags.current[i];
+      if (onSel && r) {
+        // The open readout leaves the ring and docks beside the brackets, at their height:
+        // the leader is one short level stroke instead of a diagonal across the anatomy.
+        const room = READOUT_W[V.regions[p.region].status === 'green' ? 'quiet' : 'lit'] + STAGE_PAD;
+        const edge = p.side > 0 ? r[2] + BRACKET_PAD : r[0] - BRACKET_PAD;
+        const want = edge + p.side * DOCK_GAP;
+        const x = p.side > 0 ? Math.min(want, W - room) : Math.max(want, room);
+        const y = Math.min(Math.max((r[1] + r[3]) / 2, 56), Hh - 56);
+        tag?.style.setProperty('--cg-dx', `${(x - p.x).toFixed(1)}px`);
+        tag?.style.setProperty('--cg-dy', `${(y - p.y).toFixed(1)}px`);
+        const x0 = x - p.side * 4;
+        lines.current[i]?.setAttribute('points', `${x0.toFixed(1)},${y.toFixed(1)} ${edge.toFixed(1)},${y.toFixed(1)}`);
+        dots.current[i]?.setAttribute('transform', `translate(${((r[0] + r[2]) / 2).toFixed(1)} ${((r[1] + r[3]) / 2).toFixed(1)})`);
+        return;
+      }
+      tag?.style.removeProperty('--cg-dx');
+      tag?.style.removeProperty('--cg-dy');
+      const ax = a[i * 2];
+      const ay = a[i * 2 + 1];
       const x0 = p.x - p.side * 4;
       lines.current[i]?.setAttribute('points', `${x0.toFixed(1)},${p.y.toFixed(1)} ${(x0 - p.side * 26).toFixed(1)},${p.y.toFixed(1)} ${ax.toFixed(1)},${ay.toFixed(1)}`);
       dots.current[i]?.setAttribute('transform', `translate(${ax.toFixed(1)} ${ay.toFixed(1)})`);
     });
     if (!path || !r) return;
-    const pad = 14;
+    const pad = BRACKET_PAD;
     const [x0, y0, x1, y1] = [r[0] - pad, r[1] - pad, r[2] + pad, r[3] + pad];
     const c = Math.min(22, (x1 - x0) / 3, (y1 - y0) / 3);
     path.setAttribute(
@@ -251,6 +273,7 @@ function Stage(props: {
         return (
           <button
             key={p.region}
+            ref={(el) => (tags.current[REGIONS.indexOf(p.region)] = el)}
             className="cg-readout"
             data-side={p.side < 0 ? 'left' : 'right'}
             data-status={rv.status}
@@ -368,6 +391,14 @@ export default function CockpitGlassBody() {
     window.history.replaceState(window.history.state, '', `${window.location.pathname}?${query}`);
   }, [query, ready]);
 
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && region) pickRegion(null);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [region, pickRegion]);
+
   if (loadState === 'error') return <p className="cg-error">{error}</p>;
   if (!data || !crew || !environment || !view || !ready) return <div className="cg-bezel" />;
 
@@ -411,7 +442,7 @@ export default function CockpitGlassBody() {
           <Stage view={view} region={region} metric={active} metricStatus={activeView?.status ?? null} reduced={reduced} onRegion={pickRegion} />
           <aside className="cg-panel" data-status={region ? view.regions[region].status : overall}>
             {region && active ? (
-              <Detail crew={crew} view={view} region={region} metric={active} reduced={reduced} showSource={source} onSource={setSource} onMetric={setMetric} onBack={() => pickRegion(null)} />
+              <Detail crew={crew} view={view} region={region} metric={active} reduced={reduced} day={missionDay(data.crew)} showSource={source} onSource={setSource} onMetric={setMetric} onBack={() => pickRegion(null)} />
             ) : (
               <Overview crew={crew} view={view} onRegion={pickRegion} />
             )}
@@ -442,14 +473,6 @@ export default function CockpitGlassBody() {
               </Link>
             )}
           </div>
-          <ul className="cg-legend">
-            {(['green', 'amber', 'red'] as Status[]).map((s) => (
-              <li key={s}>
-                <Shape status={s} size={14} />
-                {STATUS_WORD[s]}
-              </li>
-            ))}
-          </ul>
         </nav>
 
         <footer className="cg-foot">

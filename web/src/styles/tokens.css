@@ -4,8 +4,13 @@
  *   [data-concept="my-concept"] { --bg: 8 14 30; --font-sans: 'Space Grotesk', sans-serif; }
  * (the concept route wraps every concept in <div data-concept="<folder>">).
  * Colours are space-separated RGB channels so Tailwind alpha works: bg-surface/60.
+ *
+ * The app itself uses the Flight Record tokens in flight.css (loaded after this
+ * file, on :root). The neutral values below stay as the default inside a
+ * concept wrapper, so the archived concepts look as they did.
  */
-:root {
+:root,
+[data-concept] {
   /* surfaces */
   --bg: 14 17 23;
   --surface: 22 26 34;

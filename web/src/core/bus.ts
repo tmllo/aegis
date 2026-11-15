@@ -13,6 +13,18 @@ export interface CoreEvents {
   alert: { level: 'watch' | 'warning'; message: string; time: string };
   report: { id: string; subject: string; bytes: number; queuedAt: string; arrivesAt: string | null };
   device: { id: string; status: 'connected' | 'disconnected' | 'error' };
+  /** A check-in was saved for a crew member (values keyed by metric). */
+  checkin: { subject: string; date: string; metrics: MetricKey[]; source: string; time: string };
+  /** An escalation case moved to a new step (see core/escalation.ts). */
+  case: { id: string; subject: string; metric: MetricKey; severity: Severity; step: string; outcome: string | null; time: string };
+  /** A bundle changed state on the comm link (see core/link.ts). */
+  link: { id: string; kind: string; status: 'queued' | 'in_flight' | 'delivered'; bytes: number; time: string };
+  /** A CMO-DA case bundle was built (see core/handoff.ts). */
+  handoff: { id: string; subject: string; bytes: number; time: string };
+  /** The wrist was asked to pulse. */
+  wrist: { id: string; subject: string | null; pattern: 'single' | 'double' | 'continuous'; reason: string; time: string };
+  /** The environment switch changed. */
+  environment: { environment: string; time: string };
 }
 
 export interface BusRecord<E, K extends keyof E = keyof E> {

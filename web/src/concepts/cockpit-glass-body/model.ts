@@ -148,12 +148,14 @@ function bandFor(key: MetricKey, member: CrewMember, data: CrewData, env: Enviro
   const base = member.baseline[key];
   if (base) {
     const span = Math.max(4 * base.sd, value == null ? 0 : Math.abs(value - base.mean) * 1.15);
+    // The quiet range never reads past the metric's own absolute bounds (mood cannot exceed its scale).
+    const { min, max } = meta.absolute_red;
     return {
       kind: 'baseline',
       lo: base.mean - span,
       hi: base.mean + span,
-      from: base.mean - AMBER_Z * base.sd,
-      to: base.mean + AMBER_Z * base.sd,
+      from: Math.max(base.mean - AMBER_Z * base.sd, min),
+      to: Math.min(base.mean + AMBER_Z * base.sd, max),
       mean: base.mean,
     };
   }

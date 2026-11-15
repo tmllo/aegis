@@ -3,9 +3,10 @@
 // The graph itself (nodes, edges, status, owner, refs) is read from lineage.json;
 // only the placement on the rings lives here.
 import lineageJson from '../../../docs/lineage.json';
+import { REGIONS, type Region } from '../../data/types';
 
 export type LStatus = 'live' | 'simulated' | 'planned' | 'offline-sample';
-export type LKind = 'api' | 'core' | 'dataset' | 'device' | 'model' | 'person' | 'surface';
+export type LKind = 'api' | 'core' | 'dataset' | 'device' | 'model' | 'person' | 'surface' | 'body';
 
 export interface LNode {
   id: string;
@@ -26,6 +27,8 @@ export interface LNode {
   samples?: string[];
   maps_to?: string[];
   path?: string;
+  /** Set on the five body-region nodes this map adds between Scoring and the surfaces. */
+  region?: Region;
 }
 
 export interface LEdge {
@@ -46,15 +49,45 @@ interface LineageFile {
 }
 
 export const LINEAGE = lineageJson as unknown as LineageFile;
-export const NODES = LINEAGE.nodes;
-export const EDGES = LINEAGE.edges;
+
+/**
+ * Body regions. lineage.json stops at "Scoring"; the app then groups every
+ * metric under one of the five contract regions (metrics[m].body_region,
+ * core/scoring regionStatus) before a surface draws it. The map shows that hop
+ * as five nodes so a metric path visibly passes through its place in the body.
+ */
+export const bodyId = (r: Region) => `body_${r}`;
+const BODY_REF = ['contracts/DATA_CONTRACT.md', 'web/src/core/scoring.ts'];
+const BODY_NODES: LNode[] = REGIONS.map((r) => ({
+  id: bodyId(r),
+  label: r === 'whole_body' ? 'Whole body' : r.charAt(0).toUpperCase() + r.slice(1),
+  kind: 'body',
+  status: 'live',
+  layer: 3.5,
+  owner: 'emile',
+  source: 'Body region. Each metric belongs to one region; the region takes the worst status of its metrics.',
+  url: null,
+  license: null,
+  cadence: 'Every scored check-in',
+  fields: ['status'],
+  ref: BODY_REF,
+  stage: 'runtime',
+  region: r,
+}));
+const BODY_EDGES: LEdge[] = REGIONS.flatMap((r) => [
+  { from: 'core_scoring', to: bodyId(r), payload: 'Region status', fields: ['status'], status: 'live' as LStatus, ref: BODY_REF },
+  { from: bodyId(r), to: 'sf_console', payload: 'Region status', fields: ['status'], status: 'live' as LStatus, ref: BODY_REF },
+]);
+
+export const NODES: LNode[] = [...LINEAGE.nodes, ...BODY_NODES];
+export const EDGES: LEdge[] = [...LINEAGE.edges, ...BODY_EDGES];
 export const NODE_BY_ID: Record<string, LNode> = Object.fromEntries(NODES.map((n) => [n.id, n]));
 
 /* ------------------------------------------------------------------ layout */
 
 /** Ring radii in map units (1 unit = 1 px at 1080p). Index 0 is the centre mark. */
 export const RADII = [0, 125, 250, 325, 390, 452];
-export const RING_NAMES = ['Bus', 'Core', 'Adapters', 'Files, models', 'Devices, feeds', 'Outside'];
+export const RING_NAMES = ['Bus', 'Core', 'Adapters, body', 'Files, screens', 'Devices, feeds', 'Outside'];
 
 /**
  * Placement: id -> [ring, angle]. Angle in degrees, counter-clockwise from
@@ -66,60 +99,65 @@ const PLACE: Record<string, [number, number]> = {
 
   core_observation: [1, 150],
   core_scoring: [1, 112],
-  core_escalation: [1, 38],
-  core_handoff: [1, 344],
-  core_radiation: [1, 250],
+  core_escalation: [1, 0],
+  core_handoff: [1, 334],
+  core_radiation: [1, 262],
 
-  ad_loader: [2, 166],
-  ad_replay: [2, 144],
-  ad_sim_dosimeter: [2, 122],
-  ad_sim_biomonitor: [2, 100],
-  ad_ble_hr: [2, 78],
-  ad_manual: [2, 56],
-  ad_registry: [2, 28],
-  ad_spaceweather: [2, 237],
+  ad_loader: [2, 173],
+  ad_replay: [2, 156],
+  ad_sim_dosimeter: [2, 139],
+  ad_sim_biomonitor: [2, 122],
+  ad_ble_hr: [2, 105],
+  ad_manual: [2, 88],
+  body_brain: [2, 62],
+  body_heart: [2, 50],
+  body_blood: [2, 38],
+  body_bones: [2, 26],
+  body_whole_body: [2, 14],
+  ad_registry: [2, 345],
+  ad_spaceweather: [2, 296],
 
-  ml_generator: [3, 167],
-  ml_crew_flags: [3, 151],
-  ds_crew_data: [3, 133],
-  ml_real_crew: [3, 111],
-  ds_real_crew: [3, 89],
-  sf_console: [3, 67],
-  person_cmo: [3, 45],
-  sf_wrist: [3, 27],
-  sf_systems: [3, 11],
-  ml_fetch_donki: [3, 192],
-  ml_prepare: [3, 210],
-  ml_model_v1: [3, 228],
-  ml_export: [3, 246],
-  ds_storm_forecast: [3, 264],
+  ml_generator: [3, 169],
+  ml_crew_flags: [3, 145],
+  ds_crew_data: [3, 130.5],
+  ml_real_crew: [3, 113.5],
+  ds_real_crew: [3, 96.5],
+  sf_console: [3, 72],
+  person_cmo: [3, 44],
+  sf_wrist: [3, 20],
+  sf_systems: [3, 356],
+  ml_fetch_donki: [3, 196],
+  ml_prepare: [3, 214],
+  ml_model_v1: [3, 232],
+  ml_export: [3, 250],
+  ds_storm_forecast: [3, 268],
   sf_radiation: [3, 318],
 
-  dev_tmini: [4, 156],
-  dev_actiwatch: [4, 141],
-  dev_dosimeter: [4, 122],
-  dev_biomonitor: [4, 100],
-  dev_ble_strap: [4, 78],
-  crew: [4, 56],
-  dev_bioanalyzer: [4, 38],
+  dev_tmini: [4, 163],
+  dev_actiwatch: [4, 151],
+  dev_dosimeter: [4, 139],
+  dev_biomonitor: [4, 122],
+  dev_ble_strap: [4, 105],
+  crew: [4, 88],
+  dev_bioanalyzer: [4, 78],
   core_link: [4, 0],
-  api_iswa_hapi: [4, 197],
-  api_radlab: [4, 209],
-  api_swpc_scales: [4, 222],
-  api_swpc_protons: [4, 237],
-  api_swpc_xray: [4, 255],
-  api_swpc_alerts: [4, 273],
-  api_swpc_kp: [4, 291],
+  api_iswa_hapi: [4, 205],
+  api_radlab: [4, 223],
+  api_swpc_scales: [4, 277],
+  api_swpc_protons: [4, 288],
+  api_swpc_xray: [4, 299],
+  api_swpc_alerts: [4, 309],
+  api_swpc_kp: [4, 327],
 
-  ds_published_ranges: [5, 163],
-  ds_osd575: [5, 111],
-  api_corquaid: [5, 49],
-  api_wheretheiss: [5, 37],
-  api_isslive: [5, 25],
-  ext_cmo_da: [5, 12],
+  ds_published_ranges: [5, 169],
+  ds_osd575: [5, 113.5],
+  api_corquaid: [5, 46],
+  api_wheretheiss: [5, 34],
+  api_isslive: [5, 22],
+  ext_cmo_da: [5, 334],
   sf_ground: [5, 0],
   person_surgeon: [5, 348],
-  api_donki: [5, 192],
+  api_donki: [5, 196],
 };
 
 export interface Placed {
@@ -226,6 +264,18 @@ function closure(start: string, dir: 'up' | 'down', stopAt: (id: string) => bool
   return { nodes, edges };
 }
 
+/** Direct neighbours only, for the From / To rows of the sheet. */
+export function direct(id: string): { from: LNode[]; to: LNode[] } {
+  const from = new Set<string>();
+  const to = new Set<string>();
+  for (const e of EDGES) {
+    if (e.to === id && e.from !== id) from.add(e.from);
+    if (e.from === id && e.to !== id) to.add(e.to);
+  }
+  const list = (ids: Set<string>) => [...ids].map((n) => NODE_BY_ID[n]).sort((p, q) => p.layer - q.layer);
+  return { from: list(from), to: list(to) };
+}
+
 /** Upstream and downstream of one node. The bus is a hub, so the walk stops there. */
 export function neighbourhood(id: string) {
   const stop = (n: string) => n === BUS;
@@ -258,11 +308,12 @@ export const inStage = (id: string, stage: 'build' | 'runtime' | null) =>
  * adapters, the Observation normaliser, the bus and scoring, to the console and
  * on to the ground. `metricKeys` are the keys of crew_data.json `metrics`.
  */
-export function metricTrace(key: string, metricKeys: readonly string[], isDose: boolean) {
+export function metricTrace(key: string, metricKeys: readonly string[], isDose: boolean, region: Region | null) {
   const keys = new Set(metricKeys);
   const carried = (n: LNode) => [...n.fields, ...(n.maps_to ?? [])];
   // A node that names specific metrics takes part only if it names this one.
   const allowed = (n: LNode) => {
+    if (n.region) return n.region === region;
     if (n.id === 'core_radiation' || n.id === 'sf_radiation') return isDose;
     if (['sf_wrist', 'sf_systems', 'ad_registry', 'ext_cmo_da'].includes(n.id)) return false;
     const c = carried(n).filter((f) => keys.has(f));
@@ -301,5 +352,19 @@ export function metricTrace(key: string, metricKeys: readonly string[], isDose: 
       nodes.add(e.to);
     }
   });
-  return { nodes, edges, sources };
+  // Hops after the point where a flag can be raised: Scoring and everything downstream of it.
+  const after = new Set<string>(['core_scoring']);
+  const q = ['core_scoring'];
+  while (q.length) {
+    const id = q.pop() as string;
+    for (const i of edges) {
+      const e = EDGES[i];
+      if (e.from === id && e.to !== 'core_scoring' && !after.has(e.to)) {
+        after.add(e.to);
+        q.push(e.to);
+      }
+    }
+  }
+  const flagged = new Set<number>([...edges].filter((i) => after.has(EDGES[i].from) && EDGES[i].to !== 'core_scoring'));
+  return { nodes, edges, sources, flagged };
 }

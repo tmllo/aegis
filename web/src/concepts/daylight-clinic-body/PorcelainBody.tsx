@@ -1,8 +1,8 @@
 // Frosted porcelain body for the Daylight Clinic direction.
 // Anatomy: BodyParts3D 4.0 (c) The Database Center for Life Science, CC BY 4.0, via human-atlas (MIT).
-// Layers: organs (opaque) -> skeleton depth prepass -> ghost skeleton -> muscle -> skin veil.
-// Status sits inside the body: organ tint, exact focus structures (triangle ranges from
-// body-map.json) and hotspot uniforms that diffuse through skin and bone at the anchor.
+// Layers: organs (opaque) -> skeleton depth prepass -> ghost skeleton -> muscle -> skin veil
+// -> status pass. Flagged or selected structures (triangle ranges from body-map.json) are
+// drawn again above every veil in the status colour, so the state reads from across a room.
 import { useEffect, useMemo, useRef } from 'react';
 import { useFrame, useThree, type ThreeEvent } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
@@ -15,7 +15,7 @@ const HOTS = 4;
 
 export const PALETTE = {
   porcelain: '#F6F2EA',
-  edge: '#746C5E',
+  edge: '#4A443A',
   shadow: '#CFC6B8',
   deep: '#7F786C',
   accent: '#2B3FBF',
@@ -23,6 +23,7 @@ export const PALETTE = {
   ink: '#1A1D2B',
   amber: '#B86E00',
   red: '#C8322B',
+  neutral: '#6B655B',
 };
 const STATUS_HEX: Record<Status, string> = { green: PALETTE.deep, amber: PALETTE.amber, red: PALETTE.red };
 
@@ -41,7 +42,6 @@ const FRAG = /* glsl */ `
 uniform vec3 uBase;
 uniform vec3 uEdge;
 uniform vec3 uPorcelain;
-uniform vec3 uAccent;
 uniform vec3 uTint;
 uniform float uTintAmt;
 uniform float uEdgeAmt;
@@ -55,8 +55,6 @@ uniform float uHoleAmt;
 uniform float uSolid;
 uniform float uThin;
 uniform vec4 uHole;
-uniform float uScanY;
-uniform float uScanOn;
 uniform vec3 uHotPos[HOTS];
 uniform vec3 uHotCol[HOTS];
 uniform vec2 uHot[HOTS];
@@ -70,14 +68,12 @@ void main() {
   vec3 col = uBase * mix(0.8, 1.03, lit);
   float a = mix(uAlphaC * (1.0 - 0.45 * uThin), uAlphaE, f);
   float cut = 0.0;
-  // Data for a height exists once the scan line has passed it (head to feet).
-  float reveal = smoothstep(uScanY - 0.02, uScanY + 0.06, vW.y);
-  col = mix(col, uTint, uTintAmt * reveal);
+  col = mix(col, uTint, uTintAmt);
   for (int i = 0; i < HOTS; i++) {
     float d = distance(vW, uHotPos[i]);
     float h = 1.0 - smoothstep(0.0, uHot[i].x, d);
-    cut = max(cut, h * uHot[i].y * reveal);
-    h = h * uHot[i].y * reveal * uHotGain;
+    cut = max(cut, h * uHot[i].y);
+    h = h * uHot[i].y * uHotGain;
     col = mix(col, uHotCol[i], h * 0.9);
     a = mix(a, max(a, 0.86), h);
   }
@@ -89,10 +85,25 @@ void main() {
   float hole = 1.0 - smoothstep(uHole.w * 0.75, uHole.w * 1.35, distance(vW, uHole.xyz));
   a *= 1.0 - 0.92 * max(uHotCut * smoothstep(0.0, 0.45, cut), uHoleAmt * hole);
   a *= uShow;
-  float band = uScanOn * exp(-pow((vW.y - uScanY) / 0.006, 2.0));
-  col = mix(col, uAccent, band);
-  a = max(a, band * uShow);
   gl_FragColor = vec4(col, a);
+  #include <colorspace_fragment>
+}`;
+
+// Status pass: flat status colour with a darker rim, so the structure keeps an outline.
+const TOP_FRAG = /* glsl */ `
+uniform vec3 uCol;
+uniform vec3 uRim;
+uniform float uA;
+varying vec3 vW;
+varying vec3 vN;
+void main() {
+  vec3 n = normalize(vN);
+  vec3 v = normalize(cameraPosition - vW);
+  float f = 1.0 - abs(dot(n, v));
+  float lit = dot(n, normalize(vec3(0.35, 0.8, 0.5))) * 0.5 + 0.5;
+  vec3 col = uCol * mix(0.86, 1.1, lit);
+  col = mix(col, uRim, smoothstep(0.45, 0.92, f));
+  gl_FragColor = vec4(col, uA);
   #include <colorspace_fragment>
 }`;
 
@@ -154,8 +165,6 @@ interface Props {
   state: BodyState;
   pose: Pose;
   regionBoxes: Record<Region, Box>;
-  /** Changes on load and on crew switch: restarts the scan line. */
-  scanKey: string;
   reduced: boolean;
   onPick: (r: Region) => void;
   onFrame: (camera: THREE.Camera, w: number, h: number) => void;
@@ -170,10 +179,7 @@ const breath = (s: Status, t: number): number =>
 function makeShared() {
   return {
     uPorcelain: { value: new THREE.Color(PALETTE.porcelain) },
-    uAccent: { value: new THREE.Color(PALETTE.accent) },
     uEdge: { value: new THREE.Color(PALETTE.edge) },
-    uScanY: { value: BODY_H + 0.1 },
-    uScanOn: { value: 0 },
     uHotPos: { value: Array.from({ length: HOTS }, () => new THREE.Vector3()) },
     uHotCol: { value: Array.from({ length: HOTS }, () => new THREE.Color()) },
     uHot: { value: Array.from({ length: HOTS }, () => new THREE.Vector2(0.1, 0)) },
@@ -208,11 +214,39 @@ function makeMaterial(cfg: LayerCfg, shared: ReturnType<typeof makeShared>) {
   });
 }
 
-function Body({ state, scanKey, reduced, onReady }: Pick<Props, 'state' | 'scanKey' | 'reduced' | 'onReady'>) {
+function makeTop() {
+  return new THREE.ShaderMaterial({
+    vertexShader: VERT,
+    fragmentShader: TOP_FRAG,
+    uniforms: {
+      uCol: { value: new THREE.Color(PALETTE.neutral) },
+      uRim: { value: new THREE.Color(PALETTE.ink) },
+      uA: { value: 0 },
+    },
+    transparent: true,
+    depthWrite: true,
+    side: THREE.FrontSide,
+  });
+}
+
+const HIDDEN = new THREE.MeshBasicMaterial({ visible: false });
+const clearDepth = (renderer: THREE.WebGLRenderer) => renderer.clearDepth();
+
+/** Clears depth between passes so the status pass draws above the veils with its own occlusion. */
+function DepthClear({ order }: { order: number }) {
+  return (
+    <mesh renderOrder={order} frustumCulled={false} raycast={noRaycast} onBeforeRender={clearDepth}>
+      <planeGeometry args={[0.001, 0.001]} />
+      <meshBasicMaterial transparent colorWrite={false} depthWrite={false} depthTest={false} />
+    </mesh>
+  );
+}
+
+function Body({ state, reduced, onReady }: Pick<Props, 'state' | 'reduced' | 'onReady'>) {
   const { scene } = useGLTF(URL);
   const live = useRef(state);
   live.current = state;
-  const scan = useRef({ t: 0, on: false });
+  const rim = useMemo(() => new THREE.Color(), []);
   const clock = useRef(0);
   const hotAmt = useRef(new Float32Array(HOTS));
 
@@ -232,6 +266,8 @@ function Body({ state, scanKey, reduced, onReady }: Pick<Props, 'state' | 'scanK
       s: THREE.Vector3;
       mats: [THREE.ShaderMaterial, THREE.ShaderMaterial];
       pre: THREE.ShaderMaterial | null;
+      /** Status pass: the rest of the node, then its focus structures. */
+      top: { rest: THREE.ShaderMaterial; focus: THREE.ShaderMaterial; restMesh: THREE.Mesh | null; focusMesh: THREE.Mesh | null } | null;
     }[] = [];
     scene.traverse((o) => {
       const m = o as THREE.Mesh;
@@ -250,7 +286,8 @@ function Body({ state, scanKey, reduced, onReady }: Pick<Props, 'state' | 'scanK
       const pre = cfg.prepass
         ? new THREE.ShaderMaterial({ vertexShader: VERT, fragmentShader: PRE_FRAG, colorWrite: false })
         : null;
-      out.push({ node, cfg, geo, src: m.geometry, p, q, s, mats: [makeMaterial(cfg, shared), makeMaterial(cfg, shared)], pre });
+      const top = node === 'whole_body' ? null : { rest: makeTop(), focus: makeTop(), restMesh: null, focusMesh: null };
+      out.push({ node, cfg, geo, src: m.geometry, p, q, s, mats: [makeMaterial(cfg, shared), makeMaterial(cfg, shared)], pre, top });
     });
     return out;
   }, [scene, shared]);
@@ -261,6 +298,8 @@ function Body({ state, scanKey, reduced, onReady }: Pick<Props, 'state' | 'scanK
         p.geo.dispose();
         p.mats.forEach((m) => m.dispose());
         p.pre?.dispose();
+        p.top?.rest.dispose();
+        p.top?.focus.dispose();
       }
     },
     [parts],
@@ -291,17 +330,6 @@ function Body({ state, scanKey, reduced, onReady }: Pick<Props, 'state' | 'scanK
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [parts, focusKey]);
 
-  // Scan line: once on load and on every crew switch.
-  useEffect(() => {
-    if (reduced) {
-      scan.current.on = false;
-      shared.uScanOn.value = 0;
-      shared.uScanY.value = -1;
-      return;
-    }
-    scan.current = { t: 0, on: true };
-  }, [scanKey, reduced, shared]);
-
   useFrame((_, dt) => {
     const d = Math.min(dt, 0.05);
     clock.current += d;
@@ -309,21 +337,9 @@ function Body({ state, scanKey, reduced, onReady }: Pick<Props, 'state' | 'scanK
     const st = live.current;
     const anySel = st.selectedNodes !== null;
 
-    if (scan.current.on) {
-      scan.current.t += Math.min(dt, 0.25);
-      const k = Math.min(1, scan.current.t / 0.9);
-      shared.uScanY.value = BODY_H + 0.05 - k * (BODY_H + 0.12);
-      shared.uScanOn.value = 1;
-      if (k >= 1) {
-        scan.current.on = false;
-        shared.uScanOn.value = 0;
-        shared.uScanY.value = -1;
-      }
-    }
-
     for (let i = 0; i < HOTS; i++) {
       const h = st.hots[i];
-      const target = h ? (h.lit ? 1 : 0.18) * breath(h.status, t) : 0;
+      const target = h ? (h.lit ? 1 : 0.18) * (reduced ? 1 : breath(h.status, t)) : 0;
       hotAmt.current[i] = THREE.MathUtils.damp(hotAmt.current[i], target, 12, d);
       if (h) {
         shared.uHotPos.value[i].set(h.pos[0], h.pos[1], h.pos[2]);
@@ -340,7 +356,7 @@ function Body({ state, scanKey, reduced, onReady }: Pick<Props, 'state' | 'scanK
       const isSel = anySel && st.selectedNodes!.includes(p.node);
       const flagged = status !== 'green';
       const back = anySel && !isSel ? 0.3 : 1;
-      const b = breath(status, t);
+      const b = reduced ? 1 : breath(status, t);
       const fo = st.focus[p.node];
       const [base, focus] = p.mats;
 
@@ -366,6 +382,24 @@ function Body({ state, scanKey, reduced, onReady }: Pick<Props, 'state' | 'scanK
         m.uniforms.uMute.value = THREE.MathUtils.damp(m.uniforms.uMute.value, mute, 12, d);
         m.uniforms.uShow.value = THREE.MathUtils.damp(m.uniforms.uShow.value, show, 12, d);
       }
+
+      if (p.top) {
+        const { rest, focus: fm, restMesh, focusMesh } = p.top;
+        const restTarget = (flagged ? (fo ? 0.5 : 0.94) : isSel ? (fo ? 0.16 : 0.6) : 0) * back * b;
+        const focusTarget = fo ? 0.97 * back * (fo.status === 'green' ? 1 : b) : 0;
+        rest.uniforms.uA.value = THREE.MathUtils.damp(rest.uniforms.uA.value, restTarget, 12, d);
+        fm.uniforms.uA.value = THREE.MathUtils.damp(fm.uniforms.uA.value, focusTarget, 12, d);
+        if (flagged || restTarget > 0) {
+          rest.uniforms.uCol.value.set(flagged ? STATUS_HEX[status] : PALETTE.neutral);
+          rest.uniforms.uRim.value.copy(rim.copy(rest.uniforms.uCol.value).multiplyScalar(0.5));
+        }
+        if (fo) {
+          fm.uniforms.uCol.value.set(fo.status === 'green' ? PALETTE.neutral : STATUS_HEX[fo.status]);
+          fm.uniforms.uRim.value.copy(rim.copy(fm.uniforms.uCol.value).multiplyScalar(0.42));
+        }
+        if (restMesh) restMesh.visible = rest.uniforms.uA.value > 0.01;
+        if (focusMesh) focusMesh.visible = fm.uniforms.uA.value > 0.01;
+      }
     }
   });
 
@@ -377,8 +411,32 @@ function Body({ state, scanKey, reduced, onReady }: Pick<Props, 'state' | 'scanK
             <mesh geometry={p.src} material={p.pre} renderOrder={1} frustumCulled={false} raycast={noRaycast} />
           )}
           <mesh geometry={p.geo} material={p.mats} renderOrder={p.cfg.order} frustumCulled={false} raycast={noRaycast} />
+          {p.top && (
+            <>
+              <mesh
+                ref={(el) => (p.top!.restMesh = el)}
+                geometry={p.geo}
+                material={[p.top.rest, HIDDEN]}
+                renderOrder={10}
+                visible={false}
+                frustumCulled={false}
+                raycast={noRaycast}
+              />
+              <mesh
+                ref={(el) => (p.top!.focusMesh = el)}
+                geometry={p.geo}
+                material={[HIDDEN, p.top.focus]}
+                renderOrder={12}
+                visible={false}
+                frustumCulled={false}
+                raycast={noRaycast}
+              />
+            </>
+          )}
         </group>
       ))}
+      <DepthClear order={9} />
+      <DepthClear order={11} />
     </group>
   );
 }
@@ -509,7 +567,7 @@ export function PorcelainScene(props: Props) {
     <>
       <Rig pose={props.pose} reduced={props.reduced} onFrame={props.onFrame} />
       <Floor />
-      <Body state={props.state} scanKey={props.scanKey} reduced={props.reduced} onReady={props.onReady} />
+      <Body state={props.state} reduced={props.reduced} onReady={props.onReady} />
       <Proxies boxes={props.regionBoxes} onPick={props.onPick} />
     </>
   );

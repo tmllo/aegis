@@ -195,7 +195,7 @@
   transition: opacity var(--cg-state);
 }
 .cg-stage[data-focus='true'] :is(.cg-ring, .cg-ring-inner, .cg-tick) {
-  opacity: 0.45;
+  opacity: 0.15;
 }
 @keyframes cg-draw {
   from { stroke-dashoffset: 1; }
@@ -251,10 +251,11 @@
   min-height: 72px;
   min-width: 132px;
   padding: 0 14px;
-  transform: translateY(-50%);
+  /* --cg-dx / --cg-dy: written per frame while the readout is docked beside the brackets */
+  transform: translate(var(--cg-dx, 0px), calc(-50% + var(--cg-dy, 0px)));
   border-radius: 2px;
   color: var(--cg-t2);
-  transition: transform var(--cg-press), background-color var(--cg-press), opacity var(--cg-state), color var(--cg-state);
+  transition: background-color var(--cg-press), background-color var(--cg-press), opacity var(--cg-state), color var(--cg-state);
 }
 .cg-readout[data-side='left'] {
   flex-direction: row-reverse;
@@ -292,6 +293,7 @@
 }
 .cg-readout[data-state='on'] {
   color: var(--cg-t1);
+  background: var(--cg-bg1);
   box-shadow: inset 0 0 0 1px var(--cg-accent);
 }
 /* only quiet regions step back; a Watch or Act readout never dims */
@@ -299,8 +301,20 @@
   opacity: 0.4;
 }
 .cg-readout:active {
-  transform: translateY(-50%) scale(0.97);
   background: var(--cg-bg3);
+}
+/* green is the quiet state: an outline, never a lit dot */
+.cg-shape[data-status='green'] circle {
+  fill: none;
+  stroke: var(--cg-s);
+  stroke-width: 1.75;
+  opacity: 0.8;
+}
+.cg-overall .cg-shape[data-status='green'] circle,
+.cg-top-status .cg-shape[data-status='green'] circle {
+  fill: var(--cg-s);
+  stroke: none;
+  opacity: 1;
 }
 
 /* rotate controls: their own solid strip in the bottom-left corner, clear of the body */
@@ -321,12 +335,8 @@
   padding: 2px 4px 0;
   color: var(--cg-t1);
 }
-.cg-square {
-  background: rgb(2 8 56 / 0.6);
-}
-.cg-rotate .cg-label {
-  width: 88px;
-  text-align: center;
+.cg-rotate .cg-square {
+  background: var(--cg-bg1);
 }
 .cg-square {
   flex: none;
@@ -363,11 +373,11 @@
   padding: var(--cg-pane-pad, 28px 32px 24px);
   animation: cg-pane-in 280ms var(--cg-ease-panel) both;
 }
-.cg-pane > .cg-rows,
+.cg-pane > .cg-issues,
 .cg-pane > .cg-body {
   min-height: 0;
 }
-.cg-pane:has(> .cg-rows) {
+.cg-pane:has(> .cg-issues) {
   grid-template-rows: auto auto minmax(0, 1fr) auto;
 }
 .cg-pane:has(> .cg-body) {
@@ -436,24 +446,22 @@
   font-size: 22px;
   color: var(--cg-t2);
 }
+.cg-issues {
+  overflow: hidden;
+}
 .cg-rows {
   list-style: none;
   margin: 0;
   padding: 0;
-  display: grid;
-  grid-template-rows: repeat(var(--cg-n), minmax(64px, 80px));
-  align-content: start;
 }
-.cg-rows li {
-  display: grid;
-}
+/* one row per out-of-range metric: where, 14 days, value against the person's own range */
 .cg-row {
   width: 100%;
-  min-height: 64px;
+  min-height: var(--cg-row-h, 128px);
   display: grid;
-  grid-template-columns: 20px minmax(88px, 132px) minmax(0, 1fr) auto 20px;
+  grid-template-columns: 24px minmax(96px, 150px) minmax(0, 1fr) auto 20px;
   align-items: center;
-  gap: 16px;
+  gap: 20px;
   padding: 0 8px !important;
   border-bottom: 1px solid var(--cg-line-soft) !important;
   text-align: left;
@@ -464,32 +472,51 @@
   transform: scale(0.99);
   background: var(--cg-bg3);
 }
+.cg-row-where,
+.cg-row-reading {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+.cg-row-reading {
+  text-align: right;
+}
 .cg-row-word {
-  font-size: 24px;
+  font-size: 28px;
+  line-height: 32px;
   color: var(--cg-t1);
 }
 .cg-row-metric {
   font-size: 16px;
+  line-height: 20px;
+  white-space: nowrap;
 }
 .cg-row-value {
   white-space: nowrap;
-  font-size: 24px;
+  font-size: 32px;
+  line-height: 32px;
   font-weight: 300;
   color: var(--cg-t1);
 }
 .cg-row-value i {
   margin-left: 6px;
-  font-size: 15px;
+  font-size: 16px;
   color: var(--cg-t2);
 }
-.cg-row[data-status='green'] .cg-row-value {
-  color: var(--cg-t2);
+.cg-spark {
+  width: 100%;
+  max-width: 280px;
+  height: var(--cg-spark-h, 64px);
+  justify-self: center;
+  overflow: visible;
 }
 .cg-quiet {
   display: flex;
   align-items: center;
-  gap: 12px;
-  font-size: 16px;
+  gap: 14px;
+  min-height: 64px;
+  padding: 0 12px;
+  font-size: 18px;
   color: var(--cg-t2);
 }
 
@@ -694,14 +721,27 @@
   padding-top: 14px;
   border-top: 1px solid var(--cg-line-soft);
 }
-.cg-action p:last-child {
+.cg-action p:nth-child(2) {
   margin-top: 6px;
   max-width: 62ch;
   font-size: 18px;
   line-height: 26px;
 }
-.cg-action[data-status='green'] p:last-child {
+.cg-action[data-status='green'] p:nth-child(2) {
   color: var(--cg-t2);
+}
+.cg-log {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  font-size: 16px;
+  line-height: 20px;
+  color: var(--cg-accent);
+}
+/* units keep their own spelling inside uppercase labels (mSv, mmHg, h) */
+.cg-u {
+  text-transform: none;
 }
 
 /* source chain: numbered, glove-sized steps that open their node on the data map */
@@ -926,22 +966,6 @@
 a.cg-nav-item:active {
   background: var(--cg-bg3);
 }
-.cg-legend {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  justify-content: flex-end;
-  gap: 32px;
-  font-size: 16px;
-  color: var(--cg-t2);
-}
-.cg-legend li {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
 .cg-foot {
   padding: 8px 32px 10px;
   background: var(--cg-bg1);
@@ -1011,9 +1035,17 @@ a.cg-nav-item:active {
   .cg-tabs {
     margin-top: 4px;
   }
+  [data-concept='cockpit-glass-body'] {
+    --cg-row-h: 80px;
+    --cg-spark-h: 40px;
+  }
+  .cg-row {
+    gap: 14px;
+  }
   .cg-row-word,
   .cg-row-value {
-    font-size: 20px;
+    font-size: 24px;
+    line-height: 26px;
   }
   .cg-trend {
     font-size: 16px;
@@ -1021,7 +1053,7 @@ a.cg-nav-item:active {
   .cg-explain {
     display: none;
   }
-  .cg-action p:last-child {
+  .cg-action p:nth-child(2) {
     font-size: 16px;
     line-height: 22px;
   }
@@ -1039,7 +1071,7 @@ a.cg-nav-item:active {
   .cg-btn-source {
     font-size: 14px;
   }
-  .cg-body:has(.cg-source) .cg-strip {
+  .cg-body:has(.cg-source) :is(.cg-strip, .cg-action) {
     display: none;
   }
   .cg-chain {
@@ -1061,9 +1093,6 @@ a.cg-nav-item:active {
   }
   .cg-nav-item {
     height: 80px;
-  }
-  .cg-legend {
-    gap: 20px;
   }
   .cg-foot {
     padding: 6px 20px 8px;
@@ -1090,7 +1119,6 @@ a.cg-nav-item:active {
   .cg-pane {
     animation-name: cg-fade;
   }
-  .cg-readout,
   .cg-btn,
   .cg-square,
   .cg-row,

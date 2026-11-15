@@ -1,11 +1,54 @@
-// Small drawing parts: line icons per node kind, status shapes, line-style swatch.
-import type { Status } from '../../data/types';
-import type { LKind, LStatus } from './graph';
+// Small drawing parts: line icons per node kind, body-region glyphs, status shapes, line-style swatch, plain names.
+import type { Region, Status } from '../../data/types';
+import type { LKind, LNode, LStatus } from './graph';
+
+const P = { fill: 'none', stroke: 'currentColor', strokeWidth: 1.5, strokeLinecap: 'round', strokeLinejoin: 'round' } as const;
+
+/** 16 px glyph for a body region, centred on 0,0. */
+export function RegionIcon({ region }: { region: Region }) {
+  switch (region) {
+    case 'brain':
+      return (
+        <g {...P}>
+          <path d="M0 -6.5c-2.6-1-5.4.6-5.2 3.2-1.8 1.4-1.4 4.4.8 5 .2 2.6 3 3.6 4.4 2.3 1.4 1.3 4.2.3 4.4-2.3 2.2-.6 2.6-3.6.8-5 .2-2.6-2.6-4.2-5.2-3.2z" />
+          <path d="M0 -6.5v10.5" />
+        </g>
+      );
+    case 'heart':
+      return (
+        <g {...P}>
+          <path d="M0 6.5C-8.5 1-7-6-3-6c1.6 0 2.6 1 3 2 .4-1 1.4-2 3-2 4 0 5.500 7-3 12.500z" />
+        </g>
+      );
+    case 'blood':
+      return (
+        <g {...P}>
+          <path d="M0 -7.500C3 -3.500 5.200 -.5 5.200 2.300a5.200 5.200 0 0 1-10.400 0C-5.200 -.5-3 -3.500 0 -7.500z" />
+        </g>
+      );
+    case 'bones':
+      return (
+        <g {...P}>
+          <path d="M-3.200 3.200l6.400-6.400" />
+          <path d="M3.200 -3.200c-1-2.400 1.800-4.200 3-2.200 2 1.200.2 4-2.200 3M-3.200 3.200c1 2.400-1.800 4.200-3 2.200-2-1.200-.2-4 2.200-3" />
+        </g>
+      );
+    case 'whole_body':
+      return (
+        <g {...P}>
+          <circle cy={-5.5} r={1.9} />
+          <path d="M0 -3.200v5.400M-4.500 -1.200h9M0 2.200l-3 5.300M0 2.200l3 5.300" />
+        </g>
+      );
+  }
+}
 
 /** 20 px line icon centred on 0,0. Stroke comes from the parent (currentColor). */
-export function KindIcon({ kind }: { kind: LKind }) {
-  const p = { fill: 'none', stroke: 'currentColor', strokeWidth: 1.5, strokeLinecap: 'round', strokeLinejoin: 'round' } as const;
+export function KindIcon({ kind, region }: { kind: LKind; region?: Region }) {
+  const p = P;
   switch (kind) {
+    case 'body':
+      return region ? <RegionIcon region={region} /> : null;
     case 'device':
       return (
         <g {...p}>
@@ -63,44 +106,65 @@ export function StatusShape({ status, size = 12 }: { status: Status; size?: numb
   const h = size / 2;
   return (
     <svg width={size} height={size} viewBox={`${-h} ${-h} ${size} ${size}`} className={`dca-shape dca-${status}`} aria-hidden>
-      {status === 'green' && <circle r={h - 1} />}
-      {status === 'amber' && <path d={`M0 ${-h + 0.5}L${h - 0.5} ${h - 1}H${-h + 0.5}z`} />}
-      {status === 'red' && <rect x={-h + 1} y={-h + 1} width={size - 2} height={size - 2} />}
+      <StatusMark status={status} size={size} />
     </svg>
   );
 }
 
+/** The same shape as bare SVG, for use inside the map. */
+export function StatusMark({ status, size = 12 }: { status: Status; size?: number }) {
+  const h = size / 2;
+  if (status === 'green') return <circle r={h - 1} />;
+  if (status === 'amber') return <path d={`M0 ${-h + 0.5}L${h - 0.5} ${h - 1}H${-h + 0.5}z`} />;
+  return <rect x={-h + 1} y={-h + 1} width={size - 2} height={size - 2} />;
+}
+
+// "live" in lineage.json means real data or a real working path; the app makes no live request.
 export const STATUS_WORD: Record<LStatus, string> = {
-  live: 'Live',
+  live: 'Real',
   simulated: 'Simulated',
   planned: 'Planned',
   'offline-sample': 'Offline sample',
 };
 export const CREW_WORD: Record<Status, string> = { green: 'Normal', amber: 'Watch', red: 'Act' };
+export const KIND_WORD: Record<LKind, string> = {
+  api: 'Feed',
+  core: 'Core',
+  dataset: 'File',
+  device: 'Device',
+  model: 'Pipeline',
+  person: 'Person',
+  surface: 'Screen',
+  body: 'Body region',
+};
 
-/** The node outline style, drawn as a short line. Offline sample is a hollow double line, planned is dotted. */
+/** Plain names for nodes whose lineage label is a file or class name. Display only. */
+const PLAIN: Record<string, string> = {
+  dev_ble_strap: 'Heart strap',
+  dev_dosimeter: 'Dosimeter',
+  ds_crew_data: 'Crew file',
+  ds_real_crew: 'Lab file',
+  ds_storm_forecast: 'Storm file',
+  ml_fetch_donki: 'Flare fetch',
+  ml_real_crew: 'Lab parser',
+  ml_prepare: 'Flare prep',
+  ml_model_v1: 'Storm model',
+  ml_export: 'Forecast export',
+  ad_replay: 'Replay',
+  ad_manual: 'Check-in',
+  ad_ble_hr: 'Bluetooth HR',
+  ad_spaceweather: 'Weather snapshot',
+  api_iswa_hapi: 'iSWA dose',
+  person_cmo: 'Medical officer',
+  core_handoff: 'Handoff',
+};
+export const plainName = (n: LNode): string => PLAIN[n.id] ?? n.label;
+
+/** The node outline style, drawn as a short line. */
 export function LineSwatch({ status }: { status: LStatus }) {
   return (
-    <svg width={28} height={10} viewBox="0 0 28 10" aria-hidden style={{ flex: 'none' }}>
-      {status === 'offline-sample' ? (
-        <>
-          <line x1={1} y1={2.5} x2={27} y2={2.5} className="dca-stroke dca-st-offline-sample" />
-          <line x1={1} y1={7.5} x2={27} y2={7.5} className="dca-stroke dca-st-offline-sample" />
-        </>
-      ) : (
-        <line x1={1} y1={5} x2={27} y2={5} className={`dca-stroke dca-st-${status}`} />
-      )}
+    <svg width={28} height={8} viewBox="0 0 28 8" aria-hidden>
+      <line x1={1} y1={4} x2={27} y2={4} className={`dca-stroke dca-st-${status}`} />
     </svg>
   );
 }
-
-/** Six words or fewer per node kind, for the sheet. */
-export const KIND_WHAT: Record<LKind, string> = {
-  api: 'Outside data feed',
-  core: 'Step inside the app',
-  dataset: 'Data file',
-  device: 'Body sensor',
-  model: 'Build script',
-  person: 'Person in the loop',
-  surface: 'Screen',
-};

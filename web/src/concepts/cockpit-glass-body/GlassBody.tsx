@@ -311,7 +311,10 @@ export function GlassBody(props: GlassBodyProps) {
       const g = geo[n.name];
       if (!g) continue;
       // Focus parts take the metric's status colour; context parts sit in another region, so they stay neutral.
-      const own = map?.focus?.[n.name];
+      // When the target organ is not in the model (glucose: no pancreas) nothing is singled out as
+      // solid: the node stays one quiet tint and the brackets alone mark the measurement site.
+      const absent = (map?.missing?.length ?? 0) > 0;
+      const own = absent ? undefined : map?.focus?.[n.name];
       const ctx = map?.context?.[n.name];
       const on = writeParts(g.geometry, n.name, own ?? ctx);
       u.uFocusColor.value.set(own ? colors.status[focusStatus ?? s ?? 'green'] : colors.ghost);

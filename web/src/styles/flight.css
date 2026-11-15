@@ -1,0 +1,227 @@
+/*
+ * Flight Record: the design system of the e^x Crew Station.
+ * Promoted from src/concepts/flight-record-body and flight-record-arch.
+ *
+ * Warm black, paper-white type, Instrument Serif headlines, mono small labels,
+ * hairlines instead of boxes. Status is a shape and a word first, colour last:
+ * circle green, triangle amber, square red.
+ *
+ * Colours are space-separated RGB channels so Tailwind alpha works (bg-paper/10).
+ * Every class in this file starts with "fx-" (the concepts own "fr-").
+ */
+:root {
+  /* surfaces (ink) */
+  --bg: 20 19 15; /* #14130f */
+  --surface: 27 25 19; /* #1b1913 */
+  --surface-2: 46 47 36; /* #2e2f24 */
+
+  /* hairlines: paper at 20% and 34% over the background, flattened */
+  --line: 65 63 59;
+  --line-strong: 96 94 89;
+
+  /* text (paper). --text-faint is the dimmest text allowed: 5.6:1 on --bg */
+  --text: 244 241 234; /* #f4f1ea */
+  --text-dim: 180 178 167; /* #b4b2a7 */
+  --text-faint: 145 143 132; /* #918f84 */
+
+  /* status only. Never decoration. */
+  --ok: 95 207 150; /* #5fcf96 */
+  --warn: 240 176 74; /* #f0b04a */
+  --crit: 240 86 74; /* #f0564a */
+
+  /* the one interactive accent is paper itself */
+  --accent: 244 241 234;
+  /* misses and false alarms in the replay: neutral, not a status */
+  --neutral-mark: 180 178 167;
+
+  /* type */
+  --font-sans: 'IBM Plex Sans', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --font-display: 'Instrument Serif', 'Times New Roman', serif;
+
+  /* shape: square corners; 2 px only where a fill needs softening */
+  --radius-sm: 0px;
+  --radius: 2px;
+  --radius-lg: 2px;
+
+  /* space */
+  --grid: 8px;
+  --gut: 48px; /* page gutter */
+  --touch: 56px; /* minimum target */
+  --touch-lg: 72px; /* default control, gloved */
+  --touch-xl: 96px; /* primary and emergency controls */
+
+  /* shell rows */
+  --nav-h: 64px;
+  --strip-h: 56px;
+
+  /* motion */
+  --dur-fast: 100ms; /* press echo */
+  --dur-base: 200ms; /* state change */
+  --dur-slow: 320ms; /* a new view, a sheet */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+@media (max-width: 1100px) {
+  :root {
+    --gut: 24px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-fast: 0ms;
+    --dur-base: 0ms;
+    --dur-slow: 0ms;
+  }
+}
+/* The in-app switch (state: reducedMotion) sets this attribute on <html>. */
+:root[data-reduced-motion='true'] {
+  --dur-fast: 0ms;
+  --dur-base: 0ms;
+  --dur-slow: 0ms;
+}
+
+@layer base {
+  body {
+    font-size: 16px;
+    line-height: 24px;
+    font-variant-numeric: tabular-nums;
+  }
+  button,
+  a {
+    -webkit-tap-highlight-color: transparent;
+  }
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+    font-weight: 400;
+  }
+  ::selection {
+    background: rgb(var(--text) / 0.24);
+  }
+}
+
+@layer components {
+  /* Small uppercase label: 14 px, the type floor. */
+  .fx-label {
+    font: 500 14px/20px var(--font-sans);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: rgb(var(--text-dim));
+  }
+  /* Mono caption: ids, dates, counts. */
+  .fx-mono {
+    font: 400 14px/20px var(--font-mono);
+    letter-spacing: 0;
+  }
+  /* Serif display sizes. */
+  .fx-hero {
+    font: 400 clamp(56px, 8.9vh, 96px) / 1 var(--font-display);
+    letter-spacing: -0.01em;
+  }
+  .fx-title {
+    font: 400 32px/36px var(--font-display);
+  }
+  .fx-numeral {
+    font-family: var(--font-display);
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    line-height: 1;
+  }
+  /* Press echo within 100 ms on anything pressable. */
+  .fx-press {
+    transition:
+      opacity var(--dur-fast) linear,
+      background-color var(--dur-fast) linear,
+      border-color var(--dur-fast) linear;
+  }
+  .fx-press:active:not(:disabled) {
+    opacity: 0.7;
+  }
+  .fx-press:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+  /* Thin scrollbars for scrolling panes. */
+  .fx-scroll {
+    overflow: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgb(var(--line-strong)) transparent;
+  }
+}
+
+/* Status shapes breathe: amber slowly, red faster. Nothing else loops. */
+.fx-breathe-amber {
+  animation: fx-breathe 2s ease-in-out infinite;
+}
+.fx-breathe-red {
+  animation: fx-breathe 1s ease-in-out infinite;
+}
+@keyframes fx-breathe {
+  50% {
+    opacity: 0.55;
+  }
+}
+/* A line of a headline rising from behind its mask. */
+.fx-mask {
+  display: block;
+  overflow: hidden;
+}
+.fx-mask > span {
+  display: block;
+  animation: fx-rise var(--dur-slow) var(--ease-out) both;
+}
+@keyframes fx-rise {
+  from {
+    transform: translateY(100%);
+  }
+}
+/* Content arriving: 8 px up and a fade. Stagger with style={{ animationDelay }}. */
+.fx-unfold {
+  animation: fx-unfold var(--dur-slow) var(--ease-out) both;
+}
+@keyframes fx-unfold {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+.fx-fade {
+  animation: fx-fade var(--dur-base) linear both;
+}
+@keyframes fx-fade {
+  from {
+    opacity: 0;
+  }
+}
+/* One wrist pulse. The wrist surface repeats it by pattern. */
+@keyframes fx-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fx-breathe-amber,
+  .fx-breathe-red,
+  .fx-mask > span,
+  .fx-unfold,
+  .fx-fade {
+    animation: none !important;
+  }
+}
+:root[data-reduced-motion='true'] .fx-breathe-amber,
+:root[data-reduced-motion='true'] .fx-breathe-red,
+:root[data-reduced-motion='true'] .fx-mask > span,
+:root[data-reduced-motion='true'] .fx-unfold,
+:root[data-reduced-motion='true'] .fx-fade {
+  animation: none !important;
+}

@@ -4,9 +4,9 @@
 // Counts on the nodes are sums of these real events; nothing is invented.
 import { createBus, type Bus, type CoreEvents } from '../../core/bus';
 import { seriesToObservations } from '../../core/observation';
-import { contextFor, regionStatus, scoreDay } from '../../core/scoring';
-import type { EnvironmentId, FlareEvent, MissionData, Severity, Status } from '../../data/types';
-import { edgeIndex } from './graph';
+import { contextFor, regionStatus, scoreDay, type MetricScore } from '../../core/scoring';
+import type { EnvironmentId, FlareEvent, MissionData, Region, Severity, Status } from '../../data/types';
+import { bodyId, edgeIndex } from './graph';
 
 export type Tone = 'neutral' | 'amber' | 'red';
 /** One packet journey: consecutive lineage edges, drawn hop after hop. */
@@ -43,6 +43,9 @@ const R = {
 };
 const last = (a: number[]) => (a.length ? a[a.length - 1] : -1);
 
+/** Trunk flows, drawn at rest: source to adapter to core to surface, and on to the ground. */
+export const TRUNK = new Set<number>([...R.obs, ...R.flagConsole, ...R.escalate, ...R.ground, ...R.storm]);
+
 export interface DayFlag {
   crew: string;
   status: Status;
@@ -58,8 +61,10 @@ export interface Replay {
   counts: Map<string, number>;
   /** Test flares whose peak falls inside the mission window. Zero means the storm half stays silent. */
   flaresInWindow: number;
-  /** Applies one mission day. Returns the packet journeys to draw. */
-  step: (day: number) => Journey[];
+  /** Core scores of one crew member on one mission day (empty when there is no row). */
+  scoresOn: (crewId: string, day: number) => MetricScore[];
+  /** Applies one mission day. Returns the packet journeys to draw. With dry = true nothing is counted or published. */
+  step: (day: number, dry?: boolean) => Journey[];
   reset: () => void;
 }
 
@@ -92,9 +97,16 @@ export function createReplay(data: MissionData, environment: EnvironmentId): Rep
   );
 
   const counts = new Map<string, number>();
-  const add = (n: number, ...ids: string[]) => ids.forEach((id) => counts.set(id, (counts.get(id) ?? 0) + n));
+  let live = true;
+  const add = (n: number, ...ids: string[]) => {
+    if (live) ids.forEach((id) => counts.set(id, (counts.get(id) ?? 0) + n));
+  };
+  const emit = <K extends keyof CoreEvents>(type: K, payload: CoreEvents[K]): void => {
+    if (live) bus.emit(type, payload);
+  };
 
-  function step(day: number): Journey[] {
+  function step(day: number, dry = false): Journey[] {
+    live = !dry;
     const out: Journey[] = [];
     file.crew.forEach((m, ci) => {
       const row = m.series[day];
@@ -102,7 +114,7 @@ export function createReplay(data: MissionData, environment: EnvironmentId): Rep
       let n = 0;
       for (const o of seriesToObservations(m.id, [row], file.metrics)) {
         if (o.value === null) continue;
-        bus.emit('observation', o);
+        emit('observation', o);
         n += 1;
       }
       if (!n) return;
@@ -112,23 +124,32 @@ export function createReplay(data: MissionData, environment: EnvironmentId): Rep
       const tone: Tone = overall === 'green' ? 'neutral' : overall;
       add(n, 'ds_crew_data', 'ad_loader', 'ad_replay', 'core_observation', 'core_bus', 'core_scoring', 'sf_console', 'sf_systems');
       out.push({ hops: R.obs, tone, after: -1 });
-      bus.emit('status', { subject: m.id, overall, time: row.date });
+      emit('status', { subject: m.id, overall, time: row.date });
       if (!flagged.length) return;
 
       for (const s of flagged) {
-        bus.emit('flag', { subject: m.id, metric: s.metric, severity: s.status as Severity, z: s.z, time: row.date });
+        emit('flag', { subject: m.id, metric: s.metric, severity: s.status as Severity, z: s.z, time: row.date });
       }
       const f = flagged.length;
       add(f, 'core_bus', 'sf_console', 'sf_wrist', 'sf_systems', 'core_escalation');
       add(1, 'core_handoff');
       out.push({ hops: R.flagConsole, tone, after: last(R.obs) });
+      // Each flag also lands on its body region, then on the console.
+      const regions = new Map<Region, Status>();
+      for (const s of flagged) {
+        const r = file.metrics[s.metric].body_region;
+        const was = regions.get(r);
+        if (!was || ORDER[s.status] > ORDER[was]) regions.set(r, s.status);
+        add(1, bodyId(r));
+      }
+      regions.forEach((st, r) => out.push({ hops: chain('core_scoring', bodyId(r), 'sf_console'), tone: st as Tone, after: last(R.obs) }));
       out.push({ hops: R.wrist, tone, after: R.flagConsole[0] ?? -1 });
       out.push({ hops: R.escalate, tone, after: last(R.obs) });
       out.push({ hops: R.handoff, tone, after: last(R.escalate) });
       if (overall === 'red') {
         // The report is the day's flagged scores; its size is the size of that JSON.
         const body = JSON.stringify({ subject: m.id, date: row.date, flags: flagged });
-        bus.emit('report', { id: `${m.id}-${row.date}`, subject: m.id, bytes: body.length, queuedAt: row.date, arrivesAt: null });
+        emit('report', { id: `${m.id}-${row.date}`, subject: m.id, bytes: body.length, queuedAt: row.date, arrivesAt: null });
         add(1, 'person_cmo', 'core_link', 'sf_ground', 'person_surgeon', 'sf_systems');
         out.push({ hops: R.cmo, tone, after: last(R.escalate) });
         out.push({ hops: R.ground, tone, after: last(R.escalate) });
@@ -140,7 +161,7 @@ export function createReplay(data: MissionData, environment: EnvironmentId): Rep
       add(1, 'ds_storm_forecast', 'core_radiation', 'core_bus', 'sf_radiation', 'sf_systems');
       out.push({ hops: R.storm, tone, after: -1 });
       if (e.alert_level === 'none') continue;
-      bus.emit('alert', { level: e.alert_level, message: `${e.flare_class} p_storm ${e.p_storm}`, time: e.peak_time });
+      emit('alert', { level: e.alert_level, message: `${e.flare_class} p_storm ${e.p_storm}`, time: e.peak_time });
       add(1, 'core_escalation', 'sf_wrist');
       out.push({ hops: R.stormEscalate, tone, after: R.storm[0] ?? -1 });
       out.push({ hops: R.wrist, tone, after: R.storm[1] ?? -1 });
@@ -150,6 +171,7 @@ export function createReplay(data: MissionData, environment: EnvironmentId): Rep
       }
     }
     out.push({ hops: R.systems, tone: 'neutral', after: -1 });
+    live = true;
     return out;
   }
 
@@ -160,6 +182,7 @@ export function createReplay(data: MissionData, environment: EnvironmentId): Rep
     dayAlert,
     counts,
     flaresInWindow: flares.reduce((a, l) => a + l.length, 0),
+    scoresOn: (crewId, day) => scored[file.crew.findIndex((c) => c.id === crewId)]?.[day] ?? [],
     step,
     reset() {
       bus.clear();

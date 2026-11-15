@@ -6,7 +6,7 @@ export function Shape({ status, size = 16 }: { status: Status; size?: number }) 
   const c = `var(--dc-${status === 'green' ? 'ok' : status === 'amber' ? 'warn' : 'crit'})`;
   return (
     <svg className="dcb-shape" width={size} height={size} viewBox="0 0 16 16" aria-hidden="true">
-      {status === 'green' && <circle cx="8" cy="8" r="5.25" fill="none" stroke="var(--dc-ink-2)" strokeWidth="1.5" />}
+      {status === 'green' && <circle cx="8" cy="8" r="6" fill={c} />}
       {status === 'amber' && <path d="M8 1.5 15 14.5H1Z" fill={c} />}
       {status === 'red' && <rect x="2" y="2" width="12" height="12" fill={c} />}
     </svg>
@@ -17,8 +17,6 @@ export interface Detail {
   id: string;
   metric: MetricKey;
   label: string;
-  /** One-word name, for the escalation line. */
-  short: string;
   regionName: string;
   status: Status;
   statusWord: string;
@@ -28,6 +26,8 @@ export interface Detail {
   direction: string;
   delta: string;
   days: number;
+  /** true when the reading can be taken again on the spot. */
+  remeasure: boolean;
   /** Personal band: mean and sd from the file. */
   band: { mean: number; sd: number; windowMean: number | null } | null;
   /** Absolute limits for metrics with no personal baseline. */
@@ -35,7 +35,6 @@ export interface Detail {
   trace: (number | null)[];
   explain: string;
   action: string | null;
-  illustrative: boolean;
 }
 
 function useRoll(target: number, ms = 350): number {
@@ -110,8 +109,8 @@ function Band({ d }: { d: Detail }) {
         <span className="dcb-band-dot" data-status={d.status} style={{ left: pct(d.value, 0, hi) }} />
       </div>
       <div className="dcb-band-scale">
-        <span style={{ left: pct(d.limit.amber, 0, hi) }}>{fmt(d.limit.amber)}</span>
-        <span style={{ left: pct(d.limit.red, 0, hi) }}>{fmt(d.limit.red)}</span>
+        <span style={{ left: pct(d.limit.amber, 0, hi) }}>Watch {fmt(d.limit.amber)}</span>
+        <span style={{ left: pct(d.limit.red, 0, hi) }}>Limit {fmt(d.limit.red)}</span>
       </div>
     </div>
   );
@@ -119,7 +118,7 @@ function Band({ d }: { d: Detail }) {
 
 function Trace({ d }: { d: Detail }) {
   const [ref, w] = useWidth<HTMLDivElement>();
-  const h = 76;
+  const h = 84;
   const padX = 8;
   const padY = 10;
   const vals = d.trace.filter((v): v is number => v != null);
@@ -176,120 +175,83 @@ function Trace({ d }: { d: Detail }) {
   );
 }
 
-const HOLD_MS = 1200;
-const CANCEL_S = 5;
-
-/** Press and hold: a glove resting on the glass never escalates by accident. */
-function HoldButton({ label, onConfirm }: { label: string; onConfirm: () => void }) {
-  const [holding, setHolding] = useState(false);
-  const timer = useRef<number>();
-  const stop = () => {
-    window.clearTimeout(timer.current);
-    setHolding(false);
-  };
-  const start = () => {
-    setHolding(true);
-    timer.current = window.setTimeout(() => {
-      setHolding(false);
-      onConfirm();
-    }, HOLD_MS);
-  };
-  useEffect(() => () => window.clearTimeout(timer.current), []);
-  return (
-    <button
-      type="button"
-      className="dcb-hold"
-      data-holding={holding}
-      onPointerDown={start}
-      onPointerUp={stop}
-      onPointerLeave={stop}
-      onPointerCancel={stop}
-      onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && !e.repeat && start()}
-      onKeyUp={stop}
-    >
-      <span className="dcb-hold-fill" />
-      <span className="dcb-hold-label">{label}</span>
-    </button>
-  );
+interface Step {
+  label: string;
+  /** Line shown once the step is done. */
+  log: string;
+  tone: 'ink' | 'line' | 'crit';
+  /** Needs a second tap before it is sent. */
+  confirm?: boolean;
 }
 
-/** Red: escalation is the primary. After the hold there is a short window to cancel. */
-function RedActions({ d }: { d: Detail }) {
-  const [phase, setPhase] = useState<'idle' | 'pending' | 'sent'>('idle');
-  const [left, setLeft] = useState(CANCEL_S);
-  const [remeasured, setRemeasured] = useState(false);
-  useEffect(() => {
-    if (phase !== 'pending') return;
-    if (left <= 0) {
-      setPhase('sent');
-      return;
-    }
-    const t = window.setTimeout(() => setLeft((n) => n - 1), 1000);
-    return () => window.clearTimeout(t);
-  }, [phase, left]);
-  const what = `${d.short} ${d.value.toFixed(d.decimals)}${d.unit.startsWith('/') ? '' : ' '}${d.unit}`;
-  return (
-    <div className="dcb-act" data-kind="red">
-      {phase === 'idle' && (
-        <HoldButton
-          label="Hold to escalate"
-          onConfirm={() => {
-            setLeft(CANCEL_S);
-            setPhase('pending');
-          }}
-        />
-      )}
-      {phase !== 'idle' && (
-        <p className="dcb-sent" data-phase={phase} role="status">
-          <span className="dcb-sent-word">{phase === 'pending' ? `Sending in ${left} s` : 'Sent'}</span>
-          <span className="dcb-mono">Flight surgeon report · {what}</span>
-        </p>
-      )}
-      {phase === 'pending' ? (
-        <button type="button" className="dcb-second" onClick={() => setPhase('idle')}>
-          Cancel
-        </button>
-      ) : (
-        <button type="button" className="dcb-second" data-done={remeasured} onClick={() => setRemeasured(true)}>
-          {remeasured ? 'Re-measure logged' : 'Re-measure'}
-        </button>
-      )}
-    </div>
-  );
+/** The one next step for this state. Red escalates at once; amber ends in the conference flag. */
+function stepsFor(d: Detail): Step[] {
+  if (d.status === 'red') return [{ label: 'Escalate', log: 'Escalated to crew medical officer', tone: 'crit', confirm: true }];
+  const again: Step = { label: 'Re-measure', log: 'Re-measure logged', tone: d.status === 'amber' ? 'ink' : 'line' };
+  if (d.status === 'green') return d.remeasure ? [again] : [];
+  const flag: Step = { label: 'Flag for conference', log: 'Flagged for conference', tone: d.remeasure ? 'line' : 'ink' };
+  return d.remeasure ? [again, flag] : [flag];
 }
 
-/** Amber: re-measure first, then the confirmed value is flagged for the next conference. */
-function AmberActions() {
-  const [step, setStep] = useState<0 | 1 | 2>(0);
-  return (
-    <div className="dcb-act" data-kind="amber">
-      <button type="button" className="dcb-step" data-state={step === 0 ? 'now' : 'done'} onClick={() => step === 0 && setStep(1)}>
-        <span className="dcb-step-n">1</span>
-        {step === 0 ? 'Re-measure' : 'Re-measured'}
-      </button>
-      <button
-        type="button"
-        className="dcb-step"
-        data-state={step === 0 ? 'wait' : step === 1 ? 'now' : 'done'}
-        disabled={step === 0}
-        onClick={() => step === 1 && setStep(2)}
-      >
-        <span className="dcb-step-n">2</span>
-        {step === 2 ? 'Flagged for conference' : 'Flag for conference'}
-      </button>
-    </div>
-  );
-}
+const clock = (): string => new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+const ARM_MS = 5000;
 
 function Actions({ d }: { d: Detail }) {
-  if (d.status === 'red') return <RedActions d={d} />;
-  if (d.status === 'amber') return <AmberActions />;
+  const steps = stepsFor(d);
+  const [times, setTimes] = useState<string[]>([]);
+  const [armed, setArmed] = useState(false);
+  const done = times.length;
+  const step = steps[done];
+  const lastStep = steps[done - 1];
+
+  // An unconfirmed escalation stands down by itself.
+  useEffect(() => {
+    if (!armed) return;
+    const t = window.setTimeout(() => setArmed(false), ARM_MS);
+    return () => window.clearTimeout(t);
+  }, [armed]);
+
+  if (!steps.length) return null;
+  const press = () => {
+    if (!step) return;
+    if (step.confirm && !armed) {
+      setArmed(true);
+      return;
+    }
+    setArmed(false);
+    setTimes((t) => [...t, clock()]);
+  };
+  const back = () => {
+    if (armed) setArmed(false);
+    else setTimes((t) => t.slice(0, -1));
+  };
+
   return (
-    <div className="dcb-act" data-kind="green">
-      <p className="dcb-quiet">
-        <Shape status="green" size={18} />
-        <span>No action</span>
+    <div className="dcb-actions">
+      <p className="dcb-log" role="status">
+        {armed ? (
+          'Tap again to send'
+        ) : lastStep ? (
+          <>
+            <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+              <path d="M2.5 8.5 6.5 12.5 13.5 4" />
+            </svg>
+            {lastStep.log}
+            <span className="dcb-log-time">{times[done - 1]}</span>
+          </>
+        ) : null}
       </p>
+      <div className="dcb-action-row">
+        <button type="button" className="dcb-primary" data-tone={step ? step.tone : 'done'} data-armed={armed} disabled={!step} onClick={press}>
+          {armed && <span className="dcb-arm" />}
+          <span className="dcb-primary-label">{step ? (armed ? 'Confirm escalate' : step.label) : lastStep.log.split(' ')[0]}</span>
+        </button>
+        {(done > 0 || armed) && (
+          <button type="button" className="dcb-undo" onClick={back}>
+            {armed ? 'Cancel' : 'Undo'}
+          </button>
+        )}
+      </div>
     </div>
   );
 }
@@ -308,6 +270,7 @@ interface Props {
   onClose: () => void;
   onPrev: () => void;
   onNext: () => void;
+  /** The data system map, opened on this metric. */
   sourceHref: string | null;
 }
 
@@ -321,98 +284,87 @@ export function Sheet({ detail, onClose, onPrev, onNext, sourceHref }: Props) {
   return (
     <section className="dcb-sheet" data-open={detail !== null} aria-hidden={detail === null} aria-label="Metric detail">
       {d && (
-        <>
-          <div className="dcb-sheet-body">
-            <div className="dcb-col-a">
-              <p className="dcb-status-row">
-                <Shape status={d.status} size={22} />
-                <span className="dcb-status-word">{d.statusWord}</span>
-                <span className="dcb-mono">{d.regionName}</span>
-              </p>
-              <p className="dcb-metric-label">{d.label}</p>
-              <div className="dcb-hero-row">
-                <p className="dcb-hero">
-                  {rolled.toFixed(d.decimals)}
-                  <span className="dcb-unit">{d.unit}</span>
-                </p>
-                <dl className="dcb-facts">
-                  <div>
-                    <dt className="dcb-mono">{d.band ? 'Own band' : 'Limit'}</dt>
-                    <dd>
-                      {d.direction}
-                      {d.delta && <span className="dcb-fact-sub">{d.delta}</span>}
-                    </dd>
-                  </div>
-                  {d.days > 0 && (
-                    <div>
-                      <dt className="dcb-mono">Running</dt>
-                      <dd>
-                        {d.days}
-                        <span className="dcb-fact-sub">{d.days === 1 ? 'day' : 'days'}</span>
-                      </dd>
-                    </div>
-                  )}
-                </dl>
-              </div>
-            </div>
-
-            <div className="dcb-col-b">
-              <p className="dcb-mono dcb-chart-head">
-                <span>{d.band ? 'Own baseline' : 'Limit'}</span>
-                <span className="dcb-legend">
-                  <i className="dcb-key-dot" /> Today
-                  {d.band && (
-                    <>
-                      <i className="dcb-key-ring" /> 3-day mean
-                    </>
-                  )}
-                </span>
-              </p>
-              <Band d={d} />
-              <Trace d={d} />
-            </div>
-
-            <div className="dcb-col-c">
-              <p className="dcb-explain">{d.explain}</p>
-              {d.action && (
-                <>
-                  <p className="dcb-mono">Action</p>
-                  <p className="dcb-action-text">{d.action}</p>
-                </>
-              )}
-              {d.illustrative && <p className="dcb-mono dcb-ill">Placement illustrative</p>}
-            </div>
+        <div className="dcb-sheet-body">
+          <div className="dcb-col-a">
+            <p className="dcb-status-row">
+              <Shape status={d.status} size={22} />
+              <span className="dcb-status-word">{d.statusWord}</span>
+              <span className="dcb-mono">{d.regionName}</span>
+            </p>
+            <p className="dcb-metric-label">{d.label}</p>
+            <p className="dcb-hero">
+              {rolled.toFixed(d.decimals)}
+              <span className="dcb-unit">{d.unit}</span>
+            </p>
+            {d.status !== 'green' && (
+              <dl className="dcb-facts">
+                <div>
+                  <dt>Direction</dt>
+                  <dd>
+                    {d.direction}
+                    {d.delta && <span className="dcb-fact-sub">{d.delta}</span>}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Running</dt>
+                  <dd>
+                    {d.days}
+                    <span className="dcb-fact-sub">{d.days === 1 ? 'day' : 'days'}</span>
+                  </dd>
+                </div>
+              </dl>
+            )}
           </div>
 
-          <div className="dcb-actions">
+          <div className="dcb-col-b">
+            <p className="dcb-mono dcb-chart-head">
+              <span>{d.band ? 'Own baseline' : 'Limit'}</span>
+              <span className="dcb-legend">
+                <i className="dcb-key-dot" /> Today
+                {d.band && (
+                  <>
+                    <i className="dcb-key-ring" /> 3-day mean
+                  </>
+                )}
+              </span>
+            </p>
+            <Band d={d} />
+            <Trace d={d} />
+          </div>
+
+          <div className="dcb-col-c">
+            <p className="dcb-explain">{d.explain}</p>
+            <p className="dcb-mono">Action</p>
+            <p className="dcb-action-text">{d.action ?? 'None needed.'}</p>
             <Actions key={d.id} d={d} />
-            <div className="dcb-nav">
-              {sourceHref && (
-                <a className="dcb-sq" href={sourceHref} aria-label="Source: where this value comes from">
-                  <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true">
-                    <path d="M4 5h5v5H4zM13 12h5v5h-5zM9 7.5h4.5V12" />
-                  </svg>
-                  <span className="dcb-sq-label">Source</span>
-                </a>
-              )}
-              <Square label="Prev" onClick={onPrev}>
-                <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true">
-                  <path d="M4 14 11 7l7 7" />
-                </svg>
-              </Square>
-              <Square label="Next" onClick={onNext}>
-                <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true">
-                  <path d="M4 8l7 7 7-7" />
-                </svg>
-              </Square>
-              <Square label="Close" onClick={onClose}>
-                <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true">
-                  <path d="M4 4 18 18M18 4 4 18" />
-                </svg>
-              </Square>
-            </div>
           </div>
-        </>
+
+          <div className="dcb-col-d">
+            <Square label="Close" onClick={onClose}>
+              <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true">
+                <path d="M4 4 18 18M18 4 4 18" />
+              </svg>
+            </Square>
+            <Square label="Prev" onClick={onPrev}>
+              <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true">
+                <path d="M4 14 11 7l7 7" />
+              </svg>
+            </Square>
+            <Square label="Next" onClick={onNext}>
+              <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true">
+                <path d="M4 8l7 7 7-7" />
+              </svg>
+            </Square>
+            {sourceHref && (
+              <a className="dcb-sq" href={sourceHref} aria-label="Data path">
+                <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true">
+                  <path d="M4 5h5v5H4zM13 12h5v5h-5zM9 7.5h4.5V12" />
+                </svg>
+                <span className="dcb-sq-label">Path</span>
+              </a>
+            )}
+          </div>
+        </div>
       )}
     </section>
   );

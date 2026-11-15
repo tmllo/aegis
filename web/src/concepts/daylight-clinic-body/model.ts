@@ -34,13 +34,16 @@ export const NODE_NAMES = Object.keys(BM.model.nodes);
 
 /** Camera framing shared by the 3D rig and the 2D height ruler. */
 export const FOV = 30;
-export const HOME_FRAC = 0.76; // body height as a fraction of the stage height
+export const HOME_FRAC = 0.85; // body height as a fraction of the stage height
 export const HOME_TY = 0.477; // camera target height as a fraction of body height
 export const HOME_VISIBLE = BODY_H / HOME_FRAC;
 
 /** Stage y (px) of a body height (m) in the home view. Exact for points on the body axis. */
 export const homeY = (m: number, stageH: number): number =>
   stageH / 2 - ((m - BODY_H * HOME_TY) / HOME_VISIBLE) * stageH;
+
+/** Half the body's width (arm span) as a fraction of the stage height, in the home view. */
+export const BODY_HALF_FRAC = (BM.model.nodes.whole_body.bbox[1][0] / BODY_H) * HOME_FRAC;
 
 export const ORDER: Record<Status, number> = { green: 0, amber: 1, red: 2 };
 
@@ -70,6 +73,10 @@ export const SHORT: Record<MetricKey, string> = {
 export const STATUS_WORD: Record<Status, string> = { green: 'Clear', amber: 'Watch', red: 'Act' };
 export const DETAIL_WORD: Record<Status, string> = { green: 'In range', amber: 'Watch', red: 'Act now' };
 
+/** Instrument readings that can be taken again on the spot (interaction rule, not data). */
+const REMEASURABLE: ReadonlySet<MetricKey> = new Set<MetricKey>(['hr', 'bp_sys', 'bp_dia', 'glucose', 'temp']);
+export const canRemeasure = (metric: MetricKey): boolean => REMEASURABLE.has(metric);
+
 export function unionBox(boxes: Box[]): Box {
   const lo: Vec3 = [Infinity, Infinity, Infinity];
   const hi: Vec3 = [-Infinity, -Infinity, -Infinity];
@@ -96,6 +103,13 @@ export function metricBox(metric: MetricKey): Box {
   const f = focusStructures(metric);
   if (f.length) return unionBox(f.map((x) => x.s.b));
   return unionBox(BM.metrics[metric].structures.map((n) => BM.model.nodes[n].bbox));
+}
+
+/** Where a metric is pointed at: the centre of its focus structures, else its anchor. */
+export function focusPoint(metric: MetricKey): Vec3 {
+  if (!focusStructures(metric).length) return BM.metrics[metric].anchor;
+  const [a, b] = metricBox(metric);
+  return [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2];
 }
 
 /** Diffusion radius of the tint, from the size of the focus structures. */

@@ -5,7 +5,7 @@
 import { Component, type CSSProperties, type ReactNode } from 'react';
 import type { Region, RegionStatus, Status } from '../../data/types';
 import { REGIONS } from '../../data/types';
-import { DASH, type NodeStatus } from './model';
+import { DASH, type NodeStatus } from './record-model';
 import shellUrl from './body/shell.png';
 import bonesUrl from './body/bones.png';
 import loadUrl from './body/load.png';

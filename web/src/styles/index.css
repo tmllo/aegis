@@ -1,5 +1,6 @@
 @import './fonts.css';
 @import './tokens.css';
+@import './flight.css';
 
 @tailwind base;
 @tailwind components;
@@ -18,8 +19,12 @@
     -webkit-font-smoothing: antialiased;
     font-feature-settings: 'tnum' 1;
   }
+  /* One focus ring everywhere: 2 px paper, keyboard only. */
   :focus-visible {
     outline: 2px solid rgb(var(--accent));
     outline-offset: 2px;
+  }
+  :focus:not(:focus-visible) {
+    outline: none;
   }
 }

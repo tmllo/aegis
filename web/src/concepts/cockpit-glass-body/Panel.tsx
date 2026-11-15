@@ -13,8 +13,36 @@ export const ARCH_ID = conceptIds.find((id) => /^cockpit-glass-(arch|system|map|
 
 /* --------------------------------------------------------------- overview */
 
+/** 14-day line with the quiet band behind it, small enough to sit inside an issue row. */
+function Spark({ m }: { m: MetricView }) {
+  const W = 160;
+  const H = 44;
+  const vals = m.trace.map((t) => t.value).filter((v): v is number => v != null);
+  if (vals.length < 2) return <span />;
+  const showBand = m.band.kind === 'baseline';
+  const lo = Math.min(...vals, showBand ? m.band.from : Infinity);
+  const hi = Math.max(...vals, showBand ? m.band.to : -Infinity);
+  const n = m.trace.length;
+  const x = (i: number) => 4 + (i / Math.max(1, n - 1)) * (W - 8);
+  const y = (v: number) => 5 + (1 - (v - lo) / (hi - lo || 1)) * (H - 10);
+  const pts = m.trace.flatMap((t, i) => (t.value == null ? [] : [`${x(i).toFixed(1)},${y(t.value).toFixed(1)}`]));
+  const last = m.trace[n - 1];
+  return (
+    <svg className="cg-spark" data-status={m.status} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" aria-hidden>
+      {showBand && <rect className="cg-trace-band" x={0} width={W} y={y(m.band.to)} height={Math.max(1, y(m.band.from) - y(m.band.to))} />}
+      <polyline className="cg-trace-line" points={pts.join(' ')} vectorEffect="non-scaling-stroke" />
+      {last?.value != null && <circle className="cg-trace-now" cx={x(n - 1)} cy={y(last.value)} r={4} />}
+    </svg>
+  );
+}
+
+const trendWord = (m: MetricView): string =>
+  m.direction === 'inside' ? 'In range' : `${m.direction === 'above' ? 'Above' : 'Below'} ${m.band.kind === 'baseline' ? 'baseline' : 'limit'}`;
+
+/** Only what is out of range gets a row. The quiet regions are one line: the ring already names them. */
 export function Overview({ crew, view, onRegion }: { crew: CrewMember; view: CrewView; onRegion: (r: Region) => void }) {
   const first = view.flagged[0];
+  const quiet = REGIONS.filter((r) => view.regions[r].status === 'green').length;
   return (
     <div className="cg-pane" key={crew.id}>
       <header className="cg-pane-head">
@@ -34,37 +62,45 @@ export function Overview({ crew, view, onRegion }: { crew: CrewMember; view: Cre
         </p>
       </div>
 
-      <ul className="cg-rows" style={{ ['--cg-n' as string]: REGIONS.length }}>
-        {REGIONS.map((r) => {
-          const rv = view.regions[r];
-          const m = rv.metrics.find((x) => x.key === rv.lead) as MetricView;
-          return (
-            <li key={r}>
-              <button className="cg-row" data-status={rv.status} onClick={() => onRegion(r)}>
-                <Shape status={rv.status} size={16} />
-                <span className="cg-row-word">{REGION_WORD[r]}</span>
-                <span className="cg-row-metric">{shortLabel(m.key, m.meta)}</span>
-                <span className="cg-row-value">
-                  {m.score ? fmt(m.score.value) : 'No reading'}
-                  {m.score && <i>{m.meta.unit}</i>}
+      <div className="cg-issues">
+        <ul className="cg-rows">
+          {view.flagged.map((m) => (
+            <li key={m.key}>
+              <button className="cg-row" data-status={m.status} onClick={() => onRegion(m.meta.body_region)}>
+                <Shape status={m.status} size={20} />
+                <span className="cg-row-where">
+                  <span className="cg-row-word">{REGION_WORD[m.meta.body_region]}</span>
+                  <span className="cg-row-metric">{shortLabel(m.key, m.meta)}</span>
+                </span>
+                <Spark m={m} />
+                <span className="cg-row-reading">
+                  <span className="cg-row-value">
+                    {m.score ? fmt(m.score.value) : 'No reading'}
+                    {m.score && <i>{m.meta.unit}</i>}
+                  </span>
+                  <span className="cg-row-metric">
+                    {trendWord(m)}, {m.days} {m.days === 1 ? 'day' : 'days'}
+                  </span>
                 </span>
                 <Icon name="right" size={20} />
               </button>
             </li>
-          );
-        })}
-      </ul>
+          ))}
+        </ul>
+        {quiet > 0 && (
+          <p className="cg-quiet">
+            <Shape status="green" size={14} />
+            {quiet === REGIONS.length ? 'All' : quiet} {quiet === 1 ? 'region' : 'regions'} nominal
+          </p>
+        )}
+      </div>
 
       <div className="cg-actions">
-        {first ? (
+        {first && (
           <button className="cg-btn cg-btn-primary" onClick={() => onRegion(first.meta.body_region)}>
             <Shape status={first.status} size={18} />
             Review {REGION_WORD[first.meta.body_region]}
           </button>
-        ) : (
-          <p className="cg-quiet">
-            <Shape status="green" size={16} /> All signals in range
-          </p>
         )}
       </div>
     </div>
@@ -85,17 +121,17 @@ function Strip({ m }: { m: MetricView }) {
         {limit ? (
           <>
             <span className="cg-label">
-              <Shape status="amber" size={10} /> {STATUS_WORD.amber} from {fmt(band.to)} {m.meta.unit}
+              <Shape status="amber" size={10} /> {STATUS_WORD.amber} from {fmt(band.to)} <i className="cg-u">{m.meta.unit}</i>
             </span>
             <span className="cg-label">
-              <Shape status="red" size={10} /> {STATUS_WORD.red} from {fmt(actFrom)} {m.meta.unit}
+              <Shape status="red" size={10} /> {STATUS_WORD.red} from {fmt(actFrom)} <i className="cg-u">{m.meta.unit}</i>
             </span>
           </>
         ) : (
           <>
             <span className="cg-label">Your baseline</span>
             <span className="cg-label">
-              {fmt(band.from)} to {fmt(band.to)} {m.meta.unit}
+              {fmt(band.from)} to {fmt(band.to)} <i className="cg-u">{m.meta.unit}</i>
             </span>
           </>
         )}
@@ -236,12 +272,14 @@ export function Detail(props: {
   region: Region;
   metric: MetricKey;
   reduced: boolean;
+  /** Mission day, stamped on what the crew member logs here. */
+  day: number;
   showSource: boolean;
   onSource: (on: boolean) => void;
   onMetric: (k: MetricKey) => void;
   onBack: () => void;
 }) {
-  const { crew, view, region, metric, reduced, showSource, onSource, onMetric, onBack } = props;
+  const { crew, view, region, metric, reduced, day, showSource, onSource, onMetric, onBack } = props;
   const rv = view.regions[region];
   const m = rv.metrics.find((x) => x.key === metric) ?? rv.metrics[0];
   const [done, setDone] = useState<Record<string, Done>>({});
@@ -252,8 +290,9 @@ export function Detail(props: {
   const status: Status = m.status;
   const severity = status === 'green' ? null : status;
   const chain = showSource ? sourceChain(m.key) : [];
-  const where = m.band.kind === 'baseline' ? 'baseline' : 'limit';
-  const trend = m.direction === 'inside' ? 'In range' : `${m.direction === 'above' ? 'Above' : 'Below'} ${where}`;
+  const trend = trendWord(m);
+  // What this press did and when: the newest entry wins the one line.
+  const logged = mine.escalate ? 'Queued for flight surgeon' : mine.flag ? 'Flagged for next conference' : mine.remeasure ? 'Re-measure queued' : null;
 
   return (
     <div className="cg-pane" key={`${crew.id}:${region}`}>
@@ -332,6 +371,12 @@ export function Detail(props: {
         <div className="cg-action" data-status={status}>
           <p className="cg-label">Action</p>
           <p>{severity ? m.meta.actions[severity] : 'No action'}</p>
+          {logged && (
+            <p className="cg-log" role="status">
+              <Icon name="check" size={18} />
+              {logged}, day {day}
+            </p>
+          )}
         </div>
       </div>
 
