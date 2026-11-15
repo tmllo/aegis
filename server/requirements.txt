@@ -4,3 +4,4 @@ fastapi>=0.110
 uvicorn>=0.29
 httpx>=0.27
 lightstreamer-client-lib>=2.2  # live ISS adapter and probes/
+sgp4>=2.23  # orbit lane: SGP4 propagation of CelesTrak elements (server/orbit)

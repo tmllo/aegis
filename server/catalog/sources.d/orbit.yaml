@@ -1,0 +1,13 @@
+# Orbit layer source (docs/backend/ORBIT.md). Same format as catalog/sources.yaml.
+sources:
+- id: celestrak
+  label: CelesTrak GP orbital elements (8 satellite groups)
+  org: CelesTrak (celestrak.org), Dr. T.S. Kelso
+  real: true
+  adapter: celestrak
+  cadence: 6 h
+  input: https://celestrak.org/NORAD/elements/gp.php?GROUP=<group>&FORMAT=tle (live, AEGIS_CELESTRAK=live)
+  fallback: data/orbits/celestrak/*.tle (8 groups, epoch about 9 Nov 2026), docs/research/samples/celestrak_iss_gp.json (ISS, epoch 14 Nov 2026)
+  url: https://celestrak.org
+  licence: US-government-origin data, no licence, citation requested
+  credit: 'Orbital elements: CelesTrak (celestrak.org), Dr. T.S. Kelso'
