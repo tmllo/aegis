@@ -7,6 +7,7 @@ import CrewPage from './console/CrewPage';
 const EnvironmentPage = lazy(() => import('./console/EnvironmentPage'));
 const SystemsPage = lazy(() => import('./console/SystemsPage'));
 const MindPage = lazy(() => import('./console/mind/MindPage'));
+const CheckupPage = lazy(() => import('./console/checkup/CheckupPage'));
 
 export function App() {
   return (
@@ -17,6 +18,7 @@ export function App() {
           <Route path="/environment" element={<EnvironmentPage />} />
           <Route path="/systems" element={<SystemsPage />} />
           <Route path="/mind" element={<MindPage />} />
+          <Route path="/checkup" element={<CheckupPage />} />
         </Route>
         {/* earlier addresses fold into the three sections */}
         <Route path="/vitals" element={<Navigate to="/" replace />} />

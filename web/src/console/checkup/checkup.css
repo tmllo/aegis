@@ -1,0 +1,52 @@
+/* Daily check in the Crew language: step strip, text on black space, hairline rows, one white action. */
+.ck { position: absolute; inset: 0; }
+.ck-strip { position: absolute; z-index: 20; left: 56px; right: 56px; top: 92px; display: grid; grid-template-columns: repeat(6, 1fr); border-bottom: 1px solid rgb(255 255 255 / 0.18); }
+.ck-strip button { display: flex; align-items: baseline; gap: 10px; height: 48px; padding: 0 4px; font-size: 14px; color: rgb(255 255 255 / 0.55); text-align: left; position: relative; transition: color 150ms; }
+.ck-strip button span { font-family: var(--font-mono); font-size: 11px; color: rgb(255 255 255 / 0.45); }
+.ck-strip button:hover, .ck-strip button[data-done] { color: rgb(255 255 255 / 0.85); }
+.ck-strip button[aria-current='step'] { color: #fff; }
+.ck-strip button[aria-current='step']::after { content: ''; position: absolute; left: 0; right: 12px; bottom: -1px; height: 2px; background: #fff; }
+.ck-strip button:focus-visible { outline: 1px solid #fff; outline-offset: -1px; }
+
+.ck-read { left: 56px; top: 172px; width: 460px; }
+.ck-word { display: flex; align-items: baseline; gap: 10px; }
+.ck-word small { font-size: 22px; font-weight: 300; color: rgb(255 255 255 / 0.6); }
+.ck[data-status='amber'] .ck-word { color: rgb(var(--warn)); }
+.ck[data-status='red'] .ck-word { color: rgb(var(--crit)); }
+
+.ck-body { right: 56px; top: 172px; width: 560px; max-height: calc(100% - 300px); overflow-y: auto; overflow-x: hidden; padding: 12px; }
+.ck-rows { display: flex; flex-direction: column; }
+.ck-row { grid-template-columns: 14px 1fr 96px auto; }
+.ck-spark { width: 96px; height: 20px; }
+.ck-spark polyline { fill: none; stroke: rgb(255 255 255 / 0.55); stroke-width: 1.2; vector-effect: non-scaling-stroke; }
+.ck-row .vrow-v small, .ck-rows .vrow-v small { font-size: 12px; margin-left: 4px; color: rgb(255 255 255 / 0.6); }
+
+.ck-cam { position: relative; display: flex; flex-direction: column; gap: 10px; }
+.ck-video { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; transform: scaleX(-1); background: #05070c; display: block; }
+.ck-cam-empty { position: absolute; left: 0; right: 0; top: 0; aspect-ratio: 4 / 3; display: grid; place-items: center; }
+.ck-box { position: absolute; border: 1px solid #fff; pointer-events: none; transition: all 200ms ease-out; }
+.ck-bar { display: block; height: 2px; background: rgb(255 255 255 / 0.18); }
+.ck-bar i { display: block; height: 100%; background: #fff; transition: width 250ms linear; }
+
+.ck-pvt { position: relative; width: 100%; aspect-ratio: 16 / 10; display: grid; place-items: center; border: 1px solid rgb(255 255 255 / 0.25); background: rgb(255 255 255 / 0.02); touch-action: manipulation; }
+.ck-pvt[data-phase='go'] { border-color: #fff; }
+.ck-pvt .ck-bar { position: absolute; left: 0; right: 0; bottom: 0; }
+.ck-dot { width: 72px; height: 72px; border-radius: 50%; background: #fff; }
+.ck-send { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
+.ck-actions button:disabled { opacity: 0.45; cursor: default; }
+
+@media (max-width: 1100px) {
+  .ck { overflow-y: auto; padding: 150px 16px 140px; }
+  .ck-strip { left: 16px; right: 16px; grid-template-columns: repeat(6, auto); overflow-x: auto; gap: 12px; }
+  .ck-strip button { white-space: nowrap; font-size: 12px; }
+  .ck-read, .ck-body { position: static; width: auto; max-height: none; margin-bottom: 24px; }
+  .ck .pat-actions { position: static; flex-wrap: wrap; }
+  .ck-row { grid-template-columns: 14px 1fr auto; }
+  .ck-row .ck-spark { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { .ck-box, .ck-bar i { transition: none; } }
+.ck-rows .vrow { display: grid; grid-template-columns: 14px 1fr auto; width: 100%; }
+.ck-rows .vrow.ck-row { grid-template-columns: 14px 1fr 96px auto; }
+.ck-rows .vrow-l { align-items: flex-start; text-align: left; justify-self: start; }
+.ck-rows .vrow-v { justify-self: end; text-align: right; }
+@media (max-width: 1100px) { .ck-rows .vrow.ck-row { grid-template-columns: 14px 1fr auto; } }
