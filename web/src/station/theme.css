@@ -189,11 +189,16 @@ html:has(.st[data-theme='dark']) body {
 :root .st.ds .fr-left {
   gap: 4px;
 }
+:root .st.ds .fr .fr-left {
+  /* the rows have their own 12 px inset: shift the column so marks stay on the page margin and nothing is clipped */
+  margin-left: -12px;
+  padding-right: 4px;
+  padding-bottom: 8px;
+}
 :root .st.ds .fr-check {
   padding: 10px 12px;
   border-radius: 14px;
-  margin-left: -12px;
-  width: calc(100% + 12px);
+  width: 100%;
   transition: background-color 180ms ease-out, box-shadow 180ms ease-out;
 }
 :root .st.ds button.fr-check:hover {
@@ -400,9 +405,45 @@ html:has(.st[data-theme='dark']) body {
   border-radius: 14px;
   color: var(--ink);
 }
+/* care loop: four steps as a rounded strip, the current one filled */
+:root .st.ds .fr-loop {
+  gap: 4px;
+  padding: 4px;
+  border: 0;
+  border-radius: 18px;
+  background: var(--card-2);
+}
+:root .st.ds .fr-loop li {
+  padding: 12px 16px;
+  border: 0;
+  border-radius: 14px;
+  font-size: 13px;
+}
+:root .st.ds .fr-loop li b {
+  font-size: 15px;
+}
 :root .st.ds .fr-loop li.is-now {
-  background: var(--accent-soft);
-  box-shadow: inset 0 -3px 0 var(--accent);
+  background: var(--card);
+  box-shadow: var(--shadow-1), 0 0 0 1px var(--line);
+}
+:root .st.ds .fr-loop li.is-now b {
+  color: var(--accent);
+}
+:root .st.ds .fr-loop li.is-done b {
+  color: var(--calm);
+}
+:root .st.ds .fr-big {
+  font-size: 30px;
+  font-weight: 300;
+  letter-spacing: -0.01em;
+}
+/* daily check: all steps, Review included, fit without scrolling */
+:root .st.ds .fr.is-check .fr-left {
+  gap: 0;
+}
+:root .st.ds .fr.is-check .fr-check {
+  min-height: 0;
+  padding: 7px 12px;
 }
 :root .st.ds .mt-msg {
   border-radius: 16px;
