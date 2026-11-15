@@ -2,14 +2,14 @@
    the interface floats around it as glass cards. Deep slate with a cool teal cast, teal for
    data lines and selection, amber and red for alerts only. Motion: 150-200 ms fades,
    a 180 ms wipe between sections, numbers that tick. Nothing idles. */
-html { background: #0e1316; }
+html { background: #02040a; }
 .cx {
-  --ink: 236 242 243;
-  --dim: 146 160 164;
-  --faint: 98 112 116;
-  --accent: 95 211 214;
-  --ok: 95 211 214;
-  --glass: 28 36 40;
+  --ink: 240 248 252;
+  --dim: 168 190 200;
+  --faint: 116 138 150;
+  --accent: 79 224 232;
+  --ok: 79 224 232;
+  --glass: 40 64 80;
   --font-sans: 'Inter Tight', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
   position: relative;
@@ -18,7 +18,7 @@ html { background: #0e1316; }
   font-family: var(--font-sans);
   font-weight: 300;
   color: rgb(var(--ink));
-  background: radial-gradient(90% 70% at 50% 45%, #15201f 0%, #0e1316 60%, #0b0f11 100%);
+  background: #02040a;
 }
 
 /* top bar: mark, centred segmented tabs, square icon buttons. The mark and the 1 px line at
@@ -60,7 +60,7 @@ html { background: #0e1316; }
 .cx-error { position: absolute; left: 50%; top: 50%; translate: -50% -50%; font-size: 15px; color: rgb(var(--warn)); }
 
 /* glass cards */
-.px-panel { position: absolute; z-index: 10; display: flex; flex-direction: column; min-height: 0; border-radius: 14px; border: 1px solid rgb(255 255 255 / 0.08); background: rgb(var(--glass) / 0.72); box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.07), 0 24px 48px rgb(0 0 0 / 0.35); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+.px-panel { position: absolute; z-index: 10; display: flex; flex-direction: column; min-height: 0; border-radius: 14px; border: 1px solid rgb(255 255 255 / 0.08); background: rgb(var(--glass) / 0.55); box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.12), 0 24px 48px rgb(0 0 0 / 0.35); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
 .px-head { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px 6px; }
 .px-label { display: flex; align-items: center; gap: 9px; font-size: 11px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: rgb(var(--ink)); }
 .px-label svg { color: rgb(var(--dim)); }
@@ -246,7 +246,7 @@ input.field:focus, textarea.field:focus { outline: none; border-color: rgb(var(-
 .cf-cancel { margin-top: 8px; height: 56px; padding: 0 24px; font-size: 13px; color: #92a0a4; }
 
 /* replay inside the frame */
-.cx-replay { position: absolute; left: 28px; right: 28px; top: 92px; bottom: 40px; z-index: 10; display: flex; flex-direction: column; }
+.cx-replay { position: absolute; left: 28px; right: 28px; top: 164px; bottom: 40px; z-index: 10; display: flex; flex-direction: column; }
 .cx-replay-body { flex: 1; min-height: 0; overflow: auto; border-radius: 14px; border: 1px solid rgb(255 255 255 / 0.08); }
 .cx-replay [data-concept='radiation'] { --bg: 14 19 22; --surface: 28 36 40; --surface-2: 36 46 50; --line: 52 62 66; --text: 236 242 243; --text-dim: 146 160 164; --text-faint: 98 112 116; --accent: 95 211 214; --font-sans: 'Inter Tight', system-ui, sans-serif; --font-display: 'Inter Tight', system-ui, sans-serif; }
 
@@ -341,7 +341,7 @@ html:not(.boot-done) .cx-tabs, html:not(.boot-done) .cx-icons, html:not(.boot-do
 .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
 
 /* widget: compact / standard / alert expanded */
-.wg { position: relative; width: 100%; text-align: left; border-radius: 12px; border: 1px solid rgb(255 255 255 / 0.07); background: rgb(var(--glass) / 0.62); box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); transition: border-color 150ms, background 150ms; color: rgb(220 236 238); }
+.wg { position: relative; width: 100%; text-align: left; border-radius: 12px; border: 1px solid rgb(255 255 255 / 0.07); background: rgb(var(--glass) / 0.55); box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.12); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); transition: border-color 150ms, background 150ms; color: rgb(var(--ink)); }
 button.wg:hover { border-color: rgb(255 255 255 / 0.22); }
 .wg-l { font-size: 10.5px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: rgb(var(--dim)); display: inline-flex; align-items: center; gap: 6px; }
 .wg b { font-weight: 300; font-variant-numeric: tabular-nums; }
@@ -388,3 +388,26 @@ button.wg:hover { border-color: rgb(255 255 255 / 0.22); }
 .ho-right { right: 28px; top: 96px; width: 436px; bottom: 40px; }
 .ho-json { margin-top: 14px; flex: 1; overflow: auto; padding: 12px; border-radius: 10px; background: rgb(0 0 0 / 0.25); border: 1px solid rgb(255 255 255 / 0.06); font-family: var(--font-mono); font-size: 11.5px; line-height: 1.5; color: rgb(var(--dim)); white-space: pre; }
 .ho-path { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+
+/* crew HUD placements */
+.crew-acts { position: absolute; z-index: 12; right: 28px; top: 96px; display: flex; gap: 8px; }
+.crew-act { width: 96px; height: 64px; display: flex; flex-direction: column; gap: 4px; font-size: 11px; font-weight: 500; letter-spacing: 0.06em; }
+.crew-act:disabled { opacity: 0.4; }
+.crew-right { right: 28px; top: 172px; width: 440px; bottom: 120px; }
+.crew-chips { position: absolute; z-index: 10; left: 28px; right: 520px; bottom: 120px; display: flex; flex-wrap: wrap; gap: 6px; }
+.crew-chips .chip { height: 56px; }
+.crew-chips small { font-size: 10px; color: rgb(var(--dim)); }
+.crew-measure { position: absolute; z-index: 10; left: 28px; bottom: 190px; width: 420px; display: flex; flex-direction: column; gap: 6px; }
+.crew-measure .note[data-status='amber'] { color: rgb(var(--warn)); }
+.crew-measure .note[data-status='red'] { color: rgb(var(--crit)); }
+.crew-measure .chip { min-width: 72px; justify-content: center; }
+.crew-scrub { position: absolute; z-index: 10; left: 28px; right: 28px; bottom: 40px; }
+.scrub { display: flex; align-items: center; gap: 14px; height: 64px; padding: 4px 14px; border-radius: 14px; border: 1px solid rgb(255 255 255 / 0.08); background: rgb(var(--glass) / 0.55); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+.scrub .label { width: 150px; }
+.scrub-bar { position: relative; flex: 1; height: 56px; display: flex; gap: 1px; align-items: center; cursor: ew-resize; touch-action: none; }
+.scrub-bar i { flex: 1; height: 10px; border-radius: 1px; }
+.scrub-bar b { position: absolute; top: 10px; bottom: 10px; width: 2px; margin-left: -1px; background: #fff; }
+.env-modes { position: absolute; z-index: 20; left: 50%; translate: -50% 0; top: 92px; display: flex; gap: 2px; padding: 4px; border-radius: 12px; background: rgb(var(--glass) / 0.55); border: 1px solid rgb(255 255 255 / 0.08); backdrop-filter: blur(16px); }
+.env-modes button { height: 56px; padding: 0 18px; border-radius: 9px; font-size: 13px; color: rgb(var(--dim)); }
+.env-modes button[aria-pressed='true'] { color: rgb(var(--ink)); background: rgb(255 255 255 / 0.1); }
+.env-storm { position: relative; }

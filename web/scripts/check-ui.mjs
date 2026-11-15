@@ -5,7 +5,7 @@
 import { chromium } from '@playwright/test';
 
 const base = process.argv[2] ?? 'http://127.0.0.1:5630';
-const routes = ['/', '/vitals', '/vitals?t=heart', '/vitals?t=heart&deep=1', '/cabin', '/storm', '/systems', '/mind', '/timeline', '/shelter', '/compare', '/handoff'];
+const routes = ['/', '/?t=vessels', '/?t=vessels&deep=1', '/?p=checkin', '/?p=handoff', '/environment', '/environment?mode=shelter', '/environment?mode=replay', '/systems'];
 const b = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=metal', '--enable-gpu', '--ignore-gpu-blocklist'] });
 const ctx = await b.newContext({ viewport: { width: 1920, height: 1080 } });
 await ctx.addInitScript(() => {
