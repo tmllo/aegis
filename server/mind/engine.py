@@ -61,14 +61,21 @@ def _streak_days(days: set[str], date: str) -> int:
 
 # ---- self-report scoring -------------------------------------------------------
 def _daily_means(store: Store, subject: str, metric: str) -> dict[str, float]:
-    """Mean per day. On a day with a live check-in, only the check-in values count (they replace the simulated one)."""
+    """Value per day: the latest live check-in that day if any (it replaces the simulated value), else the mean."""
     vals: dict[str, list[float]] = {}
-    live: dict[str, list[float]] = {}
+    live: dict[str, tuple[str, float]] = {}
     for o in store.observations(subject=subject, metric=metric):
-        if o.value is not None:
-            (live if o.source == CHECKIN_SOURCE else vals).setdefault(day_of(o.t), []).append(float(o.value))
-    vals.update(live)
-    return {d: sum(v) / len(v) for d, v in vals.items()}
+        if o.value is None:
+            continue
+        d = day_of(o.t)
+        if o.source == CHECKIN_SOURCE:
+            if d not in live or o.t >= live[d][0]:
+                live[d] = (o.t, float(o.value))         # a re-rating the same day replaces the earlier one
+        else:
+            vals.setdefault(d, []).append(float(o.value))
+    out = {d: sum(v) / len(v) for d, v in vals.items()}
+    out.update({d: v for d, (_, v) in live.items()})
+    return out
 
 
 def _self_report_metrics(cat: Catalog) -> list[dict]:
@@ -125,36 +132,58 @@ def sync(cat: Catalog, store: Store, subject: str | None = None) -> dict:
     opened: list[str] = []
     closed: list[str] = []
     keys = [m["key"] for m in _self_report_metrics(cat)]
+    live_keys = set(keys)
     for s in _crew(cat, subject):
         repo.replace_assessments_for(store, s, keys, score_self_report(cat, store, s))
 
-        latest: dict[str, Assessment] = {}
-        for a in store.assessments(s):
-            if a.metric not in latest or a.t >= latest[a.metric].t:
-                latest[a.metric] = a
-        for metric, a in latest.items():
-            day = day_of(a.t)
-            # evidence_t: the newest reading already stored when the task opens. Only a reading after it closes the
-            # task, so the check-in that raised the alert never closes its own task (same-day re-measure still does).
-            seen = [o.t for o in store.observations(subject=s, metric=metric)]
-            task = Task(id=f"sys-{s}-{metric}-{day}", subject=s, kind="todo", label=a.action, origin="system",
-                        created=day, due=_shift(day, 1), metric=metric,
-                        attrs={"severity": a.severity, "z": a.z, "message": a.message, "assessment_t": a.t,
-                               "evidence_t": max(seen + [a.t]), "rule": a.rule})
-            if repo.put_task(store, task, replace=False):
-                opened.append(task.id)
+        flagged = {(a.metric, a.t) for a in store.assessments(s)}
 
+        # 1. Close (Verify). Self-report scores (re-scored live): close when the newest stored reading, at or after
+        #    the task's evidence (a same-t re-rating replaces the row), is no longer flagged on its day.
+        #    Other metrics (vitals, scored at build): close on any strictly newer reading.
         with_events = {e.task_id for e in repo.events(store, subject=s)}
+        open_metrics: set[str] = set()
         for task in repo.tasks(store, s, origin="system"):
             if task.id in with_events or not task.metric:
                 continue
             at = task.attrs.get("evidence_t") or task.attrs.get("assessment_t")
             if at is None:
                 continue
-            newer = [o.t for o in store.observations(subject=s, metric=task.metric) if o.t > at]
-            if newer:
-                repo.add_event(store, TaskEvent(task.id, min(newer), "closed"))
-                closed.append(task.id)
+            ts = [o.t for o in store.observations(subject=s, metric=task.metric)]
+            close_t = None
+            if task.metric in live_keys:
+                newest = max(ts, default=None)
+                if newest is not None and newest >= at and (task.metric, day_of(newest)) not in flagged:
+                    close_t = newest
+            else:
+                newer = [t for t in ts if t > at]
+                close_t = min(newer) if newer else None
+            if close_t is None:
+                open_metrics.add(task.metric)
+                continue
+            repo.add_event(store, TaskEvent(task.id, close_t, "closed"))
+            closed.append(task.id)
+
+        # 2. Open: one system task per current alert, and never a second one while a task for that metric is open.
+        latest: dict[str, Assessment] = {}
+        for a in store.assessments(s):
+            if a.metric not in latest or a.t >= latest[a.metric].t:
+                latest[a.metric] = a
+        for metric, a in latest.items():
+            if metric in open_metrics:
+                continue
+            day = day_of(a.t)
+            # evidence_t: the newest reading stored when the task opens; Verify compares against it.
+            seen = [o.t for o in store.observations(subject=s, metric=metric)]
+            if seen and day_of(max(seen)) > day:
+                continue                        # not current: a newer day's reading is no longer flagged
+            task = Task(id=f"sys-{s}-{metric}-{day}", subject=s, kind="todo", label=a.action, origin="system",
+                        created=day, due=_shift(day, 1), metric=metric,
+                        attrs={"severity": a.severity, "z": a.z, "message": a.message, "assessment_t": a.t,
+                               "evidence_t": max(seen + [a.t]), "rule": a.rule,
+                               "activities": activity_ids_for(cat, metric)})
+            if repo.put_task(store, task, replace=False):
+                opened.append(task.id)
     return {"opened": opened, "closed": closed}
 
 
@@ -263,6 +292,8 @@ def tasks_for_day(cat: Catalog, store: Store, subject: str, date: str) -> list[d
     ctx = _Ctx(cat, store, subject)
     picked: list[Task] = []
     for task in repo.tasks(store, subject):
+        if "activity" in task.attrs:
+            continue                            # activity logs are shown by /api/activities (done_today, times_done)
         if task.kind == "habit":
             if _scheduled(task, d):
                 picked.append(task)
@@ -391,3 +422,76 @@ def resolve_task_id(cat: Catalog, task_id: str) -> str:
                 if name == r["id"] or name in r.get("aliases", []):
                     return prefix + r["id"]
     return task_id
+
+
+# ---- activities (catalog/activities.yaml), suggested by open alerts --------------
+SEVERITY_RANK = {"red": 2, "amber": 1}
+
+
+def _activity_catalog(cat: Catalog) -> list[dict]:
+    return list((cat.extra.get("activities") or {}).get("activities") or [])
+
+
+def activity(cat: Catalog, activity_id: str) -> dict | None:
+    return next((a for a in _activity_catalog(cat) if a["id"] == activity_id), None)
+
+
+def activity_ids_for(cat: Catalog, metric: str) -> list[str]:
+    """Activities whose `helps` lists this metric, in catalog order (a fixed rule, no inference)."""
+    return [a["id"] for a in _activity_catalog(cat) if metric in (a.get("helps") or [])]
+
+
+def activity_task_id(subject: str, activity_id: str) -> str:
+    return f"activity-{subject}-{activity_id}"
+
+
+def open_alerts(cat: Catalog, store: Store, subject: str, date: str | None = None) -> list[dict]:
+    """System tasks still open on `date`: the alerts the crew member has not yet closed with a new reading or done."""
+    d = date or today(cat)
+    ctx = _Ctx(cat, store, subject)
+    out = []
+    for task in repo.tasks(store, subject, origin="system"):
+        if day_of(task.created) > d or not task.metric:
+            continue
+        if any(day_of(e.t) <= d and e.status in DONE for e in ctx.events.get(task.id, [])):
+            continue
+        out.append({"task_id": task.id, "metric": task.metric, "severity": task.attrs.get("severity"),
+                    "t": task.attrs.get("assessment_t", task.created), "message": task.attrs.get("message")})
+    out.sort(key=lambda a: (-SEVERITY_RANK.get(a["severity"], 0), a["metric"]))
+    return out
+
+
+def activities_for(cat: Catalog, store: Store, subject: str, date: str | None = None) -> dict:
+    """The activity catalog for one crew member on one day. Activities that help a metric with an open alert are
+    `suggested` and come first (red before amber, then catalog order)."""
+    d = date or today(cat)
+    alerts = open_alerts(cat, store, subject, d)
+    ctx = _Ctx(cat, store, subject)
+    rows = []
+    for i, a in enumerate(_activity_catalog(cat)):
+        because = [{"metric": x["metric"], "severity": x["severity"], "task_id": x["task_id"]}
+                   for x in alerts if x["metric"] in (a.get("helps") or [])]
+        done = [e for e in ctx.events.get(activity_task_id(subject, a["id"]), []) if e.status == "done" and day_of(e.t) <= d]
+        rank = max((SEVERITY_RANK.get(b["severity"], 0) for b in because), default=0)
+        rows.append((-rank, i, {**a, "suggested": bool(because), "because": because,
+                                "done_today": any(day_of(e.t) == d for e in done), "times_done": len(done)}))
+    rows.sort(key=lambda r: (r[0], r[1]))
+    return {"subject": subject, "date": d, "open_alerts": alerts, "activities": [r[2] for r in rows]}
+
+
+def log_activity(cat: Catalog, store: Store, subject: str, activity_id: str, t: str) -> dict:
+    """Doing an activity = a done event on the crew member's activity task (a self to-do, created on first use, hidden
+    from the task list). At most one per activity per day (task XP once). It never closes an alert: only a new
+    reading does (Verify)."""
+    a = activity(cat, activity_id)
+    if a is None:
+        raise KeyError(activity_id)
+    tid = activity_task_id(subject, activity_id)
+    repo.put_task(store, Task(id=tid, subject=subject, kind="todo", label=f"Activity: {a['label']}", origin="self",
+                              created=day_of(t), due=day_of(t), attrs={"activity": activity_id}), replace=False)
+    done_days = {day_of(e.t) for e in repo.events(store, task_id=tid) if e.status == "done"}
+    if day_of(t) not in done_days:              # once per activity per day: logging again is safe, XP not farmed
+        repo.add_event(store, TaskEvent(tid, t, "done"))
+        done_days.add(day_of(t))
+    times = len(done_days)
+    return {"activity_id": activity_id, "task_id": tid, "t": t, "status": "done", "times_done": times}

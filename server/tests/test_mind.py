@@ -150,9 +150,12 @@ def test_sync_opens_and_closes_a_system_task(cat, store):
     # idempotent while nothing new arrives
     assert engine.sync(cat, store, "c1") == {"opened": [], "closed": []}
 
-    # a newer reading closes the task
+    # a newer reading that still leaves the 3-day average flagged keeps it open (Verify) ...
     nxt = days_from(days[-1], 2)[1]
-    store.write(checkin_batch(cat, "c1", "self.social", f"{nxt}T09:00:00Z", 4))
+    store.write(checkin_batch(cat, "c1", "self.social", f"{nxt}T08:00:00Z", 4))
+    assert engine.sync(cat, store, "c1")["closed"] == []
+    # ... and a re-rating that clears it closes the task (same day: the later rating replaces the earlier one)
+    store.write(checkin_batch(cat, "c1", "self.social", f"{nxt}T09:00:00Z", 5))
     out = engine.sync(cat, store, "c1")
     assert tid in out["closed"]
     ev = repo.events(store, task_id=tid)
@@ -286,7 +289,7 @@ def test_progress_counts_closed_system_task(cat, store):
     days = put_series(store, cat, "c1", "self.social", BASE, [4] * 14 + [2, 2, 2])
     engine.sync(cat, store, "c1")
     nxt = days_from(days[-1], 2)[1]
-    store.write(checkin_batch(cat, "c1", "self.social", f"{nxt}T09:00:00Z", 4))
+    store.write(checkin_batch(cat, "c1", "self.social", f"{nxt}T09:00:00Z", 5))
     engine.sync(cat, store, "c1")
     p = engine.progress(cat, store, "c1", nxt)
     assert p["system_tasks_closed"] >= 1
@@ -474,3 +477,159 @@ def test_live_mood_checkin_is_scored():
                                           "value": 1}).json()
     assert r["assessment"]["severity"] == "red"
     assert "sys-c1-self.mood-2026-11-14" in r["opened_tasks"]
+
+
+# ---- activities (catalog/activities.yaml) -------------------------------------
+ACT_FIELDS = {"id", "label", "minutes", "category", "with", "helps", "steps", "basis", "source", "url"}
+
+
+def test_activities_catalog_is_complete():
+    cat = Catalog.load()
+    acts = cat.extra["activities"]["activities"]
+    ids = [a["id"] for a in acts]
+    assert len(ids) == len(set(ids)) and len(acts) >= 10
+    for a in acts:
+        assert ACT_FIELDS <= set(a), a["id"]
+        assert all(k in cat.metrics for k in a["helps"]), a["id"]
+        assert 3 <= len(a["steps"]) <= 5 and a["url"].startswith("https://")
+        assert a["with"] in ("solo", "crew", "ground")
+    covered = {k for a in acts for k in a["helps"]}
+    assert set(records.checkin_metrics(cat)) <= covered
+
+
+def _social_drop_store():
+    cat = Catalog.load()
+    store = Store(":memory:", cat)
+    start = dt.date(2026, 10, 1)
+    for i in range(17):
+        v = 4 if i < 14 else 1
+        store.write(records.checkin_batch(cat, "c1", "self.social", (start + dt.timedelta(days=i)).isoformat(), v))
+    engine.sync(cat, store, "c1")
+    return cat, store, (start + dt.timedelta(days=16)).isoformat()
+
+
+def test_activities_suggested_by_open_alert_and_linked_on_the_task():
+    cat, store, day = _social_drop_store()
+    res = engine.activities_for(cat, store, "c1", day)
+    tid = f"sys-c1-self.social-{day}"
+    assert [a["task_id"] for a in res["open_alerts"]] == [tid]
+    suggested = [a for a in res["activities"] if a["suggested"]]
+    assert suggested and all("self.social" in a["helps"] for a in suggested)
+    n = len(suggested)
+    assert all(a["suggested"] for a in res["activities"][:n]) and not any(a["suggested"] for a in res["activities"][n:])
+    assert suggested[0]["because"][0]["task_id"] == tid
+    assert repo.get_task(store, tid).attrs["activities"] == engine.activity_ids_for(cat, "self.social")
+
+
+def test_activity_logged_does_not_close_alert_but_new_reading_does():
+    cat, store, day = _social_drop_store()
+    aid = engine.activity_ids_for(cat, "self.social")[0]
+    r = engine.log_activity(cat, store, "c1", aid, day)
+    assert r["times_done"] == 1 and r["task_id"] == f"activity-c1-{aid}"
+    res = engine.activities_for(cat, store, "c1", day)
+    row = next(a for a in res["activities"] if a["id"] == aid)
+    assert row["done_today"] and row["times_done"] == 1
+    assert res["open_alerts"]                                   # Verify needs a reading, not an activity
+    later = [(dt.date.fromisoformat(day) + dt.timedelta(days=k)).isoformat() for k in (1, 2)]
+    for d in later:                                             # two good days clear the 3-day average
+        store.write(records.checkin_batch(cat, "c1", "self.social", f"{d}T09:00:00Z", 5))
+    engine.sync(cat, store, "c1")
+    res = engine.activities_for(cat, store, "c1", later[-1])
+    assert res["open_alerts"] == [] and not any(a["suggested"] for a in res["activities"])
+
+
+def test_activities_api():
+    c = TestClient(create_app())
+    r = c.get("/api/activities", params={"subject": "c3"})
+    assert r.status_code == 200
+    j = r.json()
+    assert {a["metric"] for a in j["open_alerts"]} >= {"self.social", "self.stress"}
+    first = j["activities"][0]
+    assert first["suggested"] and set(first["helps"]) & {"self.social", "self.stress"}
+    xp0 = c.get("/api/progress", params={"subject": "c3"}).json()["xp"]
+    p = c.post(f"/api/activities/{first['id']}/events", json={"subject": "c3"})
+    assert p.status_code == 201 and p.json()["times_done"] == 1 and p.json()["xp"] == xp0 + 10
+    again = c.get("/api/activities", params={"subject": "c3"}).json()
+    assert next(a for a in again["activities"] if a["id"] == first["id"])["done_today"]
+    assert c.post("/api/activities/nope/events", json={"subject": "c3"}).status_code == 404
+    assert c.post(f"/api/activities/{first['id']}/events", json={"subject": "iss"}).status_code == 404
+    assert c.post(f"/api/activities/{first['id']}/events", json={"subject": "c3", "t": "2026-02-30"}).status_code == 422
+    assert c.get("/api/activities", params={"subject": "c3", "date": "2026-13-01"}).status_code == 422
+
+
+
+# ---- replay of Emile's app (origin/crew-station 84818bb, web/src/data/mind.ts) -------
+def test_replay_emile_mind_ts_still_flagged_checkin_keeps_the_alert_open():
+    """mind.ts:159 posts every score at `${date}T12:00:00Z` with date = crew_data mission.today. c3's connection is
+    red; a check-in that is still low must not close the alert, a re-rating that clears it must."""
+    c = TestClient(create_app())
+    tid = "sys-c3-self.social-2026-11-14"
+    body = {"subject": "c3", "metric": "self.social", "t": "2026-11-14T12:00:00Z", "value": 2}
+    r = c.post("/api/observations", json=body)
+    assert r.status_code == 201 and r.json()["assessment"]["severity"] in ("amber", "red")
+    assert tid not in r.json()["closed_tasks"]
+    open_ids = {t["id"] for t in c.get("/api/tasks", params={"subject": "c3", "date": "2026-11-14"}).json()["tasks"]
+                if t["origin"] == "system" and not t["done"]}
+    assert tid in open_ids
+    r = c.post("/api/observations", json={**body, "value": 5})     # mind.ts re-sends the same t when a score changes
+    assert (tid in r.json()["closed_tasks"]) == (r.json()["assessment"] is None)
+
+
+def test_replay_emile_mind_ts_reads():
+    """The fields mind.ts reads: checkin metrics[].key/scale.words (5), tasks[] ServerTask, progress subset."""
+    c = TestClient(create_app())
+    ck = c.get("/api/checkin?subject=c1&date=2026-11-14").json()
+    words = {m["key"].replace("self.", ""): m["scale"]["words"] for m in ck["metrics"]}
+    assert set(words) == {"mood", "stress", "energy", "sleep_quality", "social"}
+    assert all(len(w) == 5 for w in words.values())
+    tasks = c.get("/api/tasks?subject=c1&date=2026-11-14").json()["tasks"]
+    assert tasks and all({"id", "kind", "label", "origin", "metric", "done", "status", "streak"} <= set(t) for t in tasks)
+    p = c.get("/api/progress?subject=c1&date=2026-11-14").json()
+    assert {"xp", "level", "checkin_streak", "best_habit_streak"} <= set(p)
+
+
+def test_scale_words_equal_emile_scales():
+    """web/src/data/mind.ts SCALES (84818bb) is the offline fallback; the server's words must be the same."""
+    emile = {"mood": ["Very low", "Low", "Okay", "Good", "Great"],
+             "stress": ["Calm", "Settled", "Some pressure", "Strained", "Overwhelmed"],
+             "energy": ["Drained", "Low", "Okay", "Good", "High"],
+             "sleep_quality": ["Very poor", "Poor", "Fair", "Good", "Great"],
+             "social": ["Cut off", "Distant", "Okay", "Connected", "Close"]}
+    c = TestClient(create_app())
+    ck = c.get("/api/checkin?subject=c2").json()
+    assert {m["key"].replace("self.", ""): m["scale"]["words"] for m in ck["metrics"]} == emile
+
+
+def test_same_t_correction_closes_the_alert_like_emile_sends_it():
+    """mind.ts re-sends the same t when a score is changed: the corrected (no longer flagged) score closes the task."""
+    c = TestClient(create_app())
+    body = {"subject": "c1", "metric": "self.mood", "t": "2026-11-14T12:00:00Z", "value": 1}
+    tid = "sys-c1-self.mood-2026-11-14"
+    assert tid in c.post("/api/observations", json=body).json()["opened_tasks"]
+    r = c.post("/api/observations", json={**body, "value": 5}).json()
+    assert r["assessment"] is None and tid in r["closed_tasks"]
+    acts = c.get("/api/activities", params={"subject": "c1"}).json()
+    assert all(a["metric"] != "self.mood" for a in acts["open_alerts"])
+
+
+def test_a_score_that_stays_low_keeps_one_open_task():
+    cat = Catalog.load()
+    store = Store(":memory:", cat)
+    start = dt.date(2026, 10, 1)
+    days = [(start + dt.timedelta(days=i)).isoformat() for i in range(20)]
+    for i, d in enumerate(days):
+        store.write(records.checkin_batch(cat, "c2", "self.energy", d, 4 if i < 14 else 1))
+        engine.sync(cat, store, "c2")
+    open_sys = [t for t in repo.tasks(store, "c2", origin="system")
+                if not repo.events(store, task_id=t.id) and t.metric == "self.energy"]
+    assert len(open_sys) == 1
+
+
+def test_activity_logged_twice_a_day_counts_once_and_is_not_in_the_task_list():
+    c = TestClient(create_app())
+    xp0 = c.get("/api/progress", params={"subject": "c2"}).json()["xp"]
+    a = c.post("/api/activities/grounding/events", json={"subject": "c2"}).json()
+    b = c.post("/api/activities/grounding/events", json={"subject": "c2", "t": "2026-11-14T18:00:00Z"}).json()
+    assert a["times_done"] == 1 and b["times_done"] == 1 and b["xp"] == xp0 + 10
+    ids = {t["id"] for t in c.get("/api/tasks", params={"subject": "c2"}).json()["tasks"]}
+    assert "activity-c2-grounding" not in ids

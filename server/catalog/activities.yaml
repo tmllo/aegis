@@ -1,0 +1,222 @@
+# Mind layer: short self-help activities the app can suggest when a self-report score drifts from the
+# crew member's own baseline. Self-care and resilience only, never treatment. All text written by the team.
+# Read by server/mind via cat.extra["activities"]. No generative AI picks or writes these.
+# category: calm | thoughts | values | connection | sleep | energy | conflict
+# with: solo | crew | ground (ground = needs a call slot). helps: 1-3 self-report metric keys.
+
+activities:
+- id: paced_breathing
+  label: Paced breathing
+  minutes: 4
+  category: calm
+  with: solo
+  helps: [self.stress, self.sleep_quality]
+  steps:
+  - Sit or float somewhere you can stay still for a few minutes.
+  - Breathe in slowly through your nose for a count of four.
+  - Breathe out gently for a count of six, letting your shoulders drop.
+  - Repeat for about four minutes, coming back to the count when your mind wanders.
+  basis: Slow, paced breathing is one of the relaxation tools in the VA PTSD Coach app, used for stress in the moment.
+  source: VA National Center for PTSD, PTSD Coach (relaxation tools)
+  url: https://mhealth.amegroups.org/article/view/20524/20219
+
+- id: grounding
+  label: Grounding in the here and now
+  minutes: 3
+  category: calm
+  with: solo
+  helps: [self.stress, self.mood]
+  steps:
+  - Press your feet or hands against something solid and notice the contact.
+  - Name to yourself a few things you can see, hear and feel right now.
+  - Slow your breathing a little and notice the air moving in and out.
+  - Turn your attention back to the task or the people around you.
+  basis: Grounding is the first skill in the WHO Doing What Matters guide; a digital version of the WHO materials reduced
+    distress in a randomised trial.
+  source: WHO, Doing What Matters in Times of Stress (Self-Help Plus skills)
+  url: https://communities.springernature.com/posts/a-digital-self-help-tool-based-on-the-who-materials-reduces-distress-among-refugees-results-from-an-rct
+
+- id: unhooking
+  label: Unhooking from a sticky thought
+  minutes: 3
+  category: thoughts
+  with: solo
+  helps: [self.stress, self.mood]
+  steps:
+  - Notice the thought that keeps pulling you in.
+  - Name it plainly, for example "I am having the thought that I will fail this task".
+  - Notice what you are doing and where you are right now.
+  - Choose where to put your attention next, even if the thought is still there.
+  basis: Unhooking from difficult thoughts is a core skill in the WHO Doing What Matters guide and Self-Help Plus.
+  source: WHO, Doing What Matters in Times of Stress (Self-Help Plus skills)
+  url: https://communities.springernature.com/posts/a-digital-self-help-tool-based-on-the-who-materials-reduces-distress-among-refugees-results-from-an-rct
+
+- id: value_step
+  label: One small step toward what matters
+  minutes: 5
+  category: values
+  with: solo
+  helps: [self.mood, self.energy]
+  steps:
+  - Pick one thing that matters to you on this mission, such as being a good crewmate or learning well.
+  - Think of one small action today that fits it.
+  - Make the action small enough to finish before the next sleep period.
+  - Do it, then notice how it felt.
+  basis: Acting on your values is taught in the WHO Doing What Matters guide and in the VA ACT Coach app.
+  source: WHO, Doing What Matters in Times of Stress; VA National Center for PTSD, ACT Coach (values)
+  url: https://communities.springernature.com/posts/a-digital-self-help-tool-based-on-the-who-materials-reduces-distress-among-refugees-results-from-an-rct
+
+- id: kind_self_talk
+  label: Kind self-talk
+  minutes: 3
+  category: thoughts
+  with: solo
+  helps: [self.mood, self.stress]
+  steps:
+  - Notice how you are speaking to yourself right now.
+  - Ask what you would say to a crewmate in the same spot.
+  - Say that to yourself, quietly or in writing.
+  - Pick one thing you handled well today and name it.
+  basis: Positive self-talk is a PTSD Coach tool, and being kind to yourself is a skill in the WHO Doing What Matters
+    guide.
+  source: VA National Center for PTSD, PTSD Coach (positive self-talk)
+  url: https://mhealth.amegroups.org/article/view/20524/20219
+
+- id: making_room
+  label: Making room for a hard feeling
+  minutes: 4
+  category: thoughts
+  with: solo
+  helps: [self.mood, self.stress]
+  steps:
+  - Notice where the feeling sits in your body.
+  - Breathe slowly around that spot without trying to push it away.
+  - Name the feeling in one or two words.
+  - Let it be there while you return to what you were doing.
+  basis: Making room for difficult feelings is a skill in the WHO Doing What Matters guide and in the ACT Coach
+    mindfulness exercises.
+  source: WHO, Doing What Matters in Times of Stress (Self-Help Plus skills)
+  url: https://communities.springernature.com/posts/a-digital-self-help-tool-based-on-the-who-materials-reduces-distress-among-refugees-results-from-an-rct
+
+- id: muscle_relaxation
+  label: Muscle relaxation scan
+  minutes: 10
+  category: sleep
+  with: solo
+  helps: [self.sleep_quality, self.stress, self.sleep_h]
+  steps:
+  - Settle into your sleep station or a quiet corner.
+  - Tense the muscles in your feet for five seconds, then let them go.
+  - Move up through legs, belly, hands, arms, shoulders and face the same way.
+  - Finish with a few slow breaths and notice how heavy your body feels.
+  basis: Progressive muscle relaxation is one of the relaxation tools in the VA PTSD Coach app.
+  source: VA National Center for PTSD, PTSD Coach (relaxation tools)
+  url: https://mhealth.amegroups.org/article/view/20524/20219
+
+- id: private_call_home
+  label: Private call home
+  minutes: 15
+  category: connection
+  with: ground
+  helps: [self.social, self.mood]
+  steps:
+  - Ask the ground to book a private family conference slot.
+  - Note one or two things you want to share or ask before the call.
+  - Make the call somewhere you will not be interrupted.
+  - Afterwards, take a minute to notice how you feel before going back to work.
+  basis: Private family conferences are part of NASA Behavioral Health and Performance crew support.
+  source: NASA Behavioral Health and Performance, operations overview (crew support, private family conferences)
+  url: https://ntrs.nasa.gov/api/citations/20250011491/downloads/BHP%20Operations%20Overview_Navy_Revised.pdf
+
+- id: shared_meal
+  label: Shared crew meal
+  minutes: 30
+  category: connection
+  with: crew
+  helps: [self.social, self.mood, self.energy]
+  steps:
+  - Agree a time when everyone who can is free to eat together.
+  - Put work screens away for the meal.
+  - Each person shares one good or funny moment from the day.
+  - Clean up together.
+  basis: Inspired by the team care and group living themes in NASA Behavioral Health and Performance crew support.
+  source: NASA Behavioral Health and Performance, operations overview (team care, group living)
+  url: https://ntrs.nasa.gov/api/citations/20250011491/downloads/BHP%20Operations%20Overview_Navy_Revised.pdf
+
+- id: conflict_reset
+  label: Conflict reset talk
+  minutes: 15
+  category: conflict
+  with: crew
+  helps: [self.social, self.stress]
+  steps:
+  - Ask the crewmate for a short private talk at a calm moment, not mid-task.
+  - Each person describes what happened from their side without interrupting.
+  - Name what each of you needs going forward.
+  - Agree one concrete change and a time to check back in.
+  basis: Inspired by the conflict module of the HI-SEAS Virtual Space Station, built for crews that must solve problems
+    without ground support.
+  source: HI-SEAS, Virtual Space Station (conflict module)
+  url: https://hi-seas.org/missions-i-vi-mission-updates/autonomous-behavioral-countermeasures-for-spaceflight
+
+- id: nature_break
+  label: Nature break (VR scene or Earth view)
+  minutes: 10
+  category: calm
+  with: solo
+  helps: [self.stress, self.mood]
+  steps:
+  - Put on the VR headset with a nature scene, or go to a window with an Earth view.
+  - Let your eyes rest on something far away and slow your breathing.
+  - Notice colours, movement and light for a few minutes.
+  - Take one slow breath before returning to work.
+  basis: Nature scenes in virtual reality were tested as a countermeasure for isolated crews at HI-SEAS.
+  source: Aerospace Medicine and Human Performance, Expedition-APPP and nature VR at HI-SEAS
+  url: https://asma.kglmeridian.com/view/journals/amhp/91/11/article-p876.xml
+
+- id: sleep_wind_down
+  label: Sleep wind-down
+  minutes: 20
+  category: sleep
+  with: solo
+  helps: [self.sleep_h, self.sleep_quality]
+  steps:
+  - Finish screen work about twenty minutes before your sleep window opens.
+  - Dim the lights in your sleep station.
+  - Write down anything still on your mind so you can leave it until tomorrow.
+  - Do a few minutes of slow breathing or the muscle scan, then lights out.
+  basis: Inspired by the self-care guidance in NASA Behavioral Health and Performance crew support, which treats sleep as
+    part of crew performance.
+  source: NASA Behavioral Health and Performance, operations overview (self-care)
+  url: https://ntrs.nasa.gov/api/citations/20250011491/downloads/BHP%20Operations%20Overview_Navy_Revised.pdf
+
+- id: pleasant_activity
+  label: Plan one pleasant activity
+  minutes: 5
+  category: energy
+  with: solo
+  helps: [self.mood, self.energy]
+  steps:
+  - List two or three small things you usually enjoy on board, such as music, a photo or a game.
+  - Pick one and put it in your schedule for today or tomorrow.
+  - Do it when the time comes, even if you do not feel like it.
+  - Rate your mood before and after.
+  basis: Planning pleasant activities draws on the depression module of the HI-SEAS Virtual Space Station.
+  source: HI-SEAS, Virtual Space Station (depression module)
+  url: https://hi-seas.org/missions-i-vi-mission-updates/autonomous-behavioral-countermeasures-for-spaceflight
+
+- id: movement_break
+  label: Movement break
+  minutes: 10
+  category: energy
+  with: solo
+  helps: [self.energy, self.sleep_h, self.sleep_quality]
+  steps:
+  - Step away from your task for ten minutes.
+  - Stretch arms, back and legs slowly, holding each stretch for a few breaths.
+  - Add a short burst of easy movement to raise your heart rate a little.
+  - Drink some water before going back to work.
+  basis: Inspired by the self-care guidance in NASA Behavioral Health and Performance crew support; keep it outside the
+    last hour before sleep.
+  source: NASA Behavioral Health and Performance, operations overview (self-care)
+  url: https://ntrs.nasa.gov/api/citations/20250011491/downloads/BHP%20Operations%20Overview_Navy_Revised.pdf

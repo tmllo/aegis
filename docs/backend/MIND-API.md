@@ -29,6 +29,8 @@ New metric keys (kind `self_report`, 1–5, five words each, hazard isolation, b
 | GET | `/api/progress?subject=c1&date=` | XP, level, streaks, badges |
 | POST / GET | `/api/notes?subject=c1` | journal, header `X-Crew-Member: c1` required |
 | GET | `/api/wellbeing?subject=c1&days=28&end=` | weekly summary, counts only, never journal text |
+| GET | `/api/activities?subject=c1&date=` | self-help activities, the ones that help an open alert first |
+| POST | `/api/activities/{id}/events` | log an activity as done (`{subject, t?}`) |
 
 ---
 
@@ -79,6 +81,9 @@ POST /api/observations
  "opened_tasks": ["sys-c1-self.social-2026-11-14"],
  "closed_tasks": []}
 ```
+**Verify rule:** a task opened by a check-in score closes only when a newer reading of that score is no longer flagged.
+A check-in that is still low leaves it open. A re-rating on the same day (same or later `t`) replaces the earlier rating.
+A vitals task (`vital.*`) closes on any newer reading.
 `assessment` is `null` when the score is within the person's usual range. The five check-in scores (mood included) are
 scored live on every POST; on a day with a live check-in it replaces the simulated value. A crew re-measure
 (`vital.*`) is not re-scored live (that happens at build); it only closes the open task, and `assessment` shows the
@@ -205,3 +210,48 @@ oldest first. `mean` averages the daily values, and `n` is the number of days wi
 - `POST /api/tasks` accepts an optional `id` (1-64 letters, digits, `-`, `_`). Offline-first apps make the id on the device; the server keeps it, and sending the same task twice returns the existing one instead of a duplicate. Another crew member's id gives 409.
 - `POST /api/tasks/{id}/events` accepts the app's routine names: `routine-c1-check-in`, `-exercise-block`, `-sleep-window`, `-hydration`, `-journal-line`, `-call-home` map to the server's routines through `aliases` in `server/catalog/routines.yaml`.
 - Tested by `server/tests/test_mind_app_compat.py`, which replays `web/src/data/mind.ts`.
+
+## GET /api/activities?subject=c3
+The 14 self-help activities in `server/catalog/activities.yaml`. Each carries our own steps and the source it is based on:
+WHO Doing What Matters / Self-Help Plus, VA PTSD Coach and ACT Coach, HI-SEAS Virtual Space Station and nature VR,
+NASA BHP. An activity whose `helps` includes a metric with an open alert is `suggested`, and suggested ones come first
+(red before amber). `because` names the alert and its system task. The same ids are also on each system task as
+`attrs.activities`. This is a fixed rule with no inference.
+```json
+{"subject": "c3", "date": "2026-11-14",
+ "open_alerts": [
+  {"task_id": "sys-c3-self.social-2026-11-14", "metric": "self.social", "severity": "red", "t": "2026-11-14",
+   "message": "Social connection (1–5) 3-day average 3.2σ below your own baseline"},
+  {"task_id": "sys-c3-self.stress-2026-11-14", "metric": "self.stress", "severity": "red", "t": "2026-11-14",
+   "message": "Stress (1–5) 3-day average 4.0σ above your own baseline"}],
+ "activities": [
+  {"id": "paced_breathing", "label": "Paced breathing", "minutes": 4, "category": "calm", "with": "solo",
+   "helps": ["self.stress", "self.sleep_quality"],
+   "steps": ["Sit or float somewhere you can stay still for a few minutes.",
+             "Breathe in slowly through your nose for a count of four.",
+             "Breathe out gently for a count of six, letting your shoulders drop.",
+             "Repeat for about four minutes, coming back to the count when your mind wanders."],
+   "basis": "Slow, paced breathing is one of the relaxation tools in the VA PTSD Coach app, used for stress in the moment.",
+   "source": "VA National Center for PTSD, PTSD Coach (relaxation tools)",
+   "url": "https://mhealth.amegroups.org/article/view/20524/20219",
+   "suggested": true,
+   "because": [{"metric": "self.stress", "severity": "red", "task_id": "sys-c3-self.stress-2026-11-14"}],
+   "done_today": false, "times_done": 0},
+  "... 13 more (suggested first)"]}
+```
+`category` is one of `calm`, `thoughts`, `values`, `connection`, `sleep`, `energy` or `conflict`. `with` is `solo`, `crew` or
+`ground` (ground needs a call slot).
+
+## POST /api/activities/{id}/events
+Logs one activity as done. It is stored as a done event on the crew member's activity task
+(`activity-<subject>-<id>`, origin `self`), so it earns task XP (10). It never closes an alert: only a new reading does.
+An unknown activity or subject gives 404. A bad `t` gives 422.
+```http
+POST /api/activities/private_call_home/events
+{"subject": "c3"}
+```
+`201`
+```json
+{"activity_id": "private_call_home", "task_id": "activity-c3-private_call_home", "t": "2026-11-14", "status": "done",
+ "times_done": 1, "xp": 925}
+```

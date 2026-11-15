@@ -1,0 +1,86 @@
+# Orbit layer config (docs/backend/ORBIT.md). Read as cat.extra["orbit"].
+# A new satellite group = one entry under `groups` + its file data/orbits/celestrak/<id>.tle (live: fetched by id).
+
+# Station subjects whose track the server propagates (GET /api/orbit?subject=). Subject id -> NORAD catalogue number.
+stations:
+  iss: 25544        # ISS (ZARYA)
+  tiangong: 48274   # CSS (TIANHE), core module of Tiangong
+
+# Every CelesTrak group, each one a toggle on the globe. kind: crewed | navigation | comms | observation | scenery
+groups:
+- id: stations
+  label: Crewed stations
+  kind: crewed
+  default_on: true
+  about: ISS and Tiangong with their modules and visiting vehicles. Tracks computed by the server with sunlit and SAA colouring.
+- id: visual
+  label: Brightest satellites
+  kind: observation
+  default_on: false
+  about: The satellites bright enough to see with the naked eye.
+- id: gps-ops
+  label: GPS
+  kind: navigation
+  default_on: false
+  about: Operational GPS constellation (USA).
+- id: galileo
+  label: Galileo
+  kind: navigation
+  default_on: false
+  about: Galileo navigation constellation (EU).
+- id: glo-ops
+  label: GLONASS
+  kind: navigation
+  default_on: false
+  about: Operational GLONASS constellation (Russia).
+- id: geo
+  label: Geostationary ring
+  kind: comms
+  default_on: false
+  about: Geostationary weather and communications satellites.
+- id: starlink
+  label: Starlink
+  kind: comms
+  default_on: false
+  about: SpaceX Starlink broadband constellation.
+- id: active
+  label: Every active satellite
+  kind: scenery
+  default_on: false
+  about: Every active satellite CelesTrak tracks (includes all of the groups above).
+
+# Same credit on every group (CelesTrak asks for a citation).
+credit: 'CelesTrak (celestrak.org), Dr. T.S. Kelso'
+
+# How often the live adapter may download one group (CelesTrak asks not to fetch faster than the data changes).
+min_fetch_interval_h: 6
+
+# South Atlantic Anomaly boundary used by server/orbit/engine.py (in_saa on track points, SAA passes per day).
+saa:
+  label: South Atlantic Anomaly (approximate, at ISS altitude)
+  approximate: true
+  altitude_km: 410            # ISS altitude; contour derived from an instrument on the ISS (NICER)
+  polygon:                    # [lat_deg, lon_deg] vertices, lon in -180..180, closed implicitly
+  - [-2.36, -67.68]
+  - [-10.28, -86.40]
+  - [-31.85, -84.49]
+  - [-43.99, -72.35]
+  - [-52.58, -54.56]
+  - [-53.63, -28.19]
+  - [-46.89, 0.21]
+  - [-42.67, 15.51]
+  - [-34.04, 28.80]
+  - [-21.08, 12.96]
+  - [-21.08, -9.36]
+  - [-16.04, -23.76]
+  - [0.52, -43.20]
+  basis: >-
+    Approximate. The standard SAA exclusion contour NASA uses for the NICER X-ray instrument on the ISS (CALDB file
+    nixtisaareg20170601v003.fits, region type SAACONT, valid from 2017-06-01), drawn from where NICER's particle
+    background rises at ISS altitude; no numeric flux threshold is published. Vertices copied unchanged, swapped to
+    [lat, lon]. The anomaly drifts about 0.36 deg/yr west and 0.16 deg/yr north (about 3 deg west by 2026), changes
+    with altitude and the solar cycle, and a background-defined edge is not a dose threshold.
+  refs:
+  - "NASA GSFC HEASARC, NICER XTI CALDB SAA region file nixtisaareg20170601v003.fits (valid from 2017-06-01). https://heasarc.gsfc.nasa.gov/FTP/caldb/data/nicer/xti/bcf/saa/"
+  - "NASA HEASARC, niprefilter2 help (NICER_SAA flag, saaregfile). https://heasarc.gsfc.nasa.gov/lheasoft/ftools/headas/niprefilter2.html"
+  - "Schaefer et al. (2016), Space Weather, https://doi.org/10.1002/2016SW001371 (SAA drift rates; full title and authors not yet checked)"

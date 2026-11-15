@@ -31,7 +31,7 @@ metrics:
   scale:
     min: 1
     max: 5
-    words: [Drained, Low, Steady, Good, Full]
+    words: [Drained, Low, Okay, Good, High]   # same words as web/src/data/mind.ts SCALES
   rule:
     type: baseline_z
     low_side_only: true
@@ -71,7 +71,7 @@ metrics:
   scale:
     min: 1
     max: 5
-    words: [Very poor, Poor, Fair, Good, Very good]
+    words: [Very poor, Poor, Fair, Good, Great]   # same words as web/src/data/mind.ts SCALES
   rule:
     type: baseline_z
     low_side_only: true

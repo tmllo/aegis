@@ -53,11 +53,19 @@ class Catalog:
             if m["key"] in metrics:
                 raise CatalogError(f"metric {m['key']} defined twice")
             metrics[m["key"]] = m
+        def unique(kind: str, key: str) -> dict[str, dict]:
+            out: dict[str, dict] = {}
+            for item in _load_all(root, kind):
+                if item[key] in out:
+                    raise CatalogError(f"{kind}: {item[key]!r} defined twice (base file and a .d file, or two .d files)")
+                out[item[key]] = item
+            return out
+
         cat = cls(
             metrics=metrics,
-            subjects={s["id"]: s for s in _load_all(root, "subjects")},
-            sources={s["id"]: s for s in _load_all(root, "sources")},
-            models={m["id"]: m for m in _load_all(root, "models")},
+            subjects=unique("subjects", "id"),
+            sources=unique("sources", "id"),
+            models=unique("models", "id"),
             mission=_load(root / "mission.yaml", "mission"),
             extra=extra,
         )

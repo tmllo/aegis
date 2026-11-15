@@ -115,10 +115,3 @@ sources:
   fallback: docs/research/samples/iswa_hapi_msl_rad_dosimetry_2026-11.csv
   credit: 'Mars and Moon dose: NASA CCMC iSWA (MSL RAD, LRO CRaTER)'
   status: planned (S3)
-- id: checkin
-  label: Astronaut check-in
-  org: e^x app
-  real: false
-  adapter: checkin
-  cadence: on input
-  status: planned (S5)

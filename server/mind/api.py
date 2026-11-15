@@ -41,6 +41,11 @@ class TaskIn(BaseModel):
     metric: str | None = None
 
 
+class ActivityEventIn(BaseModel):
+    subject: str
+    t: str | None = None
+
+
 class TaskEventIn(BaseModel):
     t: str | None = None
     status: str
@@ -232,3 +237,24 @@ def get_wellbeing(subject: str, days: int = 28, end: str | None = None) -> dict:
     if not 7 <= days <= 90:
         raise HTTPException(422, "days must be 7 to 90")
     return engine.wellbeing(cat, store, subject, days, _day("end", end))
+
+
+# ---- activities (suggested by open alerts) -----------------------------------
+@router.get("/api/activities")
+@_serialized
+def get_activities(subject: str, date: str | None = None) -> dict:
+    cat, store = deps.cat(), deps.store()
+    _crew(cat, subject)
+    return engine.activities_for(cat, store, subject, _day("date", date))
+
+
+@router.post("/api/activities/{activity_id}/events", status_code=201)
+@_serialized
+def post_activity_event(activity_id: str, body: ActivityEventIn) -> dict:
+    cat, store = deps.cat(), deps.store()
+    _crew(cat, body.subject)
+    if engine.activity(cat, activity_id) is None:
+        raise HTTPException(404, f"unknown activity {activity_id!r}")
+    t = _time("t", body.t) or engine.today(cat)
+    res = engine.log_activity(cat, store, body.subject, activity_id, t)
+    return {**res, "xp": engine.progress(cat, store, body.subject)["xp"]}
