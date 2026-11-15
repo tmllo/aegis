@@ -1,0 +1,17 @@
+{
+  "about": "Cabin catalog for the Cabin screen, keyed like server/catalog/metrics.yaml (cabin.*). Bands: a value below red_low or above red_high is red, below amber_low or above amber_high is amber. source NASA = a published NASA limit; Team = our own band, no NASA source. Item ids are ISS Live! (Lightstreamer ISSLIVE). Units are as observed, not as the dictionary states (see docs/research/2-data-sources/01-realtime-data-apis.md 1.2).",
+  "stale_after_h": 24,
+  "signal_item": "TIME_000001",
+  "signal_ok_class": "24",
+  "metrics": [
+    { "key": "cabin.pressure", "label": "Cabin pressure", "short": "Pressure", "unit": "mmHg", "item": "USLAB000058", "digits": 0, "bands": { "red_low": 690, "amber_low": 735, "amber_high": 790, "red_high": 800 }, "source": "Team", "emergency_below": 690 },
+    { "key": "cabin.ppo2", "label": "Oxygen, partial pressure", "short": "ppO2", "unit": "mmHg", "item": "USLAB000053", "digits": 0, "bands": { "red_low": 122, "amber_low": 127 }, "source": "NASA", "ref": "NASA-STD-3001 V2: inspired ppO2 floor 127 mmHg with monitoring, 1-hour floor 122 mmHg" },
+    { "key": "cabin.ppco2", "label": "CO2, partial pressure", "short": "ppCO2", "unit": "mmHg", "item": "USLAB000055", "digits": 2, "bands": { "amber_high": 2.5, "red_high": 3.0 }, "source": "NASA", "ref": "NASA-STD-3001 V2 6004: 1-hour average at or below 3 mmHg. Headaches reported from 2.8 mmHg, fatigue and nausea above 4.5 mmHg" },
+    { "key": "cabin.co", "label": "Carbon monoxide", "short": "CO", "unit": "ppm", "item": null, "digits": 1, "bands": {}, "source": "Planned" },
+    { "key": "cabin.temp", "label": "Cabin temperature", "short": "Temperature", "unit": "°C", "item": "USLAB000059", "digits": 1, "bands": { "red_low": 15, "amber_low": 18.3, "amber_high": 26.7, "red_high": 30 }, "source": "Team" },
+    { "key": "cabin.humidity", "label": "Relative humidity", "short": "Humidity", "unit": "%", "item": null, "digits": 0, "bands": {}, "source": "Planned" },
+    { "key": "cabin.water_clean", "label": "Clean water tank", "short": "Clean water", "unit": "%", "item": "NODE3000009", "digits": 0, "bands": { "red_low": 10, "amber_low": 25 }, "source": "Team", "tank": true },
+    { "key": "cabin.water_waste", "label": "Waste water tank", "short": "Waste water", "unit": "%", "item": "NODE3000008", "digits": 0, "bands": { "amber_high": 80, "red_high": 95 }, "source": "Team", "tank": true },
+    { "key": "cabin.urine_tank", "label": "Urine tank", "short": "Urine", "unit": "%", "item": "NODE3000005", "digits": 0, "bands": { "amber_high": 80, "red_high": 95 }, "source": "Team", "tank": true }
+  ]
+}

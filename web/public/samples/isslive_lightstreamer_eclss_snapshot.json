@@ -1,0 +1,131 @@
+{
+  "server": "https://push.lightstreamer.com",
+  "adapterSet": "ISSLIVE",
+  "fetchedAtUTC": "2026-11-14T17:54:05.368Z",
+  "status": [
+    "CONNECTING",
+    "CONNECTED:WS-STREAMING",
+    "subscribed"
+  ],
+  "items": {
+    "NODE3000002": {
+      "Value": "593.8690484647369203230482526123523712158203125",
+      "TimeStamp": "7372.5666677777635",
+      "StatusClass": "24",
+      "StatusIndicator": " ",
+      "CalibratedData": "593.87"
+    },
+    "NODE3000003": {
+      "Value": "2.94987174471259105956733037601225078105926513671875",
+      "TimeStamp": "7372.5666677777635",
+      "StatusClass": "24",
+      "StatusIndicator": " ",
+      "CalibratedData": "2.95"
+    },
+    "NODE3000004": {
+      "Value": "32",
+      "TimeStamp": "7637.714972222248",
+      "StatusClass": "24",
+      "StatusIndicator": " ",
+      "CalibratedData": "STANDBY"
+    },
+    "NODE3000005": {
+      "Value": "34",
+      "TimeStamp": "7649.462472222249",
+      "StatusClass": "24",
+      "StatusIndicator": " ",
+      "CalibratedData": "34.0"
+    },
+    "NODE3000006": {
+      "Value": "3",
+      "TimeStamp": "7641.624388611118",
+      "StatusClass": "24",
+      "StatusIndicator": " ",
+      "CalibratedData": "STANDBY"
+    },
+    "NODE3000008": {
+      "Value": "65.65000152587890625",
+      "TimeStamp": "7649.899640555514",
+      "StatusClass": "24",
+      "StatusIndicator": " ",
+      "CalibratedData": "65.7"
+    },
+    "NODE3000009": {
+      "Value": "62.409999847412109375",
+      "TimeStamp": "7649.896862777737",
+      "StatusClass": "24",
+      "StatusIndicator": " ",
+      "CalibratedData": "62.4"
+    },
+    "NODE3000010": {
+      "Value": "1",
+      "TimeStamp": "7372.5667494444715",
+      "StatusClass": "24",
+      "StatusIndicator": " ",
+      "CalibratedData": "PROCESS"
+    },
+    "NODE3000011": {
+      "Value": "-59.456890106201171875",
+      "TimeStamp": "7372.5667494444715",
+      "StatusClass": "24",
+      "StatusIndicator": " ",
+      "CalibratedData": "-59.46"
+    },
+    "USLAB000053": {
+      "Value": "165.848984880285257759169326163828372955322265625",
+      "TimeStamp": "7358.857501111097",
+      "StatusClass": "24",
+      "StatusIndicator": " ",
+      "CalibratedData": "165.85"
+    },
+    "USLAB000054": {
+      "Value": "577.6220246572876249047112651169300079345703125",
+      "TimeStamp": "7359.018889999986",
+      "StatusClass": "24",
+      "StatusIndicator": " ",
+      "CalibratedData": "577.62"
+    },
+    "USLAB000055": {
+      "Value": "2.43509767988890413192848427570424973964691162109375",
+      "TimeStamp": "7359.018889999986",
+      "StatusClass": "24",
+      "StatusIndicator": " ",
+      "CalibratedData": "2.44"
+    },
+    "USLAB000058": {
+      "Value": "758.5528564453125",
+      "TimeStamp": "7649.888473055561",
+      "StatusClass": "24",
+      "StatusIndicator": " ",
+      "CalibratedData": "758.55"
+    },
+    "USLAB000059": {
+      "Value": "24.014858245849609375",
+      "TimeStamp": "7649.884778333307",
+      "StatusClass": "24",
+      "StatusIndicator": " ",
+      "CalibratedData": "24.0"
+    },
+    "AIRLOCK000054": {
+      "Value": "758.8558349609375",
+      "TimeStamp": "7649.802639722228",
+      "StatusClass": "24",
+      "StatusIndicator": " ",
+      "CalibratedData": "758.86"
+    },
+    "TIME_000001": {
+      "Value": "27539642500",
+      "TimeStamp": "7649.9006944444445",
+      "StatusClass": "24",
+      "StatusIndicator": " ",
+      "CalibratedData": "318/17:54:02"
+    },
+    "NODE3000001": {
+      "Value": "150.667058321218490846149506978690624237060546875",
+      "TimeStamp": "7358.857223333319",
+      "StatusClass": "24",
+      "StatusIndicator": " ",
+      "CalibratedData": "150.67"
+    }
+  }
+}

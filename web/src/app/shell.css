@@ -1,0 +1,20 @@
+.app { display: grid; grid-template-rows: var(--nav-h) minmax(0, 1fr) auto; height: 100%; background: rgb(var(--bg)); color: rgb(var(--text)); overflow: hidden; }
+.app-nav { display: flex; align-items: center; gap: 40px; padding: 0 var(--gut); border-bottom: 1px solid rgb(var(--line)); }
+.app-brand { font: 400 28px/32px var(--font-display); display: flex; align-items: baseline; white-space: nowrap; }
+.app-brand sup { font-size: 16px; top: -0.6em; }
+.app-brand span { margin-left: 14px; font: 500 14px/20px var(--font-sans); letter-spacing: 0.04em; text-transform: uppercase; color: rgb(var(--text-dim)); }
+.app-sections { display: flex; height: 100%; }
+.app-section { position: relative; display: flex; align-items: center; gap: 10px; height: 100%; min-width: 128px; padding: 0 20px; font: 400 26px/30px var(--font-display); color: rgb(var(--text-dim)); }
+.app-section .fx-mono { color: rgb(var(--text-faint)); }
+.app-section.is-active { color: rgb(var(--text)); }
+.app-section::after { content: ''; position: absolute; left: 20px; right: 20px; bottom: -1px; height: 2px; background: rgb(var(--text)); transform: scaleX(0); transform-origin: left; transition: transform var(--dur-slow) var(--ease-out); }
+.app-section.is-active::after { transform: scaleX(1); }
+.app-crew { margin-left: auto; display: flex; gap: 4px; }
+.app-crew-btn { display: flex; align-items: center; gap: 10px; height: var(--touch); padding: 0 18px; border: 1px solid transparent; font: 500 17px/24px var(--font-sans); color: rgb(var(--text-dim)); }
+.app-crew-btn.is-active { border-color: rgb(var(--line-strong)); color: rgb(var(--text)); background: rgb(var(--surface)); }
+.app-mission { display: flex; gap: 20px; color: rgb(var(--text-dim)); white-space: nowrap; }
+.app-main { position: relative; min-height: 0; overflow: hidden; }
+.app-error { padding: 48px; color: rgb(var(--crit)); }
+.app-foot { padding: 8px var(--gut) 10px; border-top: 1px solid rgb(var(--line)); font: 400 14px/18px var(--font-sans); color: rgb(var(--text-faint)); }
+@media (max-width: 1400px) { .app-mission span:first-child, .app-brand span { display: none; } .app-nav { gap: 20px; } }
+.app-replay footer { display: none; }

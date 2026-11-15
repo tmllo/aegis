@@ -1,0 +1,101 @@
+/* 02 Cabin. Flight Record tokens from src/styles/flight.css. */
+.cb-root {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr) minmax(0, 0.95fr);
+  grid-template-rows: auto minmax(0, 1.15fr) minmax(0, 1fr);
+  grid-template-areas: 'head head head' 'air air water' 'dose storm model';
+  gap: 20px 48px;
+  height: 100%;
+  padding: 24px var(--gut) 24px;
+  overflow: hidden;
+}
+.cb-error { padding: 48px; color: rgb(var(--crit)); }
+.cb-dim { color: rgb(var(--text-dim)); }
+.cb-stale { color: rgb(var(--warn)); }
+
+.cb-head { grid-area: head; display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; }
+.cb-title { display: flex; align-items: baseline; gap: 28px; }
+.cb-h1 { font-size: 56px; line-height: 56px; }
+.cb-overall { font: 500 22px/28px var(--font-sans); }
+.cb-origin { display: flex; gap: 24px; color: rgb(var(--text-dim)); }
+
+.cb-sec { padding-top: 10px; border-top: 1px solid rgb(var(--text)); color: rgb(var(--text)); margin-bottom: 12px; }
+.cb-air, .cb-water, .cb-dose, .cb-storm, .cb-model { display: flex; flex-direction: column; min-height: 0; }
+.cb-air { grid-area: air; }
+.cb-water { grid-area: water; }
+.cb-dose { grid-area: dose; }
+.cb-storm { grid-area: storm; }
+.cb-model { grid-area: model; gap: 12px; }
+
+/* Air tiles: 3 x 2, hairlines, no boxes. */
+.cb-tiles { flex: 1; min-height: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(0, 1fr)); column-gap: 32px; }
+.cb-tile { display: flex; flex-direction: column; min-height: 0; padding: 10px 0 8px; border-top: 1px solid rgb(var(--line)); }
+.cb-tile.is-planned { color: rgb(var(--text-faint)); }
+.cb-tile-head { display: flex; justify-content: space-between; align-items: center; }
+.cb-src { font: 400 13px/18px var(--font-mono); padding: 1px 6px; border: 1px solid rgb(var(--line-strong)); color: rgb(var(--text-dim)); }
+.cb-src-nasa { border-color: rgb(var(--text)); color: rgb(var(--text)); }
+.cb-src-planned { border-style: dashed; }
+.cb-value { display: flex; align-items: baseline; gap: 10px; margin-top: 4px; }
+.cb-value .fx-numeral { font-size: clamp(44px, 6vh, 64px); }
+.cb-value small { font: 400 18px/24px var(--font-sans); color: rgb(var(--text-dim)); }
+.cb-status { margin-top: 2px; font: 500 18px/24px var(--font-sans); }
+.cb-empty { margin: auto 0; font: 400 28px/32px var(--font-display); color: rgb(var(--text-faint)); }
+.cb-tile-foot { margin-top: auto; display: flex; justify-content: space-between; gap: 12px; padding-top: 6px; color: rgb(var(--text-dim)); }
+.cb-ground { color: rgb(var(--crit)); }
+
+.cb-scale { position: relative; height: 10px; margin-top: 12px; }
+.cb-zone { position: absolute; top: 3px; height: 4px; }
+.cb-zone-green { background: rgb(var(--text) / 0.22); }
+.cb-zone-amber { background: rgb(var(--warn) / 0.55); }
+.cb-zone-red { background: rgb(var(--crit) / 0.6); }
+.cb-marker { position: absolute; top: -4px; width: 3px; height: 18px; margin-left: -1px; background: rgb(var(--text)); }
+
+/* Water tanks. */
+.cb-tanks { flex: 1; min-height: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+.cb-tank { display: flex; flex-direction: column; align-items: flex-start; min-height: 0; }
+.cb-tank-body { position: relative; flex: 1; min-height: 60px; width: 72px; border: 1px solid rgb(var(--line-strong)); overflow: hidden; }
+.cb-tank-fill { position: absolute; left: 0; right: 0; bottom: 0; }
+.cb-tank-tick { position: absolute; left: -1px; right: -1px; height: 0; border-top: 1px dashed rgb(var(--text) / 0.7); }
+.cb-tank-val { display: flex; align-items: baseline; gap: 6px; margin-top: 8px; font: 400 40px/40px var(--font-display); }
+.cb-tank-val small { font: 400 16px/20px var(--font-sans); color: rgb(var(--text-dim)); }
+.cb-tank-name { font: 500 16px/22px var(--font-sans); }
+.cb-tank-status { font: 500 15px/20px var(--font-sans); }
+.cb-fill-green { background: rgb(var(--text) / 0.28); }
+.cb-fill-amber { background: rgb(var(--warn)); }
+.cb-fill-red { background: rgb(var(--crit)); }
+
+/* Dose. */
+.cb-dose-today, .cb-dose-career { padding: 8px 0 12px; }
+.cb-dose-career { border-top: 1px solid rgb(var(--line)); }
+.cb-limit { position: relative; height: 8px; margin: 10px 0 8px; background: rgb(var(--surface-2)); }
+.cb-limit-fill { position: absolute; left: 0; top: 0; bottom: 0; }
+
+/* Storm feed. */
+.cb-feed { display: flex; flex-direction: column; }
+.cb-feed-row { display: grid; grid-template-columns: 96px 56px minmax(0, 1fr) 48px 112px; align-items: center; gap: 14px; min-height: 48px; border-top: 1px solid rgb(var(--line)); }
+.cb-flare { font: 500 18px/24px var(--font-sans); }
+.cb-pbar { position: relative; height: 8px; background: rgb(var(--surface-2)); }
+.cb-pfill { position: absolute; left: 0; top: 0; bottom: 0; }
+.cb-ptick { position: absolute; top: -5px; bottom: -5px; width: 1px; background: rgb(var(--text) / 0.7); }
+.cb-alert { font: 500 16px/22px var(--font-sans); }
+.cb-feed-key { margin-top: 10px; }
+
+/* Model card (from the radiation concept) and the replay link. */
+.cb-model > section { flex: 1; min-height: 0; border-color: rgb(var(--line)); background: transparent; border-radius: 0; }
+.cb-replay { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 72px; padding: 0 24px; background: rgb(var(--text)); color: rgb(var(--bg)); }
+.cb-replay span { display: flex; flex-direction: column; }
+.cb-replay b { font: 500 22px/28px var(--font-sans); }
+.cb-replay small { font: 400 15px/20px var(--font-sans); opacity: 0.8; }
+
+.cb-emergency {
+  position: absolute; left: 0; right: 0; top: 0; z-index: 5;
+  display: flex; align-items: center; justify-content: center; gap: 14px; min-height: 72px;
+  background: rgb(var(--crit)); color: rgb(var(--bg)); font: 500 26px/32px var(--font-sans);
+}
+.cb-emergency .fr-shape { fill: rgb(var(--bg)); }
+
+@media (max-height: 900px) {
+  .cb-h1 { font-size: 44px; line-height: 44px; }
+  .cb-feed-row { min-height: 40px; }
+}

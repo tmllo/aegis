@@ -61,8 +61,28 @@ export default function BodyScreen() {
   useEffect(() => {
     if (!data || urlCrewDone.current) return;
     urlCrewDone.current = true;
-    if (initial.crew && data.crew.crew.some((c) => c.id === initial.crew)) setCrew(initial.crew);
+    if (initial.crew && data.crew.crew.some((c) => c.id === initial.crew)) {
+      keepSelection.current = true;
+      setCrew(initial.crew);
+    }
   }, [data, initial.crew, setCrew]);
+
+  // Another crew member: start from the front, nothing open.
+  const keepSelection = useRef(false);
+  const lastCrew = useRef<string | null>(null);
+  useEffect(() => {
+    const id = member?.id ?? null;
+    if (lastCrew.current && id !== lastCrew.current) {
+      if (!keepSelection.current) {
+        setSelected(null);
+        setMetric(null);
+        setConfirming(false);
+        setTurn(0);
+      }
+      keepSelection.current = false;
+    }
+    lastCrew.current = id;
+  }, [member?.id]);
 
   const plates = useMemo(() => (data && member && environment ? buildPlates(member, data.crew, environment) : []), [data, member, environment]);
   const order = useMemo(() => reviewOrder(plates), [plates]);
@@ -248,7 +268,7 @@ export default function BodyScreen() {
         <svg className="fr-overlay" aria-hidden="true">
           {plates.map((p) => (
             <g key={p.id} className={`fr-leader-g${p.id === plate?.id ? ' is-selected' : ''}${p.status !== 'green' ? ' is-flagged' : ''}`}>
-              <path className="fr-leader" ref={(el) => void (el ? leaders.current.set(p.id, el) : leaders.current.delete(p.id))} />
+              <path className="fr-leader" pathLength={1} ref={(el) => void (el ? leaders.current.set(p.id, el) : leaders.current.delete(p.id))} />
               <g className="fr-mark-g" ref={(el) => void (el ? marks.current.set(p.id, el) : marks.current.delete(p.id))}>
                 {p.status === 'green' && <circle className="fr-mark" r="5" />}
                 {p.status === 'amber' && <path className="fr-mark fr-fill-amber fr-breathe-amber" d="M0 -9 9 8H-9Z" />}

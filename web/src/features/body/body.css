@@ -28,7 +28,7 @@
 
 .fr-root {
   display: grid;
-  grid-template-rows: 56px minmax(0, 1fr) 96px auto;
+  grid-template-rows: minmax(0, 1fr) 96px;
   height: 100%;
   background: var(--fr-ink-0);
   color: var(--fr-paper);
@@ -52,24 +52,6 @@
 
 @keyframes fr-breathe { 50% { opacity: 0.6; } }
 
-/* ------------------------------------------------------------------ top strip: facts only, no controls */
-.fr-top {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-  gap: 24px;
-  padding: 0 var(--fr-pad);
-  border-bottom: 1px solid var(--fr-rule);
-}
-.fr-brand { font: 400 28px/32px var(--fr-serif); display: flex; align-items: baseline; white-space: nowrap; }
-.fr-brand sup { font-size: 16px; top: -0.6em; }
-.fr-brand span { margin-left: 16px; font: 500 14px/20px var(--fr-sans); letter-spacing: 0.04em; text-transform: uppercase; color: var(--fr-paper-2); }
-.fr-who { grid-column: 2; display: flex; align-items: center; gap: 20px; font: 500 16px/24px var(--fr-sans); white-space: nowrap; }
-.fr-who-status { display: flex; align-items: center; gap: 8px; }
-/* The overview carries the name in its title block; the strip takes over once a plate is open. */
-@media (min-width: 1101px) { .fr-root:not(.has-selection) .fr-who { visibility: hidden; } }
-.fr-mission { grid-column: 3; justify-self: end; display: flex; gap: 24px; color: var(--fr-paper-2); white-space: nowrap; }
-
 /* ------------------------------------------------------------------ stage: the body is the page */
 .fr-stage { position: relative; overflow: hidden; }
 .fr-canvas {
@@ -79,10 +61,10 @@
 .fr-overlay { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
 .fr-leader { fill: none; stroke: var(--fr-paper-3); stroke-width: 1; transition: opacity 200ms linear; }
 .is-flagged > .fr-leader { stroke: var(--fr-paper); }
-.is-selected > .fr-leader { stroke: var(--fr-paper); }
-.has-selection .fr-leader-g:not(.is-selected) > .fr-leader, .fr-ch1 .fr-leader { opacity: 0; }
+.is-selected > .fr-leader { stroke: var(--fr-paper); stroke-dasharray: 1; animation: fr-draw 420ms var(--fr-out) both; }
+@keyframes fr-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+.has-selection .fr-leader-g:not(.is-selected) > .fr-leader { opacity: 0; }
 .has-selection .fr-leader-g:not(.is-selected):not(.is-flagged) > .fr-mark-g { opacity: 0.5; }
-.fr-ch1 .fr-mark-g { display: none; }
 circle.fr-mark { fill: var(--fr-ink-0); stroke: var(--fr-paper); stroke-width: 1.5; }
 .is-selected circle.fr-mark { fill: var(--fr-paper); }
 
@@ -111,35 +93,9 @@ circle.fr-mark { fill: var(--fr-ink-0); stroke: var(--fr-paper); stroke-width: 1
 .has-selection .fr-plate { opacity: 0; visibility: hidden; }
 @keyframes fr-fade { from { opacity: 0; } }
 
-.fr-index { font: 400 40px/40px var(--fr-serif); }
-.fr-index small { margin-left: 6px; font: 400 14px/20px var(--fr-mono); color: var(--fr-paper-2); vertical-align: 14px; }
-
-/* ------------------------------------------------------------------ chapter 01 */
-.fr-crew { position: absolute; left: var(--fr-pad); top: 32px; bottom: 32px; width: calc(46% - var(--fr-pad)); display: flex; flex-direction: column; }
-.fr-wash {
-  position: absolute; left: -40px; top: 56px; width: 560px; height: 230px; opacity: 0.3; filter: blur(64px);
-  background: linear-gradient(135deg, #f09f55, #e1805a 50%, #a6757e);
-}
-.fr-headline { position: relative; margin-top: 3vh; font: 400 clamp(56px, 8.9vh, 96px) / 1 var(--fr-serif); letter-spacing: -0.01em; }
-.fr-mask { display: block; overflow: hidden; }
-.fr-mask > span { display: block; animation: fr-rise 300ms var(--fr-out) both; }
-@keyframes fr-rise { from { transform: translateY(100%); } }
-.fr-sub { position: relative; margin-top: 16px; font-size: 18px; color: var(--fr-paper-2); }
-.fr-names { margin-top: auto; border-bottom: 1px solid var(--fr-rule); }
-.fr-name {
-  display: grid; grid-template-columns: 48px minmax(0, 1fr) auto 128px; align-items: center; column-gap: 0;
-  width: 100%; height: clamp(84px, 9.6vh, 104px); padding: 0 8px 0 0; text-align: left; border-top: 1px solid var(--fr-rule);
-}
-.fr-name:active { background: rgba(244, 241, 234, 0.08); }
-.fr-name .fr-shape { grid-row: span 2; }
-.fr-name-serif { font: 400 32px/36px var(--fr-serif); align-self: end; white-space: nowrap; }
-.fr-name-role { grid-column: 2; grid-row: 2; align-self: start; font: 400 16px/22px var(--fr-sans); color: var(--fr-paper-2); }
-.fr-name-flags { grid-column: 3; grid-row: 1 / span 2; font: 400 16px/24px var(--fr-sans); color: var(--fr-paper-2); }
-.fr-name-status { grid-column: 4; grid-row: 1 / span 2; justify-self: end; font: 500 22px/28px var(--fr-sans); }
-
-/* ------------------------------------------------------------------ chapter 02 */
+/* ------------------------------------------------------------------ title and note */
 .fr-title { position: absolute; left: var(--fr-pad); top: 32px; transition: opacity 160ms linear; }
-.fr-person { margin-top: 16px; font: 400 32px/36px var(--fr-serif); white-space: nowrap; }
+.fr-person { margin-top: 4px; font: 400 48px/52px var(--fr-serif); white-space: nowrap; }
 .fr-overall { display: flex; align-items: center; gap: 12px; margin-top: 6px; font: 400 36px/40px var(--fr-serif); }
 .has-selection .fr-title { opacity: 0; visibility: hidden; }
 
@@ -218,27 +174,20 @@ circle.fr-mark { fill: var(--fr-ink-0); stroke: var(--fr-paper); stroke-width: 1
 .fr-act-primary .fr-shape, .fr-act-crit .fr-shape { fill: var(--fr-ink-0); animation: none; }
 .fr-sq-text { width: 96px; }
 
-.fr-foot { padding: 8px var(--fr-pad) 10px; border-top: 1px solid var(--fr-rule); font: 400 14px/18px var(--fr-sans); color: var(--fr-paper-3); }
 
 /* ------------------------------------------------------------------ short screens: drop the sentence, keep the reading */
 @media (max-height: 860px) {
   .fr-why { display: none; }
   .fr-notecol { padding-top: 16px; padding-bottom: 12px; }
   .fr-metrics, .fr-chart, .fr-facts { margin-top: 10px; }
-  .fr-crew, .fr-title { top: 20px; }
-  .fr-crew { bottom: 20px; }
+  .fr-title { top: 20px; }
   .fr-plate-val { font-size: 36px; line-height: 36px; }
 }
 
 /* ------------------------------------------------------------------ tablet */
 @media (max-width: 1100px) {
   .fr-scope { --fr-pad: 24px; --fr-note-w: 340px; --fr-plate-w: 176px; }
-  .fr-title, .fr-mission-date, .fr-brand span { display: none; }
-  .fr-mission { gap: 16px; }
-  .fr-crew { width: calc(54% - var(--fr-pad)); }
-  .fr-name { grid-template-columns: 40px minmax(0, 1fr) auto 96px; }
-  .fr-name-flags { display: none; }
-  .fr-name-serif { font-size: 28px; }
+  .fr-title { display: none; }
   .fr-plate { padding: 6px 8px; }
   .fr-plate-name { font-size: 20px; gap: 8px; }
   .fr-act { padding: 0 20px; }

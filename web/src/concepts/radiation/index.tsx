@@ -197,7 +197,7 @@ function parkerPath(): string {
 
 const SPIRAL = parkerPath();
 
-function prepare(storm: StormForecast): Prepared {
+export function prepare(storm: StormForecast): Prepared {
   const points: ChartPoint[] = storm.events
     .filter((e) => e.split === 'test')
     .map((e) => ({
@@ -581,7 +581,7 @@ const TestOverview = memo(function TestOverview({ points, onsets, watch, warning
   );
 });
 
-function MetricsCard({ meta }: { meta: StormMeta }) {
+export function MetricsCard({ meta }: { meta: StormMeta }) {
   const m = meta.metrics_test;
   const caught = Math.round(m.hit_rate * m.n_storms);
   const alarms = falseAlarmFigure(m.false_alarms_per_month);

@@ -1,12 +1,8 @@
 import type { CrewData, MissionData, RealCrew, StormForecast } from './types';
 
-const base = (): string => import.meta.env.BASE_URL ?? '/';
+import { getJson as get } from './http';
 
-async function getJson<T>(file: string): Promise<T> {
-  const res = await fetch(`${base()}data/${file}`);
-  if (!res.ok) throw new Error(`${file}: HTTP ${res.status}`);
-  return (await res.json()) as T;
-}
+const getJson = <T,>(file: string): Promise<T> => get<T>(`data/${file}`, 15000);
 
 let cache: Promise<MissionData> | null = null;
 
