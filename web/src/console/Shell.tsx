@@ -6,6 +6,8 @@ import { hasServer } from '../data/http';
 import { DISCLAIMERS } from '../components/Footer';
 import { Mark, statusWord } from './ui';
 import { useConsole } from './useConsole';
+import { useMissionStore } from '../data/store';
+import type { EnvironmentId } from '../data/types';
 // three.js and the scene load only after the intro, so nothing competes with the video
 const World = lazy(() => import('./World').then((m) => ({ default: m.World })));
 import { useHud } from './hud';
@@ -25,6 +27,8 @@ export function Shell() {
   const [server, setServer] = useState<boolean | null>(null);
   const nav = useNavigate();
   const [credits, setCredits] = useState(false);
+  const env = useMissionStore((s) => s.environment);
+  const setEnv = useMissionStore((s) => s.setEnvironment);
   // ring reticle over hotspots: organs (from the scene), buttons and links
   const [ring, setRing] = useState<{ x: number; y: number } | null>(null);
   const hover = useHud((s) => s.hover);
@@ -127,7 +131,16 @@ export function Shell() {
         </nav>
         <div className="cx-icons">
           <DemoButton />
-          <span className="cx-day">Day {day ?? '--'}</span>
+          <span className="cx-dayloc">
+            <span className="cx-day">Day {day ?? '--'}</span>
+            {/* mission location is a setting, not health: it changes the daily radiation and signal delay */}
+            <select className="cx-loc" aria-label="Mission location" value={env ?? ''} onChange={(e) => setEnv(e.target.value as EnvironmentId)}>
+              <option value="iss">ISS</option>
+              <option value="moon">Moon</option>
+              <option value="transit">Transit to Mars</option>
+              <option value="mars">Mars</option>
+            </select>
+          </span>
           <span className="cx-live" data-on={server || undefined} title={server ? 'Server live' : 'Offline'}>
             <i /> {server ? 'Live' : 'Offline'}
           </span>

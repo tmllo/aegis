@@ -2,12 +2,11 @@
 // One very large light status word, small mono captions, one solid white action (amber case:
 // Re-measure; red: Call surgeon, which then sends the handoff report) and a secondary Scan.
 // Idle after 20 s: a slow orbit with gentle breathing, only the key readout stays.
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { TARGETS, type TargetId } from '../components/body3d/targets';
 import { postMeasure } from '../data/live';
 import type { MetricKey, Status } from '../data/types';
-import { useCameraScan } from '../scan';
 import { useWristband } from '../wearable';
 import { AlarmStrip, type Alarm } from './Monitor';
 import { fmt, METRIC_TARGET, RANK, rowOf, SHORT, STATUS_WORD, TARGET_METRICS, toSteps, type Row } from './model';
@@ -60,59 +59,6 @@ function useIdle() {
   return idle;
 }
 
-function ScanOverlay({ onClose }: { onClose: () => void }) {
-  const scan = useCameraScan({ durationS: 25 });
-  const setHeartBpm = useHud((s) => s.setHeartBpm);
-  const started = useRef(false);
-  useEffect(() => {
-    if (!started.current) {
-      started.current = true;
-      scan.start();
-    }
-  }, [scan]);
-  const setBreath = useHud((s) => s.setBreath);
-  useEffect(() => setHeartBpm(scan.bpm), [scan.bpm, setHeartBpm]);
-  useEffect(() => setBreath(scan.breathing), [scan.breathing, setBreath]);
-  return (
-    <div className="scan brk" role="dialog" aria-label="Scan">
-      <div className="scan-frame">
-        <video ref={scan.videoRef} className="scan-video" autoPlay muted playsInline />
-        {scan.box && scan.videoRef.current?.videoWidth ? (
-          <i
-            className="scan-box"
-            style={{
-              // the video is mirrored, so is the box
-              left: `${(1 - (scan.box.x + scan.box.w) / scan.videoRef.current.videoWidth) * 100}%`,
-              top: `${(scan.box.y / scan.videoRef.current.videoHeight) * 100}%`,
-              width: `${(scan.box.w / scan.videoRef.current.videoWidth) * 100}%`,
-              height: `${(scan.box.h / scan.videoRef.current.videoHeight) * 100}%`,
-            }}
-          />
-        ) : null}
-      </div>
-      <span className="cap">{scan.status === 'done' ? 'Scan done' : scan.hint ?? (scan.status === 'scanning' ? 'Hold still' : scan.status)}</span>
-      <span className="scan-bpm">
-        {scan.bpm != null ? Math.round(scan.bpm) : '--'}
-        <small>bpm</small>
-      </span>
-      <span className="scan-bar">
-        <i style={{ width: `${Math.round(scan.progress * 100)}%` }} />
-      </span>
-      <span className="cap">{scan.error ?? scan.label}</span>
-      <button
-        type="button"
-        className="ghost"
-        onClick={() => {
-          scan.cancel();
-          onClose();
-        }}
-      >
-        {scan.status === 'done' ? 'Close' : 'Cancel'}
-      </button>
-    </div>
-  );
-}
-
 /** 14 days of one reading, the person's usual band shaded, today as a dot. */
 function Spark({ r }: { r: Row }) {
   const v = r.history.slice(-14);
@@ -141,6 +87,7 @@ function Spark({ r }: { r: Row }) {
 export default function CrewPage() {
   const { cd, cv, seat } = useConsole();
   const [params, setParams] = useSearchParams();
+  const navigate = useNavigate();
   const { setFocus, setTint, heartBpm } = useHud();
   const [acked, setAcked] = useState<Record<string, boolean>>({});
   // the simulated wrist band streams HR, SpO2 and skin temperature at 1 Hz (demo: connects on load)
@@ -153,7 +100,6 @@ export default function CrewPage() {
   const [ask, setAsk] = useState(false);
   const [result, setResult] = useState<string | null>(null);
   const [handoff, setHandoff] = useState(false);
-  const [scanning, setScanning] = useState(false);
   const [how, setHow] = useState(false);
   const [edit, setEdit] = useState<MetricKey | null>(null);
   const [draft, setDraft] = useState('');
@@ -354,16 +300,14 @@ export default function CrewPage() {
       </section>
 
       <div className="crew-actions">
-        {one && one.status !== 'green' && (
+        {red && (
           <button type="button" className="solid" onClick={() => setAsk(true)}>
-            {result ?? (red ? 'Call surgeon' : 'Re-measure')}
+            {result ?? 'Call surgeon'}
           </button>
         )}
-        <button type="button" className="ghost" onClick={() => setScanning(true)}>
-          Camera check
-        </button>
-        <button type="button" className="ghost" aria-pressed={panel === 'checkin'} onClick={() => setParams(panel === 'checkin' ? {} : { p: 'checkin' }, { replace: true })}>
-          Daily check-in
+        {/* the full check (feelings, camera, wrist band, reaction test) runs at /checkup; saved values come back through the entries store */}
+        <button type="button" className={red ? 'ghost' : 'solid'} onClick={() => navigate('/checkup')}>
+          Start daily check
         </button>
         {target && (
           <button type="button" className="ghost" onClick={() => setParams({}, { replace: true })}>
@@ -371,7 +315,6 @@ export default function CrewPage() {
           </button>
         )}
       </div>
-
 
       {/* keyboard: Tab reaches each body region, Enter focuses it, Esc returns */}
       <nav className="hot-keys" aria-label="Body regions">
@@ -381,8 +324,6 @@ export default function CrewPage() {
           </button>
         ))}
       </nav>
-
-      {scanning && <ScanOverlay onClose={() => setScanning(false)} />}
 
       {one && (
         <Confirm

@@ -689,3 +689,48 @@ button.wg:hover { border-color: rgb(255 255 255 / 0.22); }
   .vlist, .sheet { order: 3; }
   .cx-top { background: linear-gradient(180deg, rgb(2 4 10 / 0.95), rgb(2 4 10 / 0.7)); }
 }
+/* readability: 12-13 px secondary text at 75 %+ white, little tracking, sentence case past 3 words */
+.cap { font-size: 12px; letter-spacing: 0.03em; text-transform: none; color: rgb(255 255 255 / 0.8); text-wrap: pretty; }
+.cap-u, .sheet h3.cap { text-transform: uppercase; letter-spacing: 0.12em; }
+.vrow-l small, .vrow-v small, .sheet-now small, .sheet-num small, .alarm-since { font-size: 12.5px; letter-spacing: 0.02em; color: rgb(255 255 255 / 0.78); }
+.vlist-live { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.solid.long, .ghost.long { text-transform: none; letter-spacing: 0.04em; font-size: 13px; }
+/* vitals: label, 14-day trend with the usual band, value (tap to edit) */
+.vlist { width: 400px; }
+.vrow { display: grid; grid-template-columns: 1fr auto; padding: 0; gap: 0; }
+.vrow-main { display: grid; grid-template-columns: 14px 1fr 72px; align-items: center; gap: 10px; min-height: 52px; padding: 4px 6px; text-align: left; }
+.vrow-main[aria-pressed='true'] { box-shadow: inset 2px 0 0 #fff; }
+.vrow:hover { background: rgb(255 255 255 / 0.04); }
+.vspark { display: block; width: 72px; height: 24px; color: rgb(255 255 255 / 0.8); }
+.vrow[data-status='amber'] .vspark { color: rgb(var(--warn)); }
+.vrow[data-status='red'] .vspark { color: rgb(var(--crit)); }
+.vrow-v { min-width: 92px; height: 52px; padding: 0 8px 0 12px; text-align: right; border-bottom: 1px dashed transparent; }
+.vrow-v:hover { border-bottom-color: rgb(255 255 255 / 0.5); }
+.vrow-edit { grid-column: 1 / -1; display: flex; align-items: center; gap: 8px; padding: 6px 6px 10px 30px; }
+.vrow-edit input { width: 96px; height: 44px; padding: 0 10px; background: transparent; border: 1px solid rgb(255 255 255 / 0.6); color: #fff; font-size: 20px; font-weight: 300; font-variant-numeric: tabular-nums; border-radius: 0; }
+.vrow-edit input:focus { outline: none; border-color: #fff; }
+.vrow-edit small { font-family: var(--font-mono); font-size: 12px; color: rgb(255 255 255 / 0.78); margin-right: auto; }
+.vrow-edit .solid, .vrow-edit .ghost { height: 44px; padding: 0 16px; }
+/* guidance under the alert */
+.crew-do { display: flex; flex-direction: column; gap: 8px; max-width: 470px; }
+.crew-steps { list-style: decimal; padding-left: 20px; display: flex; flex-direction: column; gap: 4px; font-size: 15px; line-height: 1.4; color: #fff; }
+.crew-steps li::marker { font-family: var(--font-mono); font-size: 12px; color: rgb(255 255 255 / 0.7); }
+.crew-how { align-self: flex-start; height: 40px; padding: 0 14px; font-size: 11px; }
+/* callout on the body: a thin leader line to a small label, flagged regions only */
+.pin { width: 7px; height: 7px; border: 0; }
+.tip { transform: translate(52px, -50%); top: 0; min-width: 0; padding: 0; border: 0; border-radius: 0; background: none; box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; pointer-events: none; }
+.tip::before { left: -48px; top: 50%; bottom: auto; width: 44px; background: rgb(255 255 255 / 0.7); }
+.tip b { font-family: var(--font-mono); font-size: 12px; font-weight: 400; letter-spacing: 0.02em; color: #fff; text-shadow: 0 0 6px #000; }
+.tip[data-status='amber'] b { color: rgb(var(--warn)); }
+.tip[data-status='red'] b { color: rgb(var(--crit)); }
+.tip span:empty { display: none; }
+/* mission location: a quiet setting under the day */
+.cx-dayloc { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+.cx-loc { height: 26px; padding: 0 4px; background: transparent; border: 0; border-bottom: 1px solid rgb(255 255 255 / 0.25); color: rgb(255 255 255 / 0.8); font-family: var(--font-mono); font-size: 12px; cursor: pointer; }
+.cx-loc option { background: #050608; color: #fff; }
+.cx-loc:hover, .cx-loc:focus-visible { border-bottom-color: #fff; color: #fff; outline: none; }
+@media (max-width: 760px) {
+  .vlist { width: auto; }
+  .vrow-edit { padding-left: 6px; flex-wrap: wrap; }
+}
+.vrow-v { width: 116px; }
