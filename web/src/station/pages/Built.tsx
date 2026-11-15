@@ -85,13 +85,54 @@ const ROWS: { to: string; name: string; solves: string; proof: Proof[] }[] = [
   },
 ];
 
+/** Results, verified wording only (THESIS-DETAILS section 11). */
+const FOUND: { n: string; t: string; s: string }[] = [
+  { n: '16 of 17', t: 'storms warned', s: 'Held-out 2024\u20112026, 1 false alarm a month' },
+  { n: '3.8 h', t: 'median warning ahead', s: '2.5 h outside May 2024' },
+  { n: '39 h', t: 'warning before May 2024', s: 'Before the 10 May onset' },
+  { n: 'Under 2', t: 'false alarms a month', s: 'Per astronaut, with the 3-day rule (from about 5); 6,000 simulated missions' },
+];
+/** What is behind the code (counted in the repo, 15 Nov). */
+const BUILT: { n: string; t: string }[] = [
+  { n: '14 years', t: 'NASA DONKI flares to train on (2010\u20112023)' },
+  { n: '23', t: 'server endpoints in the data core' },
+  { n: '152', t: 'automated tests (57 app, 95 server)' },
+  { n: '0', t: 'AI in alerts or scoring' },
+];
+
 export default function Built() {
   return (
     <Page
       className="bt-page"
       title="What we built"
-      sub="Each section, the problem it solves, and what backs it."
       object={
+        <div className="bt-wrap">
+          <div className="bt-intro">
+            <p>Far from Earth, the crew is its own first doctor. e^x checks each astronaut against their own normal, every day, in about a minute.</p>
+            <p>It says what to do and who to tell: yourself, the crew medic or the flight surgeon. It also warns of solar radiation storms hours before they arrive.</p>
+            <p>It runs fully offline on the station. Alerts come from tested rules and a model trained on real NASA space-weather data.</p>
+          </div>
+          <dl className="bt-big">
+            {FOUND.map((f) => (
+              <div key={f.n}>
+                <dt>{f.n}</dt>
+                <dd>
+                  <b>{f.t}</b>
+                  <span>{f.s}</span>
+                </dd>
+              </div>
+            ))}
+          </dl>
+          <dl className="bt-big is-small">
+            {BUILT.map((f) => (
+              <div key={f.t}>
+                <dt>{f.n}</dt>
+                <dd>
+                  <b>{f.t}</b>
+                </dd>
+              </div>
+            ))}
+          </dl>
         <ol className="bt">
           {ROWS.map((r, i) => (
             <li key={r.to}>
@@ -113,6 +154,7 @@ export default function Built() {
             </li>
           ))}
         </ol>
+        </div>
       }
     />
   );

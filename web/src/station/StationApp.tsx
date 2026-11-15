@@ -17,6 +17,7 @@ import { Demo } from './Demo';
 import './station.css';
 import './ds.css';
 import './frame.css';
+import './palette.css';
 
 const Body = lazy(() => import('./pages/CrewHealth'));
 const Check = lazy(() => import('./pages/Checkin'));
