@@ -1,6 +1,6 @@
 // The 3D body: matte porcelain layers, white skeleton, the five systems tinted by status.
 // Click an organ or a label to open that system. Camera glides to the selected system.
-import { Suspense, useEffect, useMemo, useRef } from 'react';
+import { Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Canvas, useFrame, useThree, type ThreeEvent } from '@react-three/fiber';
 import { ContactShadows, Environment, Html, Lightformer, OrbitControls } from '@react-three/drei';
 import * as THREE from 'three';
@@ -18,6 +18,7 @@ const TINT: Record<Status, THREE.Color> = {
 };
 const WHITE = new THREE.Color('#eef1f7');
 const BLACK = new THREE.Color(0, 0, 0);
+const REDUCE = typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 const NO_PICK = new Set(['skin', 'muscles', 'lung_left', 'lung_right', 'airways']);
 
 const BASE: Record<string, number> = {
@@ -76,6 +77,12 @@ function Model({ tint, focus, onPick }: { tint: Record<SystemId, Status>; focus:
     return out;
   }, [geo]);
   useEffect(() => () => Object.values(mats).forEach((m) => m.dispose()), [mats]);
+  // hover: the system under the pointer lights up before the click, so the body reads as touchable
+  const [hover, setHover] = useState<SystemId | null>(null);
+  useEffect(() => {
+    document.body.style.cursor = hover ? 'pointer' : '';
+    return () => void (document.body.style.cursor = '');
+  }, [hover]);
 
   const goals = useMemo(() => {
     const g: Record<string, { o: number; c: THREE.Color; top?: boolean; e?: THREE.Color }> = {};
@@ -98,15 +105,21 @@ function Model({ tint, focus, onPick }: { tint: Record<SystemId, Status>; focus:
         g[n] = { o: n === 'muscle_antigravity' ? 0.45 : 0.95, c: WHITE.clone().lerp(TINT[s], 0.82), top: s !== 'green', e: TINT[s].clone().multiplyScalar(s === 'green' ? 0.15 : 0.4) };
       }
     }
+    if (hover && hover !== focus)
+      for (const n of SYSTEM_NODES[hover]) {
+        if (!g[n] || n === 'skin') continue;
+        const c = TINT[tint[hover]];
+        g[n] = { o: Math.max(g[n].o, n === 'muscle_antigravity' ? 0.5 : 0.9), c: WHITE.clone().lerp(c, 0.6), top: true, e: c.clone().multiplyScalar(0.55) };
+      }
     return g;
-  }, [geo, tint, focus]);
+  }, [geo, tint, focus, hover]);
 
   const meshes = useRef<Record<string, THREE.Mesh | null>>({});
   const group = useRef<THREE.Group>(null);
   useFrame((state, dt) => {
     const t = state.clock.elapsedTime;
     const heart = meshes.current.heart;
-    if (heart) {
+    if (heart && !REDUCE) {
       const ph = ((t * 62) / 60) % 1;
       const s = 1 + 0.045 * (ph < 0.15 ? Math.sin((ph / 0.15) * Math.PI * 0.5) : Math.exp(-(ph - 0.15) * 7));
       if (!heart.geometry.boundingBox) heart.geometry.computeBoundingBox();
@@ -115,7 +128,7 @@ function Model({ tint, focus, onPick }: { tint: Record<SystemId, Status>; focus:
       heart.position.copy(c).multiplyScalar(1 - s);
     }
     const k = 1 - Math.exp(-Math.min(dt, 0.05) / 0.09);
-    const pulse = 0.75 + 0.25 * Math.sin(t * 3);
+    const pulse = REDUCE ? 1 : 0.75 + 0.25 * Math.sin(t * 3);
     for (const [n, m] of Object.entries(mats)) {
       const goal = goals[n];
       if (!goal) continue;
@@ -131,20 +144,29 @@ function Model({ tint, focus, onPick }: { tint: Record<SystemId, Status>; focus:
     }
   });
 
-  const click = (e: ThreeEvent<MouseEvent>) => {
-    e.stopPropagation();
-    if (e.delta > 4 || !group.current) return;
+  const systemAt = (e: ThreeEvent<PointerEvent | MouseEvent>): SystemId | null => {
+    if (!group.current) return null;
     for (const hit of e.intersections) {
       const n = hit.object.userData.node as string | undefined;
       if (!n || NO_PICK.has(n) || (mats[n]?.opacity ?? 0) < 0.3) continue;
-      const local = group.current.worldToLocal(hit.point.clone());
-      const t = pickTarget(n, local, 'all');
-      if (t) return onPick(TARGET_SYSTEM[t]);
+      const t = pickTarget(n, group.current.worldToLocal(hit.point.clone()), 'all');
+      if (t) return TARGET_SYSTEM[t];
     }
+    return null;
+  };
+  const click = (e: ThreeEvent<MouseEvent>) => {
+    e.stopPropagation();
+    if (e.delta > 4) return;
+    const sys = systemAt(e);
+    if (sys) onPick(sys);
+  };
+  const move = (e: ThreeEvent<PointerEvent>) => {
+    const sys = systemAt(e);
+    if (sys !== hover) setHover(sys);
   };
 
   return (
-    <group ref={group} onClick={click}>
+    <group ref={group} onClick={click} onPointerMove={move} onPointerOut={() => setHover(null)}>
       {Object.entries(geo).map(([n, g]) => (
         <mesh key={n} ref={(m) => void (meshes.current[n] = m)} geometry={g} material={mats[n]} userData={{ node: n }} frustumCulled={false} />
       ))}
@@ -213,6 +235,22 @@ function Rig({ focus }: { focus: SystemId | null }) {
   return <OrbitControls ref={ctl} target={viewFor(focus).target} makeDefault enablePan={false} minDistance={0.4} maxDistance={4.5} enableDamping dampingFactor={0.08} minPolarAngle={0.5} maxPolarAngle={2.4} />;
 }
 
+/** A slow idle sway (about 14 degrees each way) so the body reads as 3D; it settles to front when a
+ * system is open or the user drags, and stays still under prefers-reduced-motion. */
+function Sway({ still, children }: { still: boolean; children: ReactNode }) {
+  const ref = useRef<THREE.Group>(null);
+  const reduce = REDUCE;
+  const t0 = useRef(0);
+  useFrame((_, dt) => {
+    const g = ref.current;
+    if (!g) return;
+    if (!still && !reduce) t0.current += dt;
+    const goal = still || reduce ? 0 : 0.25 * Math.sin(t0.current * 0.35);
+    g.rotation.y += (goal - g.rotation.y) * (1 - Math.exp(-dt * 4));
+  });
+  return <group ref={ref}>{children}</group>;
+}
+
 /** Radiation streaks across the body when the station is under a storm warning. */
 function Particles({ on }: { on: boolean }) {
   const N = 700;
@@ -266,8 +304,9 @@ export default function BodyCanvas({
   storm?: boolean;
 }) {
   const v0 = viewFor(focus);
+  const [held, setHeld] = useState(false);
   return (
-    <Canvas dpr={[1, 1.6]} camera={{ position: v0.pos, fov: 34, near: 0.01, far: 50 }} gl={{ antialias: true, alpha: true }}>
+    <Canvas onPointerDown={() => setHeld(true)} onPointerUp={() => setHeld(false)} onPointerLeave={() => setHeld(false)} dpr={[1, 1.6]} camera={{ position: v0.pos, fov: 34, near: 0.01, far: 50 }} gl={{ antialias: true, alpha: true }}>
       <ambientLight intensity={0.35} />
       <directionalLight position={[-2, 4, 3]} intensity={2.2} />
       <Environment resolution={128}>
@@ -282,8 +321,10 @@ export default function BodyCanvas({
           </Html>
         }
       >
-        <Model tint={tint} focus={focus} onPick={onPick} />
-        <Labels tint={tint} focus={focus} values={values} onPick={onPick} />
+        <Sway still={focus != null || held}>
+          <Model tint={tint} focus={focus} onPick={onPick} />
+          <Labels tint={tint} focus={focus} values={values} onPick={onPick} />
+        </Sway>
       </Suspense>
       <Particles on={storm} />
       <ContactShadows position={[0, 0.002, 0]} opacity={0.45} scale={2.2} blur={2.4} far={1.2} frames={1} />
