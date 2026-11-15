@@ -5,52 +5,104 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="color-scheme" content="dark" />
     <title>e^x Crew Station</title>
+    <link rel="preload" as="image" href="/loading/loading-crew-poster.jpg" />
     <style>
-      /* Loading screen: first paint. Placeholder inline, full image crossfades in after decode, app fades in under it.
-         src/boot.ts drives the hairline from the real loads (data + GLB/textures). */
-      #boot { position: fixed; inset: 0; z-index: 2147483000; background: #05070c; overflow: hidden; transition: opacity 500ms cubic-bezier(0.16, 1, 0.3, 1); }
+      /* Loading screen, first paint. Order: inline placeholder, poster, then the intro clip
+         (once per session, plays once, holds its last frame). Graded to the console navy; the
+         e^x mark and hairline sit where the console's own mark and top-bar line are.
+         src/boot.ts drives the hairline from the real loads and fades into the app. */
+      #boot { position: fixed; inset: 0; z-index: 2147483000; background: #05080f; overflow: hidden; transition: opacity 700ms cubic-bezier(0.16, 1, 0.3, 1); font-family: 'Inter Tight', system-ui, sans-serif; font-weight: 300; color: rgb(233 238 248); }
       #boot.boot-out { opacity: 0; pointer-events: none; }
-      #boot .boot-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-      #boot .boot-lqip { background: #05070c url("data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAASABIAAD/4QB0RXhpZgAATU0AKgAAAAgAAwEaAAUAAAABAAAAMgEbAAUAAAABAAAAOodpAAQAAAABAAAAQgAAAAAAAABIAAAAAQAAAEgAAAABAAOgAQADAAAAAQABAACgAgAEAAAAAQAAACCgAwAEAAAAAQAAABIAAAAA/+0AOFBob3Rvc2hvcCAzLjAAOEJJTQQEAAAAAAAAOEJJTQQlAAAAAAAQ1B2M2Y8AsgTpgAmY7PhCfv/AABEIABIAIAMBIgACEQEDEQH/xAAfAAABBQEBAQEBAQAAAAAAAAAAAQIDBAUGBwgJCgv/xAC1EAACAQMDAgQDBQUEBAAAAX0BAgMABBEFEiExQQYTUWEHInEUMoGRoQgjQrHBFVLR8CQzYnKCCQoWFxgZGiUmJygpKjQ1Njc4OTpDREVGR0hJSlNUVVZXWFlaY2RlZmdoaWpzdHV2d3h5eoOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4eLj5OXm5+jp6vHy8/T19vf4+fr/xAAfAQADAQEBAQEBAQEBAAAAAAAAAQIDBAUGBwgJCgv/xAC1EQACAQIEBAMEBwUEBAABAncAAQIDEQQFITEGEkFRB2FxEyIygQgUQpGhscEJIzNS8BVictEKFiQ04SXxFxgZGiYnKCkqNTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqCg4SFhoeIiYqSk5SVlpeYmZqio6Slpqeoqaqys7S1tre4ubrCw8TFxsfIycrS09TV1tfY2dri4+Tl5ufo6ery8/T19vf4+fr/2wBDAAQEBAQEBAYEBAYJBgYGCQwJCQkJDA8MDAwMDA8SDw8PDw8PEhISEhISEhIVFRUVFRUZGRkZGRwcHBwcHBwcHBz/2wBDAQQFBQcHBwwHBwwdFBAUHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR3/3QAEAAL/2gAMAwEAAhEDEQA/APhCGCdrJjDGzmZ9p2gnhee3qSPyroLPTdR0vQLnW5C0cdw62YhYEeYzDf06MFC5I7HHrW1p/ha0ghxq135hhJcxW5wADgHLkc9ug/GnaTftZeI7l9HYrbRgBYmYkAEAEguTgg89cnpWvI1a5mpp3M7RtO8RahKIruymexlUo+VEYCnncu7AypwRTbb4f69eSMlmnnpkhXRJCGHYjCY5+teqwtfXsjQNuUSJuln3BtsWQrEbckklgoPvXp5l0jSvDy3VjIWvdywwQsATM54VQCPlA5JPoKJygvMUed7n/9D5CVmMtwCSc28v8jWboqr/AGwnA/1DN+OOv1rRT/XT/wDXvL/6Caz9F/5DEf8A17t/KumZhA9Y8PuwW+cEhvs0nPfiWHFX1d18QaY6sQwiLAjrksAT9aztA/1d/wD9e0v/AKNiq+P+Q9pv/XE/+hiuKW50H//Z") center / cover no-repeat; filter: blur(18px); transform: scale(1.06); }
-      #boot .boot-full { opacity: 0; transform: scale(1.02); transition: opacity 600ms cubic-bezier(0.16, 1, 0.3, 1), transform 6s cubic-bezier(0.16, 1, 0.3, 1); }
-      #boot.boot-sharp .boot-full { opacity: 1; transform: scale(1); }
-      #boot .boot-scrim { position: absolute; inset: 0; background: linear-gradient(0deg, rgba(5, 7, 12, 0.85) 0%, rgba(5, 7, 12, 0) 38%); }
-      #boot .boot-ui { position: absolute; left: 6vw; right: 6vw; bottom: 7vh; color: #e8eef7; font-family: 'Inter Tight', system-ui, sans-serif; }
-      #boot .boot-mark { font-family: 'Instrument Serif', Georgia, serif; font-size: clamp(48px, 6vw, 96px); line-height: 1; letter-spacing: -0.01em; }
-      #boot .boot-mark sup { font-size: 0.5em; vertical-align: 0.9em; margin-left: 0.04em; }
-      #boot .boot-line { position: relative; height: 1px; margin-top: 28px; background: rgba(232, 238, 247, 0.18); overflow: hidden; }
-      #boot .boot-line i { position: absolute; inset: 0; background: #e8eef7; transform-origin: left; transform: scaleX(var(--p, 0.04)); transition: transform 400ms cubic-bezier(0.16, 1, 0.3, 1); }
-      #boot .boot-credit { margin-top: 14px; font-size: 11px; letter-spacing: 0.04em; color: rgba(232, 238, 247, 0.55); }
+      #boot .boot-layer { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+      #boot .boot-lqip { background: #05080f url("data:image/jpeg;base64,/9j//gAQTGF2YzYyLjI4LjEwMQD/2wBDAAgQEBMQExYWFhYWFhoYGhsbGxoaGhobGxsdHR0iIiIdHR0bGx0dICAiIiUmJSMjIiMmJigoKDAwLi44ODpFRVP/xABwAAADAQEBAAAAAAAAAAAAAAAGBwMFBAABAQEBAQAAAAAAAAAAAAAAAAABAwIQAAIABAQEBAcBAQAAAAAAAAECAxEAITESBAVBMzJxIlFhgbKxgnNicsETFBEBAQEBAQAAAAAAAAAAAAAAAAFBAhH/wAARCAASACADASIAAhEAAxEA/9oADAMBAAIRAxEAPwBSxIsSKxcuXY4ljmJ7k1GCjxGCBSczASGMyZYd69AUXdulbkDE+Q960oD5IyuvhNiJDCTA2xNjKtZ3ZSNrWbHG0aF3ZAw8f+YvlX1OE5XtQaYRZ8qBnMpyW/Dj5UyNXuP/AGxwXULMZLEyIGCtfiLTowXXaeCoSFCgr4Z5URDl4XMse5nWXoSa8s9xRbBVRBnIdETh+NCS8v3FGELkfTE+Gi46N4hokPRlVVSYSkkACZliZY11bX0ufNVn641PeuVovsr8qptfS36r/a5TH//Z") center / cover no-repeat; filter: blur(16px); transform: scale(1.06); }
+      #boot .boot-poster { opacity: 0; transition: opacity 500ms ease-out; }
+      #boot.boot-has-poster .boot-poster { opacity: 1; }
+      #boot video { opacity: 0; transition: opacity 500ms ease-out; }
+      #boot.boot-playing video { opacity: 1; }
+      /* grade: navy tint, then the console's dark field toward the edges */
+      #boot .boot-grade { position: absolute; inset: 0; background: rgb(14 26 70); mix-blend-mode: color; opacity: 0.55; }
+      #boot .boot-shade { position: absolute; inset: 0; background: radial-gradient(70% 70% at 50% 55%, rgba(5, 8, 16, 0.15), rgba(5, 8, 16, 0.75)), linear-gradient(180deg, rgba(5, 8, 16, 0.7) 0, rgba(5, 8, 16, 0) 18%, rgba(5, 8, 16, 0) 70%, rgba(5, 8, 16, 0.85) 100%); }
+      /* mark and hairline at the console's top-bar positions */
+      #boot .boot-mark { position: absolute; left: 40px; top: 21px; font-size: 34px; line-height: 1; letter-spacing: -0.02em; animation: boot-in 500ms ease-out 400ms both; }
+      @keyframes boot-in { from { opacity: 0; } to { opacity: 1; } }
+      #boot .boot-mark span { position: relative; top: -0.75em; font-size: 0.55em; margin-left: 1px; }
+      #boot .boot-line { position: absolute; left: 0; right: 0; top: 75px; height: 1px; background: rgba(170, 190, 230, 0.14); overflow: hidden; }
+      #boot .boot-line i { position: absolute; inset: 0; background: rgb(233 238 248); transform-origin: left; transform: scaleX(var(--p, 0.04)); transition: transform 400ms cubic-bezier(0.16, 1, 0.3, 1); }
+      #boot .boot-skip { position: absolute; right: 40px; top: 18px; height: 40px; padding: 0 18px; border: 1px solid rgba(170, 190, 230, 0.35); border-radius: 8px; background: transparent; color: rgb(233 238 248); font: inherit; font-size: 14px; letter-spacing: 0.04em; cursor: pointer; opacity: 0; pointer-events: none; transition: opacity 300ms; }
+      #boot.boot-playing .boot-skip { opacity: 0.8; pointer-events: auto; }
+      #boot .boot-credit { position: absolute; left: 0; right: 0; bottom: 12px; text-align: center; font-size: 11px; color: rgba(140, 154, 182, 0.8); }
+      html:not(.boot-done) [data-concept] .cc-top, html:not(.boot-done) [data-concept] .cc-bar { animation-play-state: paused; }
       @media (prefers-reduced-motion: reduce) {
-        #boot .boot-full { transform: none; transition: opacity 400ms linear; }
+        #boot { transition: opacity 400ms linear; }
+        #boot .boot-poster { transition: none; }
         #boot .boot-line i { transition: none; }
       }
     </style>
   </head>
   <body>
     <div id="boot" role="status" aria-label="Loading">
-      <div class="boot-img boot-lqip"></div>
-      <img
-        class="boot-img boot-full"
-        alt=""
-        src="/loading/loading-cupola-1440.jpg"
-        srcset="/loading/loading-cupola-1440.jpg 1440w, /loading/loading-cupola-2560.jpg 2560w"
-        sizes="100vw"
-        decoding="async"
-        fetchpriority="high"
-      />
-      <div class="boot-scrim"></div>
-      <div class="boot-ui">
-        <div class="boot-mark">e<sup>x</sup></div>
-        <div class="boot-line"><i></i></div>
-        <p class="boot-credit">Earth: NASA Blue Marble and Black Marble, public domain &middot; Body: MakeHuman, CC0</p>
-      </div>
+      <div class="boot-layer boot-lqip"></div>
+      <img class="boot-layer boot-poster" alt="" src="/loading/loading-crew-poster.jpg" decoding="async" fetchpriority="high" />
+      <div class="boot-grade"></div>
+      <div class="boot-shade"></div>
+      <div class="boot-mark">e<span>x</span></div>
+      <div class="boot-line"><i></i></div>
+      <button type="button" class="boot-skip">Skip</button>
+      <p class="boot-credit">Video: NASA, KSC-20190225-MH-SPX01-0001, CC0</p>
     </div>
     <script>
       (function () {
-        var img = document.querySelector('#boot .boot-full');
-        var sharp = function () { document.getElementById('boot').classList.add('boot-sharp'); };
-        if (img.decode) img.decode().then(sharp, sharp); else img.onload = sharp;
+        var boot = document.getElementById('boot');
+        var poster = boot.querySelector('.boot-poster');
+        var showPoster = function () { boot.classList.add('boot-has-poster'); };
+        if (poster.decode) poster.decode().then(showPoster, showPoster); else poster.onload = showPoster;
+
+        // the intro clip: first load of a session only, never with reduced motion
+        var done = function () {
+          if (boot.dataset.intro === 'done') return;
+          boot.dataset.intro = 'done';
+          boot.classList.remove('boot-playing');
+          boot.dispatchEvent(new Event('intro-done'));
+        };
+        var seen = false;
+        try { seen = sessionStorage.getItem('ex-intro') === '1'; sessionStorage.setItem('ex-intro', '1'); } catch (e) {}
+        var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (seen || reduce) { boot.dataset.intro = 'done'; return; }
+        boot.dataset.intro = 'playing';
+
+        var v = document.createElement('video');
+        v.className = 'boot-layer';
+        v.muted = true; v.defaultMuted = true; v.playsInline = true; v.preload = 'auto';
+        v.setAttribute('muted', ''); v.setAttribute('playsinline', ''); v.setAttribute('aria-hidden', 'true');
+        v.poster = '/loading/loading-crew-poster.jpg';
+        var small = Math.max(screen.width, innerWidth) <= 1280;
+        var srcs = small
+          ? [['/loading/loading-crew-720.mp4', 'video/mp4']]
+          : [['/loading/loading-crew-1080.webm', 'video/webm'], ['/loading/loading-crew-1080.mp4', 'video/mp4']];
+        srcs.forEach(function (s, i) {
+          var e = document.createElement('source'); e.src = s[0]; e.type = s[1];
+          if (i === srcs.length - 1) e.addEventListener('error', done); // last source failed: poster stays
+          v.appendChild(e);
+        });
+        var started = false;
+        var start = function () {
+          if (started || boot.dataset.intro === 'done') return;
+          started = true;
+          var p = v.play();
+          if (p && p.then) p.then(function () { boot.classList.add('boot-playing'); }, done);
+          else boot.classList.add('boot-playing');
+        };
+        v.addEventListener('canplaythrough', start, { once: true });
+        v.addEventListener('loadeddata', function () { setTimeout(function () { if (v.readyState >= 3) start(); }, 300); }, { once: true });
+        // no loop: when it ends it holds on its last frame until the app is ready
+        v.addEventListener('error', done);
+        setTimeout(function () { if (!started) done(); }, 4000); // never wait on a slow clip
+        var skip = function () { boot.dispatchEvent(new Event('intro-skip')); };
+        boot.querySelector('.boot-skip').addEventListener('click', skip);
+        var onKey = function (e) { if (!document.getElementById('boot')) return removeEventListener('keydown', onKey); if (e.key === 'Enter' || e.key === 'Escape') skip(); };
+        addEventListener('keydown', onKey);
+        boot.insertBefore(v, boot.querySelector('.boot-grade'));
+        v.load();
       })();
     </script>
     <div id="root"></div>
