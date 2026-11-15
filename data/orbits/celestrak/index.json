@@ -1,0 +1,54 @@
+{
+  "source": "CelesTrak (celestrak.org), Dr. T.S. Kelso. US-government-origin data, no licence, citation requested.",
+  "via": "Tomas's local gods-eye-view cache (.gev-cache), copied 2026-11-15",
+  "groups": [
+    {
+      "group": "active",
+      "objects": 15883,
+      "fetched_at_ms": 1794263994305,
+      "file": "data/orbits/celestrak/active.tle"
+    },
+    {
+      "group": "galileo",
+      "objects": 32,
+      "fetched_at_ms": 1794263771155,
+      "file": "data/orbits/celestrak/galileo.tle"
+    },
+    {
+      "group": "geo",
+      "objects": 568,
+      "fetched_at_ms": 1794263771787,
+      "file": "data/orbits/celestrak/geo.tle"
+    },
+    {
+      "group": "glo-ops",
+      "objects": 26,
+      "fetched_at_ms": 1794263771258,
+      "file": "data/orbits/celestrak/glo-ops.tle"
+    },
+    {
+      "group": "gps-ops",
+      "objects": 32,
+      "fetched_at_ms": 1794263771051,
+      "file": "data/orbits/celestrak/gps-ops.tle"
+    },
+    {
+      "group": "starlink",
+      "objects": 10621,
+      "fetched_at_ms": 1794263993524,
+      "file": "data/orbits/celestrak/starlink.tle"
+    },
+    {
+      "group": "stations",
+      "objects": 15,
+      "fetched_at_ms": 1794263771256,
+      "file": "data/orbits/celestrak/stations.tle"
+    },
+    {
+      "group": "visual",
+      "objects": 156,
+      "fetched_at_ms": 1794263771156,
+      "file": "data/orbits/celestrak/visual.tle"
+    }
+  ]
+}
