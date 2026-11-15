@@ -1,0 +1,18 @@
+# Mind layer sources (docs/backend/NEXT.md section 2).
+sources:
+- id: checkin
+  label: Crew check-in (Mind screen)
+  org: e^x (server/mind, POST /api/observations)
+  real: false
+  adapter: server.mind.records.checkin_batch
+  cadence: on submit
+  input: POST /api/observations from the app
+  credit: Self-reported check-in scores (simulated crew)
+- id: mind_sim
+  label: Simulated check-in history
+  org: e^x (server/mind/plugin.py, fixed seed)
+  real: false
+  adapter: server.mind.plugin
+  cadence: on build
+  input: generated, seed per crew member
+  credit: Simulated check-in history, not real astronaut records

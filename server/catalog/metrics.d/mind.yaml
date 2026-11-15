@@ -1,0 +1,83 @@
+# Mind layer (docs/backend/NEXT.md section 2). Self-report check-in scores, 1-5, a word on every step.
+# Scored by server/mind/engine.py with the mission's baseline_z constants (first 14 days, 3-day mean, amber 2, red 3).
+# self.mood stays in metrics.yaml (crew_daily); its words live in routines.yaml checkin.scales.
+metrics:
+- key: self.stress
+  label: Stress (1–5)
+  unit: /5
+  kind: self_report
+  hazard: isolation
+  body_region: brain
+  scale:
+    min: 1
+    max: 5
+    words: [Calm, Settled, Some pressure, Strained, Overwhelmed]
+  rule:
+    type: baseline_z
+    high_side_only: true
+    sd_floor: 0.6
+  explain: Sustained stress in isolation and confinement wears down sleep, attention and team work. A rise above your own
+    usual level is the signal, not the number itself.
+  how_to_measure: 'Daily self-rating: 1 = calm, 5 = overwhelmed.'
+  actions:
+    amber: Take a 10-minute break off task and try the guided breathing module tonight. Re-rate tomorrow.
+    red: Tell the commander and book a private conference with the flight psychologist.
+- key: self.energy
+  label: Energy (1–5)
+  unit: /5
+  kind: self_report
+  hazard: isolation
+  body_region: brain
+  scale:
+    min: 1
+    max: 5
+    words: [Drained, Low, Steady, Good, Full]
+  rule:
+    type: baseline_z
+    low_side_only: true
+    sd_floor: 0.6
+  explain: Low energy that lasts several days can come from poor sleep, workload or low mood. Compared with your own usual
+    level.
+  how_to_measure: 'Daily self-rating: 1 = drained, 5 = full of energy.'
+  actions:
+    amber: Protect tonight's sleep window and keep the exercise block. Re-rate tomorrow.
+    red: Tell the commander; review workload and sleep with the flight surgeon.
+- key: self.social
+  label: Social connection (1–5)
+  unit: /5
+  kind: self_report
+  hazard: isolation
+  body_region: brain
+  scale:
+    min: 1
+    max: 5
+    words: [Cut off, Distant, Okay, Connected, Close]
+  rule:
+    type: baseline_z
+    low_side_only: true
+    sd_floor: 0.6
+  explain: Feeling cut off from crew and family is a core risk of isolation and confinement. A drop below your own usual
+    level is worth acting on early.
+  how_to_measure: 'Daily self-rating: 1 = cut off, 5 = close to crew and family.'
+  actions:
+    amber: Schedule a call home and share a meal with the crew today.
+    red: Book a private conference with the flight psychologist.
+- key: self.sleep_quality
+  label: Sleep quality (1–5)
+  unit: /5
+  kind: self_report
+  hazard: isolation
+  body_region: brain
+  scale:
+    min: 1
+    max: 5
+    words: [Very poor, Poor, Fair, Good, Very good]
+  rule:
+    type: baseline_z
+    low_side_only: true
+    sd_floor: 0.6
+  explain: How rested you feel, alongside the hours slept. Poor sleep quality on several nights affects mood and attention.
+  how_to_measure: 'Each morning: 1 = very poor, 5 = very good.'
+  actions:
+    amber: Keep the sleep window tonight, dim the lights an hour before, no screens in the bunk. Re-rate tomorrow.
+    red: Tell the flight surgeon; review the sleep schedule and the cabin noise and light.
