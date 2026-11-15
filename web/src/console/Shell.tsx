@@ -15,7 +15,7 @@ import './console.css';
 
 export const SECTIONS = [
   { to: '/', name: 'Crew' },
-  { to: '/environment', name: 'Environment' },
+  { to: '/environment', name: 'Cabin' },
   { to: '/systems', name: 'Systems' },
 ] as const;
 
@@ -150,12 +150,11 @@ export function Shell() {
         </button>
         {credits && (
           <span className="cx-credits-pop">
-            Anatomy: BodyParts3D 4.0, DBCLS, CC BY 4.0 · Earth: NASA Blue and Black Marble, public domain · Clouds: Solar System Scope, CC BY 4.0 · Video: NASA KSC-20190225-MH-SPX01-0001, CC0 · Orbital elements: CelesTrak (celestrak.org) · Stars: NASA SVS Deep Star Maps, Gaia ESA/DPAC
+            Anatomy: BodyParts3D 4.0, DBCLS, CC BY 4.0 · Earth: NASA Blue and Black Marble, public domain · Clouds: Solar System Scope, CC BY 4.0 · Backdrop: Earth from NASA Blue Marble and Black Marble; clouds: Solar System Scope, CC BY 4.0 · Video: NASA KSC-20190225-MH-SPX01-0001, CC0 · Orbital elements: CelesTrak (celestrak.org) · Stars: NASA SVS Deep Star Maps, Gaia ESA/DPAC
           </span>
         )}
       </footer>
       <div className="cx-grain" aria-hidden />
-      <p id="cx-tele" className="cx-telemetry" aria-hidden />
       {(hover || ring) && <i className="cx-ring" style={{ left: hover ? hover.x : ring!.x, top: hover ? hover.y : ring!.y }} aria-hidden />}
 
     </div>

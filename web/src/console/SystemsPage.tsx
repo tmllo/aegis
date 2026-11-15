@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { getSources, refreshSources, type SourceState } from '../data/live';
 import { PLACEMENTS } from './model';
-import { Icon, Panel } from './ui';
 import { useConsole } from './useConsole';
 
 const NAMES: Record<string, string> = { sim_crew: 'Crew sensors', ml_forecast: 'Storm model', osdr: 'Inspiration4 labs', isslive: 'ISS cabin', mind_sim: 'Self-report', checkin: 'Check-ins' };
@@ -35,37 +34,20 @@ export default function SystemsPage() {
 
   return (
     <>
-      <div className="sys-flow">
-        <div className="flow">
-          <i className="flow-line" />
-          {steps.map((s) => (
-            <div key={s.name} className="flow-node">
-              <span className="flow-dot">
-                <b>{s.n}</b>
-              </span>
-              <span className="flow-name">
-                {s.name === 'ex' ? (
-                  <>
-                    e<sup>x</sup>
-                  </>
-                ) : (
-                  s.name
-                )}
-              </span>
-              <span className="flow-sub">{s.sub}</span>
-            </div>
-          ))}
-        </div>
-        <p className="sys-proof">
+      <section className="pat sys-left">
+        <span className="cap">How readings reach you</span>
+        <b className="pat-word">{checks} checks today</b>
+        <span className="cap pat-line">
+          {steps.map((s) => `${s.name === 'ex' ? 'e\u02e3' : s.name} ${s.n}`).join('  \u2192  ')}
+        </span>
+        <span className="cap">
           {caught} of {m.n_storms} storms caught · {Math.round(m.false_alarms_per_month)} false alarm a month
-        </p>
-        <button type="button" className="btn" onClick={() => setOpen((o) => !o)}>
-          {open ? 'Hide sources' : 'Sources'}
-        </button>
-      </div>
+        </span>
+      </section>
 
       {open && (
-        <Panel label="Sources" icon="list" aside={src ? 'Server' : 'This device'} className="sys-src">
+        <section className="pat sys-src brk">
+          <span className="cap">Sources · {src ? 'server' : 'this device'}</span>
           <table className="tbl">
             <tbody>
               {rows.map(([name, word, at]) => (
@@ -77,23 +59,29 @@ export default function SystemsPage() {
               ))}
             </tbody>
           </table>
-          {src && (
-            <button
-              type="button"
-              className="btn mt-auto"
-              disabled={busy}
-              onClick={async () => {
-                setBusy(true);
-                await refreshSources();
-                setSrc(await getSources());
-                setBusy(false);
-              }}
-            >
-              <Icon name="back" size={14} /> {busy ? 'Refreshing' : 'Refresh'}
-            </button>
-          )}
-        </Panel>
+        </section>
       )}
+
+      <div className="pat-actions">
+        <button type="button" className="ghost" aria-pressed={open} onClick={() => setOpen((o) => !o)}>
+          {open ? 'Hide sources' : 'Sources'}
+        </button>
+        {open && src && (
+          <button
+            type="button"
+            className="ghost"
+            disabled={busy}
+            onClick={async () => {
+              setBusy(true);
+              await refreshSources();
+              setSrc(await getSources());
+              setBusy(false);
+            }}
+          >
+            {busy ? 'Refreshing' : 'Refresh'}
+          </button>
+        )}
+      </div>
     </>
   );
 }

@@ -8,12 +8,20 @@ import { TARGETS, type TargetId } from '../components/body3d/targets';
 import { postMeasure } from '../data/live';
 import type { MetricKey, Status } from '../data/types';
 import { useCameraScan } from '../scan';
-import { fmt, RANK, rowOf, SHORT, STATUS_WORD, TARGET_METRICS } from './model';
+import { useWristband } from '../wearable';
+import { AlarmStrip, type Alarm } from './Monitor';
+import { fmt, METRIC_TARGET, RANK, rowOf, SHORT, STATUS_WORD, TARGET_METRICS } from './model';
 import { Confirm } from './ui';
 import { CheckinPanel } from './CheckinPanel';
 import { HandoffPanel } from './HandoffPanel';
 import { useConsole } from './useConsole';
 import { useHud } from './hud';
+import { InfoSheet } from './InfoSheet';
+import { ViewControls } from './Controls';
+import { Mark } from './ui';
+import { LINK_DELAY } from './model';
+import { useMissionStore } from '../data/store';
+import type { EnvironmentId } from '../data/types';
 
 const ALL: MetricKey[] = ['hr', 'bp_sys', 'bp_dia', 'glucose', 'temp', 'sleep_h', 'mood', 'exercise_min', 'bone_loss_pct', 'dose_mSv_day'];
 const VITAL: Partial<Record<MetricKey, string>> = { bp_sys: 'vital.bp_sys', bp_dia: 'vital.bp_dia', hr: 'vital.hr', temp: 'vital.temp', glucose: 'vital.glucose' };
@@ -64,7 +72,9 @@ function ScanOverlay({ onClose }: { onClose: () => void }) {
       scan.start();
     }
   }, [scan]);
+  const setBreath = useHud((s) => s.setBreath);
   useEffect(() => setHeartBpm(scan.bpm), [scan.bpm, setHeartBpm]);
+  useEffect(() => setBreath(scan.breathing), [scan.breathing, setBreath]);
   return (
     <div className="scan brk" role="dialog" aria-label="Scan">
       <div className="scan-frame">
@@ -109,6 +119,14 @@ export default function CrewPage() {
   const { cd, cv, seat } = useConsole();
   const [params, setParams] = useSearchParams();
   const { setFocus, setTint, heartBpm } = useHud();
+  const [acked, setAcked] = useState<Record<string, boolean>>({});
+  const setEnv = useMissionStore((s) => s.setEnvironment);
+  // the simulated wrist band streams HR, SpO2 and skin temperature at 1 Hz (demo: connects on load)
+  const band = useWristband({ subject: cv?.m.id, hrMean: cv?.m.baseline.hr?.mean, hrSd: cv?.m.baseline.hr?.sd, day: cd?.mission.today });
+  const bandOff = band.status === 'off';
+  useEffect(() => {
+    if (bandOff && cv?.m.id) band.connect('sim');
+  }, [bandOff, cv?.m.id]); // eslint-disable-line react-hooks/exhaustive-deps
   const idle = useIdle();
   const [ask, setAsk] = useState(false);
   const [result, setResult] = useState<string | null>(null);
@@ -142,6 +160,18 @@ export default function CrewPage() {
   const red = one?.status === 'red';
   const caption = one ? `${SHORT[one.k]} ${fmt(one.value, one.digits)} ${one.unit}${one.mean != null ? ` · usual ${fmt(one.mean, one.digits)}` : ''}` : 'All readings in range';
 
+  const live = band.status === 'connected' && band.reading;
+  const iToday = cv.m.series.findIndex((x) => x.date === cd.mission.today);
+  let streak = 0;
+  for (let j = iToday; j >= 0 && cv.m.series[j].hr != null; j--) streak++;
+  const measuredToday = iToday >= 0 && cv.m.series[iToday].hr != null;
+  const delay = LINK_DELAY[cd.mission.environment] ?? 'unknown';
+  const escalation = cv.overall === 'red' ? `Flight surgeon · report arrives in ~${delay}` : cv.overall === 'amber' ? 'Crew medical officer' : 'Self-care';
+  const sheetK = (params.get('k') as MetricKey | null) ?? (target ? TARGET_METRICS[target][0] : null);
+  const sheetRow = sheetK ? all.find((r) => r.k === sheetK) : undefined;
+  const day = new Date(`${cd.mission.today}T00:00:00Z`).toUTCString().slice(5, 11);
+  const alarms: Alarm[] = flagged.map((r) => ({ id: `${cv.m.id}-${r.k}`, status: r.status, text: `${r.label} ${fmt(r.value, r.digits)} ${r.unit}${r.mean != null ? `, usual ${fmt(r.mean, r.digits)}` : ''}`, since: `${Math.max(1, r.running)} d` }));
+
   const act = async () => {
     setAsk(false);
     if (!one) return;
@@ -154,13 +184,61 @@ export default function CrewPage() {
 
   return (
     <div className="crew" data-idle={idle || undefined} data-status={cv.overall}>
+      <AlarmStrip alarms={alarms} acked={acked} onAck={(id) => setAcked((a) => ({ ...a, [id]: true }))} />
+      {sheetRow ? (
+        <InfoSheet r={sheetRow} target={target} cd={cd} m={cv.m} onClose={() => setParams({}, { replace: true })} />
+      ) : (
+        <div className="vlist" aria-label="Vitals">
+          <span className="cap">
+            Vitals · {seat[cv.m.id]} · {day}
+          </span>
+          {live && (
+            <span className="cap vlist-live">
+              Live HR {Math.round(band.reading!.hr)} bpm · SpO2 {Math.round(band.reading!.spo2)} % · {band.deviceName}
+              {heartBpm != null ? ` · camera ${Math.round(heartBpm)} bpm` : ''}
+            </span>
+          )}
+          {all.map((r) => (
+            <button key={r.k} type="button" className="vrow" data-status={r.status !== 'green' ? r.status : undefined} aria-pressed={sheetK === r.k} onClick={() => METRIC_TARGET[r.k] && setParams({ t: METRIC_TARGET[r.k]!, k: r.k }, { replace: true })}>
+              <Mark s={r.status} size={9} />
+              <span className="vrow-l">
+                {SHORT[r.k]}
+                <small>{r.lo != null && r.hi != null ? `usual ${fmt(r.lo, r.digits)}-${fmt(r.hi, r.digits)}` : STATUS_WORD[r.status]}</small>
+              </span>
+              <span className="vrow-v">
+                {fmt(r.value, r.digits)}
+                <small>{r.unit}</small>
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
       <section className="crew-read brk" aria-live="polite">
         <span className="cap">
           {seat[cv.m.id]} · {cv.m.role}
         </span>
         <b className="crew-word">{STATUS_WORD[cv.overall]}</b>
-        <span className="cap crew-line">{caption}</span>
+        {!flagged.length && <span className="cap crew-line">{caption}</span>}
         {heartBpm != null && <span className="cap">Heart {Math.round(heartBpm)} bpm · camera estimate</span>}
+        <span className="cap crew-esc">Goes to: {escalation}</span>
+        <span className="cap">
+          {measuredToday ? 'Next measurement: tomorrow morning' : 'Measurement due now'} · {streak} days in a row
+        </span>
+        <span className="crew-env" role="group" aria-label="Setting">
+          {(['iss', 'moon', 'transit', 'mars'] as EnvironmentId[]).map((e) => (
+            <button key={e} type="button" className="ghost" aria-pressed={cd.mission.environment === e} onClick={() => setEnv(e)}>
+              {e === 'iss' ? 'ISS' : e === 'moon' ? 'Moon' : e === 'transit' ? 'Transit' : 'Mars'}
+            </button>
+          ))}
+        </span>
+        <span className="cap crew-band">
+          {band.deviceName ?? 'Wrist band (simulated)'} · {band.status === 'connected' ? `connected${band.reading ? ` · battery ${Math.round(band.reading.battery)} %` : ''}` : band.status}
+          {band.status !== 'connected' && band.status !== 'pairing' && (
+            <button type="button" className="ghost crew-connect" onClick={() => band.connect('sim')}>
+              Connect
+            </button>
+          )}
+        </span>
       </section>
 
       <div className="crew-actions">
@@ -172,6 +250,9 @@ export default function CrewPage() {
         <button type="button" className="ghost" onClick={() => setScanning(true)}>
           Scan
         </button>
+        <button type="button" className="ghost" aria-pressed={panel === 'checkin'} onClick={() => setParams(panel === 'checkin' ? {} : { p: 'checkin' }, { replace: true })}>
+          Check-in
+        </button>
         {target && (
           <button type="button" className="ghost" onClick={() => setParams({}, { replace: true })}>
             Whole body
@@ -179,9 +260,8 @@ export default function CrewPage() {
         )}
       </div>
 
-      <button type="button" className="ghost crew-checkin" aria-pressed={panel === 'checkin'} onClick={() => setParams(panel === 'checkin' ? {} : { p: 'checkin' }, { replace: true })}>
-        Check-in
-      </button>
+
+      <ViewControls layers style={{ left: 'calc(50% - 300px)', bottom: 64 }} />
 
       {/* keyboard: Tab reaches each body region, Enter focuses it, Esc returns */}
       <nav className="hot-keys" aria-label="Body regions">

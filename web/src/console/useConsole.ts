@@ -29,8 +29,13 @@ export function useConsole() {
   const selectedId = useMissionStore((s) => s.selectedCrewId);
   const setCrew = useMissionStore((s) => s.setSelectedCrewId);
   const asOf = useHud((s) => s.asOf);
-  // replaying a day (Timeline) = the same data with the mission clock set to that day
-  const cd = useMemo(() => (data?.crew ? (asOf ? { ...data.crew, mission: { ...data.crew.mission, today: asOf } } : data.crew) : null), [data, asOf]);
+  const env = useMissionStore((s) => s.environment);
+  // replay day and mission setting (ISS / Moon / transit / Mars) applied to the same data
+  const cd = useMemo(() => {
+    if (!data?.crew) return null;
+    const mission = { ...data.crew.mission, ...(asOf ? { today: asOf } : {}), ...(env ? { environment: env } : {}) };
+    return { ...data.crew, mission };
+  }, [data, asOf, env]);
 
   const views: CrewView[] = useMemo(
     () => (cd ? cd.crew.map((m) => crewView(cd, withMood(cd, m, reports[m.id]?.[cd.mission.today]?.mood))) : []),

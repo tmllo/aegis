@@ -40,6 +40,9 @@ interface Hud {
   /** Live heart rate from the camera scan; drives the heart pulse on the body. */
   heartBpm: number | null;
   setHeartBpm: (b: number | null) => void;
+  /** Breathing rate from the camera scan (/min). */
+  breath: number | null;
+  setBreath: (b: number | null) => void;
   /** Body model ready. */
   bodyReady: boolean;
   setYaw: (y: number) => void;
@@ -57,6 +60,8 @@ export const useHud = create<Hud>((set) => ({
   setIdle: (idle) => set((s) => (s.idle === idle ? s : { idle })),
   heartBpm: null,
   setHeartBpm: (heartBpm) => set({ heartBpm }),
+  breath: null,
+  setBreath: (breath) => set({ breath }),
   asOf: null,
   setAsOf: (asOf) => set({ asOf }),
   compare: [],
