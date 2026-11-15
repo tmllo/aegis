@@ -3,3 +3,4 @@
 | When | Lane | File | What and why |
 |---|---|---|---|
 | 2026-11-15 | mind | `server/catalog/metrics.yaml` | Add `scale: {min: 1, max: 5, words: [Very low, Low, Okay, Good, Great]}` to `self.mood`, so `GET /api/catalog?kind=self_report` carries words for all five check-in scores. Until then the words live in `server/catalog/routines.yaml` `checkin.scales` and `GET /api/checkin` serves them. When done, delete that fallback entry. |
+| 2026-11-15 | live | `docs/backend/AGENT-RULES.md` section 2, `server/README.md` | Document that `build.derive()` re-runs on every live refresh, so a plugin's `after_build(cat, store)` must be idempotent and must never delete user rows (derive holds `store.lock`). Also add the new run modes to the README: `server/run.ps1`, `server/Containerfile`, `AEGIS_DB` (default `server/data/aegis.db`) / `AEGIS_REFRESH` / `AEGIS_STREAM_POLL_S`, `GET/POST /api/refresh`. |
