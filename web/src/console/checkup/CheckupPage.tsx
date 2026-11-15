@@ -14,7 +14,7 @@ import { useHud } from '../hud';
 import { LINK_DELAY, STATUS_WORD } from '../model';
 import { Mark } from '../ui';
 import { useConsole } from '../useConsole';
-import { CheckinScales } from '../mind/CheckinScales';
+import { OneQuestion } from '../mind/OneQuestion';
 import { useCheckSession } from './session';
 import { buildSummary, overall } from './summary';
 import '../mind/mind.css';
@@ -53,6 +53,7 @@ export default function CheckupPage() {
   const [sending, setSending] = useState<{ start: number; total: number } | null>(null);
   const [, force] = useState(0);
   const [saveNote, setSaveNote] = useState<string | null>(null);
+  const [details, setDetails] = useState(false);
   const tapRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
@@ -170,7 +171,7 @@ export default function CheckupPage() {
           {unit && <small>{unit}</small>}
         </b>
 
-        {step === 0 && <span className="cap pat-line">How do you feel today? One tap per row.</span>}
+        {step === 0 && <span className="cap pat-line">Five quick questions</span>}
         {step === 1 && <span className="cap pat-line">{scan.message}</span>}
         {step === 2 && <span className="cap pat-line">{band.status === 'connected' ? `${band.deviceName} · live` : band.status === 'pairing' ? 'Pairing the wrist band' : 'Pair the wrist band'}</span>}
         {step === 3 && <span className="cap pat-line">{pvt.phase === 'idle' ? 'Tap the box or press Space when the dot appears · 1 min' : pvt.phase === 'done' ? `${pvt.result?.lapses ?? 0} lapses · ${pvt.result?.falseStarts ?? 0} early taps${pvt.baseline?.usual ? ` · usual ${pvt.baseline.usual} ms` : ' · first tests set her usual'}` : `Last ${pvt.last ?? '--'} ms`}</span>}
@@ -179,7 +180,7 @@ export default function CheckupPage() {
       </section>
 
       <section className="pat ck-body">
-        {step === 0 && <CheckinScales subject={m.id} date={today} />}
+        {step === 0 && <OneQuestion subject={m.id} date={today} onDone={() => setStep(1)} />}
 
         {step === 1 && (
           <div className="ck-cam brk">
@@ -236,7 +237,8 @@ export default function CheckupPage() {
 
         {(step === 4 || step === 5) && (
           <div className="ck-rows">
-            {rows.map((r) => (
+            <button type="button" className="ghost mi-more" aria-expanded={details} onClick={() => setDetails((d) => !d)}>{details ? 'Hide details' : `Details · ${rows.filter((r) => r.value != null).length} readings`}</button>
+            {details && rows.map((r) => (
               <div key={r.key} className="vrow ck-row" data-status={r.status ?? undefined}>
                 <Mark s={r.status} />
                 <span className="vrow-l">
@@ -262,7 +264,7 @@ export default function CheckupPage() {
       </section>
 
       <div className="pat-actions ck-actions">
-        {step === 0 && <button type="button" className="solid" onClick={next}>{answered === 5 ? 'Next: camera' : 'Next'}</button>}
+        {step === 0 && answered < 5 && <button type="button" className="ghost" onClick={next}>Skip questions</button>}
         {step === 1 && (scan.status === 'scanning' || scan.status === 'starting'
           ? <button type="button" className="ghost" onClick={scan.cancel}>Stop scan</button>
           : <button type="button" className="solid" onClick={scan.status === 'done' ? next : scan.start}>{scan.status === 'done' ? 'Next: band' : scan.status === 'idle' ? 'Start scan' : 'Scan again'}</button>)}

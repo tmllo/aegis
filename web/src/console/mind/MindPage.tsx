@@ -10,7 +10,7 @@ import { useConsole } from '../useConsole';
 import { askModel, SUGGESTED_QUESTIONS, type Answer } from './advisor';
 import { useMindData } from './api';
 import { CARE, sourceById } from './care';
-import { CheckinScales } from './CheckinScales';
+import { OneQuestion } from './OneQuestion';
 import { assess, routeText, type ScoreKey, type Today } from './rules';
 import './mind.css';
 
@@ -46,6 +46,7 @@ export default function MindPage() {
   const [draft, setDraft] = useState('');
   const [showSources, setShowSources] = useState(false);
   const [openAct, setOpenAct] = useState<string | null>(null);
+  const [more, setMore] = useState(false);
 
   useEffect(() => {
     if (m && today) void mind.pull(m.id, today);
@@ -94,12 +95,18 @@ export default function MindPage() {
         <span className="cap">Mind · {seat[m.id]} · {today}</span>
         <b className="pat-word mi-word">{read.word}</b>
         <span className="cap pat-line">{read.reasons[0] ?? 'Mood, stress and sleep within her usual'}</span>
-        {read.reasons.length > 1 && <span className="cap">{read.reasons.slice(1, 3).join(' · ')}</span>}
         <span className="mi-route">{routeText(read.route, delay)}</span>
 
       </section>
 
       <section className="pat mi-right">
+        {!more && view === 'check' ? (
+          <div className="mi-view">
+            <OneQuestion subject={m.id} date={today} />
+            <button type="button" className="ghost mi-more" onClick={() => { setMore(true); setView('week'); }}>More</button>
+          </div>
+        ) : (
+        <>
         <div className="mi-tabs" role="tablist" aria-label="Mind views">
           {VIEWS.map(([v, label]) => (
             <button key={v} type="button" role="tab" aria-selected={view === v} className="ghost" onClick={() => setView(v)}>
@@ -107,12 +114,6 @@ export default function MindPage() {
             </button>
           ))}
         </div>
-
-        {view === 'check' && (
-          <div className="mi-view" role="tabpanel">
-            <CheckinScales subject={m.id} date={today} note={data.online === false ? 'saved on this device' : undefined} />
-          </div>
-        )}
 
         {view === 'week' && (
           <div className="mi-view" role="tabpanel">
@@ -247,13 +248,15 @@ export default function MindPage() {
             )}
           </div>
         )}
+        </>
+        )}
       </section>
 
       <div className="pat-actions mi-actions">
-        <button type="button" className="solid" onClick={() => setView('care')}>
+        <button type="button" className="solid" onClick={() => { setMore(true); setView('care'); }}>
           {read.route === 'crew-medical-officer' ? 'Call the medical officer' : 'Talk to someone'}
         </button>
-        <button type="button" className="ghost" onClick={() => setView('ask')}>
+        <button type="button" className="ghost" onClick={() => { setMore(true); setView('ask'); }}>
           Ask eˣ
         </button>
       </div>

@@ -14,7 +14,7 @@
 .ck[data-status='amber'] .ck-word { color: rgb(var(--warn)); }
 .ck[data-status='red'] .ck-word { color: rgb(var(--crit)); }
 
-.ck-body { right: 56px; top: 172px; width: 560px; max-height: calc(100% - 300px); overflow-y: auto; overflow-x: hidden; padding: 12px; }
+.ck-body { right: 56px; top: 160px; width: 560px; max-height: calc(100% - 220px); overflow-y: auto; overflow-x: hidden; padding: 12px; }
 .ck-rows { display: flex; flex-direction: column; }
 .ck-row { grid-template-columns: 14px 1fr 96px auto; }
 .ck-spark { width: 96px; height: 20px; }
@@ -50,3 +50,4 @@
 .ck-rows .vrow-l { align-items: flex-start; text-align: left; justify-self: start; }
 .ck-rows .vrow-v { justify-self: end; text-align: right; }
 @media (max-width: 1100px) { .ck-rows .vrow.ck-row { grid-template-columns: 14px 1fr auto; } }
+.ck .oq-opt { height: 52px; }

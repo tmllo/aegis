@@ -61,3 +61,12 @@
   .mi .pat-actions { position: static; flex-wrap: wrap; }
 }
 @media (prefers-reduced-motion: reduce) { .mi-view, .mi-answer { animation: none; } }
+
+/* one question per screen */
+.oq { display: flex; flex-direction: column; gap: 18px; animation: mi-in 200ms ease-out; }
+.oq-q { font-size: 40px; font-weight: 200; line-height: 1.1; letter-spacing: -0.01em; }
+.oq-opts { display: flex; flex-direction: column; gap: 10px; }
+.oq-opt { height: 60px; text-align: left; font-size: 14px; letter-spacing: 0.12em; }
+.oq-opt:hover { background: rgb(255 255 255 / 0.08); }
+.oq-go { align-self: flex-start; }
+.mi-more { align-self: flex-start; }
