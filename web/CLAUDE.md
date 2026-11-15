@@ -31,3 +31,14 @@ Mission-control calm, not sci-fi noise: dark UI, one accent per status (green/am
 
 ## Definition of done
 Overview → body → panel with chart + action → live check-in changes a color → radiation feed → replay with alarm. All from the JSON files, offline build working, deployed link, and a 30-second screen recording of the demo path.
+
+## Habitat module guardrails (non-negotiable)
+- Data comes ONLY from web/public/data/habitat_telemetry.json, read as specified in contracts/HABITAT_CONTRACT.md + CHANGELOG v2.2. Never hardcode values, thresholds, dates, crew ids or lead times.
+- Read amber/red from meta.thresholds. Never assume 1.0 or any fixed number.
+- If lead_time_h is negative or null, never show "flagged before the limit"; show "limit rule fired first" or hide it.
+- Every planted fault is shown honestly: caught / missed (detected: false) / false alarm (planted: false).
+- Wording for crew links is always "Possible environmental cause", never a diagnosis.
+- These labels must be visible: footer "Habitat telemetry simulated. Detector validated on NASA SMAP/MSL telemetry." and the existing "Not medical advice".
+- Never edit anything in /ml, /contracts or web/public/data/*.json. If the shape seems wrong, stop and tell Emile to tell Tomas.
+- The habitat module must not break the MVP: crew overview, body map, check-in and the radiation replay must still work after every commit. Run the app and click through the demo path before each push.
+- Time box: habitat UI done by 22:45. After that, only fixes that break the demo.
