@@ -1,0 +1,71 @@
+/* Devices on the body page: icon, name + connection, what it reads. Same 8 px rhythm as the frame. */
+.dv {
+  margin-top: 16px;
+  display: grid;
+  gap: 12px;
+}
+.dv ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 16px;
+}
+.dv li {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+}
+.dv-i {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--line-2);
+  color: var(--ink);
+}
+.dv li.is-off .dv-i {
+  color: var(--ink-3);
+  border-style: dashed;
+}
+.dv-t {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+.dv-t b {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  font-size: 16px;
+  font-weight: 500;
+}
+.dv-t em {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-style: normal;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--calm);
+}
+.dv-t em i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.dv li.is-off .dv-t em {
+  color: var(--ink-3);
+}
+.dv li.is-off .dv-t em i {
+  background: none;
+  border: 1.5px solid currentColor;
+}
+.dv-t > span {
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--ink-2);
+}

@@ -9,6 +9,7 @@ import { CW_LABEL, CW_RANK, RANK, SYSTEMS, SYSTEM_BY_ID, dutyOf, fmtV, metricSys
 import { Btn, CW_STATUS, lc, plainLine, roleOf, unitOf, valOf } from '../ds';
 import { Check, Page, SideCap } from '../frame';
 import { RowVital } from '../vitals';
+import { Devices } from '../devices';
 import { useStation, type SystemId } from '../state';
 import { cue } from '../ui';
 
@@ -63,6 +64,7 @@ export default function Body() {
           {SYSTEMS.filter((s) => s.id !== 'blood' || v.sys.blood !== 'nominal').map((s) => (
             <Check key={s.id} s={CW_STATUS[v.sys[s.id]]} title={s.name} word={`${CW_LABEL[v.sys[s.id]]} · ${values[s.id].line}`} on={sel === s.id} onClick={() => pick(s.id)} />
           ))}
+          {!medic && <Devices />}
         </>
       }
       object={
