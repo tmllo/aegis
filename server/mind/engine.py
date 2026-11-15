@@ -61,15 +61,22 @@ def _streak_days(days: set[str], date: str) -> int:
 
 # ---- self-report scoring -------------------------------------------------------
 def _daily_means(store: Store, subject: str, metric: str) -> dict[str, float]:
+    """Mean per day. On a day with a live check-in, only the check-in values count (they replace the simulated one)."""
     vals: dict[str, list[float]] = {}
+    live: dict[str, list[float]] = {}
     for o in store.observations(subject=subject, metric=metric):
         if o.value is not None:
-            vals.setdefault(day_of(o.t), []).append(float(o.value))
+            (live if o.source == CHECKIN_SOURCE else vals).setdefault(day_of(o.t), []).append(float(o.value))
+    vals.update(live)
     return {d: sum(v) / len(v) for d, v in vals.items()}
 
 
 def _self_report_metrics(cat: Catalog) -> list[dict]:
-    return [m for m in cat.metrics.values() if m["kind"] == "self_report"]
+    """The scores the Mind engine scores live: every self_report metric plus the check-in metrics (self.mood).
+    At build, engine/scoring.py scores self.mood too; sync replaces those rows with the same rule so a live mood
+    check-in is scored at once."""
+    keys = set(checkin_metrics(cat)) | {k for k, m in cat.metrics.items() if m["kind"] == "self_report"}
+    return [m for k, m in cat.metrics.items() if k in keys]
 
 
 def score_self_report(cat: Catalog, store: Store, subject: str) -> list[Assessment]:
@@ -97,9 +104,18 @@ def score_self_report(cat: Catalog, store: Store, subject: str) -> list[Assessme
             z = (sum(w) / len(w) - mu) / sd
             score = -z if rule.get("low_side_only") else z if rule.get("high_side_only") else abs(z)
             severity = "red" if score >= red_z else "amber" if score >= amber_z else None
+            hard = m.get("absolute_red")
+            outside = bool(hard) and not (hard["min"] <= daily[d] <= hard["max"])
+            if outside:
+                severity = "red"
             if severity is None:
                 continue
-            msg = f"{m['label']} 3-day average {abs(z):.1f}σ {'above' if z > 0 else 'below'} your own baseline"
+            if score >= amber_z:
+                msg = f"{m['label']} 3-day average {abs(z):.1f}σ {'above' if z > 0 else 'below'} your own baseline"
+                if outside:
+                    msg += ", and outside the hard safety limit"
+            else:
+                msg = f"{m['label']} outside the hard safety limit"          # same words as engine/scoring.py
             out.append(Assessment(subject, m["key"], d, RULE, severity, round(z, 2), msg, m["actions"][severity]))
     return out
 

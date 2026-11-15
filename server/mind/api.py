@@ -4,6 +4,7 @@ No SQL and no scoring here. GET /api/observations stays the core route; this fil
 """
 from __future__ import annotations
 
+import functools
 import json
 from typing import Literal
 from uuid import uuid4
@@ -46,6 +47,16 @@ class NoteIn(BaseModel):
     t: str | None = None
 
 
+def _serialized(fn):
+    """Run a handler under store.lock (an RLock): FastAPI runs sync handlers in a thread pool and the store shares one
+    sqlite connection, so a write-then-sync request must not interleave with another request's reads or writes."""
+    @functools.wraps(fn)
+    def wrapper(*args, **kwargs):
+        with deps.store().lock:
+            return fn(*args, **kwargs)
+    return wrapper
+
+
 # ---- checks ------------------------------------------------------------------
 def _crew(cat, subject: str) -> str:
     s = cat.subjects.get(subject)
@@ -55,7 +66,7 @@ def _crew(cat, subject: str) -> str:
 
 
 def _day(name: str, value: str | None) -> str | None:
-    if value is not None and not records.DAY_RE.match(value):
+    if value is not None and not records.valid_day(value):
         raise HTTPException(422, f"{name} {value!r}: use YYYY-MM-DD")
     return value
 
@@ -73,6 +84,7 @@ def _own_journal(subject: str, member: str | None) -> None:
 
 # ---- check-in ----------------------------------------------------------------
 @router.get("/api/checkin")
+@_serialized
 def checkin(subject: str, date: str | None = None) -> dict:
     cat, store = deps.cat(), deps.store()
     _crew(cat, subject)
@@ -80,6 +92,7 @@ def checkin(subject: str, date: str | None = None) -> dict:
 
 
 @router.post("/api/observations", status_code=201)
+@_serialized
 def post_observation(body: ObservationIn) -> dict:
     cat, store = deps.cat(), deps.store()
     _crew(cat, body.subject)
@@ -108,6 +121,7 @@ def post_observation(body: ObservationIn) -> dict:
 
 # ---- tasks -------------------------------------------------------------------
 @router.get("/api/tasks")
+@_serialized
 def get_tasks(subject: str, date: str | None = None) -> dict:
     cat, store = deps.cat(), deps.store()
     _crew(cat, subject)
@@ -116,6 +130,7 @@ def get_tasks(subject: str, date: str | None = None) -> dict:
 
 
 @router.post("/api/tasks", status_code=201)
+@_serialized
 def post_task(body: TaskIn) -> dict:
     cat, store = deps.cat(), deps.store()
     _crew(cat, body.subject)
@@ -140,6 +155,7 @@ def post_task(body: TaskIn) -> dict:
 
 
 @router.post("/api/tasks/{task_id}/events", status_code=201)
+@_serialized
 def post_task_event(task_id: str, body: TaskEventIn) -> dict:
     cat, store = deps.cat(), deps.store()
     task = repo.get_task(store, task_id)
@@ -156,6 +172,7 @@ def post_task_event(task_id: str, body: TaskEventIn) -> dict:
 
 # ---- progress ----------------------------------------------------------------
 @router.get("/api/progress")
+@_serialized
 def get_progress(subject: str, date: str | None = None) -> dict:
     cat, store = deps.cat(), deps.store()
     _crew(cat, subject)
@@ -168,6 +185,7 @@ def _note_dict(n: records.Note) -> dict:
 
 
 @router.post("/api/notes", status_code=201)
+@_serialized
 def post_note(subject: str, body: NoteIn, x_crew_member: str | None = Header(None)) -> dict:
     cat, store = deps.cat(), deps.store()
     _crew(cat, subject)
@@ -183,6 +201,7 @@ def post_note(subject: str, body: NoteIn, x_crew_member: str | None = Header(Non
 
 
 @router.get("/api/notes")
+@_serialized
 def get_notes(subject: str, since: str | None = None, x_crew_member: str | None = Header(None)) -> dict:
     cat, store = deps.cat(), deps.store()
     _crew(cat, subject)
@@ -192,6 +211,7 @@ def get_notes(subject: str, since: str | None = None, x_crew_member: str | None 
 
 # ---- wellbeing (no journal text) ---------------------------------------------
 @router.get("/api/wellbeing")
+@_serialized
 def get_wellbeing(subject: str, days: int = 28, end: str | None = None) -> dict:
     cat, store = deps.cat(), deps.store()
     _crew(cat, subject)

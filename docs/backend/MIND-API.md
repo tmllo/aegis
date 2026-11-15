@@ -79,7 +79,10 @@ POST /api/observations
  "opened_tasks": ["sys-c1-self.social-2026-11-14"],
  "closed_tasks": []}
 ```
-`assessment` is `null` when the score is within the person's usual range. A later reading of the same metric closes the
+`assessment` is `null` when the score is within the person's usual range. The five check-in scores (mood included) are
+scored live on every POST; on a day with a live check-in it replaces the simulated value. A crew re-measure
+(`vital.*`) is not re-scored live (that happens at build); it only closes the open task, and `assessment` shows the
+build-time one. Impossible dates (`2026-02-30`), non-finite or negative values give 422. A later reading of the same metric closes the
 open system task: the same POST with `"t": "2026-11-14T21:00:00Z", "value": 4` returns
 `"closed_tasks": ["sys-c1-self.social-2026-11-14"]` (Detect → Notify → Verify).
 Error: `{"subject": "c1", "metric": "self.stress", "value": 7}` → `422 {"detail": "self.stress: value 7 outside 1-5"}`.

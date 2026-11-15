@@ -32,8 +32,10 @@ def checkin_form(cat, store, subject, date=None) -> dict
 ```
 
 ### score_self_report
-For every metric with `kind == "self_report"` (not self.mood: it is crew_daily and scored by engine/scoring.py).
-Per day, the mean of that subject's values that day (any source). Constants from `cat.mission["scoring"]`:
+For every metric with `kind == "self_report"` plus the check-in metrics (self.mood: crew_daily, scored at build by
+engine/scoring.py; sync replaces its rows with the same rule so a live mood check-in counts at once). Per day, the mean
+of that subject's values that day; on a day with a `checkin` value only check-in values count. A day outside
+`absolute_red` is red. Constants from `cat.mission["scoring"]`:
 baseline = mean and sample sd (n-1) of the first `baseline_days` days that have a value, sd raised to `rule.sd_floor`,
 needs >= 3 values. z on day d = (mean of the daily values on days d-2..d that exist - baseline mean) / sd.
 Side: `rule.low_side_only` -> score = -z; `rule.high_side_only` -> score = z; else |z|. amber at `amber_z`, red at `red_z`.

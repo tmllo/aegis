@@ -5,7 +5,9 @@ checkin_batch() is the adapter: it turns one POST body into a Batch, or raises V
 """
 from __future__ import annotations
 
+import math
 import re
+from datetime import date, datetime
 from dataclasses import dataclass, field
 from typing import Any, Literal
 
@@ -59,8 +61,30 @@ def day_of(t: str) -> str:
     return t[:10]
 
 
+def valid_day(d: str) -> bool:
+    """YYYY-MM-DD that is a real calendar day (2026-02-30 is not)."""
+    if not isinstance(d, str) or not DAY_RE.match(d):
+        return False
+    try:
+        date.fromisoformat(d)
+    except ValueError:
+        return False
+    return True
+
+
 def valid_time(t: str) -> bool:
-    return bool(DAY_RE.match(t) or INSTANT_RE.match(t))
+    """A real day, or a real UTC instant YYYY-MM-DDTHH:MM[:SS[.f]]Z."""
+    if not isinstance(t, str):
+        return False
+    if DAY_RE.match(t):
+        return valid_day(t)
+    if not INSTANT_RE.match(t):
+        return False
+    try:
+        datetime.fromisoformat(t[:-1])
+    except ValueError:
+        return False
+    return True
 
 
 def valid_schedule(s: str) -> bool:
@@ -95,6 +119,10 @@ def checkin_batch(cat: Catalog, subject: str, metric: str, t: str, value: float,
         raise ValueError(f"t {t!r}: use YYYY-MM-DD or YYYY-MM-DDTHH:MM:SSZ")
     if isinstance(value, bool) or not isinstance(value, (int, float)):
         raise ValueError("value must be a number")
+    if not math.isfinite(value):
+        raise ValueError("value must be a finite number")
+    if m["kind"] == "crew_daily" and value < 0:
+        raise ValueError(f"{metric}: value {value} cannot be negative")
     sc = scale_of(cat, metric)
     if sc and not (sc["min"] <= value <= sc["max"]):
         raise ValueError(f"{metric}: value {value} outside {sc['min']}-{sc['max']}")

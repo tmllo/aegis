@@ -455,3 +455,22 @@ def test_alerting_checkin_does_not_close_its_own_task():
     again = c.post("/api/observations", json={"subject": "c1", "metric": "self.social", "t": "2026-11-14T21:00:00Z",
                                               "value": 4}).json()
     assert tid in again["closed_tasks"]
+
+
+def test_impossible_dates_and_bad_values_are_422():
+    c = TestClient(create_app())
+    assert c.get("/api/progress", params={"subject": "c1", "date": "2026-13-01"}).status_code == 422
+    assert c.get("/api/wellbeing", params={"subject": "c1", "end": "2026-02-30"}).status_code == 422
+    assert c.post("/api/tasks/routine-c1-hydration/events", json={"status": "done", "t": "2026-02-30"}).status_code == 422
+    assert c.post("/api/observations", json={"subject": "c1", "metric": "self.mood", "t": "2026-02-30",
+                                             "value": 3}).status_code == 422
+    assert c.post("/api/observations", json={"subject": "c1", "metric": "vital.bp_sys", "value": -50}).status_code == 422
+
+
+def test_live_mood_checkin_is_scored():
+    """self.mood is crew_daily, but a live check-in is scored at once by the Mind engine (same rule)."""
+    c = TestClient(create_app())
+    r = c.post("/api/observations", json={"subject": "c1", "metric": "self.mood", "t": "2026-11-14T09:00:00Z",
+                                          "value": 1}).json()
+    assert r["assessment"]["severity"] == "red"
+    assert "sys-c1-self.mood-2026-11-14" in r["opened_tasks"]
