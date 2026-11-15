@@ -117,10 +117,10 @@ export default function EnvironmentPage() {
       </section>
 
       <div className="pat-actions">
-        <button type="button" className="solid" onClick={() => setParams({ mode: 'replay' }, { replace: true })}>
+        <button type="button" className="solid long" onClick={() => setParams({ mode: 'replay' }, { replace: true })}>
           Replay the May 2024 storm
         </button>
-        <button type="button" className="ghost" onClick={() => setParams({ mode: 'shelter' }, { replace: true })}>
+        <button type="button" className="ghost long" onClick={() => setParams({ mode: 'shelter' }, { replace: true })}>
           Run a storm drill
         </button>
       </div>
