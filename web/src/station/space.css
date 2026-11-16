@@ -234,3 +234,23 @@ html:has(.st[data-theme='dark']) body {
     inset: 0 0 52px;
   }
 }
+/* iPhone: the view switch sits at the top of the stage and the stage ends above the tab bar, so neither
+   menu covers the other */
+@media (max-width: 1100px) {
+  :root .st.ds .fr-object:has(.ds-body) {
+    min-height: 0;
+    height: calc(100dvh - 300px - env(safe-area-inset-bottom));
+  }
+  :root .st.ds .ds-body > .ds-views {
+    top: 0;
+    bottom: auto;
+  }
+  .suit-tt {
+    inset: 48px 0 0;
+  }
+}
+@media (max-width: 480px) {
+  .suit-tt {
+    inset: 44px 0 0;
+  }
+}

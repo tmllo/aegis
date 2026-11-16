@@ -47,9 +47,9 @@ function Shell() {
   // light or dark, remembered on this device
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     try {
-      return localStorage.getItem('ex-theme') === 'dark' ? 'dark' : 'light';
+      return localStorage.getItem('ex-theme') === 'light' ? 'light' : 'dark'; // dark by default (Emile, 16 Nov)
     } catch {
-      return 'light';
+      return 'dark';
     }
   });
   const flipTheme = () => {

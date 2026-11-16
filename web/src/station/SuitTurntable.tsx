@@ -1,125 +1,74 @@
-// The suit, photoreal: Cycles frames of the Apollo 11 A7L scan (Smithsonian 3D, CC0; patches and flag
-// painted out) rendered in Blender (blender-assets/_scripts/suit-render/turntable_space.py), shown as a
-// turntable that shares one angle with the 3D body views (spin.ts).
-// Smooth and jank-free: the compressed frames are fetched once; frames near the current angle are decoded
-// off the main thread (createImageBitmap) and kept in a small window; a canvas draws the two frames around
-// the angle and cross-fades them, so the turn is continuous. Drag to turn; it turns on its own when idle.
+// The suit, photoreal: a Cycles turntable of the Apollo 11 A7L scan (Smithsonian 3D, CC0; patches and flag
+// painted out), rendered in Blender (blender-assets/_scripts/suit-render/turntable_space.py) and encoded as
+// a transparent video: WebM VP9 with alpha for Chrome/Firefox, HEVC with alpha for Safari / iPhone.
+// The video plays natively (hardware decode: sharp and smooth on phones) and one full play is one full turn
+// at the shared speed, so it stays in step with the 3D body views (spin.ts). Dragging seeks the video.
 import { useEffect, useRef, useState } from 'react';
 import { spin, SPIN_SPEED } from './spin';
-import { loadSuitFrames } from '../data/suitFrames';
 import './suit.css';
 
-export const SUIT_FRAMES = 96;
-const N = SUIT_FRAMES;
+const TURN_S = (2 * Math.PI) / SPIN_SPEED; // one turn, seconds
 const REDUCE = typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
-const WINDOW = 6; // decoded frames kept on each side of the current one
-const posOf = (a: number) => ((((-a / (2 * Math.PI)) * N) % N) + N) % N;
-const wrap = (i: number) => ((i % N) + N) % N;
+const BASE = import.meta.env.BASE_URL;
+/** Safari decodes HEVC with alpha; everyone else gets VP9 with alpha */
+const SAFARI = typeof navigator !== 'undefined' && /Apple/.test(navigator.vendor) && !/CriOS|FxiOS|Chrome/.test(navigator.userAgent);
+const SRC = SAFARI ? `${BASE}suit/turntable.mp4` : `${BASE}suit/turntable.webm`;
+/** video time for the shared angle: t = 0 faces the viewer; the camera circling one way is the suit
+ *  turning the other way in the render */
+const timeOf = (a: number, d: number) => ((((-a / (2 * Math.PI)) * d) % d) + d) % d;
+const angleOf = (t: number, d: number) => -(t / d) * 2 * Math.PI;
 
 export default function SuitTurntable() {
   const [ready, setReady] = useState(false);
-  const canvas = useRef<HTMLCanvasElement>(null);
-  const blobs = useRef<(Blob | null)[]>(Array(N).fill(null));
-  const bitmaps = useRef(new Map<number, ImageBitmap>());
-  const pending = useRef(new Set<number>());
-  const idle = useRef(true);
+  const video = useRef<HTMLVideoElement>(null);
   const drag = useRef<{ x: number; a: number } | null>(null);
   const resume = useRef(0);
-  const lastDrawn = useRef('');
+  const idle = useRef(true);
 
-  // fetch every compressed frame once (about 2 MB in total)
+  const dur = () => {
+    const v = video.current;
+    return v && isFinite(v.duration) && v.duration > 0 ? v.duration : TURN_S;
+  };
+  const seekTo = (a: number) => {
+    const v = video.current;
+    if (v) v.currentTime = timeOf(a, dur());
+  };
+
+  // start at the shared angle, then let the video drive the angle while it plays
   useEffect(() => {
-    let alive = true;
-    loadSuitFrames(N).then((bs) => {
-      blobs.current = bs;
-      if (alive) setReady(true);
-    });
-    return () => {
-      alive = false;
-      bitmaps.current.forEach((b) => b.close());
-      bitmaps.current.clear();
+    const v = video.current;
+    if (!v) return;
+    const onReady = () => {
+      v.playbackRate = dur() / TURN_S; // one play = one turn at the shared speed, whatever the encoded length
+      seekTo(spin.a);
+      setReady(true);
+      if (!REDUCE) void v.play().catch(() => undefined);
     };
-  }, []);
-
-  /** keep the frames around index c decoded; free the rest */
-  const keepAround = (c: number) => {
-    const want = new Set<number>();
-    for (let d = -WINDOW; d <= WINDOW; d++) want.add(wrap(c + d));
-    for (const [k, b] of bitmaps.current) if (!want.has(k)) (b.close(), bitmaps.current.delete(k));
-    for (const k of want) {
-      if (bitmaps.current.has(k) || pending.current.has(k) || !blobs.current[k]) continue;
-      pending.current.add(k);
-      createImageBitmap(blobs.current[k]!)
-        .then((bm) => {
-          pending.current.delete(k);
-          bitmaps.current.set(k, bm);
-          lastDrawn.current = ''; // a frame arrived: redraw
-        })
-        .catch(() => pending.current.delete(k));
-    }
-  };
-
-  const draw = () => {
-    const cv = canvas.current;
-    if (!cv) return;
-    const p = posOf(spin.a);
-    const i0 = Math.floor(p) % N;
-    const i1 = wrap(i0 + 1);
-    const f = p - Math.floor(p);
-    keepAround(i0);
-    const key = `${i0}:${f.toFixed(3)}:${cv.width}`;
-    if (key === lastDrawn.current) return;
-    const b0 = bitmaps.current.get(i0);
-    const b1 = bitmaps.current.get(i1);
-    if (!b0) return; // keep the last picture until this frame is decoded
-    // size the canvas to its box at device resolution
-    const dpr = Math.min(2, devicePixelRatio || 1);
-    const w = Math.round(cv.clientWidth * dpr);
-    const h = Math.round(cv.clientHeight * dpr);
-    if (cv.width !== w || cv.height !== h) {
-      cv.width = w;
-      cv.height = h;
-    }
-    const ctx = cv.getContext('2d');
-    if (!ctx) return;
-    const s = Math.min(w / b0.width, h / b0.height);
-    const dw = b0.width * s;
-    const dh = b0.height * s;
-    const dx = (w - dw) / 2;
-    const dy = (h - dh) / 2;
-    ctx.clearRect(0, 0, w, h);
-    ctx.globalAlpha = 1;
-    ctx.drawImage(b0, dx, dy, dw, dh);
-    if (b1 && f > 0.003) {
-      ctx.globalAlpha = f;
-      ctx.drawImage(b1, dx, dy, dw, dh);
-      ctx.globalAlpha = 1;
-    }
-    lastDrawn.current = key;
-  };
-
-  useEffect(() => {
-    if (!ready) return;
+    if (v.readyState >= 1) onReady();
+    else v.addEventListener('loadedmetadata', onReady, { once: true });
     let raf = 0;
-    let last = performance.now();
-    const tick = (t: number) => {
+    const tick = () => {
       raf = requestAnimationFrame(tick);
-      const dt = Math.min(0.1, (t - last) / 1000);
-      last = t;
-      if (idle.current && !REDUCE) spin.a += dt * SPIN_SPEED;
-      draw();
+      if (idle.current && !v.paused) spin.a = angleOf(v.currentTime, dur());
     };
     raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [ready]);
+    return () => {
+      cancelAnimationFrame(raf);
+      v.removeEventListener('loadedmetadata', onReady);
+    };
+  }, []);
 
   const pause = () => {
     idle.current = false;
     window.clearTimeout(resume.current);
+    video.current?.pause();
   };
   const later = () => {
     window.clearTimeout(resume.current);
-    resume.current = window.setTimeout(() => (idle.current = true), 4000);
+    resume.current = window.setTimeout(() => {
+      idle.current = true;
+      if (!REDUCE) void video.current?.play().catch(() => undefined);
+    }, 4000);
   };
   useEffect(() => () => window.clearTimeout(resume.current), []);
 
@@ -136,7 +85,9 @@ export default function SuitTurntable() {
       }}
       onPointerMove={(e) => {
         const d = drag.current;
-        if (d) spin.a = d.a - (e.clientX - d.x) * 0.012;
+        if (!d) return;
+        spin.a = d.a - (e.clientX - d.x) * 0.012;
+        seekTo(spin.a);
       }}
       onPointerUp={() => {
         drag.current = null;
@@ -150,11 +101,12 @@ export default function SuitTurntable() {
         if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
         e.preventDefault();
         pause();
-        spin.a += ((e.key === 'ArrowLeft' ? -1 : 1) * 2 * Math.PI) / N;
+        spin.a += (e.key === 'ArrowLeft' ? -1 : 1) * 0.1;
+        seekTo(spin.a);
         later();
       }}
     >
-      <canvas ref={canvas} className="suit-tt-canvas" />
+      <video ref={video} className="suit-tt-video" src={SRC} muted playsInline loop preload="auto" disablePictureInPicture />
       {!ready && <p className="suit-tt-wait">Loading suit</p>}
     </div>
   );
