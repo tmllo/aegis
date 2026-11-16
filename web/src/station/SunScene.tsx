@@ -5,7 +5,7 @@
 // Heliographic frame: the Sun at the origin, the Earth side (lon 0) faces +Z, west (+lon) is +X.
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { Billboard, Html, Line, OrbitControls, Stars } from '@react-three/drei';
+import { Billboard, Html, Line, OrbitControls, useTexture } from '@react-three/drei';
 import * as THREE from 'three';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import type { AlertLevel } from '../data/types';
@@ -220,6 +220,18 @@ function FocusTag({ f }: { f: SunFocus }) {
   );
 }
 
+/** The real sky around the scene: NASA SVS Deep Star Maps 2020 (public domain) on a far sphere. */
+function Sky() {
+  const tex = useTexture('/space/sky-4096.jpg');
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return (
+    <mesh rotation={[0.35, 2.4, 0]}>
+      <sphereGeometry args={[120, 64, 32]} />
+      <meshBasicMaterial map={tex} side={THREE.BackSide} toneMapped={false} color="#c8c8c8" />
+    </mesh>
+  );
+}
+
 /** Slow orbit around the scene when idle (about 70 s a turn); stops while dragging, resumes after 4 s. */
 function Camera() {
   const ctl = useRef<OrbitControlsImpl>(null);
@@ -271,7 +283,7 @@ export default function SunScene({
       <Canvas dpr={[1, 1.75]} camera={{ position: [1.0, 0.9, 8.6], fov: 34, near: 0.05, far: 400 }} gl={{ antialias: true }} onCreated={() => setReady(true)}>
         <color attach="background" args={['#03050c']} />
         <Suspense fallback={null}>
-          <Stars radius={90} depth={60} count={5000} factor={3.2} saturation={0} fade speed={REDUCE ? 0 : 0.35} />
+          <Sky />
           <Corona storm={alarm || level === 'warning' ? 1 : 0} />
           <SunBody calm={REDUCE} />
           {flares.map((f) => (

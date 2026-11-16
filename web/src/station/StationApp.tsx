@@ -19,6 +19,8 @@ import './ds.css';
 import './frame.css';
 import './palette.css';
 import './theme.css';
+import './space.css';
+import SpaceBackdrop from './SpaceBackdrop';
 
 const Body = lazy(() => import('./pages/CrewHealth'));
 const Check = lazy(() => import('./pages/Checkin'));
@@ -91,6 +93,7 @@ function Shell() {
 
   return (
     <div className={`st ds is-frame ${alarmOn ? 'is-alarm' : ''}`} data-theme={theme}>
+      {theme === 'dark' && <SpaceBackdrop />}
       <button type="button" className="fr-corner is-l ds-brand" onClick={() => (cue('tick', sound), nav('/'))} aria-label="e to the x, crew status">
         e<sup>x</sup>
       </button>
@@ -144,7 +147,7 @@ function Shell() {
                   { to: '/', label: 'Crew', icon: 'crew', alert: crewS, end: true },
                   { to: '/radiation', label: 'Radiation', icon: 'environment', alert: envS },
                   { to: '/cabin', label: 'Cabin', icon: 'cabin' },
-                  { to: '/surgeon', label: 'Surgeon', icon: 'surgeon' },
+                  { to: '/surgeon', label: 'Earth support', icon: 'surgeon' },
                 ]
               : [
                   { to: '/check', label: 'Check in', icon: 'check', alert: mine && !mine.checkedIn ? 'amber' : undefined },
@@ -163,7 +166,7 @@ function Shell() {
         <span>{DISCLAIMERS[1]}</span>
         <span>Space weather data: {data.storm.meta.data_credit}</span>
         <span>Signal delay to Earth ~ {LINK_DELAY[env]}</span>
-        <span title={ANATOMY_CREDIT}>Anatomy: BodyParts3D, CC BY 4.0 · Skeleton: Z-Anatomy, CC BY-SA 4.0</span>
+        <span title={ANATOMY_CREDIT}>Anatomy: BodyParts3D, CC BY 4.0 · Suit: Smithsonian 3D scan, CC0</span>
       </footer>
 
       {alarmOn && <Shelter onAck={() => setAlarm({ ...alarm, phase: 'sheltered' })} phase={alarm.phase} flare={alarm.flare} p={alarm.p} onOpen={() => nav('/radiation')} here={loc.pathname.startsWith('/radiation')} />}

@@ -1,0 +1,58 @@
+/* Space everywhere in the dark theme (Emile, 16 Nov): the navy fill becomes deep space (SpaceBackdrop)
+   and panels turn to glass over the stars, the same look as the Radiation page. */
+.space-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: #03050c;
+}
+/* a soft vignette over the turning sky keeps the edges calm behind the side columns */
+.space-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 70% 60% at 50% 45%, rgb(3 5 12 / 0) 0%, rgb(3 5 12 / 0.5) 100%);
+  pointer-events: none;
+}
+.space-bg > div {
+  position: absolute !important;
+  inset: 0;
+}
+/* the Radiation page draws its own space */
+:root .st.ds:has(.sun3d) .space-bg {
+  display: none;
+}
+:root .st.ds[data-theme='dark'] {
+  --canvas: #03050c;
+  --card: rgb(20 26 46 / 0.6);
+  --card-2: rgb(28 35 56 / 0.7);
+  --line: rgb(255 255 255 / 0.1);
+  --line-2: rgb(255 255 255 / 0.22);
+  background: transparent;
+  isolation: isolate;
+}
+html:has(.st[data-theme='dark']),
+html:has(.st[data-theme='dark']) body {
+  background: #03050c;
+}
+:root .st.ds[data-theme='dark'] .fr-vital,
+:root .st.ds[data-theme='dark'] .fr-dock,
+:root .st.ds[data-theme='dark'] .ds-btn,
+:root .st.ds[data-theme='dark'] .fr-seg,
+:root .st.ds[data-theme='dark'] .mt.is-full,
+:root .st.ds[data-theme='dark'] .cb-big,
+:root .st.ds[data-theme='dark'] .ds-menu-pop {
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+:root .st.ds[data-theme='dark'] .st-foot {
+  background: transparent;
+}
+/* the body view switch sits under the feet, centred, so it never covers the head or a label */
+:root .st.ds .ds-body > .ds-views {
+  top: auto;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+}

@@ -116,9 +116,9 @@ export default function Checkin() {
       if (!r || !(metric in draft)) continue;
       const ok = r.status === 'green';
       settle(cid, metric, ok ? 'resolved' : 'escalated');
-      window.setTimeout(() => toast(ok ? { tone: 'green', title: `${r.label} back in range`, body: 'The countermeasure worked.' } : { tone: 'red', title: `${r.label} still flagged`, body: 'Queued for the flight surgeon.' }), 900);
+      window.setTimeout(() => toast(ok ? { tone: 'green', title: `${r.label} back in range`, body: 'The countermeasure worked.' } : { tone: 'red', title: `${r.label} still flagged`, body: 'Queued for the Earth support team.' }), 900);
     }
-    toast({ tone: preview.overall === 'green' ? 'green' : preview.overall, title: `${roleOf(v.m)} checked in`, body: `${CW_LABEL[preview.cw]}. Saved for the flight surgeon.` });
+    toast({ tone: preview.overall === 'green' ? 'green' : preview.overall, title: `${roleOf(v.m)} checked in`, body: `${CW_LABEL[preview.cw]}. Saved for the Earth support team.` });
     const worst = SYSTEMS.map((s) => s.id).sort((a, b) => RANK[preview.status[b]] - RANK[preview.status[a]])[0];
     nav(`/body/${v.m.id}${preview.overall !== 'green' ? `?s=${worst}` : ''}`);
   };

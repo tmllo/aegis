@@ -586,3 +586,440 @@ html:has(.st[data-theme='dark']) body {
   border: 1px solid rgb(22 26 43 / 0.16) !important;
   box-shadow: 0 1px 4px rgb(22 26 43 / 0.12);
 }
+
+/* ================================================================ Leftover controls in the new style (16 Nov, Emile)
+   compact segments (the body view switch), the Menu's select. Same tokens as the rest: card-2 track,
+   card thumb with a hairline, 14 / 18 px radii, 180 ms ease-out. */
+:root .st.ds .fr-seg.is-sm {
+  padding: 3px;
+  border-radius: 14px;
+}
+:root .st.ds .fr-seg.is-sm button {
+  min-height: 36px;
+  min-width: 0;
+  padding: 0 14px;
+  border-radius: 11px;
+  font-size: 14px;
+}
+:root .st.ds .fr-seg button:active {
+  transform: scale(0.97);
+}
+/* body view switch: top left of the stage, beside the model */
+:root .st.ds .ds-body > .ds-views {
+  position: absolute;
+  top: 8px;
+  left: 0;
+  z-index: 5;
+  width: max-content;
+  height: auto;
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+:root .st.ds .ds-menu-row select {
+  appearance: none;
+  background: var(--card-2)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%238a93ad' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+    no-repeat right 14px center;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  padding: 0 38px 0 14px;
+  min-height: 44px;
+  color: var(--ink);
+  transition: border-color 180ms ease-out, background-color 180ms ease-out;
+}
+:root .st.ds .ds-menu-row select:hover {
+  border-color: var(--line-2);
+}
+/* body labels as small cards: no thin coloured frame, the dot carries status; the view switch stays on top */
+:root .st.ds .st-hs {
+  border: 0 !important;
+  border-radius: 12px;
+  padding: 7px 12px 7px 10px;
+  background: var(--card);
+  box-shadow: var(--shadow-2);
+  backdrop-filter: none;
+  transition: box-shadow 180ms ease-out, transform 180ms ease-out;
+}
+:root .st.ds .st-hs b {
+  font-size: 13px;
+  font-weight: 500;
+}
+:root .st.ds .st-hs em {
+  font-family: inherit;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+:root .st.ds .st-hs.is-red i,
+:root .st.ds .st-hs.is-amber i {
+  box-shadow: none;
+}
+:root .st.ds .st-hs.is-on {
+  box-shadow: var(--shadow-2), 0 0 0 2px var(--accent);
+}
+:root .st.ds .st-hs.is-dot {
+  border-radius: 50%;
+  padding: 0;
+  background: var(--card);
+}
+:root .st.ds .ds-body > .ds-views {
+  z-index: 40;
+}
+
+/* ---- Earth support: a message thread with Earth (same card as the xAI chat), the note as the composer */
+:root .st.ds .es .es-mark {
+  display: inline-grid;
+  place-items: center;
+  color: var(--accent);
+}
+:root .st.ds .es .es-log {
+  justify-content: flex-end;
+}
+:root .st.ds .es-empty {
+  margin: auto 0 0;
+  font-size: 15px;
+  color: var(--ink-3);
+  text-align: center;
+}
+:root .st.ds .es-out {
+  align-self: flex-end;
+  display: grid;
+  justify-items: end;
+  gap: 6px;
+  max-width: 80%;
+  animation: th-rise 220ms ease-out backwards;
+}
+:root .st.ds .es-out .mt-row.is-user {
+  max-width: none;
+  white-space: pre-line;
+}
+:root .st.ds .es-out small {
+  font-size: 12px;
+  color: var(--ink-3);
+  transition: color 180ms ease-out;
+}
+:root .st.ds .es-out small.is-done {
+  color: var(--calm);
+}
+:root .st.ds .es .mt-row.is-model {
+  animation: th-rise 220ms ease-out backwards;
+}
+:root .st.ds .es-compose {
+  margin: 0 20px 20px;
+  padding: 14px 16px 12px;
+  border: 1px solid var(--line-2);
+  border-radius: 14px;
+  background: var(--canvas);
+  transition: border-color 180ms ease-out;
+}
+:root .st.ds .es-compose:focus-within {
+  border-color: var(--accent);
+}
+:root .st.ds .es-compose textarea {
+  width: 100%;
+  resize: none;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--ink);
+  outline: none;
+}
+:root .st.ds .es-attach {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0 0;
+  padding: 10px 0 0;
+  list-style: none;
+  border-top: 1px solid var(--line);
+}
+:root .st.ds .es-attach li {
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: var(--card-2);
+  font-size: 13px;
+  color: var(--ink-2);
+}
+@media (prefers-reduced-motion: reduce) {
+  :root .st.ds .es-out,
+  :root .st.ds .es .mt-row.is-model {
+    animation: none;
+  }
+}
+
+/* ---- Care: one card per open item, four plain steps, the current one lit */
+:root .st.ds .cp {
+  width: min(680px, 100%);
+  display: grid;
+  gap: 0;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: var(--shadow-1);
+  text-align: left;
+  overflow: hidden;
+}
+:root .st.ds .cp-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--line);
+}
+:root .st.ds .cp-head div {
+  display: grid;
+  gap: 2px;
+}
+:root .st.ds .cp-head b {
+  font-size: 17px;
+  font-weight: 600;
+}
+:root .st.ds .cp-head span {
+  font-size: 13px;
+  color: var(--ink-3);
+}
+:root .st.ds .cp-head em {
+  margin-left: auto;
+  font-style: normal;
+  font-size: 14px;
+  font-weight: 500;
+}
+:root .st.ds .cp-mark {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--calm);
+  flex: none;
+}
+:root .st.ds .cp-mark.is-amber,
+:root .st.ds .cp-head em.is-amber {
+  background-color: var(--watch);
+  color: var(--watch);
+}
+:root .st.ds .cp-mark.is-red,
+:root .st.ds .cp-head em.is-red {
+  background-color: var(--act);
+  color: var(--act);
+}
+:root .st.ds .cp-head em {
+  background-color: transparent !important;
+}
+:root .st.ds .cp-steps {
+  list-style: none;
+  margin: 0;
+  padding: 8px 20px;
+  display: grid;
+}
+:root .st.ds .cp-steps li {
+  position: relative;
+  display: grid;
+  grid-template-columns: 28px 1fr;
+  gap: 14px;
+  padding: 12px 0;
+  color: var(--ink-3);
+  transition: color 180ms ease-out;
+}
+/* the rail between the numbers */
+:root .st.ds .cp-steps li + li::before {
+  content: '';
+  position: absolute;
+  left: 13.5px;
+  top: -12px;
+  height: 24px;
+  width: 1px;
+  background: var(--line-2);
+}
+:root .st.ds .cp-steps i {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid var(--line-2);
+  font-style: normal;
+  font-size: 13px;
+  background: var(--card);
+  position: relative;
+  z-index: 1;
+}
+:root .st.ds .cp-steps b {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 28px;
+}
+:root .st.ds .cp-steps p {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.5;
+}
+:root .st.ds .cp-steps li.is-done i {
+  border-color: transparent;
+  background: color-mix(in srgb, var(--calm) 16%, transparent);
+  color: var(--calm);
+}
+:root .st.ds .cp-steps li.is-done {
+  color: var(--ink-2);
+}
+:root .st.ds .cp-steps li.is-now {
+  color: var(--ink);
+}
+:root .st.ds .cp-steps li.is-now i {
+  border-color: transparent;
+  background: var(--accent-fill);
+  color: #fff;
+}
+:root .st.ds .cp-steps li.is-now b {
+  color: var(--accent);
+}
+:root .st.ds .cp-steps li.is-now p {
+  font-size: 20px;
+  line-height: 1.4;
+  font-weight: 400;
+}
+:root .st.ds .cp-why {
+  margin: 0;
+  padding: 14px 20px 18px;
+  border-top: 1px solid var(--line);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ink-3);
+}
+
+/* ================================================================ Two colours only (16 Nov, Emile)
+   "only use blue and vibrant red in the ui, no more yellow, no more green". One rule set, applied to every
+   element so no older local token (palette, cockpit, sun, cabin) can bring amber or green back:
+     blue   = attention that is not urgent (Act today, Watch) and interaction (selected, focus, links)
+     red    = Act now / Shelter / errors only
+     neutral= OK (no colour: nothing needs you)
+   Buttons carry no blue fill: the primary button is the page's highest-contrast neutral. */
+:root .st.ds[data-theme='dark'],
+:root .st.ds[data-theme='dark'] * {
+  --accent: #8fb0ff;
+  --accent-fill: #8fb0ff;
+  --accent-soft: rgb(143 176 255 / 0.14);
+  --cg-accent: #8fb0ff;
+  --blue: #8fb0ff;
+  --watch: #8fb0ff;
+  --amber: #8fb0ff;
+  --adv: #8fb0ff;
+  --calm: #a3abc2;
+  --green: #a3abc2;
+  --act: #ff3b4e;
+  --red: #ff3b4e;
+}
+:root .st.ds[data-theme='light'],
+:root .st.ds[data-theme='light'] * {
+  --accent: #2557e8;
+  --accent-fill: #2557e8;
+  --accent-soft: rgb(37 87 232 / 0.1);
+  --cg-accent: #2557e8;
+  --blue: #2557e8;
+  --watch: #2557e8;
+  --amber: #2557e8;
+  --adv: #2557e8;
+  --calm: #5b627a;
+  --green: #5b627a;
+  --act: #e0112b;
+  --red: #e0112b;
+}
+/* primary button: neutral, maximum contrast with the page (white on dark, ink on light) */
+:root .st.ds .ds-btn.is-primary {
+  background: var(--ink);
+  color: var(--canvas);
+  border-color: transparent;
+  box-shadow: var(--shadow-1);
+}
+:root .st.ds .ds-btn.is-primary:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--ink) 86%, var(--canvas));
+}
+:root .st.ds[data-theme='dark'] .ds-btn.is-primary {
+  color: #0b0f1e;
+}
+:root .st.ds .ds-btn.is-danger {
+  background: var(--act);
+  color: #fff;
+  box-shadow: none;
+}
+:root .st.ds .ds-btn.is-danger:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--act) 86%, #000);
+}
+:root .st.ds .ds-btn:disabled {
+  opacity: 0.45;
+}
+/* selected things: blue line and blue text, no blue fill */
+:root .st.ds .fr-dock a.is-on {
+  background: var(--card-2);
+}
+:root .st.ds .ds-scale button.is-on,
+:root .st.ds .ds-chips button.is-on,
+:root .st.ds .mi-q-opts button.is-on {
+  background: var(--card);
+}
+:root .st.ds .fr-check.is-on .fr-check-mark.is-plain {
+  background: transparent;
+  border-color: var(--accent);
+  color: var(--accent);
+}
+:root .st.ds .mt.is-full .mt-row.is-user {
+  background: var(--card-2);
+}
+:root .st.ds .cp-steps li.is-now i {
+  background: var(--card);
+  border: 2px solid var(--accent);
+  color: var(--accent);
+  font-weight: 600;
+}
+:root .st.ds .cp-steps li.is-done i {
+  background: var(--card-2);
+  color: var(--ink-2);
+}
+:root .st.ds .es-out small.is-done {
+  color: var(--ink-2);
+}
+/* no glow on status marks */
+:root .st.ds .st-hs.is-amber i,
+:root .st.ds .st-hs.is-red i {
+  box-shadow: none;
+}
+/* ---- left-column rows: one quiet icon each; status is its colour plus a small dot, no rings or shapes */
+:root .st.ds .fr-check-mark.has-icon {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  background: var(--card-2);
+  color: var(--ink-2);
+  box-shadow: none;
+  outline: 0;
+}
+:root .st.ds .fr-check-mark.has-icon.is-amber {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+:root .st.ds .fr-check-mark.has-icon.is-red {
+  background: color-mix(in srgb, var(--act) 14%, transparent);
+  color: var(--act);
+}
+:root .st.ds .fr-check-mark.has-icon.is-amber::after,
+:root .st.ds .fr-check-mark.has-icon.is-red::after {
+  content: '';
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 0 2px var(--canvas);
+}
+:root .st.ds .fr-check.is-on .fr-check-mark.has-icon {
+  outline: 0;
+  box-shadow: inset 0 0 0 1.5px var(--accent);
+  color: var(--accent);
+}
+:root .st.ds .fr-check.is-on .fr-check-mark.has-icon.is-red {
+  color: var(--act);
+}

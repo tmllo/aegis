@@ -1,7 +1,8 @@
 // Body: one astronaut. Left: the five body systems (tap to open). Centre: the 3D body.
 // Right: vital cards (value, 28 days of bars, flagged days in colour, usual range as a band);
 // with a system open, its readings plus why it matters, what to do and how to measure.
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useState } from 'react';
+import type { BodyView } from '../BodyCanvas';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { alarmActive } from '../../core/alarm';
 import type { MetricKey } from '../../data/types';
@@ -14,6 +15,15 @@ import { useStation, type SystemId } from '../state';
 import { cue } from '../ui';
 
 const BodyCanvas = lazy(() => import('../BodyCanvas'));
+import SuitTurntable from '../SuitTurntable';
+// kept here (not imported from BodyCanvas) so the 3D code stays in its own lazy chunk
+const VIEWS: [BodyView, string][] = [
+  ['suit', 'Suit'],
+  ['body', 'Body'],
+  ['skeleton', 'Skeleton'],
+  ['vessels', 'Vessels'],
+  ['organs', 'Organs'],
+];
 
 const DUTY = { cleared: 'Cleared for EVA', restricted: 'Re-check before EVA', hold: 'Hold: no EVA', shelter: 'In the storm shelter' } as const;
 /** Main vitals in priority order (sleep, mood, heart rate, exercise, blood pressure); temperature and blood sugar only when flagged. */
@@ -36,6 +46,7 @@ export default function Body() {
   const v = views.find((x) => x.m.id === wanted) ?? [...views].sort((a, b) => RANK[b.overall] - RANK[a.overall])[0];
   const isShared = shared[v?.m.id ?? ''] !== false;
   const sel = qs.get('s') as SystemId | null;
+  const [view, setView] = useState<BodyView>('body');
   if (!data || !v) return null;
   if (medic && !isShared)
     return <Page title={roleOf(v.m)} sub="Not shared with the medic. Only check-in done or not is visible." footRight={<Btn onClick={() => nav('/')}>Back to crew</Btn>} />;
@@ -69,9 +80,21 @@ export default function Body() {
       }
       object={
         <div className="ds-body">
-          <Suspense fallback={null}>
-            <BodyCanvas tint={v.status} focus={sel} values={Object.fromEntries(Object.entries(values).filter(([k]) => k !== 'blood' || v.sys.blood !== 'nominal')) as typeof values} onPick={(s) => pick(s)} storm={alarmOn} />
-          </Suspense>
+          {/* the suit is a photoreal Cycles turntable (no WebGL); the 3D body stays mounted underneath so
+              switching back is instant */}
+          <div className={`ds-3d${view === 'suit' ? ' is-hidden' : ''}`}>
+            <Suspense fallback={null}>
+              <BodyCanvas tint={v.status} focus={sel} values={Object.fromEntries(Object.entries(values).filter(([k]) => k !== 'blood' || v.sys.blood !== 'nominal')) as typeof values} onPick={(s) => pick(s)} storm={alarmOn} view={view === 'suit' ? 'body' : view} />
+            </Suspense>
+          </div>
+          {view === 'suit' && <SuitTurntable />}
+          <div className="fr-seg is-sm ds-views" role="tablist" aria-label="Body view">
+            {VIEWS.map(([k, name]) => (
+              <button key={k} type="button" role="tab" className={view === k ? 'is-on' : ''} aria-selected={view === k} onClick={() => (cue('tick', sound), setView(k))}>
+                {name}
+              </button>
+            ))}
+          </div>
         </div>
       }
       right={
@@ -97,7 +120,7 @@ export default function Body() {
       footRight={
         v.overall === 'red' ? (
           <Btn kind="danger" onClick={() => nav(`/surgeon?c=${v.m.id}`)}>
-            Contact surgeon
+            Contact Earth support
           </Btn>
         ) : v.issues.length ? (
           <Btn onClick={() => nav(`/care?c=${v.m.id}`)}>Open care plan</Btn>

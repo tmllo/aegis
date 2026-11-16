@@ -15,7 +15,7 @@ export const STATUS_HEX: Record<Status, string> = { green: "#0ca30c", amber: "#f
 export type Layers = { skin: boolean; muscles: boolean; skeleton: boolean; vessels: boolean; organs: boolean };
 export const v3 = (a: number[]) => new THREE.Vector3(a[0], a[1], a[2]);
 
-const NODE_LAYER: Record<string, { layer: keyof Layers; key: string }> = {
+export const NODE_LAYER: Record<string, { layer: keyof Layers; key: string }> = {
   skin: { layer: "skin", key: "skin" },
   muscles: { layer: "muscles", key: "muscles" },
   muscle_antigravity: { layer: "muscles", key: "mag" },
@@ -52,12 +52,14 @@ async function loadBody(): Promise<THREE.Group> {
   return scene;
 }
 
-/** The detailed skeleton (Z-Anatomy, CC BY-SA 4.0, aligned to this body in Blender:
- *  blender-assets/_scripts/skeleton/build_skeleton.py) replaces the two bone nodes when it loads.
- *  If it is missing, the original BodyParts3D bones stay, so the body always renders. */
+/** Optional replacement skeleton (e.g. Z-Anatomy, built by blender-assets/_scripts/skeleton/build_skeleton.py).
+ *  Off by default: the app uses Tomas's BodyParts3D bones from body.glb (Emile, 16 Nov).
+ *  Set VITE_SKELETON_URL to a GLB with `bones` + `bones_loadbearing` nodes to swap them in. */
 async function swapSkeleton(scene: THREE.Group, loader: GLTFLoader) {
+  const url = import.meta.env.VITE_SKELETON_URL;
+  if (!url) return;
   try {
-    const res = await fetch(import.meta.env.VITE_SKELETON_URL ?? "/models/skeleton.glb");
+    const res = await fetch(url);
     if (!res.ok) return;
     const sk = (await loader.parseAsync(await res.arrayBuffer(), "")).scene;
     sk.updateMatrixWorld(true);

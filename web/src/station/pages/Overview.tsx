@@ -72,7 +72,7 @@ export default function Overview() {
           ))}
         </>
       }
-      footRight={top && (top.id === 'alarm' || open(top.id.split('-')[0])) ? <Btn onClick={() => nav(top.to)}>{top.tone === 'red' && top.id !== 'alarm' ? 'Open and contact surgeon' : top.id.endsWith('-checkin') ? 'Start daily check' : 'Open'}</Btn> : <Btn onClick={() => nav('/check')}>Start daily check</Btn>}
+      footRight={top && (top.id === 'alarm' || open(top.id.split('-')[0])) ? <Btn onClick={() => nav(top.to)}>{top.tone === 'red' && top.id !== 'alarm' ? 'Contact Earth support' : top.id.endsWith('-checkin') ? 'Start daily check' : 'Open'}</Btn> : <Btn onClick={() => nav('/check')}>Start daily check</Btn>}
     />
   );
 }

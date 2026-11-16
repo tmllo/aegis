@@ -38,8 +38,8 @@ const ROWS: { to: string; name: string; solves: string; proof: Proof[] }[] = [
   },
   {
     to: '/surgeon',
-    name: 'Surgeon',
-    solves: 'When a result goes to the crew and when to the flight surgeon, with the note prefilled.',
+    name: 'Earth support',
+    solves: 'When a result goes to the crew and when to the Earth support team, with the note prefilled.',
     proof: [
       { k: 'Research', v: 'NASA-STD-3001 caution and warning classes' },
       { k: 'Code', v: 'core/alarm.ts: Emergency only from a measured event, a forecast raises Warning at most' },
@@ -146,7 +146,7 @@ const NORM: [string, string][] = [
 const VALUE: { t: string; s: string }[] = [
   { t: 'Earlier', s: 'A storm warning hours ahead, and a health drift flagged days before it is an emergency' },
   { t: 'Personal', s: 'Your own normal, not a population range: under 2 false alarms a month per astronaut' },
-  { t: 'Autonomous', s: 'Works with no link to Earth; says what the crew handles and what goes to the surgeon' },
+  { t: 'Autonomous', s: 'Works with no link to Earth; says what the crew handles and what goes to Earth support' },
   { t: 'Honest', s: 'Every number carries its source and whether it is real, recorded or simulated' },
 ];
 const AI: [string, string][] = [
@@ -165,7 +165,7 @@ export default function Built() {
         <div className="bt-wrap">
           <div className="bt-intro">
             <p>Far from Earth, the crew is its own first doctor. e^x checks each astronaut against their own normal, every day, in about a minute.</p>
-            <p>It says what to do and who to tell: yourself, the crew medic or the flight surgeon. It also warns of solar radiation storms hours before they arrive.</p>
+            <p>It says what to do and who to tell: yourself, the crew medic or the Earth support team. It also warns of solar radiation storms hours before they arrive.</p>
             <p>It runs fully offline on the station. Alerts come from tested rules and a model trained on real NASA space-weather data.</p>
           </div>
           <dl className="bt-big">

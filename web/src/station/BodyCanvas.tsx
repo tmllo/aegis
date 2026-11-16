@@ -1,20 +1,22 @@
-// The 3D body: matte porcelain layers, white skeleton, the five systems tinted by status.
+// The 3D body: matte porcelain layers, white skeleton, the five systems tinted by status; a view switch shows
+// the whole body, the suit, or one layer alone.
 // Click an organ or a label to open that system. Camera glides to the selected system.
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { Canvas, useFrame, useThree, type ThreeEvent } from '@react-three/fiber';
-import { ContactShadows, Environment, Html, Lightformer, OrbitControls } from '@react-three/drei';
+import { ContactShadows, Environment, Html, Lightformer, OrbitControls, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
-import { bodyGeometries, useBody } from '../components/body3d/BodyScene';
+import { bodyGeometries, NODE_LAYER, useBody, type Layers } from '../components/body3d/BodyScene';
 import { pickTarget, TARGETS, type TargetId } from '../components/body3d/targets';
 import A from '../components/body3d/anchors.json';
 import type { Status } from '../data/types';
 import type { SystemId } from './state';
 
-// Emile: parts that need care light up in soft red (amber and red both); healthy parts stay bone.
-const CARE = new THREE.Color('#ff6f6f');
+// Emile: parts that need care light up in red (amber and red both); healthy parts stay bone. Two colours
+// only in the UI (16 Nov): blue for selection, red for care.
+const CARE = new THREE.Color('#ff3b4e');
 const TINT: Record<Status, THREE.Color> = {
-  green: new THREE.Color('#9fe3d0'),
+  green: new THREE.Color('#8fb0ff'), // an open healthy system lights blue (selection), never green
   amber: CARE,
   red: CARE,
 };
@@ -73,7 +75,18 @@ const SPOTS: Record<SystemId, { p: [number, number, number]; side: 'l' | 'r' }> 
   whole_body: { p: [-0.25, 1.38, 0.04], side: 'l' },
 };
 
-function Model({ tint, focus, onPick, bone }: { tint: Record<SystemId, Status>; focus: SystemId | null; onPick: (s: SystemId) => void; bone: THREE.Color }) {
+/** One view at a time (Emile, 16 Nov): the whole body, the suit alone, or one layer on its own.
+ *  Skin and muscles are not shown in any view. */
+export type BodyView = 'body' | 'suit' | 'skeleton' | 'vessels' | 'organs';
+const HIDDEN = new Set(['skin', 'muscles', 'muscle_antigravity']);
+/** The layer each view isolates, drawn near-solid; bones stay as a faint frame for place. */
+const SOLO: Partial<Record<BodyView, { layer: keyof Layers; o: number }>> = {
+  skeleton: { layer: 'skeleton', o: 1 },
+  vessels: { layer: 'vessels', o: 0.92 },
+  organs: { layer: 'organs', o: 0.9 },
+};
+
+function Model({ tint, focus, onPick, bone, view }: { tint: Record<SystemId, Status>; focus: SystemId | null; onPick: (s: SystemId) => void; bone: THREE.Color; view: BodyView }) {
   const scene = useBody();
   const geo = useMemo(() => bodyGeometries(scene), [scene]);
   const mats = useMemo(() => {
@@ -120,8 +133,24 @@ function Model({ tint, focus, onPick, bone }: { tint: Record<SystemId, Status>; 
         const c = TINT[tint[hover]];
         g[n] = { o: Math.max(g[n].o, n === 'muscle_antigravity' ? 0.5 : 0.9), c: WHITE.clone().lerp(c, 0.6), top: true, e: c.clone().multiplyScalar(0.55) };
       }
+    // views: skin and muscles never show; the suit hides the whole body (nothing glows through it);
+    // a layer view draws that layer near-solid over a faint skeleton, and keeps flagged or open systems
+    const solo = SOLO[view];
+    for (const n of Object.keys(g)) {
+      const layer = NODE_LAYER[n]?.layer;
+      if (HIDDEN.has(n) || view === 'suit') {
+        g[n] = { ...g[n], o: 0, top: false, e: undefined };
+        continue;
+      }
+      if (!solo) continue;
+      const keep = g[n].top || focusNodes.has(n);
+      if (layer === solo.layer) g[n] = { ...g[n], o: Math.max(g[n].o, solo.o) };
+      else if (keep) continue;
+      else if (layer === 'skeleton') g[n] = { ...g[n], o: 0.14 };
+      else g[n] = { ...g[n], o: 0 };
+    }
     return g;
-  }, [geo, tint, focus, hover, bone]);
+  }, [geo, tint, focus, hover, bone, view]);
 
   const meshes = useRef<Record<string, THREE.Mesh | null>>({});
   const group = useRef<THREE.Group>(null);
@@ -210,10 +239,42 @@ function Labels({ tint, focus, values, onPick }: { tint: Record<SystemId, Status
   );
 }
 
+/** Apollo 11 A7L suit: the Smithsonian's 3D scan (CC0), stood up at real size on the body's floor with the
+ *  agency patches, flag and name tag painted out (docs/body-kit/fit_a7l_suit.py). Fetched the first time
+ *  the Suit view is chosen, then fades in and out; the body is hidden behind it. */
+const SUIT_URL = import.meta.env.VITE_SUIT_URL ?? '/models/suit.glb';
+function Suit({ on }: { on: boolean }) {
+  const { scene } = useGLTF(SUIT_URL, false) as { scene: THREE.Group };
+  const mats = useMemo(() => {
+    const out: THREE.MeshStandardMaterial[] = [];
+    scene.traverse((o) => {
+      const m = o as THREE.Mesh;
+      if (!m.isMesh) return;
+      m.raycast = () => {}; // clicks pass through the suit to the body systems inside
+      const mat = m.material as THREE.MeshStandardMaterial;
+      mat.envMapIntensity = 0.9;
+      mat.opacity = 0;
+      out.push(mat);
+    });
+    return out;
+  }, [scene]);
+  useFrame((_, dt) => {
+    const k = 1 - Math.exp(-Math.min(dt, 0.05) / 0.12);
+    for (const m of mats) {
+      m.opacity += ((on ? 1 : 0) - m.opacity) * k;
+      m.transparent = m.opacity < 0.99;
+      m.depthWrite = m.opacity > 0.5;
+      m.visible = m.opacity > 0.01;
+    }
+  });
+  return <primitive object={scene} />;
+}
+
 type View = { pos: [number, number, number]; target: [number, number, number] };
 // The whole body stays in view (Emile): a selected system is highlighted and labelled, not zoomed into.
 function viewFor(_focus: SystemId | null): View {
-  return { pos: [0, 0.92, 3.5], target: [0, 0.88, 0] };
+  // start close (Emile, 16 Nov): the body fills the stage, head to feet
+  return { pos: [0, 0.9, 3.05], target: [0, 0.86, 0] };
 }
 
 function Rig({ focus }: { focus: SystemId | null }) {
@@ -327,16 +388,21 @@ export default function BodyCanvas({
   values,
   onPick,
   storm = false,
+  view = 'body',
 }: {
   tint: Record<SystemId, Status>;
   focus: SystemId | null;
   values: Record<SystemId, { name: string; line: string }>;
   onPick: (s: SystemId) => void;
   storm?: boolean;
+  view?: BodyView;
 }) {
   const v0 = viewFor(focus);
   const theme = usePageTheme();
   const light = theme === 'light';
+  // the suit model downloads only once someone asks for it
+  const [suitWanted, setSuitWanted] = useState(view === 'suit');
+  useEffect(() => void (view === 'suit' && setSuitWanted(true)), [view]);
   return (
     <Canvas dpr={[1, 1.6]} camera={{ position: v0.pos, fov: 34, near: 0.01, far: 50 }} gl={{ antialias: true, alpha: true }}>
       {/* the body sits on the page itself: same background colour, no panel */}
@@ -355,9 +421,20 @@ export default function BodyCanvas({
           </Html>
         }
       >
-        <Model tint={tint} focus={focus} onPick={onPick} bone={light ? BONE_LIGHT : BONE} />
+        <Model tint={tint} focus={focus} onPick={onPick} bone={light ? BONE_LIGHT : BONE} view={view} />
         <Labels tint={tint} focus={focus} values={values} onPick={onPick} />
       </Suspense>
+      {suitWanted && (
+        <Suspense
+          fallback={
+            <Html center>
+              <p className="st-muted">Loading suit…</p>
+            </Html>
+          }
+        >
+          <Suit on={view === 'suit'} />
+        </Suspense>
+      )}
       <Particles on={storm} />
       <ContactShadows position={[0, 0.002, 0]} opacity={light ? 0.3 : 0.45} scale={2.2} blur={2.4} far={1.2} frames={1} color={light ? '#3a4060' : '#000000'} />
       <Rig focus={focus} />

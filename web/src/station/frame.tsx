@@ -29,11 +29,49 @@ export function Page({ title, sub, left, object, right, footLeft, footRight, cla
 
 /* ------------------------------------------------------------------ checklist */
 
+/** Each row gets its own icon from what it is about (Emile, 16 Nov): status is the icon's colour, not a shape. */
+const ROW_ICON: [RegExp, keyof typeof VITAL_ICON][] = [
+  [/cardio|heart|blood pressure/i, 'heart'],
+  [/neuro/i, 'brain'],
+  [/sleep/i, 'sleep'],
+  [/musculo|bone|muscle/i, 'bone'],
+  [/radiation storm|storm|flare|forecast|radiation/i, 'sun'],
+  [/shield/i, 'shield'],
+  [/shelter/i, 'shelter'],
+  [/act now/i, 'alert'],
+  [/act today/i, 'clock'],
+  [/watch/i, 'eye'],
+  [/what to do/i, 'list'],
+  [/mood/i, 'mood'],
+  [/stress/i, 'stress'],
+  [/energy/i, 'energy'],
+  [/social/i, 'social'],
+  [/daily check|check-?in/i, 'checklist'],
+  [/status/i, 'pulse'],
+  [/co2|o2|oxygen|air|cabin/i, 'air'],
+  [/water|humid/i, 'drop'],
+  [/temp|thermal/i, 'temp'],
+  [/pressure/i, 'gauge'],
+  [/glucose|sugar/i, 'sugar'],
+  [/exercise/i, 'run'],
+  [/dose/i, 'dose'],
+  [/engineer|commander|specialist|medic|pilot|crew/i, 'person'],
+];
+function iconFor(title: ReactNode, word: ReactNode): keyof typeof VITAL_ICON {
+  const s = `${typeof title === 'string' ? title : ''}`;
+  const w = `${typeof word === 'string' ? word : ''}`;
+  return ROW_ICON.find(([re]) => re.test(s))?.[1] ?? ROW_ICON.find(([re]) => re.test(w))?.[1] ?? 'pulse';
+}
+
 export function Check({ s, title, word, onClick, on, mark }: { s: Status; title: ReactNode; word: ReactNode; onClick?: () => void; on?: boolean; mark?: ReactNode }) {
   const body = (
     <>
-      <span className={`fr-check-mark is-${mark != null ? 'plain' : s}`} aria-hidden>
-        {mark ?? <Shape s={s} size={12} />}
+      <span className={`fr-check-mark is-${mark != null ? 'plain' : s}${mark == null ? ' has-icon' : ''}`} aria-hidden>
+        {mark ?? (
+          <svg viewBox="0 0 24 24" width="18" height="18">
+            {VITAL_ICON[iconFor(title, word)]}
+          </svg>
+        )}
       </span>
       <span className="fr-check-t">
         <b>{title}</b>
@@ -111,9 +149,16 @@ export const DOCK_ICON = {
       <path d="M9 20v-3.2A6.5 6.5 0 1 1 18.5 11l1.5 3h-2v2.5a1.5 1.5 0 0 1-1.5 1.5H14v2" />
     </svg>
   ),
+  // a space habitat: pressurised module with a porthole, a truss, and two solar wings
   cabin: (
     <svg viewBox="0 0 24 24" {...I}>
-      <path d="M4 9h11a3 3 0 1 0-3-3M4 15h14a3 3 0 1 1-3 3M4 12h8" />
+      <rect x="8.5" y="6" width="7" height="12" rx="3.5" />
+      <circle cx="12" cy="10" r="1.4" />
+      <path d="M8.5 13.5h7M5.5 12h3M15.5 12h3" />
+      <rect x="1.5" y="7" width="4" height="10" />
+      <path d="M1.5 12h4M3.5 7v10" />
+      <rect x="18.5" y="7" width="4" height="10" />
+      <path d="M18.5 12h4M20.5 7v10" />
     </svg>
   ),
   environment: (
@@ -164,6 +209,21 @@ export const VITAL_ICON = {
     </g>
   ),
   air: <path {...G} d="M4 9h11a3 3 0 1 0-3-3M4 15h14a3 3 0 1 1-3 3M4 12h8" />,
+  brain: <path {...G} d="M12 5.5a3 3 0 0 0-5.6 1.4A3 3 0 0 0 5 12a3 3 0 0 0 2 4.6A3 3 0 0 0 12 18.5m0-13a3 3 0 0 1 5.6 1.4A3 3 0 0 1 19 12a3 3 0 0 1-2 4.6 3 3 0 0 1-5 1.9m0-13v13" />,
+  stress: <path {...G} d="M3 12h3.5l2-5 3.5 10 2.5-7 1.5 2H21" />,
+  energy: <path {...G} d="M13 3 6 13.5h5.5L10.5 21 18 10h-5.5z" />,
+  social: <path {...G} d="M9 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm-5.5 8c.6-3.2 2.8-4.8 5.5-4.8s4.9 1.6 5.5 4.8M16 10.5a2.5 2.5 0 1 0 0-5M17 14.4c2 .5 3.3 2 3.6 4.6" />,
+  person: <path {...G} d="M12 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Zm-6.5 9c.7-3.8 3.3-5.8 6.5-5.8s5.8 2 6.5 5.8" />,
+  shield: <path {...G} d="M12 3.5 5 6v5.5c0 4.4 3 7.7 7 9 4-1.3 7-4.6 7-9V6z" />,
+  shelter: <path {...G} d="M4 11 12 4.5l8 6.5M6.5 9.5V19.5h11V9.5M10 19.5v-5h4v5" />,
+  alert: <path {...G} d="M12 4 3 19.5h18zM12 10v4.5M12 17v.01" />,
+  clock: <path {...G} d="M12 20a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm0-12v4.5l3 2" />,
+  eye: <path {...G} d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Zm9.5 2.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" />,
+  list: <path {...G} d="M9 6.5h11M9 12h11M9 17.5h11M4.5 6.5h.01M4.5 12h.01M4.5 17.5h.01" />,
+  pulse: <path {...G} d="M3 12h4l2.5-6 5 12 2.5-6h4" />,
+  drop: <path {...G} d="M12 3.5s6 6.6 6 10.5a6 6 0 0 1-12 0c0-3.9 6-10.5 6-10.5Z" />,
+  gauge: <path {...G} d="M4.5 16a8 8 0 1 1 15 0M12 13l3.5-4" />,
+  checklist: <path {...G} d="M5 4h14v17H5zM9 4V2.8h6V4M8.5 12.5l2.3 2.3 4.7-4.8" />,
   sun: (
     <g {...G}>
       <circle cx="12" cy="12" r="4" />

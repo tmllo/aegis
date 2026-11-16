@@ -4,7 +4,7 @@
 // AI, no key), else a scripted offline demo; the tag in the header says which one answered. Escalation never depends on the model: risk words get a fixed
 // reply, and Contact Earth support comes from the check-in scores.
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { getKey, setKey, talk, type Reply, type Turn } from '../data/therapist';
+import { getKey, talk, type Reply, type Turn } from '../data/therapist';
 
 const REDUCE = typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 const OPENERS = ['I miss home', 'I slept badly', 'Tension with the crew', 'I feel flat today'];
@@ -40,7 +40,9 @@ function Typed({ text, live, onTick }: { text: string; live: boolean; onTick: ()
 
 const Mark = ({ big }: { big?: boolean }) => (
   <span className={`mt-av${big ? ' is-big' : ''}`} aria-hidden>
-    e<sup>x</sup>
+    <span className="mt-av-t">
+      e<sup>x</sup>
+    </span>
   </span>
 );
 
@@ -49,8 +51,7 @@ export default function MindTalk({ today, day, name }: { today: string; day: str
   const [text, setText] = useState('');
   const [busy, setBusy] = useState(false);
   const [via, setVia] = useState<Reply['via'] | null>(null);
-  const [keyOpen, setKeyOpen] = useState(false);
-  const log = useRef<HTMLDivElement>(null);
+    const log = useRef<HTMLDivElement>(null);
   const input = useRef<HTMLTextAreaElement>(null);
   const toEnd = useCallback(() => {
     log.current?.scrollTo({ top: log.current.scrollHeight });
@@ -80,7 +81,8 @@ export default function MindTalk({ today, day, name }: { today: string; day: str
           <b>xAI</b>
           <span>Reads today's check-in, nothing else</span>
         </div>
-        <span className={`mt-model${via && via !== 'script' ? ' is-live' : ''}`}>{via === 'gemini' ? 'Gemini' : via === 'site' ? 'Live' : via === 'script' ? 'Offline demo' : getKey() ? 'Gemini' : 'Ready'}</span>
+        {/* honest label (Emile, 16 Nov): the replies are a scripted demo unless a real Gemini key answered */}
+        <span className={`mt-model${via === 'gemini' ? ' is-live' : ''}`}>{via === 'gemini' ? 'Gemini' : 'Demo'}</span>
         {turns.length > 0 && (
           <button type="button" className="mt-new" onClick={() => setTurns([])}>
             New chat
@@ -159,26 +161,7 @@ export default function MindTalk({ today, day, name }: { today: string; day: str
         </button>
       </form>
 
-      <p className="mt-foot">
-        AI demo, not medical advice.{' '}
-        {keyOpen ? (
-          <input
-            className="mt-key"
-            type="password"
-            placeholder="Paste a free Gemini API key"
-            defaultValue={getKey()}
-            onBlur={(e) => {
-              setKey(e.target.value);
-              setKeyOpen(false);
-            }}
-            autoFocus
-          />
-        ) : (
-          <button type="button" className="mt-link" onClick={() => setKeyOpen(true)}>
-            {getKey() ? 'Change key' : 'Use Gemini'}
-          </button>
-        )}
-      </p>
+      <p className="mt-foot">AI demo, not medical advice.</p>
     </section>
   );
 }

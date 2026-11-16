@@ -23,8 +23,8 @@ export const CW_LABEL: Record<CW, string> = { nominal: 'OK', advisory: 'Watch', 
 export const CW_OWNER: Record<CW, string> = {
   nominal: 'No action',
   advisory: 'Crew · self-care, keep logging',
-  caution: 'Crew re-checks · in daily surgeon report',
-  warning: 'Flight surgeon · review now',
+  caution: 'Crew re-checks · in the daily report to Earth',
+  warning: 'Earth support · review now',
   emergency: 'All crew · immediate action',
 };
 export const ADVISORY_Z = 1.5;
@@ -187,7 +187,8 @@ export function buildView(cd: CrewData, raw: CrewMember, entries: Partial<Record
       hi: b ? b.mean + 2 * b.sd : null,
       history: hist.map((r) => ({ date: r.date, v: r[k], flag: flagBy.get(r.date) ?? null })),
       running,
-      action: st === 'green' ? null : meta.actions[st],
+      // the data file says "flight surgeon"; the app calls them the Earth support team (Emile, 16 Nov)
+      action: st === 'green' ? null : meta.actions[st].replace(/flight surgeon/gi, 'Earth support team'),
       entered: !!entries && k in entries,
     };
   }
@@ -266,7 +267,7 @@ export function actionQueue(views: CrewView[], sw: SpaceWeather | null, phase: A
         who: `${seatOf(v.m)} · ${firstName(v.m)}`,
         title: issueLine(r),
         detail: r.action ?? '',
-        cta: r.status === 'red' ? 'Open and contact surgeon' : 'Open countermeasure',
+        cta: r.status === 'red' ? 'Contact Earth support' : 'Open countermeasure',
         to: `/body/${v.m.id}?s=${metricSystem(r.k)}`,
       });
     }

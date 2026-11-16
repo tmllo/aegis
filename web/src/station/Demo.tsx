@@ -64,8 +64,8 @@ export function useBeats(): Beat[] {
       {
         to: '/surgeon',
         target: ['.fr-object > *', '.fr-object'],
-        title: 'Contact surgeon',
-        say: 'A ready note for the flight surgeon. It is queued and sends when the link is up.',
+        title: 'Contact Earth support',
+        say: 'A ready note for the Earth support team. It is queued and sends when the link is up.',
         data: 'Note: what I said, what was measured, plan',
         source: 'Built from my 28-day trends and today’s check',
       },

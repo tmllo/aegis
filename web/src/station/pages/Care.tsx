@@ -50,42 +50,52 @@ export default function Care() {
   const { v, r } = cur;
   const plan = plans[`${v.m.id}:${r.k}`];
   const sys = SYSTEM_BY_ID[metricSystem(r.k)];
+  const warn = r.cw === 'warning' || r.cw === 'emergency';
+  const action = r.action ?? 'Keep logging every day. The trend is being watched; no action needed yet.';
+  // one plain step list: noticed, do this, re-measure, result. The current step is the one to act on.
   const stage = !plan ? 1 : plan.stage === 'started' ? 2 : 3;
   const steps = [
-    { t: 'Detected', d: r.running > 1 ? `For ${r.running} days` : 'Today' },
-    { t: 'Action', d: plan ? 'Started' : 'Not started' },
-    { t: 'Re-measure', d: plan?.stage === 'started' ? 'At the next check' : plan ? 'Done' : '—' },
-    { t: 'Outcome', d: plan?.stage === 'resolved' ? 'Back in range' : plan?.stage === 'escalated' ? 'To the surgeon' : '—' },
+    { t: 'Noticed', d: `${plainLine(r)}.` },
+    { t: warn ? 'Tell Earth support' : 'Do this', d: action },
+    { t: 'Re-measure', d: plan?.stage === 'started' ? "At tomorrow's check-in." : "At the next check-in, to see if it helped." },
+    {
+      t: 'Result',
+      d: plan?.stage === 'resolved' ? 'Back in your usual range.' : plan?.stage === 'escalated' ? 'Sent to the Earth support team.' : 'Back in range, or it goes to the Earth support team.',
+    },
   ];
-  const action = r.action ?? 'Keep logging every day. The trend is being watched; no action needed yet.';
   const habits: MetricKey[] = ['sleep_h', 'exercise_min', 'mood'];
 
   return (
     <Page
       title="Care"
-      sub={`${items.length} open · act before anything turns critical`}
+      sub={items.length === 1 ? 'One thing to look after' : `${items.length} things to look after, worst first`}
       left={items.map((x) => {
         const k = `${x.v.m.id}:${x.r.k}`;
         return <Check key={k} s={CW_STATUS[x.r.cw]} title={me === 'medic' ? `${roleOf(x.v.m)} · ${x.r.label}` : x.r.label} word={`${CW_LABEL[x.r.cw]} · ${plainLine(x.r).replace(`${x.r.label} is `, '')}`} on={k === `${v.m.id}:${r.k}`} onClick={() => open(k)} />;
       })}
       object={
-        <div className="fr-panel">
-          <p className="fr-cap">
-            {roleOf(v.m)} · {sys.name} · {CW_LABEL[r.cw]}
-          </p>
-          <p className="fr-big">{action}</p>
-          <ol className="fr-loop">
+        <section className="cp" aria-label={`${r.label}: what to do`}>
+          <header className="cp-head">
+            <span className={`cp-mark is-${CW_STATUS[r.cw]}`} aria-hidden />
+            <div>
+              <b>{me === 'medic' ? `${roleOf(v.m)} · ${r.label}` : r.label}</b>
+              <span>{sys.name}</span>
+            </div>
+            <em className={`is-${CW_STATUS[r.cw]}`}>{CW_LABEL[r.cw]}</em>
+          </header>
+          <ol className="cp-steps">
             {steps.map((s, i) => (
-              <li key={s.t} className={i < stage ? 'is-done' : i === stage ? 'is-now' : ''}>
-                <b>
-                  {i + 1}. {s.t}
-                </b>
-                {s.d}
+              <li key={s.t} className={i < stage ? 'is-done' : i === stage ? 'is-now' : ''} aria-current={i === stage ? 'step' : undefined}>
+                <i aria-hidden>{i < stage ? '✓' : i + 1}</i>
+                <div>
+                  <b>{s.t}</b>
+                  <p>{s.d}</p>
+                </div>
               </li>
             ))}
           </ol>
-          <p className="ds-note">{sys.why}</p>
-        </div>
+          <p className="cp-why">{sys.why}</p>
+        </section>
       }
       right={
         <>
@@ -103,7 +113,7 @@ export default function Care() {
       footRight={
         r.cw === 'warning' ? (
           <Btn kind="danger" onClick={() => nav(`/surgeon?c=${v.m.id}`)}>
-            Contact surgeon
+            Contact Earth support
           </Btn>
         ) : !plan && r.cw !== 'advisory' ? (
           <Btn

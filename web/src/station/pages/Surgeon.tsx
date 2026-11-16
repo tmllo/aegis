@@ -1,34 +1,55 @@
-// Surgeon: when a result goes to the crew and when to the flight surgeon (a challenge question).
-// Left: the NASA-STD-3001 caution & warning ladder: who acts at each class, with today's count.
-// Centre: the note to the flight surgeon in SOAP form (subjective, objective, assessment, plan),
-// filled from the readings, editable, sent with the data package. Right: each crew member's class.
-import { useEffect, useState } from 'react';
+// Earth support team (route /surgeon): when a result goes to the crew and when to Earth (a challenge question).
+// Emile, 16 Nov: message style, easy to follow. Left: who acts at each class, the current one marked.
+// Centre: a message thread with Earth (same look as the xAI chat). The note is prefilled in plain words from
+// the readings and stays editable; what is attached is listed under it. Sending queues it behind the signal
+// delay, then it shows as delivered and Earth acknowledges. Right: the readings that go with it.
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { CW_LABEL, CW_RANK, LINK_DELAY, MOOD_WORD, RANK, dutyOf, issueLine, useStationData, type CW, type CrewView } from '../model';
 import { Btn, CW_STATUS, roleOf } from '../ds';
-import { Bar, Check, Page, SideCap } from '../frame';
+import { Check, Page, SideCap } from '../frame';
+import { RowVital } from '../vitals';
 import { useStation } from '../state';
 import { cue } from '../ui';
+import '../mind.css'; // the chat card styles (shared with the xAI chat)
 
 /** Who acts at each class (docs/ARCHITECTURE.md section 3), highest first. A label only: no alarm is raised here. */
-const WHO: Record<CW, string> = {
-  emergency: 'All crew, now. Measured event only',
-  warning: 'Flight surgeon now',
-  caution: 'Crew re-checks; daily surgeon report',
-  advisory: 'Crew self-care, keep logging',
-  nominal: 'Nobody',
+const WHO: Partial<Record<CW, string>> = {
+  emergency: 'All crew, now',
+  warning: 'Earth support, now',
+  caution: 'Crew re-checks today',
+  advisory: 'You, self-care',
 };
-const LADDER = (Object.keys(CW_RANK) as CW[]).sort((a, b) => CW_RANK[b] - CW_RANK[a]).map((cw) => ({ cw, who: WHO[cw] }));
-const DUTY = { cleared: 'cleared for EVA', restricted: 're-check before EVA', hold: 'hold: no EVA or safety-critical tasks', shelter: 'in the storm shelter' } as const;
+const LADDER = (Object.keys(WHO) as CW[]).sort((a, b) => CW_RANK[b] - CW_RANK[a]);
+const DUTY = { cleared: 'I am cleared for EVA.', restricted: 'I will re-check before any EVA.', hold: 'I am holding EVA and safety-critical tasks.', shelter: 'I am in the storm shelter.' } as const;
+const ATTACH = ['28-day trends', 'Personal baselines', "Today's check-in"];
 
-function soap(v: CrewView) {
+/** The note in the astronaut's own voice: what is off, how I feel, what I am doing, what I ask. */
+function draft(v: CrewView): string {
   const today = v.m.series[v.m.series.length - 1];
-  return {
-    s: `Mood ${today?.mood ?? '—'}/5 (${MOOD_WORD[today?.mood ?? 0] || '—'}). Sleep ${today?.sleep_h ?? '—'} h last night.`,
-    o: v.issues.length ? v.issues.map((r) => issueLine(r)).join('\n') : 'All readings inside the personal baseline.',
-    a: `${CW_LABEL[v.cw]}. Duty: ${DUTY[dutyOf(v.cw, false)]}.`,
-    p: v.issue?.action ? `${v.issue.action} Requesting review and advice.` : 'No action needed. For the record.',
-  };
+  const lines = [
+    ...(v.issues.length ? v.issues.slice(0, 3).map((r) => `${issueLine(r)}.`) : ['All my readings are inside my usual range.']),
+    today?.mood ? `Mood ${today.mood}/5 (${(MOOD_WORD[today.mood] || '').toLowerCase()}).` : '',
+    DUTY[dutyOf(v.cw, false)],
+    v.issue ? 'Asking for your review and advice.' : 'No action needed, for the record.',
+  ];
+  return lines.filter(Boolean).join('\n');
+}
+
+type Msg = { id: number; from: 'me' | 'earth'; text: string; state?: 'queued' | 'delivered'; at: string };
+const hhmm = () => new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+/** One-way delay in ms for the simulated link (Moon ~1.3 s; Mars minutes, shortened for the demo). */
+const DELAY_MS: Record<string, number> = { iss: 800, moon: 1300, transit: 4000, mars: 6000 };
+
+function EarthMark() {
+  return (
+    <span className="mt-av es-mark" aria-hidden>
+      <svg viewBox="0 0 20 20" width="16" height="16">
+        <circle cx="10" cy="10" r="7.25" fill="none" stroke="currentColor" strokeWidth="1.4" />
+        <path d="M2.9 10h14.2M10 2.75c2.2 2 3.2 4.4 3.2 7.25S12.2 15.25 10 17.25M10 2.75C7.8 4.75 6.8 7.15 6.8 10s1 5.25 3.2 7.25" fill="none" stroke="currentColor" strokeWidth="1.2" />
+      </svg>
+    </span>
+  );
 }
 
 export default function Surgeon() {
@@ -36,7 +57,6 @@ export default function Surgeon() {
   const [qs, setQs] = useSearchParams();
   const nav = useNavigate();
   const call = useStation((s) => s.callSurgeon);
-  const sent = useStation((s) => s.surgeon);
   const toast = useStation((s) => s.toast);
   const sound = useStation((s) => s.sound);
   const me = useStation((s) => s.me);
@@ -44,60 +64,109 @@ export default function Surgeon() {
   const medic = me === 'medic';
   const visible = medic ? views.filter((x) => shared[x.m.id] !== false) : views.filter((x) => x.m.id === me);
   const v = visible.find((x) => x.m.id === qs.get('c')) ?? [...visible].sort((a, b) => RANK[b.overall] - RANK[a.overall])[0];
-  const [note, setNote] = useState(() => (v ? soap(v) : { s: '', o: '', a: '', p: '' }));
+  const [note, setNote] = useState(() => (v ? draft(v) : ''));
+  const [thread, setThread] = useState<Msg[]>([]);
+  const log = useRef<HTMLDivElement>(null);
+  const timers = useRef<number[]>([]);
   useEffect(() => {
-    if (v) setNote(soap(v));
+    if (v) setNote(draft(v));
+    setThread([]);
   }, [v?.m.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => () => timers.current.forEach((t) => window.clearTimeout(t)), []);
+  useEffect(() => {
+    log.current?.scrollTo({ top: log.current.scrollHeight, behavior: 'smooth' });
+  }, [thread]);
   if (!data) return null;
-  if (!v) return <Page title="Flight surgeon" sub="Nobody has shared with the medic." />;
+  if (!v) return <Page title="Earth support team" sub="Nobody has shared with the medic." />;
 
+  const delay = DELAY_MS[env] ?? 1300;
   const send = () => {
+    const text = note.trim();
+    if (!text) return;
+    const id = Date.now();
     call(v.m.id);
     cue('chime', sound);
-    toast({ tone: 'info', title: 'Queued for the flight surgeon', body: `${roleOf(v.m)}: note and 28-day trends. Sends when the link is up (delay ${LINK_DELAY[env]}).` });
+    setThread((t) => [...t, { id, from: 'me', text, state: 'queued', at: hhmm() }]);
+    setNote('');
+    toast({ tone: 'info', title: 'Sent to the Earth support team', body: `With trends and baselines. Signal delay ${LINK_DELAY[env]}.` });
+    timers.current.push(
+      window.setTimeout(() => setThread((t) => t.map((m) => (m.id === id ? { ...m, state: 'delivered' } : m))), delay),
+      window.setTimeout(
+        () =>
+          setThread((t) => [
+            ...t,
+            {
+              id: id + 1,
+              from: 'earth',
+              at: hhmm(),
+              text: v.cw === 'warning' || v.cw === 'emergency' ? 'Received. Our doctor is reviewing your data now and will call you on the private line within the hour. Keep the hold until then.' : 'Received, thank you. Nothing urgent in your data. Keep logging; we will look again at tomorrow’s check-in.',
+            },
+          ]),
+        delay * 2 + 2200,
+      ),
+    );
   };
 
   return (
     <Page
-      title="Flight surgeon"
-      sub={`Signal delay to Earth ~ ${LINK_DELAY[env]} · ${Object.keys(sent).length} queued this session`}
+      title="Earth support team"
+      sub={`Private line · signal delay ${LINK_DELAY[env]}`}
       left={
         <>
-          <p className="fr-cap">Who acts, by class</p>
-          {LADDER.map((l) => (
-            <Check key={l.cw} s={CW_STATUS[l.cw]} title={CW_LABEL[l.cw]} word={l.who} on={l.cw === v.cw} />
+          <p className="fr-cap">Who acts</p>
+          {LADDER.map((cw) => (
+            <Check key={cw} s={CW_STATUS[cw]} title={CW_LABEL[cw]} word={WHO[cw]!} on={cw === v.cw} />
           ))}
         </>
       }
       object={
-        <div className="fr-panel">
-          <p className="fr-cap">
-            Note for {roleOf(v.m)} · {CW_LABEL[v.cw]}
-            {sent[v.m.id] ? ' · queued' : ''}
-          </p>
-          <div className="fr-soap">
-            {(
-              [
-                ['s', 'Subjective'],
-                ['o', 'Objective'],
-                ['a', 'Assessment'],
-                ['p', 'Plan'],
-              ] as const
-            ).map(([k, label]) => (
-              <label key={k}>
-                <span>{label}</span>
-                <textarea value={note[k]} rows={k === 'o' ? 3 : 2} onChange={(e) => setNote({ ...note, [k]: e.target.value })} />
-              </label>
-            ))}
+        <section className="mt is-full es" aria-label="Messages with the Earth support team">
+          <header className="mt-head">
+            <EarthMark />
+            <div className="mt-who">
+              <b>Earth support team</b>
+              <span>{medic ? `About ${roleOf(v.m)}` : 'Only you and Earth see this'}</span>
+            </div>
+            <span className="mt-model is-live">Link up</span>
+          </header>
+
+          <div className="mt-log es-log" ref={log} aria-live="polite">
+            {thread.length === 0 ? (
+              <p className="es-empty">Your note is ready below. Read it, change anything, then send.</p>
+            ) : (
+              thread.map((m) =>
+                m.from === 'me' ? (
+                  <div key={m.id} className="es-out">
+                    <p className="mt-row is-user">{m.text}</p>
+                    <small className={m.state === 'delivered' ? 'is-done' : ''}>
+                      {m.at} · {m.state === 'delivered' ? 'Delivered' : `Sending, ${LINK_DELAY[env]} delay`}
+                    </small>
+                  </div>
+                ) : (
+                  <div key={m.id} className="mt-row is-model">
+                    <EarthMark />
+                    <p>{m.text}</p>
+                  </div>
+                ),
+              )
+            )}
           </div>
-          <p className="ds-note">Attached: 28-day trends, personal baselines, today's check.</p>
-        </div>
+
+          <div className="es-compose">
+            <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={thread.length ? 2 : 5} aria-label="Note to the Earth support team" placeholder="Write to the Earth support team" />
+            <ul className="es-attach" aria-label="Attached">
+              {ATTACH.map((a) => (
+                <li key={a}>{a}</li>
+              ))}
+            </ul>
+          </div>
+        </section>
       }
       right={
         <>
-          <SideCap>{medic ? 'Shared with the medic' : 'Private: only you and the flight surgeon see this'}</SideCap>
-          {visible.map((x) => (
-            <Bar key={x.m.id} label={roleOf(x.m)} value={CW_LABEL[x.cw]} frac={(CW_RANK[x.cw] + 1) / 5} s={CW_STATUS[x.cw]} note={sent[x.m.id] ? 'Queued for the surgeon' : x.issue ? issueLine(x.issue) : 'Nothing to report'} />
+          <SideCap>Goes with the note</SideCap>
+          {(v.issues.length ? v.issues.slice(0, 3) : [v.rows.sleep_h, v.rows.mood, v.rows.hr].filter(Boolean)).map((r) => (
+            <RowVital key={r.k} v={v} r={r} />
           ))}
         </>
       }
@@ -110,17 +179,16 @@ export default function Surgeon() {
               </button>
             ))}
           </div>
-        ) : undefined
+        ) : (
+          <Btn kind="secondary" onClick={() => nav('/')}>
+            My health
+          </Btn>
+        )
       }
       footRight={
-        <>
-          <Btn kind="secondary" onClick={() => nav(medic ? `/body/${v.m.id}` : '/')}>
-            {medic ? 'Open' : 'My health'}
-          </Btn>
-          <Btn kind={v.cw === 'warning' ? 'danger' : 'primary'} onClick={send}>
-            {sent[v.m.id] ? 'Queue again' : 'Queue for surgeon'}
-          </Btn>
-        </>
+        <Btn kind={v.cw === 'warning' ? 'danger' : 'primary'} onClick={send} disabled={!note.trim()}>
+          Send to Earth support
+        </Btn>
       }
     />
   );
