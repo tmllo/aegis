@@ -312,3 +312,84 @@ html:has(.st[data-theme='dark']) body {
   line-height: 0;
   vertical-align: 0.7em;
 }
+
+/* dark theme: deep navy (#000080) stays the fill for buttons and selected items, but navy used as text or
+   as a small mark on the black sky is lifted to a royal navy that reads at 5:1 */
+.st.ds[data-theme='dark'],
+.st.ds[data-theme='dark'] * {
+  --watch: #6f6fff !important;
+  --adv: #6f6fff !important;
+  --navy-lit: #6f6fff !important;
+  --amber: #6f6fff !important;
+}
+/* side columns: content can scroll fully above the bottom fade, so the last card shows its edge */
+:root .st.ds .fr-right,
+:root .st.ds .fr-left {
+  padding-bottom: 40px;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 110px, #000 calc(100% - 16px), transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0, #000 110px, #000 calc(100% - 16px), transparent 100%);
+}
+/* Cabin: effect on the body, plain text rows */
+.cb-fx {
+  display: grid;
+  gap: 4px;
+  padding: 0 0 14px;
+  border-bottom: 1px solid var(--line);
+}
+.cb-fx-h {
+  margin: 0;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 15px;
+}
+.cb-fx-h b {
+  font-weight: 500;
+  color: var(--ink);
+}
+.cb-fx-h span {
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+.cb-fx-h em {
+  font-style: normal;
+  color: var(--ink-3);
+}
+.cb-fx-w {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: var(--ink-3);
+}
+.cb-fx.is-amber .cb-fx-w {
+  color: var(--watch);
+}
+.cb-fx.is-red .cb-fx-w {
+  color: var(--act);
+}
+.cb-fx-t {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+.cb-fx-src {
+  margin: 0 0 8px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink-3);
+}
+/* iPhone: the logo stays put while the page scrolls, so it gets the same glass chip as the Menu button */
+@media (max-width: 1100px) {
+  :root .st.ds .fr-corner.ds-brand {
+    border-radius: 14px;
+    background: rgb(3 5 12 / 0.55);
+    border: 1px solid var(--line);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+    justify-content: center;
+  }
+}

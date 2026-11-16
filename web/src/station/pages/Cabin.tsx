@@ -128,6 +128,32 @@ export function useCabin(): CabinParts {
     ),
     right: (
       <>
+        {/* what the cabin air does to the body right now, against NASA-STD-3001 limits (Tomas's channel data) */}
+        <SideCap>Effect on your body</SideCap>
+        {keys.map((k) => {
+          const c = data.channels[k];
+          const val = latestValue(data, k);
+          const st = data.status.by_channel[k];
+          const lim = c.limits;
+          const range = lim.min != null && lim.max != null ? `${lim.min}–${lim.max}` : lim.max != null ? `under ${lim.max}` : lim.min != null ? `over ${lim.min}` : null;
+          const word = st === 'green' ? 'No effect expected' : st === 'red' ? 'Act now' : 'Watch';
+          return (
+            <div key={k} className={`cb-fx is-${st}`}>
+              <p className="cb-fx-h">
+                <b>{c.label.replace(' (partial pressure)', '')}</b>
+                <span>
+                  {val == null ? '–' : val.toFixed(digits(k))} {c.unit}
+                  {range && <em> · limit {range}</em>}
+                </span>
+              </p>
+              <p className="cb-fx-w">
+                {st !== 'green' && <Shape s={st} size={9} />} {word}
+              </p>
+              {st !== 'green' && <p className="cb-fx-t">{c.health_link}</p>}
+            </div>
+          );
+        })}
+        <p className="cb-fx-src">Limits: NASA-STD-3001. The CO₂ limit (3 mmHg, 1-hour average) is set to keep crew headaches under 1.4% (NASA OCHMO-TB-004).</p>
         <SideCap>Detector, last {DAYS} days</SideCap>
         {events.map((a) => (
           <Bar key={a.id} label={data.channels[a.channel].label} value={anomalyTag(a).label} frac={a.detected ? 1 : 0.15} s={a.detected ? 'green' : 'amber'} note={leadTimeText(a) ?? undefined} />

@@ -32,7 +32,7 @@ const NARROW = typeof innerWidth !== 'undefined' && innerWidth < 760;
 const REDUCE = typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 const D = Math.PI / 180;
 const R = 1;
-const CREW = new THREE.Vector3(3.1, 0.12, 1.5);
+const CREW = new THREE.Vector3(2.3, 0.1, 1.1);
 const LEVEL_HEX: Record<AlertLevel, string> = { none: '#fff1c2', watch: '#ffb547', warning: '#ff5a4f' };
 const UP = new THREE.Vector3(0, 1, 0);
 
@@ -153,7 +153,7 @@ function FieldLine({ foot, level, particles }: { foot: number; level: AlertLevel
   const curve = useMemo(() => {
     const a = onSun(0, Math.min(89, foot), R * 1.02);
     const out = a.clone().normalize().multiplyScalar(2.1).add(new THREE.Vector3(0, 0.35, 0));
-    const mid = new THREE.Vector3(2.3, 0.5, 1.9);
+    const mid = new THREE.Vector3(1.8, 0.45, 1.4);
     return new THREE.CatmullRomCurve3([a, out, mid, CREW.clone()], false, 'centripetal');
   }, [foot]);
   const pts = useMemo(() => curve.getPoints(80), [curve]);
@@ -257,7 +257,7 @@ function Camera() {
     camera.position.copy(c.target).add(off);
     c.update();
   });
-  return <OrbitControls ref={ctl} target={[1.1, 0.05, 0.6]} enablePan={false} minDistance={3} maxDistance={12} enableDamping dampingFactor={0.08} minPolarAngle={0.6} maxPolarAngle={2.3} />;
+  return <OrbitControls ref={ctl} target={[0.6, 0.05, 0.3]} enablePan={false} minDistance={3} maxDistance={12} enableDamping dampingFactor={0.08} minPolarAngle={0.6} maxPolarAngle={2.3} />;
 }
 
 export default function SunScene({
@@ -282,7 +282,7 @@ export default function SunScene({
   const [ready, setReady] = useState(false);
   return (
     <div className={`sun3d${ready ? ' is-ready' : ''}`} role="img" aria-label="The Sun in space with recent flares, the magnetic field line to the crew, and the crew's position">
-      <Canvas dpr={[1, 1.75]} camera={{ position: NARROW ? [1.2, 1.4, 13.5] : [1.0, 0.9, 8.6], fov: NARROW ? 40 : 34, near: 0.05, far: 400 }} gl={{ antialias: true }} onCreated={() => setReady(true)}>
+      <Canvas dpr={[1, 1.75]} camera={{ position: NARROW ? [0.8, 1.3, 12.5] : [0.6, 0.9, 10.5], fov: NARROW ? 40 : 34, near: 0.05, far: 400 }} gl={{ antialias: true }} onCreated={() => setReady(true)}>
         <color attach="background" args={['#03050c']} />
         <Suspense fallback={null}>
           <Sky />
