@@ -365,7 +365,8 @@ function Rig({ focus, cam }: { focus: SystemId | null; cam: View | null }) {
   const ctl = useRef<OrbitControlsImpl>(null);
   const { camera } = useThree();
   const goal = useRef<{ p: THREE.Vector3; t: THREE.Vector3; on: boolean }>({ p: new THREE.Vector3(), t: new THREE.Vector3(), on: false });
-  const focusRef = useRef(false); // zoomed into a part: no idle orbit
+  // after a part is opened the body holds still a moment, then keeps turning slowly (Emile, 16 Nov)
+  const pauseUntil = useRef(0);
   useEffect(() => {
     const v = cam ?? viewFor(focus);
     const t = new THREE.Vector3(...v.target);
@@ -373,7 +374,7 @@ function Rig({ focus, cam }: { focus: SystemId | null; cam: View | null }) {
     if (zoom) spin.a = 0; // a zoomed part is always seen from the front
     const p = new THREE.Vector3(...v.pos).sub(t).applyAxisAngle(UP, spin.a).add(t); // otherwise keep the shared angle
     goal.current = { p, t, on: true };
-    focusRef.current = zoom;
+    if (zoom) pauseUntil.current = performance.now() + 4000;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [focus, cam && cam.pos.join(), cam && cam.target.join()]);
   useEffect(() => {
@@ -400,7 +401,7 @@ function Rig({ focus, cam }: { focus: SystemId | null; cam: View | null }) {
     const c = ctl.current;
     if (!c || goal.current.on) return;
     off.current.copy(camera.position).sub(c.target);
-    if (!idleRef.current || REDUCE || focusRef.current) {
+    if (!idleRef.current || REDUCE || performance.now() < pauseUntil.current) {
       spin.a = Math.atan2(off.current.x, off.current.z); // dragging: the shared angle follows the camera
       return;
     }
@@ -410,7 +411,7 @@ function Rig({ focus, cam }: { focus: SystemId | null; cam: View | null }) {
     c.update();
   });
   // idle: the camera circles the body slowly so every side (and every part in soft red) comes into view;
-  // it stops while someone drags or a system is open, and resumes 4 s after the last touch
+  // it stops while someone drags and resumes 4 s after the last touch or after a part is opened
   const [idle, setIdle] = useState(true);
   useEffect(() => void (idleRef.current = idle), [idle]);
   useEffect(() => {
