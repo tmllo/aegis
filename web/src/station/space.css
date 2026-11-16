@@ -433,3 +433,23 @@ html:has(.st[data-theme='dark']) body {
   object-position: center 70%;
   filter: brightness(0.6) saturate(0.95);
 }
+/* the video sits over the still frame and fades in only once it plays, so a refused autoplay never shows
+   a play button; the browser's own start button and controls are hidden on every engine */
+.space-bg.is-video .space-video {
+  opacity: 0;
+  transition: opacity 600ms ease-out;
+  pointer-events: none;
+}
+.space-bg.is-video .space-video.is-playing {
+  opacity: 1;
+}
+.space-bg .space-video::-webkit-media-controls,
+.space-bg .space-video::-webkit-media-controls-start-playback-button,
+.space-bg .space-video::-webkit-media-controls-overlay-play-button,
+.space-bg .space-video::-webkit-media-controls-panel {
+  display: none !important;
+  -webkit-appearance: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .space-bg.is-video .space-video { transition: none; }
+}

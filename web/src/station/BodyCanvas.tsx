@@ -5,6 +5,9 @@ import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { Canvas, useFrame, useLoader, useThree, type ThreeEvent } from '@react-three/fiber';
 import { ContactShadows, Environment, Html, Lightformer, OrbitControls, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
+import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
+import dracoWasm from 'three/examples/jsm/libs/draco/draco_decoder.wasm?url';
+import dracoWrapper from 'three/examples/jsm/libs/draco/draco_wasm_wrapper.js?url';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import { bodyGeometries, NODE_LAYER, useBody, type Layers } from '../components/body3d/BodyScene';
 import { pickTarget, TARGETS, type TargetId } from '../components/body3d/targets';
@@ -246,15 +249,24 @@ function Label({ s, tint, focus, value, onPick }: { s: SystemId; tint: Status; f
   const g = useRef<THREE.Group>(null);
   const box = useRef<HTMLDivElement>(null);
   const p = useMemo(() => new THREE.Vector3(), []);
-  const { camera, size } = useThree();
+  const { camera } = useThree();
   const inFrame = useRef(true);
   useFrame(() => {
     if (!g.current || !box.current) return;
     g.current.getWorldPosition(p).project(camera);
-    // the label runs about 220 px out to one side of its dot: that side must fit inside the canvas
-    const reach = 220 / (size.width / 2);
-    const end = sp.side === 'r' ? p.x + reach : p.x - reach;
-    const ok = focus === s || (Math.abs(end) < 0.98 && Math.abs(p.x) < 1 && p.y < SAFE.top && p.y > SAFE.bottom);
+    // the label must sit fully on screen (its own width, shorter on phones) and clear of the switch below
+    const btn = box.current.firstElementChild as HTMLElement | null;
+    const r = btn?.getBoundingClientRect();
+    const onScreen = !r || (r.left >= 4 && r.right <= window.innerWidth - 4);
+    // the open system's label always shows: if it runs off one edge, it switches to the other side of its dot
+    if (focus === s && btn && r) {
+      if (r.right > window.innerWidth - 4 && btn.classList.contains('side-r')) btn.classList.replace('side-r', 'side-l');
+      else if (r.left < 4 && btn.classList.contains('side-l')) btn.classList.replace('side-l', 'side-r');
+    }
+    // never on top of the view switch (top of the stage on phones, bottom on desktop)
+    const sw = document.querySelector('.ds-views')?.getBoundingClientRect();
+    const clear = !r || !sw || r.bottom < sw.top - 4 || r.top > sw.bottom + 4 || r.right < sw.left || r.left > sw.right;
+    const ok = (focus === s && clear) || (onScreen && clear && p.y < SAFE.top && p.y > SAFE.bottom);
     if (ok === inFrame.current) return;
     inFrame.current = ok;
     box.current.style.opacity = ok ? (quiet ? '0.6' : '1') : '0';
@@ -284,9 +296,21 @@ function Label({ s, tint, focus, value, onPick }: { s: SystemId; tint: Status; f
  *  lowered onto the skeleton's arms, soles on the floor) with fabric, metal and visor materials and baked AO, no flags
  *  or agency patches (blender-assets/_scripts/suit-emu-nasa). Fetched the first time the Suit view is chosen. */
 const SUIT_URL = import.meta.env.VITE_SUIT_URL ?? '/models/suit.glb';
-useGLTF.preload(SUIT_URL, false); // the page opens on the suit: start the download with the app, not with the canvas
+// The suit is Draco-compressed (5.8 MB -> 2.1 MB). The decoder ships inside the app build (no outside server,
+// so it still works offline): the loader is pointed at the bundled files instead of a decoder folder.
+class LocalDraco extends DRACOLoader {
+  _loadLibrary(url: string, responseType: string) {
+    const file = url === 'draco_decoder.wasm' ? dracoWasm : url === 'draco_wasm_wrapper.js' ? dracoWrapper : url;
+    const loader = new THREE.FileLoader(this.manager);
+    loader.setResponseType(responseType);
+    return new Promise((resolve, reject) => loader.load(file, resolve, undefined, reject));
+  }
+}
+const draco = new LocalDraco();
+const withDraco = (loader: { setDRACOLoader: (d: DRACOLoader) => void }) => loader.setDRACOLoader(draco);
+useGLTF.preload(SUIT_URL, false, true, withDraco as never); // the page opens on the suit: start the download with the app
 function Suit({ on }: { on: boolean }) {
-  const { scene } = useGLTF(SUIT_URL, false) as { scene: THREE.Group };
+  const { scene } = useGLTF(SUIT_URL, false, true, withDraco as never) as unknown as { scene: THREE.Group };
   const { gl, camera } = useThree();
   // upload textures and compile shaders before the first visible frame, then fade in: no hitch in the turn
   const ready = useRef(false);
@@ -423,6 +447,15 @@ function Rig({ focus, cam }: { focus: SystemId | null; cam: View | null }) {
     c.addEventListener('start', start);
     c.addEventListener('end', end);
     return () => (window.clearTimeout(tm), c.removeEventListener('start', start), c.removeEventListener('end', end));
+  }, []);
+  // phones: a vertical swipe on the body scrolls the page; a sideways drag still turns the body
+  useEffect(() => {
+    const el = (ctl.current as unknown as { domElement?: HTMLElement } | null)?.domElement;
+    if (!el || !matchMedia('(pointer: coarse)').matches) return;
+    const set = () => (el.style.touchAction = 'pan-y');
+    set();
+    const t = window.setTimeout(set, 500); // OrbitControls sets 'none' when it connects
+    return () => window.clearTimeout(t);
   }, []);
   return <OrbitControls ref={ctl} target={(cam ?? viewFor(focus)).target} makeDefault enablePan={false} minDistance={0.4} maxDistance={6} enableDamping dampingFactor={0.08} minPolarAngle={0.5} maxPolarAngle={2.4} />;
 }

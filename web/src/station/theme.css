@@ -2129,3 +2129,59 @@ html:has(.st[data-theme='dark']) body {
   outline: 2px solid var(--ink);
   outline-offset: 2px;
 }
+
+/* phones (16 Nov, Emile: "fully mobile optimised") */
+@media (max-width: 1100px) {
+  /* content scrolling up fades out under the logo and Menu instead of running behind them */
+  :root .st.ds::before {
+    content: '';
+    position: fixed;
+    inset: 0 0 auto 0;
+    height: calc(84px + env(safe-area-inset-top));
+    z-index: 35;
+    pointer-events: none;
+    background: linear-gradient(to bottom, rgb(3 5 12 / 0.96) 55%, rgb(3 5 12 / 0));
+  }
+  :root .st.ds[data-theme='light']::before {
+    background: linear-gradient(to bottom, rgb(243 244 247 / 0.96) 55%, rgb(243 244 247 / 0));
+  }
+  /* labels on the body: a small dark chip so the text reads over the white suit */
+  :root .st.ds[data-theme] .st-hs span {
+    padding-top: 0;
+  }
+  :root .st.ds[data-theme] .st-hs b,
+  :root .st.ds[data-theme] .st-hs em {
+    align-self: flex-start;
+    padding: 1px 6px;
+    border-radius: 6px;
+    background: rgb(3 5 12 / 0.72);
+    text-shadow: none;
+  }
+  :root .st.ds[data-theme] .st-hs.side-l b,
+  :root .st.ds[data-theme] .st-hs.side-l em {
+    align-self: flex-end;
+  }
+  :root .st.ds[data-theme] .st-hs b {
+    border-radius: 6px 6px 0 0;
+  }
+  :root .st.ds[data-theme] .st-hs em {
+    border-radius: 0 6px 6px 6px;
+  }
+  :root .st.ds[data-theme] .st-hs.side-l em {
+    border-radius: 6px 0 6px 6px;
+  }
+}
+/* phones: the view switch never wraps a label onto two lines */
+:root .st.ds .ds-views button {
+  white-space: nowrap;
+}
+@media (max-width: 400px) {
+  :root .st.ds .ds-views button {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+  :root .st.ds .ds-views .ds-views-back {
+    padding-right: 8px;
+    margin-right: 2px;
+  }
+}
