@@ -383,3 +383,36 @@ html:has(.st[data-theme='dark']) body {
   }
 }
 
+/* backdrop preview images: a very slow drift so the scene feels alive */
+.space-bg.is-still .space-still {
+  position: absolute;
+  inset: -3%;
+  background-position: center bottom;
+  background-size: cover;
+  animation: space-drift 90s ease-in-out infinite alternate;
+}
+@keyframes space-drift {
+  from { transform: scale(1) translate(0, 0); }
+  to { transform: scale(1.05) translate(-1.5%, 0.5%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .space-bg.is-still .space-still { animation: none; }
+}
+/* Earth and Moon backdrops: darken the lower half so cards and the dock stay readable */
+.space-bg.is-earth::after,
+.space-bg.is-moon::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, rgb(3 5 12 / 0) 35%, rgb(3 5 12 / 0.55) 75%, rgb(3 5 12 / 0.8) 100%);
+  pointer-events: none;
+}
+.space-bg.is-moon .space-still {
+  filter: brightness(0.7);
+}
+/* iPhone: the helmet starts below the view switch */
+@media (max-width: 1100px) {
+  .suit-tt {
+    inset: 60px 0 0;
+  }
+}

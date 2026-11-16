@@ -301,6 +301,7 @@ export default function Built() {
               <li>{ANATOMY_CREDIT}</li>
               <li>Suit: Apollo 11 A7L, Smithsonian National Air and Space Museum 3D scan, CC0 (3d.si.edu); patches and flag painted out</li>
               <li>Night sky: NASA SVS Deep Star Maps 2020, public domain (svs.gsfc.nasa.gov/4851)</li>
+              <li>Background: Earth from orbit rendered in Blender from NASA Blue Marble and Black Marble, public domain</li>
               <li>Studio light for the suit render: Poly Haven studio_small_09 HDRI, CC0</li>
             </ul>
           </section>
