@@ -1023,3 +1023,561 @@ html:has(.st[data-theme='dark']) body {
 :root .st.ds .fr-check.is-on .fr-check-mark.has-icon.is-red {
   color: var(--act);
 }
+
+/* ================================================================ Navy main colour (16 Nov, Emile: #000080)
+   Navy is the one UI colour: primary button, selected items and "needs a look" marks are filled navy with
+   white on top. Text and lines stay neutral (navy text would vanish on the dark page; a light navy tint is
+   used only for thin selection lines in dark). Red only for problems. */
+:root .st.ds[data-theme='dark'],
+:root .st.ds[data-theme='dark'] * {
+  --navy: #000080;
+  --accent: #9a9cff;
+  --accent-fill: #000080;
+  --accent-soft: rgb(154 156 255 / 0.12);
+  --watch: #9a9cff;
+  --amber: #9a9cff;
+  --blue: #9a9cff;
+  --cg-accent: #9a9cff;
+}
+:root .st.ds[data-theme='light'],
+:root .st.ds[data-theme='light'] * {
+  --navy: #000080;
+  --accent: #000080;
+  --accent-fill: #000080;
+  --accent-soft: rgb(0 0 128 / 0.08);
+  --watch: #000080;
+  --amber: #000080;
+  --blue: #000080;
+  --cg-accent: #000080;
+}
+/* primary button: navy fill, white label; a hairline keeps its edge visible on the dark page */
+:root .st.ds .ds-btn.is-primary,
+:root .st.ds[data-theme='dark'] .ds-btn.is-primary {
+  background: var(--navy);
+  color: #fff;
+  border: 1px solid rgb(255 255 255 / 0.16);
+  box-shadow: var(--shadow-1);
+}
+:root .st.ds[data-theme='light'] .ds-btn.is-primary {
+  border-color: transparent;
+}
+:root .st.ds .ds-btn.is-primary:hover:not(:disabled) {
+  background: #0a0a9e;
+}
+/* selected: navy fill, white text, the same everywhere */
+:root .st.ds .fr-dock a.is-on,
+:root .st.ds .fr-seg button.is-on,
+:root .st.ds .ds-scale button.is-on,
+:root .st.ds .ds-chips button.is-on,
+:root .st.ds .mi-q-opts button.is-on {
+  background: var(--navy);
+  border-color: var(--navy);
+  color: #fff;
+  box-shadow: none;
+}
+:root .st.ds .fr-dock a.is-on .fr-dock-i svg:first-child,
+:root .st.ds .ds-scale button.is-on b {
+  color: #fff;
+}
+:root .st.ds .fr-check.is-on .fr-check-mark.has-icon,
+:root .st.ds .fr-check-mark.has-icon.is-amber,
+:root .st.ds .cp-steps li.is-now i {
+  background: var(--navy);
+  border-color: transparent;
+  color: #fff;
+  box-shadow: none;
+}
+:root .st.ds .fr-check-mark.has-icon.is-amber::after {
+  display: none;
+}
+:root .st.ds .fr-check.is-on .fr-check-mark.has-icon.is-red {
+  background: var(--act);
+  color: #fff;
+}
+:root .st.ds .fr-check.is-on .fr-check-mark.is-plain {
+  background: var(--navy);
+  border-color: transparent;
+  color: #fff;
+}
+/* text that used the accent stays readable: neutral ink in dark, navy in light */
+:root .st.ds[data-theme='dark'] .cp-steps li.is-now b,
+:root .st.ds[data-theme='dark'] .fr-loop li.is-now b {
+  color: var(--ink);
+}
+:root .st.ds .mt.is-full .mt-row.is-user {
+  background: var(--navy);
+  color: #fff;
+}
+:root .st.ds[data-theme='light'] .mt.is-full .mt-row.is-user {
+  background: rgb(0 0 128 / 0.08);
+  color: var(--ink);
+}
+/* soft fills that read --accent-soft (chart usual-range band, user bubble) stay light, not solid navy */
+:root .st.ds[data-theme='dark'] .fr-v-band {
+  fill: rgb(154 156 255 / 0.12);
+}
+:root .st.ds[data-theme='light'] .fr-v-band {
+  fill: rgb(0 0 128 / 0.07);
+}
+
+/* ================================================================ Live states lit, boxes clear (16 Nov, Emile)
+   Green comes back for one job only: something is connected / live / delivered. Red stays for problems.
+   Every box loses its fill: hairline outline on the space backdrop. Popovers and toasts keep a fill so
+   text over other content stays readable. */
+:root .st.ds[data-theme='dark'],
+:root .st.ds[data-theme='dark'] * {
+  --ok: #34d17a;
+}
+:root .st.ds[data-theme='light'],
+:root .st.ds[data-theme='light'] * {
+  --ok: #148a3c;
+}
+:root .st.ds .dv li.is-on .dv-t em {
+  color: var(--ok);
+}
+:root .st.ds .dv li.is-on .dv-t em i {
+  background: var(--ok);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ok) 22%, transparent), 0 0 8px color-mix(in srgb, var(--ok) 60%, transparent);
+}
+:root .st.ds .mt-model.is-live {
+  color: var(--ok);
+  opacity: 1;
+}
+:root .st.ds .mt-model.is-live::before {
+  background: var(--ok);
+  border-radius: 50%;
+  box-shadow: 0 0 6px color-mix(in srgb, var(--ok) 70%, transparent);
+}
+:root .st.ds .es-out small.is-done {
+  color: var(--ok);
+}
+
+/* transparent boxes */
+:root .st.ds .fr-vital,
+:root .st.ds button.fr-vital:hover,
+:root .st.ds .fr-vital.is-on,
+:root .st.ds .mt.is-full,
+:root .st.ds .cp,
+:root .st.ds .es-compose,
+:root .st.ds .ds-btn.is-secondary,
+:root .st.ds .fr-dock,
+:root .st.ds .fr-seg,
+:root .st.ds .fr-loop,
+:root .st.ds .fr-check.is-on,
+:root .st.ds .ds-scale button,
+:root .st.ds .ds-chips button,
+:root .st.ds .ds-step,
+:root .st.ds .mi-q-opts button,
+:root .st.ds .mt-in,
+:root .st.ds .mt.is-full .mt-in,
+:root .st.ds .ds-text,
+:root .st.ds .fr-soap textarea,
+:root .st.ds .st-hs,
+:root .st.ds .st-hs.is-dot {
+  background: transparent;
+  box-shadow: none;
+}
+:root .st.ds .fr-vital,
+:root .st.ds .mt.is-full,
+:root .st.ds .cp,
+:root .st.ds .fr-dock,
+:root .st.ds .fr-seg,
+:root .st.ds .ds-btn.is-secondary {
+  border: 1px solid var(--line-2);
+}
+:root .st.ds .fr-check.is-on {
+  box-shadow: inset 0 0 0 1px var(--line-2);
+}
+:root .st.ds .fr-vital.is-on {
+  border-color: var(--accent);
+}
+:root .st.ds .ds-btn.is-secondary:hover:not(:disabled),
+:root .st.ds .fr-dock a:hover,
+:root .st.ds button.fr-check:hover,
+:root .st.ds .ds-scale button:hover,
+:root .st.ds .ds-chips button:hover,
+:root .st.ds .mi-q-opts button:hover {
+  background: rgb(255 255 255 / 0.06);
+}
+:root .st.ds[data-theme='light'] :is(.ds-btn.is-secondary, .fr-dock a, button.fr-check, .ds-scale button, .ds-chips button, .mi-q-opts button):hover:not(:disabled) {
+  background: rgb(22 26 43 / 0.05);
+}
+/* icon tiles and chips: outline only */
+:root .st.ds .fr-v-icon,
+:root .st.ds .fr-check-mark.has-icon,
+:root .st.ds .es-attach li {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--line-2);
+}
+:root .st.ds .fr-check-mark.has-icon.is-red,
+:root .st.ds .fr-v-icon.is-red {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--act) 60%, transparent);
+}
+/* body labels float on the scene without a box: a soft shadow under the text keeps them readable */
+:root .st.ds .st-hs {
+  border: 0 !important;
+  text-shadow: 0 1px 6px rgb(0 0 0 / 0.85);
+}
+:root .st.ds .st-hs.is-dot {
+  box-shadow: inset 0 0 0 1px var(--line-2);
+}
+:root .st.ds .st-hs.is-on {
+  box-shadow: none;
+}
+:root .st.ds .st-hs.is-on b {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+/* the chat card's own stylesheet (mind.css) loads after this file: win on specificity, not order */
+:root .st.ds[data-theme] .mt.is-full,
+:root .st.ds[data-theme] .mt.is-full .mt-in,
+:root .st.ds[data-theme] .mt-sugg button {
+  background: transparent;
+  box-shadow: none;
+}
+:root .st.ds[data-theme] .mt.is-full {
+  border: 1px solid var(--line-2);
+}
+
+/* ================================================================ Blue only in small parts (16 Nov, Emile)
+   Selected = a light neutral fill and white text; the colour is a thin marker, a ring or an icon, never a
+   filled block. Red buttons stay for urgent actions. */
+:root .st.ds[data-theme='dark'] { --sel: rgb(255 255 255 / 0.09); }
+:root .st.ds[data-theme='light'] { --sel: rgb(22 26 43 / 0.06); }
+:root .st.ds .fr-dock a.is-on,
+:root .st.ds .fr-seg button.is-on,
+:root .st.ds .ds-scale button.is-on,
+:root .st.ds .ds-chips button.is-on,
+:root .st.ds .mi-q-opts button.is-on {
+  background: var(--sel);
+  border-color: var(--line-2);
+  color: var(--ink);
+  box-shadow: none;
+}
+:root .st.ds .fr-dock a.is-on .fr-dock-i svg:first-child,
+:root .st.ds .ds-scale button.is-on b {
+  color: var(--ink);
+}
+/* the marker: a short blue line under the selected tab / segment */
+:root .st.ds .fr-dock a.is-on,
+:root .st.ds .fr-seg button.is-on {
+  position: relative;
+}
+:root .st.ds .fr-dock a.is-on::after,
+:root .st.ds .fr-seg button.is-on::after {
+  content: '';
+  display: block;
+  position: absolute;
+  left: 50%;
+  bottom: 5px;
+  width: 16px;
+  height: 2px;
+  margin-left: -8px;
+  border-radius: 2px;
+  background: var(--accent);
+}
+:root .st.ds .ds-scale button.is-on,
+:root .st.ds .ds-chips button.is-on,
+:root .st.ds .mi-q-opts button.is-on {
+  border-color: var(--accent);
+}
+/* rows: selected and needs-a-look are a thin blue ring and a blue icon, no fill */
+:root .st.ds .fr-check.is-on .fr-check-mark.has-icon,
+:root .st.ds .fr-check-mark.has-icon.is-amber {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--accent);
+  color: var(--accent);
+}
+:root .st.ds .fr-check.is-on .fr-check-mark.has-icon.is-red {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--act);
+  color: var(--act);
+}
+:root .st.ds .fr-check.is-on .fr-check-mark.is-plain,
+:root .st.ds .cp-steps li.is-now i {
+  background: transparent;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+}
+:root .st.ds .mt.is-full .mt-row.is-user,
+:root .st.ds[data-theme] .mt.is-full .mt-row.is-user {
+  background: var(--sel);
+  color: var(--ink);
+}
+
+/* ================================================================ Vibrant, and only where needed (16 Nov, Emile)
+   Three saturated colours, each with one job: blue = selected / needs a look / the one primary action,
+   red = act now / error, green = live / connected / delivered. Everything else is neutral. */
+:root .st.ds[data-theme='dark'],
+:root .st.ds[data-theme='dark'] * {
+  --accent: #5b73ff;
+  --watch: #5b73ff;
+  --amber: #5b73ff;
+  --blue: #5b73ff;
+  --cg-accent: #5b73ff;
+  --adv: #5b73ff;
+  --act: #ff2e45;
+  --red: #ff2e45;
+  --ok: #1ff07a;
+  --navy: #3048ff;
+}
+:root .st.ds[data-theme='light'],
+:root .st.ds[data-theme='light'] * {
+  --accent: #2438ff;
+  --watch: #2438ff;
+  --amber: #2438ff;
+  --blue: #2438ff;
+  --cg-accent: #2438ff;
+  --adv: #2438ff;
+  --act: #f0122d;
+  --red: #f0122d;
+  --ok: #00a650;
+  --navy: #2438ff;
+}
+:root .st.ds .ds-btn.is-primary,
+:root .st.ds[data-theme] .ds-btn.is-primary {
+  background: var(--navy);
+  border-color: transparent;
+  color: #fff;
+}
+:root .st.ds .ds-btn.is-primary:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--navy) 85%, #fff);
+}
+:root .st.ds .ds-btn.is-danger,
+:root .st.ds[data-theme] .ds-btn.is-danger {
+  background: var(--act);
+  color: #fff;
+}
+
+/* ================================================================ 28-day charts (16 Nov, Emile: "properly animated")
+   Usual range = two hairlines with a whisper of fill. Ordinary days are quiet neutral bars, today is white,
+   flagged days carry the status colour. Bars rise from the baseline left to right once, on every metric. */
+:root .st.ds .fr-v-chart {
+  overflow: visible;
+}
+:root .st.ds .fr-v-usual rect {
+  fill: var(--ink);
+  opacity: 0.045;
+}
+:root .st.ds .fr-v-usual line {
+  stroke: var(--ink-3);
+  stroke-width: 1;
+  stroke-dasharray: 2 3;
+  vector-effect: non-scaling-stroke;
+  opacity: 0.55;
+}
+:root .st.ds .fr-v-band {
+  display: none;
+}
+:root .st.ds .fr-v-bar {
+  fill: var(--ink-3);
+  opacity: 0.42;
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: fr-bar-rise 640ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  animation-delay: calc(var(--i, 0) * 16ms);
+  transition: opacity 160ms ease-out, fill 160ms ease-out;
+}
+:root .st.ds .fr-v-bar.is-today {
+  fill: var(--ink);
+  opacity: 1;
+}
+:root .st.ds .fr-v-bar.is-amber {
+  fill: var(--watch);
+  opacity: 1;
+}
+:root .st.ds .fr-v-bar.is-red {
+  fill: var(--act);
+  opacity: 1;
+}
+:root .st.ds .fr-v-miss {
+  fill: var(--ink-3);
+  opacity: 0.4;
+}
+:root .st.ds .fr-vital:hover .fr-v-bar:not(.is-amber):not(.is-red):not(.is-today) {
+  opacity: 0.62;
+}
+@keyframes fr-bar-rise {
+  from {
+    transform: scaleY(0);
+    opacity: 0;
+  }
+  40% {
+    opacity: 1;
+  }
+}
+/* single-value metrics (range dot) slide to their place */
+:root .st.ds .fr-v-range-dot {
+  animation: fr-dot-in 700ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+@keyframes fr-dot-in {
+  from {
+    left: 0;
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  :root .st.ds .fr-v-bar,
+  :root .st.ds .fr-v-range-dot {
+    animation: none;
+  }
+}
+
+/* ================================================================ Glowing navy (16 Nov, Emile: "bring back the navy
+   blue I chose, it should just glow, like the red"). Navy #000080 is the fill; a bright navy halo makes it
+   read on the dark page. Text in the navy family uses a lit tint of the same hue so it stays readable. */
+:root .st.ds[data-theme='dark'],
+:root .st.ds[data-theme='dark'] * {
+  --navy: #000080;
+  --navy-lit: #3a3aff;
+  --accent: #8a8aff;
+  --watch: #8a8aff;
+  --amber: #8a8aff;
+  --blue: #8a8aff;
+  --cg-accent: #8a8aff;
+  --adv: #8a8aff;
+  --glow-navy: 0 0 0 1px #2a2aff, 0 0 14px rgb(58 58 255 / 0.75), 0 0 32px rgb(0 0 128 / 0.9);
+  --glow-red: 0 0 0 1px #ff4a5e, 0 0 14px rgb(255 46 69 / 0.55), 0 0 32px rgb(255 46 69 / 0.25);
+}
+:root .st.ds[data-theme='light'],
+:root .st.ds[data-theme='light'] * {
+  --navy: #000080;
+  --navy-lit: #000080;
+  --accent: #000080;
+  --watch: #000080;
+  --amber: #000080;
+  --blue: #000080;
+  --cg-accent: #000080;
+  --adv: #000080;
+  --glow-navy: 0 0 0 1px #000080, 0 4px 16px rgb(0 0 128 / 0.35);
+  --glow-red: 0 4px 16px rgb(240 18 45 / 0.35);
+}
+/* primary: navy with its glow; danger: red with the same kind of glow */
+:root .st.ds .ds-btn.is-primary,
+:root .st.ds[data-theme] .ds-btn.is-primary {
+  background: var(--navy);
+  border-color: transparent;
+  color: #fff;
+  box-shadow: var(--glow-navy);
+}
+:root .st.ds .ds-btn.is-primary:hover:not(:disabled) {
+  background: #0000a0;
+}
+:root .st.ds .ds-btn.is-danger,
+:root .st.ds[data-theme] .ds-btn.is-danger {
+  box-shadow: var(--glow-red);
+}
+/* small markers glow navy */
+:root .st.ds .fr-dock a.is-on::after,
+:root .st.ds .fr-seg button.is-on::after {
+  background: var(--navy-lit);
+  box-shadow: 0 0 8px var(--navy-lit), 0 0 2px #fff;
+}
+:root .st.ds .fr-check.is-on .fr-check-mark.has-icon,
+:root .st.ds .fr-check-mark.has-icon.is-amber,
+:root .st.ds .cp-steps li.is-now i,
+:root .st.ds .fr-check.is-on .fr-check-mark.is-plain {
+  background: var(--navy);
+  border-color: transparent;
+  color: #fff;
+  box-shadow: var(--glow-navy);
+}
+:root .st.ds .fr-check.is-on .fr-check-mark.has-icon.is-red,
+:root .st.ds .fr-check-mark.has-icon.is-red {
+  box-shadow: inset 0 0 0 1px var(--act), 0 0 12px rgb(255 46 69 / 0.4);
+}
+:root .st.ds .ds-scale button.is-on,
+:root .st.ds .ds-chips button.is-on,
+:root .st.ds .mi-q-opts button.is-on {
+  border-color: var(--navy-lit);
+  box-shadow: 0 0 12px rgb(58 58 255 / 0.45);
+}
+:root .st.ds .fr-v-bar.is-amber {
+  fill: var(--navy-lit);
+}
+
+/* ================================================================ True navy only (16 Nov, Emile: "wrong blue")
+   Every blue shape is #000080 itself; it shows on the dark page through a soft navy glow, not by turning
+   lighter. Blue text would be unreadable on dark, so text that used the accent goes back to ink. */
+:root .st.ds[data-theme='dark'],
+:root .st.ds[data-theme='dark'] * {
+  --navy: #000080;
+  --navy-lit: #000080;
+  --accent: #000080;
+  --watch: #000080;
+  --amber: #000080;
+  --blue: #000080;
+  --cg-accent: #000080;
+  --adv: #000080;
+  --navy-halo: 0 0 6px 1px rgb(0 0 200 / 0.9), 0 0 16px 2px rgb(0 0 160 / 0.7);
+  --glow-navy: 0 0 0 1px rgb(40 40 200 / 0.9), 0 0 14px 2px rgb(0 0 200 / 0.75), 0 0 30px 4px rgb(0 0 128 / 0.8);
+}
+:root .st.ds .fr-dock a.is-on::after,
+:root .st.ds .fr-seg button.is-on::after {
+  background: var(--navy);
+  box-shadow: var(--navy-halo);
+  height: 3px;
+}
+:root .st.ds[data-theme='dark'] :is(.fr-check-mark.has-icon.is-amber, .fr-check.is-on .fr-check-mark.has-icon, .cp-steps li.is-now i, .fr-check.is-on .fr-check-mark.is-plain) {
+  background: var(--navy);
+  color: #fff;
+  box-shadow: var(--glow-navy);
+}
+:root .st.ds[data-theme='dark'] :is(.ds-scale button.is-on, .ds-chips button.is-on, .mi-q-opts button.is-on) {
+  border-color: rgb(40 40 200 / 0.9);
+  box-shadow: var(--navy-halo);
+}
+/* small navy status shapes (dock badge, row shapes) glow so they stay visible */
+:root .st.ds[data-theme='dark'] svg [fill='var(--watch)'],
+:root .st.ds[data-theme='dark'] .is-amber > svg,
+:root .st.ds[data-theme='dark'] .fr-dock-i > svg + svg {
+  filter: drop-shadow(0 0 3px rgb(0 0 220)) drop-shadow(0 0 6px rgb(0 0 160));
+}
+:root .st.ds[data-theme='dark'] .fr-v-bar.is-amber {
+  fill: var(--navy);
+  opacity: 1;
+  filter: drop-shadow(0 0 2px rgb(0 0 220));
+}
+:root .st.ds[data-theme='dark'] :focus-visible {
+  outline-color: #fff;
+}
+/* navy text is unreadable on dark: words in "needs a look" items read in ink; navy stays on shapes */
+:root .st.ds[data-theme='dark'] .is-amber :is(span, b, p, em, small, strong),
+:root .st.ds[data-theme='dark'] .is-amber.cb-hero-v,
+:root .st.ds[data-theme='dark'] .cb-hero.is-amber .cb-hero-v,
+:root .st.ds[data-theme='dark'] .fr-bar.is-amber .fr-bar-v,
+:root .st.ds[data-theme='dark'] .fr-vital.is-amber .fr-v-t b,
+:root .st.ds[data-theme='dark'] .bt-value dt {
+  color: var(--ink);
+}
+/* selection: neutral fill only, no blue line */
+:root .st.ds .fr-dock a.is-on::after,
+:root .st.ds .fr-seg button.is-on::after {
+  display: none;
+}
+
+/* the x in e^x sends a short navy signal every 5 s */
+:root .st.ds .ds-brand sup {
+  animation: ex-signal 5s ease-out infinite;
+}
+@keyframes ex-signal {
+  0%, 78%, 100% {
+    text-shadow: none;
+  }
+  84% {
+    text-shadow: 0 0 4px #0000ff, 0 0 10px #0000e0, 0 0 22px #000080, 0 0 36px #000080;
+  }
+  92% {
+    text-shadow: 0 0 2px #0000c0, 0 0 8px #000080;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  :root .st.ds .ds-brand sup {
+    animation: none;
+    text-shadow: 0 0 8px #000080;
+  }
+}
+:root .st.ds[data-theme='dark'] .es .es-mark {
+  color: var(--ink-2);
+}

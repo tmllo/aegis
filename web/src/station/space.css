@@ -135,3 +135,82 @@ html:has(.st[data-theme='dark']) body {
 :root .st.ds .ck .ck-ghost {
   color: var(--ink);
 }
+
+/* ================================================================ metric trend (frame.tsx Trend) */
+.fr-v-trend {
+  position: relative;
+  display: block;
+  height: 56px;
+}
+.fr-v-trend .fr-v-chart {
+  display: block;
+  width: 100%;
+  height: 56px;
+  overflow: visible;
+  cursor: crosshair;
+}
+.fr-v-band {
+  fill: var(--ink);
+  opacity: 0.1;
+}
+.fr-v-area-top {
+  stop-color: var(--ink);
+  stop-opacity: 0.16;
+}
+.fr-v-area-bot {
+  stop-color: var(--ink);
+  stop-opacity: 0;
+}
+.fr-v-line {
+  fill: none;
+  stroke: var(--ink-2);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.fr-v-dot {
+  stroke: none;
+}
+.fr-v-dot.is-amber {
+  fill: var(--watch);
+}
+.fr-v-dot.is-red {
+  fill: var(--act);
+}
+.fr-v-hair {
+  stroke: var(--ink-3);
+  stroke-width: 1;
+  stroke-dasharray: 2 3;
+}
+.fr-v-today {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  margin: -4.5px 0 0 -4.5px;
+  border-radius: 50%;
+  background: var(--ink);
+  box-shadow: 0 0 0 3px rgb(255 255 255 / 0.12);
+  pointer-events: none;
+}
+.fr-v-today.is-amber {
+  background: var(--watch);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--watch) 25%, transparent);
+}
+.fr-v-today.is-red {
+  background: var(--act);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--act) 25%, transparent);
+}
+.fr-v-tip {
+  position: absolute;
+  top: -22px;
+  transform: translateX(-50%);
+  padding: 2px 8px;
+  white-space: nowrap;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  background: var(--card-2);
+  border: 1px solid var(--line-2);
+  border-radius: 6px;
+  pointer-events: none;
+}

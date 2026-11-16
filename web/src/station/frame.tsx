@@ -2,7 +2,7 @@
 //   title (centre top) · checklist (left) · object (centre) · vital cards and bars (right)
 //   footer: page controls (left) · icon dock (centre) · main action (right)
 // Status is always shape + word + colour.
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { NavLink } from 'react-router-dom';
 import type { Status } from '../data/types';
 import { Shape } from './ds';
@@ -152,13 +152,11 @@ export const DOCK_ICON = {
   // a space habitat: pressurised module with a porthole, a truss, and two solar wings
   cabin: (
     <svg viewBox="0 0 24 24" {...I}>
-      <rect x="8.5" y="6" width="7" height="12" rx="3.5" />
-      <circle cx="12" cy="10" r="1.4" />
-      <path d="M8.5 13.5h7M5.5 12h3M15.5 12h3" />
-      <rect x="1.5" y="7" width="4" height="10" />
-      <path d="M1.5 12h4M3.5 7v10" />
-      <rect x="18.5" y="7" width="4" height="10" />
-      <path d="M18.5 12h4M20.5 7v10" />
+      {/* satellite: body on the diagonal, two solar panels, antenna and signal arc */}
+      <path d="m8.5 12 3.5 3.5 4.5-4.5L13 7.5Z" />
+      <path d="m10.25 9.75-3.5-3.5L4 9l3.5 3.5M15.5 14.5l3.5 3.5-2.75 2.75-3.5-3.5" />
+      <path d="m16.5 7.5 2.5-2.5" />
+      <path d="M4 15.5a4.5 4.5 0 0 0 4.5 4.5M4 19.5h.01" />
     </svg>
   ),
   environment: (
@@ -250,27 +248,101 @@ export interface VitalProps {
   on?: boolean;
 }
 
-export function Vital({ icon, label, value, unit, s = 'green', history, lo, hi, range, note, onClick, on }: VitalProps) {
+/** 28-day trend (16 Nov): a smooth line with a soft area, the person's usual range as a quiet band, dots
+ *  only on days outside it, today's value as a status-coloured marker, and a hover readout per day. */
+function Trend({ history, lo, hi, s, unit }: { history: { v: number | null; flag: Status | null }[]; lo?: number | null; hi?: number | null; s: Status; unit: string }) {
+  const [hov, setHov] = useState<number | null>(null);
   const W = 300;
-  const H = 40;
+  const H = 56;
+  const T = 6;
+  const B = 6;
+  const vals = history.map((h) => h.v).filter((x): x is number => x != null);
+  let min = Math.min(...vals, lo ?? Infinity);
+  let max = Math.max(...vals, hi ?? -Infinity);
+  const pad = (max - min || 1) * 0.15;
+  min -= pad;
+  max += pad;
+  const n = history.length;
+  const x = (i: number) => (n === 1 ? W / 2 : (i / (n - 1)) * (W - 8) + 4);
+  const y = (v: number) => T + (1 - (v - min) / (max - min)) * (H - T - B);
+  // smooth path through the points (Catmull-Rom as cubic Beziers), broken at missing days
+  const segs: { i: number; v: number }[][] = [];
+  history.forEach((h, i) => {
+    if (h.v == null) return void (segs.length && segs[segs.length - 1].length && segs.push([]));
+    if (!segs.length) segs.push([]);
+    segs[segs.length - 1].push({ i, v: h.v });
+  });
+  const pathOf = (pts: { i: number; v: number }[]) =>
+    pts
+      .map((p, k) => {
+        if (k === 0) return `M${x(p.i).toFixed(1)},${y(p.v).toFixed(1)}`;
+        const p0 = pts[k - 2] ?? pts[k - 1];
+        const p1 = pts[k - 1];
+        const p3 = pts[k + 1] ?? p;
+        const c1x = x(p1.i) + (x(p.i) - x(p0.i)) / 6;
+        const c1y = y(p1.v) + (y(p.v) - y(p0.v)) / 6;
+        const c2x = x(p.i) - (x(p3.i) - x(p1.i)) / 6;
+        const c2y = y(p.v) - (y(p3.v) - y(p1.v)) / 6;
+        return `C${c1x.toFixed(1)},${c1y.toFixed(1)} ${c2x.toFixed(1)},${c2y.toFixed(1)} ${x(p.i).toFixed(1)},${y(p.v).toFixed(1)}`;
+      })
+      .join(' ');
+  const last = [...history.keys()].reverse().find((i) => history[i].v != null)!;
+  const h = hov != null ? history[hov] : null;
+  const days = hov != null ? n - 1 - hov : 0;
+  const fmt = (v: number) => {
+    if (unit === 'h') {
+      const m = Math.round(v * 60);
+      return `${Math.floor(m / 60)}:${String(m % 60).padStart(2, '0')}`;
+    }
+    return Math.abs(v) < 10 && v % 1 ? v.toFixed(1) : String(Math.round(v));
+  };
+  return (
+    <span className="fr-v-trend">
+      <svg
+        className="fr-v-chart"
+        viewBox={`0 0 ${W} ${H}`}
+        preserveAspectRatio="none"
+        aria-hidden
+        onPointerMove={(e) => {
+          const r = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
+          const f = (e.clientX - r.left) / r.width;
+          setHov(Math.max(0, Math.min(n - 1, Math.round(f * (n - 1)))));
+        }}
+        onPointerLeave={() => setHov(null)}
+      >
+        <defs>
+          <linearGradient id="frvArea" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0" className="fr-v-area-top" />
+            <stop offset="1" className="fr-v-area-bot" />
+          </linearGradient>
+        </defs>
+        {lo != null && hi != null && <rect className="fr-v-band" x="0" width={W} y={y(hi)} height={Math.max(1, y(lo) - y(hi))} />}
+        {segs
+          .filter((g) => g.length > 1)
+          .map((g, k) => (
+            <path key={`a${k}`} className="fr-v-area" d={`${pathOf(g)} L${x(g[g.length - 1].i).toFixed(1)},${H} L${x(g[0].i).toFixed(1)},${H} Z`} fill="url(#frvArea)" />
+          ))}
+        {segs.map((g, k) => (g.length > 1 ? <path key={`l${k}`} className="fr-v-line" d={pathOf(g)} vectorEffect="non-scaling-stroke" /> : null))}
+        {history.map((p, i) =>
+          p.v != null && p.flag && p.flag !== 'green' && i !== last ? <circle key={i} className={`fr-v-dot is-${p.flag}`} cx={x(i)} cy={y(p.v)} r="2.2" vectorEffect="non-scaling-stroke" /> : null,
+        )}
+        {hov != null && <line className="fr-v-hair" x1={x(hov)} x2={x(hov)} y1="0" y2={H} vectorEffect="non-scaling-stroke" />}
+      </svg>
+      {/* round markers drawn in HTML so they stay round on the stretched chart */}
+      <i className={`fr-v-today is-${s}`} style={{ left: `${(x(last) / W) * 100}%`, top: `${(y(history[last].v!) / H) * 100}%` }} />
+      {h && h.v != null && (
+        <span className="fr-v-tip" style={{ left: `${(x(hov!) / W) * 100}%` }}>
+          {fmt(h.v)} {unit} · {days === 0 ? 'today' : `${days} d ago`}
+        </span>
+      )}
+    </span>
+  );
+}
+
+export function Vital({ icon, label, value, unit, s = 'green', history, lo, hi, range, note, onClick, on }: VitalProps) {
   let chart: ReactNode = null;
   if (history && history.some((h) => h.v != null)) {
-    const vals = history.map((h) => h.v).filter((x): x is number => x != null);
-    let min = Math.min(...vals, lo ?? Infinity);
-    let max = Math.max(...vals, hi ?? -Infinity);
-    const pad = (max - min || 1) * 0.12;
-    min -= pad;
-    max += pad;
-    const y = (x: number) => H - ((x - min) / (max - min)) * H;
-    const bw = W / history.length;
-    chart = (
-      <svg className="fr-v-chart" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" aria-hidden>
-        {lo != null && hi != null && <rect x="0" y={y(hi)} width={W} height={Math.max(1, y(lo) - y(hi))} className="fr-v-band" />}
-        {history.map((h, i) =>
-          h.v == null ? null : <rect key={i} x={i * bw + bw * 0.22} width={bw * 0.56} y={y(h.v)} height={Math.max(2, H - y(h.v))} className={`fr-v-bar${h.flag ? ` is-${h.flag}` : ''}${i === history.length - 1 ? ' is-today' : ''}`} />,
-        )}
-      </svg>
-    );
+    chart = <Trend history={history} lo={lo} hi={hi} s={s} unit={typeof unit === 'string' ? unit : ''} />;
   } else if (range && range.v != null) {
     const f = (x: number) => (Math.max(range.min, Math.min(range.max, x)) - range.min) / (range.max - range.min || 1);
     chart = (
