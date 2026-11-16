@@ -1,7 +1,7 @@
 // Body: one astronaut. Left: the five body systems (tap to open). Centre: the 3D body.
 // Right: vital cards (value, 28 days of bars, flagged days in colour, usual range as a band);
 // with a system open, its readings plus why it matters, what to do and how to measure.
-import { lazy, Suspense, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import type { BodyView } from '../BodyCanvas';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { alarmActive } from '../../core/alarm';
@@ -12,9 +12,9 @@ import { Check, Page, SideCap } from '../frame';
 import { RowVital } from '../vitals';
 import { Devices } from '../devices';
 import { useStation, type SystemId } from '../state';
+import { SYSTEM_VIEWS } from '../bodyViews';
 import { cue } from '../ui';
 import '../suit.css';
-import SuitTurntable from '../SuitTurntable';
 
 const BodyCanvas = lazy(() => import('../BodyCanvas'));
 // kept here (not imported from BodyCanvas) so the 3D code stays in its own lazy chunk
@@ -47,6 +47,22 @@ export default function Body() {
   const isShared = shared[v?.m.id ?? ''] !== false;
   const sel = qs.get('s') as SystemId | null;
   const [view, setView] = useState<BodyView>('suit'); // Emile: the page opens on the suit
+  // with a system open the switch offers that system's own views (bodyViews.ts); the first one opens by default
+  const [sub, setSub] = useState<{ s: SystemId; id: string } | null>(null);
+  const subViews = sel ? SYSTEM_VIEWS[sel] : null;
+  const current = subViews ? (subViews.find((x) => sub?.s === sel && x.id === sub.id) ?? subViews[0]) : null;
+  const shown: BodyView = current ? current.layer : view;
+  useEffect(() => {
+    if (!sel) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      const n = new URLSearchParams(window.location.search);
+      n.delete('s');
+      setQs(n, { replace: true });
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [sel, setQs]);
   if (!data || !v) return null;
   if (medic && !isShared)
     return <Page title={roleOf(v.m)} sub="Not shared with the medic. Only check-in done or not is visible." footRight={<Btn onClick={() => nav('/')}>Back to crew</Btn>} />;
@@ -80,26 +96,46 @@ export default function Body() {
       }
       object={
         <div className="ds-body">
-          {/* the suit is a photoreal Cycles turntable rendered through this same 3D camera, so it matches the
-              skeleton in size and turn; the 3D body stays mounted underneath (paused) for instant switching */}
-          <div className={`ds-3d${view === 'suit' ? ' is-hidden' : ''}`}>
+          {/* the suit is a live 3D EMU in the same scene, camera and spin as the skeleton, so size and turn always match */}
+          <div className="ds-3d">
             <Suspense fallback={null}>
-              <BodyCanvas tint={v.status} focus={sel} values={Object.fromEntries(Object.entries(values).filter(([k]) => k !== 'blood' || v.sys.blood !== 'nominal')) as typeof values} onPick={(s) => pick(s)} storm={alarmOn} view={view === 'suit' ? 'body' : view} paused={view === 'suit'} />
+              <BodyCanvas tint={v.status} focus={sel} values={Object.fromEntries(Object.entries(values).filter(([k]) => k !== 'blood' || v.sys.blood !== 'nominal')) as typeof values} onPick={(s) => pick(s)} storm={alarmOn} view={shown} cam={current?.cam ?? null} />
             </Suspense>
           </div>
-          {view === 'suit' && <SuitTurntable />}
-          <div className="fr-seg is-sm ds-views" role="tablist" aria-label="Body view">
-            {VIEWS.map(([k, name]) => (
-              <button key={k} type="button" role="tab" className={view === k ? 'is-on' : ''} aria-selected={view === k} onClick={() => (cue('tick', sound), setView(k))}>
-                {name}
-              </button>
-            ))}
+          <div className={`fr-seg is-sm ds-views${subViews ? ' is-deep' : ''}`} role="tablist" aria-label="Body view">
+            {subViews && current ? (
+              <>
+                <button type="button" className="ds-views-back" onClick={() => pick(null)} aria-label="Back to the whole body (Esc)">
+                  <svg viewBox="0 0 20 20" width="14" height="14" aria-hidden>
+                    <path d="M12.5 4.5 7 10l5.5 5.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  Body
+                </button>
+                {subViews.map((x) => (
+                  <button key={x.id} type="button" role="tab" className={current.id === x.id ? 'is-on' : ''} aria-selected={current.id === x.id} onClick={() => (cue('tick', sound), setSub({ s: sel!, id: x.id }))}>
+                    {x.name}
+                  </button>
+                ))}
+              </>
+            ) : (
+              VIEWS.map(([k, name]) => (
+                <button key={k} type="button" role="tab" className={view === k ? 'is-on' : ''} aria-selected={view === k} onClick={() => (cue('tick', sound), setView(k))}>
+                  {name}
+                </button>
+              ))
+            )}
           </div>
         </div>
       }
       right={
         <>
-          <SideCap>{sel ? SYSTEM_BY_ID[sel].name : 'Last 28 days'}</SideCap>
+          {sel ? (
+            <div className="ds-deep-head">
+              <h2>{SYSTEM_BY_ID[sel].name}</h2>
+            </div>
+          ) : (
+            <SideCap>Last 28 days</SideCap>
+          )}
           {(sel ? SYSTEM_BY_ID[sel].metrics.filter((k) => k !== 'bp_dia' && k !== 'dose_mSv_cum' && k !== 'bone_loss_pct' && v.rows[k].value != null) : [...MAIN, ...ON_FLAG.filter((k) => v.rows[k].cw !== 'nominal')]).map((k) => (
             <RowVital key={k} v={v} r={v.rows[k]} on={!!sel} onClick={() => pick(metricSystem(k))} />
           ))}

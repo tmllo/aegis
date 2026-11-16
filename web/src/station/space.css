@@ -246,7 +246,7 @@ html:has(.st[data-theme='dark']) body {
 
 /* ================================================================ Navy only (Emile, 16 Nov)
    Navy #000080 stays the one UI colour (selected items, main button, 'needs a look' marks, from the
-   earlier palette pass). Every light blue from older passes (sky #8fb0ff, indigo #9fb0ff, cyan, #2563eb)
+   earlier palette pass). Every light blue from older passes (sky #8fb0ff, indigo #9fb0ff, cyan, #000080)
    now resolves to navy. Status colours are left as the navy palette defines them. */
 .st.ds[data-theme],
 .st.ds[data-theme] * {
@@ -306,10 +306,10 @@ html:has(.st[data-theme='dark']) body {
    as a small mark on the black sky is lifted to a royal navy that reads at 5:1 */
 .st.ds[data-theme='dark'],
 .st.ds[data-theme='dark'] * {
-  --watch: #6f6fff !important;
-  --adv: #6f6fff !important;
-  --navy-lit: #6f6fff !important;
-  --amber: #6f6fff !important;
+  --watch: #f4f6fb !important;
+  --adv: #f4f6fb !important;
+  --navy-lit: #f4f6fb !important;
+  --amber: #f4f6fb !important;
 }
 /* side columns: content can scroll fully above the bottom fade, so the last card shows its edge */
 :root .st.ds .fr-right,

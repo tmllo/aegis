@@ -14,7 +14,7 @@
   --ink-2: #474e66;
   --ink-3: #636a82;
   --accent: #000080;
-  --accent-soft: rgb(37 99 235 / 0.1);
+  --accent-soft: rgb(0 0 128 / 0.08);
   --calm: #15803d;
   --watch: #b45309;
   --act: #d92d20;
@@ -149,10 +149,10 @@ html:has(.st[data-theme='dark']) body {
   background: var(--accent-fill);
   color: #fff;
   border-color: transparent;
-  box-shadow: 0 1px 2px rgb(37 99 235 / 0.35), inset 0 1px 0 rgb(255 255 255 / 0.18);
+  box-shadow: 0 1px 2px rgb(0 0 128 / 0.35), inset 0 1px 0 rgb(255 255 255 / 0.18);
 }
 :root .st.ds .ds-btn.is-primary:hover:not(:disabled) {
-  background: #1d4fd7;
+  background: #00006a;
 }
 :root .st.ds .ds-btn.is-secondary {
   background: var(--card);
@@ -912,14 +912,14 @@ html:has(.st[data-theme='dark']) body {
 }
 :root .st.ds[data-theme='light'],
 :root .st.ds[data-theme='light'] * {
-  --accent: #2557e8;
-  --accent-fill: #2557e8;
-  --accent-soft: rgb(37 87 232 / 0.1);
-  --cg-accent: #2557e8;
-  --blue: #2557e8;
-  --watch: #2557e8;
-  --amber: #2557e8;
-  --adv: #2557e8;
+  --accent: #000080;
+  --accent-fill: #000080;
+  --accent-soft: rgb(0 0 128 / 0.08);
+  --cg-accent: #000080;
+  --blue: #000080;
+  --watch: #000080;
+  --amber: #000080;
+  --adv: #000080;
   --calm: #5b627a;
   --green: #5b627a;
   --act: #e0112b;
@@ -1031,13 +1031,13 @@ html:has(.st[data-theme='dark']) body {
 :root .st.ds[data-theme='dark'],
 :root .st.ds[data-theme='dark'] * {
   --navy: #000080;
-  --accent: #9a9cff;
+  --accent: #f4f6fb;
   --accent-fill: #000080;
-  --accent-soft: rgb(154 156 255 / 0.12);
-  --watch: #9a9cff;
-  --amber: #9a9cff;
-  --blue: #9a9cff;
-  --cg-accent: #9a9cff;
+  --accent-soft: rgb(255 255 255 / 0.1);
+  --watch: #f4f6fb;
+  --amber: #f4f6fb;
+  --blue: #f4f6fb;
+  --cg-accent: #f4f6fb;
 }
 :root .st.ds[data-theme='light'],
 :root .st.ds[data-theme='light'] * {
@@ -1114,7 +1114,7 @@ html:has(.st[data-theme='dark']) body {
 }
 /* soft fills that read --accent-soft (chart usual-range band, user bubble) stay light, not solid navy */
 :root .st.ds[data-theme='dark'] .fr-v-band {
-  fill: rgb(154 156 255 / 0.12);
+  fill: rgb(255 255 255 / 0.1);
 }
 :root .st.ds[data-theme='light'] .fr-v-band {
   fill: rgb(0 0 128 / 0.07);
@@ -1311,29 +1311,29 @@ html:has(.st[data-theme='dark']) body {
    red = act now / error, green = live / connected / delivered. Everything else is neutral. */
 :root .st.ds[data-theme='dark'],
 :root .st.ds[data-theme='dark'] * {
-  --accent: #5b73ff;
-  --watch: #5b73ff;
-  --amber: #5b73ff;
-  --blue: #5b73ff;
-  --cg-accent: #5b73ff;
-  --adv: #5b73ff;
+  --accent: #f4f6fb;
+  --watch: #f4f6fb;
+  --amber: #f4f6fb;
+  --blue: #f4f6fb;
+  --cg-accent: #f4f6fb;
+  --adv: #f4f6fb;
   --act: #ff2e45;
   --red: #ff2e45;
   --ok: #1ff07a;
-  --navy: #3048ff;
+  --navy: #000080;
 }
 :root .st.ds[data-theme='light'],
 :root .st.ds[data-theme='light'] * {
-  --accent: #2438ff;
-  --watch: #2438ff;
-  --amber: #2438ff;
-  --blue: #2438ff;
-  --cg-accent: #2438ff;
-  --adv: #2438ff;
+  --accent: #000080;
+  --watch: #000080;
+  --amber: #000080;
+  --blue: #000080;
+  --cg-accent: #000080;
+  --adv: #000080;
   --act: #f0122d;
   --red: #f0122d;
   --ok: #00a650;
-  --navy: #2438ff;
+  --navy: #000080;
 }
 :root .st.ds .ds-btn.is-primary,
 :root .st.ds[data-theme] .ds-btn.is-primary {
@@ -1431,12 +1431,12 @@ html:has(.st[data-theme='dark']) body {
 :root .st.ds[data-theme='dark'] * {
   --navy: #000080;
   --navy-lit: #3a3aff;
-  --accent: #8a8aff;
-  --watch: #8a8aff;
-  --amber: #8a8aff;
-  --blue: #8a8aff;
-  --cg-accent: #8a8aff;
-  --adv: #8a8aff;
+  --accent: #f4f6fb;
+  --watch: #f4f6fb;
+  --amber: #f4f6fb;
+  --blue: #f4f6fb;
+  --cg-accent: #f4f6fb;
+  --adv: #f4f6fb;
   --glow-navy: 0 0 0 1px #2a2aff, 0 0 14px rgb(58 58 255 / 0.75), 0 0 32px rgb(0 0 128 / 0.9);
   --glow-red: 0 0 0 1px #ff4a5e, 0 0 14px rgb(255 46 69 / 0.55), 0 0 32px rgb(255 46 69 / 0.25);
 }
@@ -1533,6 +1533,16 @@ html:has(.st[data-theme='dark']) body {
 :root .st.ds[data-theme='dark'] .is-amber > svg,
 :root .st.ds[data-theme='dark'] .fr-dock-i > svg + svg {
   filter: drop-shadow(0 0 3px rgb(0 0 220)) drop-shadow(0 0 6px rgb(0 0 160));
+}
+/* icons inside a ring stay crisp white: the glow sits on the ring, never on the icon's strokes */
+:root .st.ds[data-theme] :is(.fr-v-icon, .fr-check-mark.has-icon).is-amber > svg {
+  filter: none;
+}
+:root .st.ds[data-theme] .fr-v-icon.is-amber {
+  background: transparent;
+  color: var(--ink);
+  box-shadow: inset 0 0 0 1.5px #2a2ad8, 0 0 12px rgb(0 0 200 / 0.45);
+  transition: box-shadow 200ms ease-out;
 }
 :root .st.ds[data-theme='dark'] .fr-v-bar.is-amber {
   fill: var(--navy);
@@ -1680,7 +1690,7 @@ html:has(.st[data-theme='dark']) body {
   box-shadow: inset 0 0 0 1.5px #2a2ad8, 0 0 12px rgb(0 0 200 / 0.45) !important;
 }
 :root .st.ds[data-theme] .fr-check.is-on .fr-check-mark.has-icon.is-amber {
-  box-shadow: inset 0 0 0 2px var(--ink), 0 0 12px rgb(0 0 200 / 0.5) !important;
+  box-shadow: inset 0 0 0 2px var(--ink), 0 0 12px rgb(255 255 255 / 0.3) !important;
 }
 
 /* ================================================================ Rows like the Radiation list (16 Nov, Emile)
@@ -1794,12 +1804,12 @@ html:has(.st[data-theme='dark']) body {
     text-shadow: none;
   }
   82% {
-    color: #5a5aff;
-    text-shadow: 0 0 1.5px rgb(70 70 255 / 0.9), 0 0 4px rgb(0 0 230 / 0.55);
+    color: #ffffff;
+    text-shadow: 0 0 1.5px rgb(255 255 255 / 0.6), 0 0 4px rgb(255 255 255 / 0.25);
   }
   90% {
-    color: #3a3af0;
-    text-shadow: 0 0 2px rgb(0 0 200 / 0.5);
+    color: #f4f6fb;
+    text-shadow: 0 0 2px rgb(255 255 255 / 0.3);
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -1886,4 +1896,236 @@ html:has(.st[data-theme='dark']) body {
 /* replay gauge: the fill is neutral (no yellow); the two markers carry watch (navy) and warning (red) */
 :root .st.ds .st-gauge-track b {
   background: var(--ink-2) !important;
+}
+
+/* ================================================================ Body: deeper view (16 Nov, Emile)
+   With a system open, the right column starts with a way back and the system's name. */
+:root .st.ds .ds-deep-head {
+  display: grid;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+:root .st.ds .ds-deep-head h2 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 500;
+  line-height: 1.2;
+  color: var(--ink);
+}
+:root .st.ds .ds-back {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 32px;
+  margin-left: -6px;
+  padding: 0 10px 0 4px;
+  border-radius: 8px;
+  font-size: 14px;
+  color: var(--ink-2);
+  background: transparent;
+  transition: color 160ms ease-out, background-color 160ms ease-out;
+}
+:root .st.ds .ds-back:hover {
+  color: var(--ink);
+  background: var(--sel);
+}
+:root .st.ds .ds-back:active {
+  background: rgb(255 255 255 / 0.14);
+}
+:root .st.ds[data-theme='light'] .ds-back:active {
+  background: rgb(22 26 43 / 0.1);
+}
+:root .st.ds .ds-back:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+/* Body labels as callouts (16 Nov, Emile: "easier to view the metrics on the body"): a dot on the part, a hairline
+   out past the suit, then the system name over its value. No box; a soft shadow keeps text readable on the suit. */
+:root .st.ds[data-theme] .st-hs,
+:root .st.ds[data-theme] .st-hs.is-dot {
+  gap: 0;
+  padding: 0;
+  border: 0 !important;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  transform: translate(-4px, -50%);
+  align-items: center;
+  cursor: pointer;
+}
+:root .st.ds[data-theme] .st-hs.side-l {
+  transform: translate(calc(-100% + 4px), -50%);
+  flex-direction: row-reverse;
+  text-align: right;
+}
+:root .st.ds[data-theme] .st-hs i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ink);
+  box-shadow: 0 0 0 3px rgb(0 0 0 / 0.35);
+  transition: transform 180ms ease-out;
+}
+:root .st.ds[data-theme] .st-hs.is-red i {
+  background: var(--act);
+  box-shadow: 0 0 0 3px rgb(0 0 0 / 0.35), 0 0 10px color-mix(in srgb, var(--act) 70%, transparent);
+}
+:root .st.ds[data-theme] .st-hs.is-amber i {
+  background: var(--ink);
+  box-shadow: 0 0 0 2px #000080, 0 0 10px rgb(0 0 200 / 0.6);
+}
+:root .st.ds[data-theme] .st-hs span,
+:root .st.ds[data-theme] .st-hs.is-dot span {
+  display: flex;
+  position: relative;
+  flex-direction: column;
+  gap: 1px;
+  padding: 0 0 0 104px;
+  line-height: 1.15;
+  text-shadow: 0 1px 2px rgb(0 0 0 / 0.9), 0 0 12px rgb(0 0 0 / 0.75);
+}
+:root .st.ds[data-theme] .st-hs.side-l span {
+  padding: 0 104px 0 0;
+}
+:root .st.ds[data-theme] .st-hs span::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 4px;
+  width: 92px;
+  height: 1px;
+  background: color-mix(in srgb, var(--ink) 55%, transparent);
+  transition: background-color 180ms ease-out;
+}
+:root .st.ds[data-theme] .st-hs.side-l span::before {
+  left: auto;
+  right: 4px;
+}
+:root .st.ds[data-theme] .st-hs b {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink-2);
+  text-decoration: none;
+}
+:root .st.ds[data-theme] .st-hs em {
+  font-size: 20px;
+  font-weight: 500;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+:root .st.ds[data-theme] .st-hs.is-red em {
+  color: var(--act);
+}
+:root .st.ds[data-theme] .st-hs:hover span::before,
+:root .st.ds[data-theme] .st-hs.is-on span::before {
+  background: var(--ink);
+}
+:root .st.ds[data-theme] .st-hs:hover i,
+:root .st.ds[data-theme] .st-hs.is-on i {
+  transform: scale(1.35);
+}
+:root .st.ds[data-theme] .st-hs:hover b,
+:root .st.ds[data-theme] .st-hs.is-on b {
+  color: var(--ink);
+}
+:root .st.ds[data-theme] .st-hs:active span {
+  opacity: 0.7;
+}
+:root .st.ds[data-theme] .st-hs:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 4px;
+}
+:root .st.ds[data-theme='light'] .st-hs span {
+  text-shadow: 0 0 10px rgb(255 255 255 / 0.9);
+}
+@media (prefers-reduced-motion: reduce) {
+  :root .st.ds[data-theme] .st-hs i,
+  :root .st.ds[data-theme] .st-hs span::before {
+    transition: none;
+  }
+}
+
+/* Vital cards (16 Nov, Emile: "make the metric windows better to view"): a dark glass card so the line and text
+   read over the bright clouds, and a readout that never leaves the card */
+:root .st.ds[data-theme='dark'] .fr-vital,
+:root .st.ds[data-theme='dark'] button.fr-vital:hover,
+:root .st.ds[data-theme='dark'] .fr-vital.is-on {
+  background: rgb(4 7 15 / 0.66);
+  -webkit-backdrop-filter: blur(14px) saturate(1.1);
+  backdrop-filter: blur(14px) saturate(1.1);
+}
+:root .st.ds[data-theme='dark'] button.fr-vital:hover {
+  background: rgb(10 14 26 / 0.74);
+}
+:root .st.ds .fr-v-tip {
+  top: -26px;
+  padding: 3px 8px;
+  font-size: 12px;
+  line-height: 1.3;
+  color: var(--ink);
+  background: rgb(4 7 15 / 0.92);
+  border: 1px solid var(--line-2);
+  border-radius: 6px;
+}
+:root .st.ds .fr-v-tip.is-end {
+  transform: translateX(calc(-100% + 6px));
+}
+:root .st.ds .fr-v-tip.is-start {
+  transform: translateX(-6px);
+}
+:root .st.ds[data-theme='light'] .fr-v-tip {
+  background: var(--card);
+}
+/* phone: shorter leader lines and a smaller value so the callouts stay on screen */
+@media (max-width: 600px) {
+  :root .st.ds[data-theme] .st-hs span { padding-left: 52px; }
+  :root .st.ds[data-theme] .st-hs.side-l span { padding: 0 52px 0 0; }
+  :root .st.ds[data-theme] .st-hs span::before { width: 40px; }
+  :root .st.ds[data-theme] .st-hs em { font-size: 16px; }
+  :root .st.ds[data-theme] .st-hs b { font-size: 11px; }
+}
+
+/* body view switch with a system open: "Body" goes back, then that system's views (16 Nov, Emile) */
+:root .st.ds .ds-views .ds-views-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding-right: 12px;
+  margin-right: 4px;
+  color: var(--ink-2);
+  border-right: 1px solid var(--line-2);
+  border-radius: 0;
+  transition: color 160ms ease-out;
+}
+:root .st.ds .ds-views .ds-views-back:hover {
+  color: var(--ink);
+}
+:root .st.ds .ds-views .ds-views-back:active {
+  opacity: 0.7;
+}
+/* the switch sits on the body: a dark glass backing keeps it readable over white organs and bones */
+:root .st.ds[data-theme='dark'] .ds-body > .ds-views {
+  background: rgb(4 7 15 / 0.78);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+
+/* vital cards: no navy borders (16 Nov, Emile: "get rid of the blue borders"); hover and selected are a
+   brighter neutral line instead */
+:root .st.ds[data-theme] .fr-vital,
+:root .st.ds[data-theme] .fr-vital.is-on {
+  border-color: var(--line-2) !important;
+  box-shadow: none !important;
+  transition: border-color 160ms ease-out, background-color 160ms ease-out;
+}
+:root .st.ds[data-theme] button.fr-vital:hover,
+:root .st.ds[data-theme] button.fr-vital.is-on:hover {
+  border-color: color-mix(in srgb, var(--ink) 45%, transparent) !important;
+}
+:root .st.ds[data-theme] button.fr-vital:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
 }

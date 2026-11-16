@@ -2,7 +2,7 @@
 // the whole body, the suit, or one layer alone.
 // Click an organ or a label to open that system. Camera glides to the selected system.
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
-import { Canvas, useFrame, useThree, type ThreeEvent } from '@react-three/fiber';
+import { Canvas, useFrame, useLoader, useThree, type ThreeEvent } from '@react-three/fiber';
 import { ContactShadows, Environment, Html, Lightformer, OrbitControls, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
@@ -17,7 +17,7 @@ import type { SystemId } from './state';
 // only in the UI (16 Nov): blue for selection, red for care.
 const CARE = new THREE.Color('#ff3b4e');
 const TINT: Record<Status, THREE.Color> = {
-  green: new THREE.Color('#8fb0ff'), // an open healthy system lights blue (selection), never green
+  green: new THREE.Color('#ffffff'), // an open healthy system lights white (selection), never blue or green
   amber: CARE,
   red: CARE,
 };
@@ -120,7 +120,8 @@ function Model({ tint, focus, onPick, bone, view }: { tint: Record<SystemId, Sta
     }
     for (const sys of Object.keys(SYSTEM_NODES) as SystemId[]) {
       const s = tint[sys];
-      const on = s !== 'green' || sys === focus;
+      // with a system open, only that system is lit; flagged parts elsewhere wait until you go back (Emile, 16 Nov)
+      const on = focus && focus !== 'whole_body' ? sys === focus : s !== 'green' || sys === focus;
       if (!on) continue;
       for (const n of SYSTEM_NODES[sys]) {
         if (!g[n]) continue;
@@ -227,78 +228,154 @@ function Model({ tint, focus, onPick, bone, view }: { tint: Record<SystemId, Sta
 function Labels({ tint, focus, values, onPick }: { tint: Record<SystemId, Status>; focus: SystemId | null; values: Record<SystemId, { name: string; line: string }>; onPick: (s: SystemId) => void }) {
   return (
     <>
-      {(Object.keys(SPOTS) as SystemId[]).map((s) => {
-        const sp = SPOTS[s];
-        const show = !focus || focus === s;
-        // a quiet body: only flagged or selected systems carry a text label; the others are a dot to tap
-        const text = tint[s] !== 'green' || focus === s;
-        if (!values[s]) return null;
-        return (
-          <group key={s} position={sp.p}>
-            <Html zIndexRange={[30, 0]} style={{ pointerEvents: show ? 'auto' : 'none', opacity: show ? 1 : 0, transition: 'opacity 250ms' }}>
-              <button className={`st-hs is-${tint[s]} side-${sp.side}${focus === s ? ' is-on' : ''}${text ? '' : ' is-dot'}`} onClick={() => onPick(s)} aria-label={`${values[s].name} ${values[s].line}`}>
-                <i />
-                <span>
-                  <b>{values[s].name}</b>
-                  <em>{values[s].line}</em>
-                </span>
-              </button>
-            </Html>
-          </group>
-        );
-      })}
+      {(Object.keys(SPOTS) as SystemId[]).map((s) =>
+        values[s] ? <Label key={s} s={s} tint={tint[s]} focus={focus} value={values[s]} onPick={onPick} /> : null,
+      )}
     </>
   );
 }
 
-/** Apollo 11 A7L suit: the Smithsonian's 3D scan (CC0), stood up at real size on the body's floor with the
- *  agency patches, flag and name tag painted out (docs/body-kit/fit_a7l_suit.py). Fetched the first time
- *  the Suit view is chosen, then fades in and out; the body is hidden behind it. */
+/** Safe frame for labels (normalised screen units): clear of the canvas edges and the view switch below. */
+const SAFE = { top: 0.9, bottom: -0.62 };
+
+// Emile (16 Nov): every system carries its name and value on the body; with a system open, the others stay
+// visible and one tap away (quieter), and a label whose part is out of frame hides instead of being cut off
+function Label({ s, tint, focus, value, onPick }: { s: SystemId; tint: Status; focus: SystemId | null; value: { name: string; line: string }; onPick: (s: SystemId) => void }) {
+  const sp = SPOTS[s];
+  const quiet = !!focus && focus !== s;
+  const g = useRef<THREE.Group>(null);
+  const box = useRef<HTMLDivElement>(null);
+  const p = useMemo(() => new THREE.Vector3(), []);
+  const { camera, size } = useThree();
+  const inFrame = useRef(true);
+  useFrame(() => {
+    if (!g.current || !box.current) return;
+    g.current.getWorldPosition(p).project(camera);
+    // the label runs about 220 px out to one side of its dot: that side must fit inside the canvas
+    const reach = 220 / (size.width / 2);
+    const end = sp.side === 'r' ? p.x + reach : p.x - reach;
+    const ok = focus === s || (Math.abs(end) < 0.98 && Math.abs(p.x) < 1 && p.y < SAFE.top && p.y > SAFE.bottom);
+    if (ok === inFrame.current) return;
+    inFrame.current = ok;
+    box.current.style.opacity = ok ? (quiet ? '0.6' : '1') : '0';
+    box.current.style.pointerEvents = ok ? 'auto' : 'none';
+  });
+  useEffect(() => {
+    if (box.current && inFrame.current) box.current.style.opacity = quiet ? '0.6' : '1';
+  }, [quiet]);
+  return (
+    <group ref={g} position={sp.p}>
+      <Html zIndexRange={[30, 0]}>
+        <div ref={box} style={{ opacity: quiet ? 0.6 : 1, transition: 'opacity 250ms ease-out' }}>
+          <button className={`st-hs is-${tint} side-${sp.side}${focus === s ? ' is-on' : ''}`} onClick={() => onPick(s)} aria-label={`${value.name} ${value.line}`}>
+            <i />
+            <span>
+              <b>{value.name}</b>
+              <em>{value.line}</em>
+            </span>
+          </button>
+        </div>
+      </Html>
+    </group>
+  );
+}
+
+/** EVA spacesuit (EMU): NASA 3D Resources model, cleaned, stood over this skeleton (head in the helmet, arms
+ *  lowered onto the skeleton's arms, soles on the floor) with fabric, metal and visor materials and baked AO, no flags
+ *  or agency patches (blender-assets/_scripts/suit-emu-nasa). Fetched the first time the Suit view is chosen. */
 const SUIT_URL = import.meta.env.VITE_SUIT_URL ?? '/models/suit.glb';
+useGLTF.preload(SUIT_URL, false); // the page opens on the suit: start the download with the app, not with the canvas
 function Suit({ on }: { on: boolean }) {
   const { scene } = useGLTF(SUIT_URL, false) as { scene: THREE.Group };
+  const { gl, camera } = useThree();
+  // upload textures and compile shaders before the first visible frame, then fade in: no hitch in the turn
+  const ready = useRef(false);
+  useEffect(() => {
+    let live = true;
+    scene.traverse((o) => {
+      const m = (o as THREE.Mesh).material as THREE.MeshStandardMaterial | undefined;
+      if (!m) return;
+      for (const t of [m.map, m.normalMap, m.roughnessMap, m.metalnessMap]) if (t) gl.initTexture(t);
+    });
+    const vis: THREE.Material[] = [];
+    scene.traverse((o) => {
+      const m = (o as THREE.Mesh).material as THREE.Material | undefined;
+      if (m && !m.visible) (m.visible = true), vis.push(m);
+    });
+    gl.compileAsync(scene, camera).finally(() => {
+      for (const m of vis) m.visible = false;
+      if (live) ready.current = true;
+    });
+    return () => void (live = false);
+  }, [scene, gl, camera]);
+  // the visor mirrors the Earth backdrop the crew member stands in front of
+  const earth = useLoader(THREE.TextureLoader, '/space/earth-iss.jpg');
   const mats = useMemo(() => {
+    earth.mapping = THREE.EquirectangularReflectionMapping;
+    earth.colorSpace = THREE.SRGBColorSpace;
     const out: THREE.MeshStandardMaterial[] = [];
     scene.traverse((o) => {
       const m = o as THREE.Mesh;
       if (!m.isMesh) return;
       m.raycast = () => {}; // clicks pass through the suit to the body systems inside
       const mat = m.material as THREE.MeshStandardMaterial;
-      mat.envMapIntensity = 0.9;
+      // the mirror visor and metal parts need the environment to read as glass and metal
+      if (mat.name === 'suit_visor') {
+        mat.envMap = earth;
+        mat.envMapIntensity = 1.6;
+      } else mat.envMapIntensity = mat.metalness > 0.5 ? 1.4 : 1;
       mat.opacity = 0;
       out.push(mat);
     });
     return out;
-  }, [scene]);
+  }, [scene, earth]);
   useFrame((_, dt) => {
     const k = 1 - Math.exp(-Math.min(dt, 0.05) / 0.12);
     for (const m of mats) {
-      m.opacity += ((on ? 1 : 0) - m.opacity) * k;
+      m.opacity += ((on && ready.current ? 1 : 0) - m.opacity) * k;
       m.transparent = m.opacity < 0.99;
       m.depthWrite = m.opacity > 0.5;
       m.visible = m.opacity > 0.01;
     }
   });
-  return <primitive object={scene} />;
+  return (
+    <>
+      <primitive object={scene} />
+      {/* sunlight for the white suit only: a warm hard key from the upper left, as in orbit */}
+      <directionalLight position={[-2.6, 3.2, 3.6]} intensity={on ? 1.1 : 0} color="#fff4e6" />
+    </>
+  );
 }
 
 type View = { pos: [number, number, number]; target: [number, number, number] };
-// The whole body stays in view (Emile): a selected system is highlighted and labelled, not zoomed into.
-function viewFor(_focus: SystemId | null): View {
-  // start close (Emile, 16 Nov): the body fills the stage, head to feet
-  return { pos: [0, 0.9, 3.05], target: [0, 0.86, 0] };
+// Emile (16 Nov, 13:58): the whole figure with air around it, the suit's boots clear of the view switch
+const WHOLE: View = { pos: [0, 0.96, 4.3], target: [0, 0.92, 0] };
+// Emile (16 Nov, 14:40): opening a system flies the camera to that part, seen from the front
+const ZOOM: Partial<Record<SystemId, View>> = {
+  brain: { pos: [0, 1.64, 1.3], target: [0, 1.6, 0] },
+  heart: { pos: [0.02, 1.32, 1.5], target: [0.02, 1.29, 0.02] },
+  blood: { pos: [0, 1.18, 1.75], target: [0, 1.14, 0] },
+  bones: { pos: [0, 0.95, 3.1], target: [0, 0.9, 0] },
+};
+function viewFor(focus: SystemId | null): View {
+  return (focus && ZOOM[focus]) || WHOLE;
 }
 
-function Rig({ focus }: { focus: SystemId | null }) {
+function Rig({ focus, cam }: { focus: SystemId | null; cam: View | null }) {
   const ctl = useRef<OrbitControlsImpl>(null);
   const { camera } = useThree();
   const goal = useRef<{ p: THREE.Vector3; t: THREE.Vector3; on: boolean }>({ p: new THREE.Vector3(), t: new THREE.Vector3(), on: false });
+  const focusRef = useRef(false); // zoomed into a part: no idle orbit
   useEffect(() => {
-    const v = viewFor(focus);
+    const v = cam ?? viewFor(focus);
     const t = new THREE.Vector3(...v.target);
-    const p = new THREE.Vector3(...v.pos).sub(t).applyAxisAngle(UP, spin.a).add(t); // keep the shared angle
+    const zoom = !!cam || !!(focus && ZOOM[focus]);
+    if (zoom) spin.a = 0; // a zoomed part is always seen from the front
+    const p = new THREE.Vector3(...v.pos).sub(t).applyAxisAngle(UP, spin.a).add(t); // otherwise keep the shared angle
     goal.current = { p, t, on: true };
-  }, [focus]);
+    focusRef.current = zoom;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focus, cam && cam.pos.join(), cam && cam.target.join()]);
   useEffect(() => {
     const c = ctl.current;
     if (!c) return;
@@ -323,7 +400,7 @@ function Rig({ focus }: { focus: SystemId | null }) {
     const c = ctl.current;
     if (!c || goal.current.on) return;
     off.current.copy(camera.position).sub(c.target);
-    if (!idleRef.current || REDUCE) {
+    if (!idleRef.current || REDUCE || focusRef.current) {
       spin.a = Math.atan2(off.current.x, off.current.z); // dragging: the shared angle follows the camera
       return;
     }
@@ -346,7 +423,7 @@ function Rig({ focus }: { focus: SystemId | null }) {
     c.addEventListener('end', end);
     return () => (window.clearTimeout(tm), c.removeEventListener('start', start), c.removeEventListener('end', end));
   }, []);
-  return <OrbitControls ref={ctl} target={viewFor(focus).target} makeDefault enablePan={false} minDistance={0.4} maxDistance={4.5} enableDamping dampingFactor={0.08} minPolarAngle={0.5} maxPolarAngle={2.4} />;
+  return <OrbitControls ref={ctl} target={(cam ?? viewFor(focus)).target} makeDefault enablePan={false} minDistance={0.4} maxDistance={6} enableDamping dampingFactor={0.08} minPolarAngle={0.5} maxPolarAngle={2.4} />;
 }
 
 /** Radiation streaks across the body when the station is under a storm warning. */
@@ -410,6 +487,7 @@ export default function BodyCanvas({
   storm = false,
   paused = false,
   view = 'body',
+  cam = null,
 }: {
   tint: Record<SystemId, Status>;
   focus: SystemId | null;
@@ -419,8 +497,10 @@ export default function BodyCanvas({
   /** hidden behind the suit turntable: stop rendering until shown again */
   paused?: boolean;
   view?: BodyView;
+  /** camera framing for the chosen system view (bodyViews.ts); null = the default for the focus */
+  cam?: View | null;
 }) {
-  const v0 = viewFor(focus);
+  const v0 = cam ?? viewFor(focus);
   const theme = usePageTheme();
   const light = theme === 'light';
   // the suit model downloads only once someone asks for it
@@ -431,11 +511,11 @@ export default function BodyCanvas({
       {/* the body sits on the page itself: same background colour, no panel */}
       <hemisphereLight args={['#f4efe6', light ? '#8d93a8' : '#1a1f3a', light ? 0.6 : 0.45]} />
       <directionalLight position={[-2, 4, 3]} intensity={light ? 1.7 : 2.4} color="#fff3e2" />
-      <directionalLight position={[2.5, 2, -3]} intensity={light ? 1.1 : 1.6} color="#c9dcff" />
+      <directionalLight position={[2.5, 2, -3]} intensity={light ? 1.1 : 1.6} color="#ffffff" />
       <Environment resolution={128}>
         <Lightformer form="rect" intensity={3} position={[-2.5, 3.5, 3]} rotation={[-0.7, -0.5, 0]} scale={[6, 4, 1]} color="#ffffff" />
-        <Lightformer form="rect" intensity={0.8} position={[3, 1, 2.5]} rotation={[0, 0.9, 0]} scale={[3, 5, 1]} color="#dfe8ff" />
-        <Lightformer form="rect" intensity={0.6} position={[0, 2, -4]} rotation={[0, Math.PI, 0]} scale={[6, 3, 1]} color="#bfe8f0" />
+        <Lightformer form="rect" intensity={0.8} position={[3, 1, 2.5]} rotation={[0, 0.9, 0]} scale={[3, 5, 1]} color="#ffffff" />
+        <Lightformer form="rect" intensity={0.6} position={[0, 2, -4]} rotation={[0, Math.PI, 0]} scale={[6, 3, 1]} color="#f2f2f2" />
       </Environment>
       <Suspense
         fallback={
@@ -460,7 +540,7 @@ export default function BodyCanvas({
       )}
       <Particles on={storm} />
       <ContactShadows position={[0, 0.002, 0]} opacity={light ? 0.3 : 0.45} scale={2.2} blur={2.4} far={1.2} frames={1} color={light ? '#3a4060' : '#000000'} />
-      <Rig focus={focus} />
+      <Rig focus={focus} cam={cam} />
     </Canvas>
   );
 }

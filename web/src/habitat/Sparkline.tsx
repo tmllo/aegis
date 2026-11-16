@@ -53,7 +53,7 @@ export function Sparkline({ data, channel, days, width = 640, height = 90, highl
       {anoms.map((a) => (
         <g key={a.id + "-m"}>
           {a.detected_at && Date.parse(a.detected_at) >= t0 && (
-            <line x1={x(a.detected_at)} x2={x(a.detected_at)} y1={0} y2={plotH} stroke="#38bdf8" strokeWidth={2} />
+            <line x1={x(a.detected_at)} x2={x(a.detected_at)} y1={0} y2={plotH} stroke="#f4f6fb" strokeWidth={2} />
           )}
           {a.limit_crossed_at && Date.parse(a.limit_crossed_at) >= t0 && (
             <line x1={x(a.limit_crossed_at)} x2={x(a.limit_crossed_at)} y1={0} y2={plotH} stroke="#f59e0b" strokeWidth={2} strokeDasharray="2 3" />

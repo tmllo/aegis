@@ -176,7 +176,7 @@ function FieldLine({ foot, level, particles }: { foot: number; level: AlertLevel
   const col = LEVEL_HEX[level === 'none' ? 'none' : level];
   return (
     <>
-      <Line points={pts} color={level === 'none' ? '#9fb4ff' : col} lineWidth={1.2} dashed dashSize={0.08} gapSize={0.06} transparent opacity={0.7} />
+      <Line points={pts} color={level === 'none' ? '#c8ccd6' : col} lineWidth={1.2} dashed dashSize={0.08} gapSize={0.06} transparent opacity={0.7} />
       <instancedMesh ref={dots} args={[undefined, undefined, 24]} frustumCulled={false}>
         <sphereGeometry args={[0.022, 8, 8]} />
         <meshBasicMaterial color={col} toneMapped={false} />

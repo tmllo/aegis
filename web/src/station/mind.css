@@ -73,7 +73,7 @@
 .mt-head b { font-weight: 500; }
 .mt-model { margin-left: auto; font-size: 13px; opacity: 0.7; display: inline-flex; align-items: center; gap: 6px; }
 .mt-model::before { content: ''; width: 6px; height: 6px; background: currentColor; opacity: 0.6; }
-.mt-model.is-live::before { background: var(--green, #5eead4); opacity: 1; }
+.mt-model.is-live::before { background: var(--green, #f4f6fb); opacity: 1; }
 .mt-log { display: flex; flex-direction: column; gap: 12px; max-height: 240px; overflow-y: auto; scroll-behavior: smooth; }
 .mt-row { margin: 0; font-size: 16px; line-height: 1.5; }
 .mt-row.is-model { display: flex; gap: 12px; align-items: flex-start; }
@@ -215,7 +215,7 @@
   max-width: 75%;
   padding: 10px 14px;
   border-radius: 16px 16px 4px 16px;
-  background: var(--accent-soft, rgb(37 99 235 / 0.1));
+  background: var(--accent-soft, rgb(0 0 128 / 0.08));
   color: var(--ink, #161a2b);
 }
 :root .st.ds .mt.is-full .mt-in {

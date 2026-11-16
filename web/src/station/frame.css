@@ -677,7 +677,7 @@ button.fr-vital:active {
   height: 36px;
 }
 .fr-v-band {
-  fill: oklch(0.86 0.1 215 / 0.1);
+  fill: oklch(0.98 0.008 272 / 0.1);
 }
 .fr-v-bar {
   fill: oklch(0.88 0.03 272 / 0.32);
@@ -701,7 +701,7 @@ button.fr-vital:active {
   position: absolute;
   top: 5px;
   height: 4px;
-  background: oklch(0.86 0.1 215 / 0.35);
+  background: oklch(0.98 0.008 272 / 0.35);
 }
 .fr-v-range-dot {
   position: absolute;
@@ -1022,12 +1022,12 @@ button.fr-vital:hover,
   padding: 14px 0 12px;
 }
 button.fr-vital:hover {
-  background: rgb(43 219 227 / 0.05);
+  background: rgb(255 255 255 / 0.05);
 }
 .fr-vital.is-on {
   box-shadow: inset 3px 0 0 var(--cg-accent);
   padding-left: 12px;
-  background: rgb(43 219 227 / 0.06);
+  background: rgb(255 255 255 / 0.06);
 }
 .fr-v-icon {
   border-color: var(--line-2);
@@ -1057,7 +1057,7 @@ button.fr-vital:hover {
 }
 .ds-btn.is-secondary:hover:not(:disabled) {
   border-color: var(--cg-accent);
-  background: rgb(43 219 227 / 0.06);
+  background: rgb(255 255 255 / 0.06);
 }
 .ds-btn.is-danger {
   background: #2a0d1f;

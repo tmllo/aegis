@@ -5,9 +5,9 @@ export const HONEST_FOOTER = "Habitat telemetry simulated. Detector validated on
 
 /** caught / missed / false alarm. Every planted fault is shown honestly. */
 export function anomalyTag(a: Anomaly): { label: string; color: string } {
-  if (!a.planted) return { label: "False alarm", color: "#a78bfa" };
+  if (!a.planted) return { label: "False alarm", color: "#8a93ad" };
   if (!a.detected) return { label: "Missed", color: "#94a3b8" };
-  return { label: "Caught", color: "#38bdf8" };
+  return { label: "Caught", color: "#f4f6fb" };
 }
 
 /** Never claim "before the limit" unless lead_time_h is positive. */

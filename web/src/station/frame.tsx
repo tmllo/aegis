@@ -330,7 +330,8 @@ function Trend({ history, lo, hi, s, unit }: { history: { v: number | null; flag
       {/* round markers drawn in HTML so they stay round on the stretched chart */}
       <i className={`fr-v-today is-${s}`} style={{ left: `${(x(last) / W) * 100}%`, top: `${(y(history[last].v!) / H) * 100}%` }} />
       {h && h.v != null && (
-        <span className="fr-v-tip" style={{ left: `${(x(hov!) / W) * 100}%` }}>
+        // the readout stays inside the card: right-aligned near the right edge, left-aligned near the left edge
+        <span className={`fr-v-tip${x(hov!) / W > 0.72 ? ' is-end' : x(hov!) / W < 0.28 ? ' is-start' : ''}`} style={{ left: `${(x(hov!) / W) * 100}%` }}>
           {fmt(h.v)} {unit} · {days === 0 ? 'today' : `${days} d ago`}
         </span>
       )}

@@ -20,7 +20,7 @@
   --ink: oklch(0.98 0.008 272);
   --ink-2: oklch(0.88 0.03 272);
   --ink-3: oklch(0.78 0.04 272);
-  --calm: oklch(0.86 0.1 215);
+  --calm: oklch(0.98 0.008 272);
   --watch: oklch(0.84 0.14 75);
   --act: oklch(0.72 0.17 28);
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
@@ -417,7 +417,7 @@ button.ds-menu-row:hover b {
   display: block;
 }
 .ds .st-band {
-  fill: oklch(0.86 0.1 215 / 0.12);
+  fill: oklch(0.98 0.008 272 / 0.12);
 }
 .ds .st-line {
   stroke: var(--ink);
@@ -483,8 +483,8 @@ button.ds-menu-row:hover b {
   stroke-width: 0.8;
 }
 .fc-band {
-  fill: oklch(0.86 0.1 215 / 0.12);
-  stroke: oklch(0.86 0.1 215 / 0.55);
+  fill: oklch(0.98 0.008 272 / 0.12);
+  stroke: oklch(0.98 0.008 272 / 0.55);
   stroke-dasharray: 4 5;
 }
 .fc-svg-cap {
@@ -524,7 +524,7 @@ button.ds-menu-row:hover b {
 }
 .fc-ring {
   fill: none;
-  stroke: oklch(0.86 0.1 215 / 0.32);
+  stroke: oklch(0.98 0.008 272 / 0.32);
 }
 .fc-ring.is-ticks {
   stroke-dasharray: 1 11;
@@ -561,7 +561,7 @@ button.ds-menu-row:hover b {
 }
 .fc-field {
   fill: none;
-  stroke: oklch(0.86 0.1 215 / 0.45);
+  stroke: oklch(0.98 0.008 272 / 0.45);
   stroke-width: 1.5;
   stroke-dasharray: 6 6;
   animation: fc-dash 1.2s linear infinite;
@@ -579,7 +579,7 @@ button.ds-menu-row:hover b {
   }
 }
 .fc-particle {
-  fill: oklch(0.93 0.06 215);
+  fill: oklch(0.98 0.008 272);
 }
 .fc-particle.is-amber {
   fill: oklch(0.9 0.09 75);
@@ -592,7 +592,7 @@ button.ds-menu-row:hover b {
 }
 .fc-crew .fc-crew-halo {
   fill: none;
-  stroke: oklch(0.86 0.1 215 / 0.5);
+  stroke: oklch(0.98 0.008 272 / 0.5);
 }
 .fc-crew text {
   font-size: 17px;
