@@ -295,3 +295,20 @@ html:has(.st[data-theme='dark']) body {
   color: var(--ink) !important;
   filter: none !important;
 }
+/* stageshow layout audit (16 Nov): the e^x logo button fits its mark and is a full 44 px tap target;
+   Cabin channel chips get even insets */
+:root .st.ds .fr-corner.ds-brand {
+  display: inline-flex;
+  align-items: center;
+  min-height: 48px;
+  min-width: 48px;
+  padding: 4px 6px;
+  line-height: 1;
+}
+:root .st.ds .cb-chip {
+  padding: 8px 12px;
+}
+:root .st.ds .fr-corner.ds-brand sup {
+  line-height: 0;
+  vertical-align: 0.7em;
+}
