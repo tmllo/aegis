@@ -13,9 +13,10 @@ import { RowVital } from '../vitals';
 import { Devices } from '../devices';
 import { useStation, type SystemId } from '../state';
 import { cue } from '../ui';
+import '../suit.css';
+import SuitTurntable from '../SuitTurntable';
 
 const BodyCanvas = lazy(() => import('../BodyCanvas'));
-import SuitTurntable from '../SuitTurntable';
 // kept here (not imported from BodyCanvas) so the 3D code stays in its own lazy chunk
 const VIEWS: [BodyView, string][] = [
   ['suit', 'Suit'],
@@ -79,8 +80,8 @@ export default function Body() {
       }
       object={
         <div className="ds-body">
-          {/* the suit is a photoreal Cycles turntable (no WebGL); the 3D body stays mounted underneath so
-              switching back is instant */}
+          {/* the suit is a photoreal Cycles turntable rendered through this same 3D camera, so it matches the
+              skeleton in size and turn; the 3D body stays mounted underneath (paused) for instant switching */}
           <div className={`ds-3d${view === 'suit' ? ' is-hidden' : ''}`}>
             <Suspense fallback={null}>
               <BodyCanvas tint={v.status} focus={sel} values={Object.fromEntries(Object.entries(values).filter(([k]) => k !== 'blood' || v.sys.blood !== 'nominal')) as typeof values} onPick={(s) => pick(s)} storm={alarmOn} view={view === 'suit' ? 'body' : view} paused={view === 'suit'} />

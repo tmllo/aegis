@@ -11,7 +11,10 @@ import * as THREE from 'three';
 const REDUCE = typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 function Sky() {
-  const tex = useTexture('/space/sky-4096.jpg');
+  // the real sky at 8K (Emile, 16 Nov): NASA SVS Deep Star Maps 2020, sharper than the 4K version
+  const tex = useTexture('/space/sky-8192.jpg');
+  tex.generateMipmaps = true;
+  tex.minFilter = THREE.LinearMipmapLinearFilter;
   tex.colorSpace = THREE.SRGBColorSpace;
   tex.anisotropy = 4;
   const g = useRef<THREE.Group>(null);
@@ -41,7 +44,7 @@ function Sky() {
 export default function SpaceBackdrop() {
   return (
     <div className="space-bg" aria-hidden>
-      <Canvas frameloop="demand" dpr={1} camera={{ position: [0, 0, 0.01], fov: 62, near: 0.01, far: 200 }} gl={{ antialias: false, powerPreference: 'low-power' }}>
+      <Canvas frameloop="demand" dpr={[1, 1.5]} camera={{ position: [0, 0, 0.01], fov: 62, near: 0.01, far: 200 }} gl={{ antialias: false, powerPreference: 'low-power' }}>
         <color attach="background" args={['#03050c']} />
         <Suspense fallback={null}>
           <Sky />

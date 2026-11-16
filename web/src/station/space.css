@@ -230,9 +230,6 @@ html:has(.st[data-theme='dark']) body {
   :root .st.ds .ds-body > .ds-views {
     bottom: 4px;
   }
-  .suit-tt {
-    inset: 0 0 52px;
-  }
 }
 /* iPhone: the view switch sits at the top of the stage and the stage ends above the tab bar, so neither
    menu covers the other */
@@ -244,14 +241,6 @@ html:has(.st[data-theme='dark']) body {
   :root .st.ds .ds-body > .ds-views {
     top: 0;
     bottom: auto;
-  }
-  .suit-tt {
-    inset: 48px 0 0;
-  }
-}
-@media (max-width: 480px) {
-  .suit-tt {
-    inset: 44px 0 0;
   }
 }
 
@@ -393,3 +382,4 @@ html:has(.st[data-theme='dark']) body {
     justify-content: center;
   }
 }
+
