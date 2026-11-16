@@ -1,0 +1,11 @@
+# Cloudflare Pages caching. Hashed build files never change; media and models change rarely.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+/space/*
+  Cache-Control: public, max-age=604800, stale-while-revalidate=86400
+/suit/*
+  Cache-Control: public, max-age=604800, stale-while-revalidate=86400
+/models/*
+  Cache-Control: public, max-age=604800, stale-while-revalidate=86400
+/data/*
+  Cache-Control: public, max-age=300, stale-while-revalidate=3600

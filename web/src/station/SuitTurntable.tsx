@@ -13,7 +13,9 @@ const REDUCE = typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced
 const BASE = import.meta.env.BASE_URL;
 /** Safari decodes HEVC with alpha; everyone else gets VP9 with alpha */
 const SAFARI = typeof navigator !== 'undefined' && /Apple/.test(navigator.vendor) && !/CriOS|FxiOS|Chrome/.test(navigator.userAgent);
-const SRC = SAFARI ? `${BASE}suit/turntable.mp4` : `${BASE}suit/turntable.webm`;
+// phones get the 600 px encode (1.6-1.9 MB instead of 4.5-8.4 MB): still sharper than the stage at 3x
+const SMALL = typeof matchMedia !== 'undefined' && matchMedia('(max-width: 900px)').matches;
+const SRC = `${BASE}suit/turntable${SMALL ? '-600' : ''}.${SAFARI ? 'mp4' : 'webm'}`;
 /** video time for the shared angle: the render's camera orbits exactly like the 3D camera, so t grows with a */
 const timeOf = (a: number, d: number) => ((((a / (2 * Math.PI)) * d) % d) + d) % d;
 const angleOf = (t: number, d: number) => (t / d) * 2 * Math.PI;
