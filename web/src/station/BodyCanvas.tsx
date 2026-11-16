@@ -10,6 +10,7 @@ import { bodyGeometries, NODE_LAYER, useBody, type Layers } from '../components/
 import { pickTarget, TARGETS, type TargetId } from '../components/body3d/targets';
 import A from '../components/body3d/anchors.json';
 import type { Status } from '../data/types';
+import { spin, SPIN_SPEED } from './spin';
 import type { SystemId } from './state';
 
 // Emile: parts that need care light up in red (amber and red both); healthy parts stay bone. Two colours
@@ -283,7 +284,9 @@ function Rig({ focus }: { focus: SystemId | null }) {
   const goal = useRef<{ p: THREE.Vector3; t: THREE.Vector3; on: boolean }>({ p: new THREE.Vector3(), t: new THREE.Vector3(), on: false });
   useEffect(() => {
     const v = viewFor(focus);
-    goal.current = { p: new THREE.Vector3(...v.pos), t: new THREE.Vector3(...v.target), on: true };
+    const t = new THREE.Vector3(...v.target);
+    const p = new THREE.Vector3(...v.pos).sub(t).applyAxisAngle(UP, spin.a).add(t); // keep the shared angle
+    goal.current = { p, t, on: true };
   }, [focus]);
   useEffect(() => {
     const c = ctl.current;
@@ -307,9 +310,15 @@ function Rig({ focus }: { focus: SystemId | null }) {
   const off = useRef(new THREE.Vector3());
   useFrame((_, dt) => {
     const c = ctl.current;
-    if (!c || !idleRef.current || REDUCE || goal.current.on) return;
-    off.current.copy(camera.position).sub(c.target).applyAxisAngle(UP, Math.min(dt, 0.1) * 0.125);
-    camera.position.copy(c.target).add(off.current);
+    if (!c || goal.current.on) return;
+    off.current.copy(camera.position).sub(c.target);
+    if (!idleRef.current || REDUCE) {
+      spin.a = Math.atan2(off.current.x, off.current.z); // dragging: the shared angle follows the camera
+      return;
+    }
+    spin.a += Math.min(dt, 0.1) * SPIN_SPEED;
+    const r = Math.hypot(off.current.x, off.current.z);
+    camera.position.set(c.target.x + r * Math.sin(spin.a), c.target.y + off.current.y, c.target.z + r * Math.cos(spin.a));
     c.update();
   });
   // idle: the camera circles the body slowly so every side (and every part in soft red) comes into view;

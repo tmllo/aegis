@@ -3,19 +3,21 @@
 // turntable. Drag to turn it; it turns slowly on its own when nobody touches it; arrow keys step it.
 // No WebGL: plain images, so it looks the same on every machine and works offline.
 import { useEffect, useRef, useState } from 'react';
+import { spin, SPIN_SPEED } from './spin';
 import './suit.css';
 
 const N = 48;
 const SRC = (i: number) => `${import.meta.env.BASE_URL}suit/f${String(i).padStart(3, '0')}.webp`;
 const REDUCE = typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
-const FRONT = 0; // frame 0 faces the viewer
-const STEP_MS = 140; // one 7.5 degree step: a full turn in about 7 s
+/** frame for the shared angle: frame 0 faces the viewer; the camera circling one way = the suit turning
+ *  the other way in the render */
+const frameOf = (a: number) => ((Math.round((-a / (2 * Math.PI)) * N) % N) + N) % N;
 
 export default function SuitTurntable() {
-  const [i, setI] = useState(FRONT);
+  const [i, setI] = useState(() => frameOf(spin.a));
   const [loaded, setLoaded] = useState(0);
   const idle = useRef(true);
-  const drag = useRef<{ x: number; i: number } | null>(null);
+  const drag = useRef<{ x: number; a: number } | null>(null);
   const resume = useRef(0);
 
   // preload every frame once, so turning never flashes
@@ -32,8 +34,18 @@ export default function SuitTurntable() {
   const ready = loaded >= N;
   useEffect(() => {
     if (!ready || REDUCE) return;
-    const id = window.setInterval(() => idle.current && setI((v) => (v + 1) % N), STEP_MS);
-    return () => window.clearInterval(id);
+    let raf = 0;
+    let last = performance.now();
+    const tick = (t: number) => {
+      raf = requestAnimationFrame(tick);
+      const dt = Math.min(0.1, (t - last) / 1000);
+      last = t;
+      if (!idle.current) return;
+      spin.a += dt * SPIN_SPEED;
+      setI(frameOf(spin.a));
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
   }, [ready]);
 
   const pause = () => {
@@ -54,14 +66,14 @@ export default function SuitTurntable() {
       tabIndex={0}
       onPointerDown={(e) => {
         pause();
-        drag.current = { x: e.clientX, i };
+        drag.current = { x: e.clientX, a: spin.a };
         (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
       }}
       onPointerMove={(e) => {
         const d = drag.current;
         if (!d) return;
-        const steps = Math.round((e.clientX - d.x) / 12);
-        setI((((d.i - steps) % N) + N) % N);
+        spin.a = d.a - (e.clientX - d.x) * 0.012;
+        setI(frameOf(spin.a));
       }}
       onPointerUp={() => {
         drag.current = null;
@@ -75,7 +87,8 @@ export default function SuitTurntable() {
         if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
         e.preventDefault();
         pause();
-        setI((v) => (v + (e.key === 'ArrowLeft' ? 1 : N - 1)) % N);
+        spin.a += ((e.key === 'ArrowLeft' ? -1 : 1) * 2 * Math.PI) / N;
+        setI(frameOf(spin.a));
         later();
       }}
     >
