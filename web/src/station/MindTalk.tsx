@@ -4,7 +4,7 @@
 // AI, no key), else a scripted offline demo; the tag in the header says which one answered. Escalation never depends on the model: risk words get a fixed
 // reply, and Contact Earth support comes from the check-in scores.
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { getKey, talk, type Reply, type Turn } from '../data/therapist';
+import { talk, type Reply, type Turn } from '../data/therapist';
 
 const REDUCE = typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 const OPENERS = ['I miss home', 'I slept badly', 'Tension with the crew', 'I feel flat today'];
