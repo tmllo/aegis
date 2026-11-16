@@ -416,3 +416,10 @@ html:has(.st[data-theme='dark']) body {
     inset: 60px 0 0;
   }
 }
+/* (suit.css loads later with the lazy suit chunk, so these need the higher specificity) */
+@media (max-width: 1100px) {
+  :root .st.ds .suit-tt {
+    inset: 56px 0 48px;
+    height: auto;
+  }
+}
