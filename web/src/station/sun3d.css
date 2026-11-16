@@ -1,0 +1,123 @@
+/* The Sun in space (SunScene.tsx). The Radiation screen IS space: the scene fills the whole screen
+   behind the frame, the page switches to its night tokens, and the side panels float as glass over the
+   stars. No panel, no box, no edge. */
+:root .st.ds[data-theme]:has(.sun3d) {
+  color-scheme: dark;
+  --canvas: #03050c;
+  --card: rgb(20 26 46 / 0.62);
+  --card-2: rgb(28 35 56 / 0.7);
+  --line: rgb(255 255 255 / 0.1);
+  --line-2: rgb(255 255 255 / 0.22);
+  --ink: #f4f6fb;
+  --ink-2: #b4bcd2;
+  --ink-3: #8a93ad;
+  --accent: #8fb0ff;
+  --accent-soft: rgb(143 176 255 / 0.14);
+  --calm: #4fd67a;
+  --watch: #f5b83d;
+  --act: #ff6b6b;
+  --adv: #9fb0ff;
+  --shadow-1: none;
+  --shadow-2: 0 10px 28px rgb(0 0 0 / 0.45);
+  background: #03050c;
+}
+html:has(.sun3d),
+html:has(.sun3d) body {
+  background: #03050c;
+}
+:root .st.ds .fr-object:has(.sun3d) {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  margin: 0;
+  position: static;
+}
+.sun3d {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  opacity: 0;
+  transition: opacity 600ms ease-out;
+}
+.sun3d.is-ready {
+  opacity: 1;
+}
+/* everything readable sits above space */
+:root .st.ds:has(.sun3d) .fr-title,
+:root .st.ds:has(.sun3d) .fr-left,
+:root .st.ds:has(.sun3d) .fr-right,
+:root .st.ds:has(.sun3d) .fr-foot-l,
+:root .st.ds:has(.sun3d) .fr-foot-r,
+:root .st.ds:has(.sun3d) .st-foot,
+:root .st.ds:has(.sun3d) .fr-corner {
+  position: relative;
+  z-index: 3;
+}
+:root .st.ds:has(.sun3d) .fr-corner {
+  position: absolute;
+  z-index: 40;
+}
+:root .st.ds:has(.sun3d) .fr-vital,
+:root .st.ds:has(.sun3d) .fr-dock,
+:root .st.ds:has(.sun3d) .ds-btn,
+:root .st.ds:has(.sun3d) .fr-seg {
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+:root .st.ds:has(.sun3d) .st-foot {
+  background: transparent;
+}
+.sun3d canvas {
+  cursor: grab;
+}
+.sun3d canvas:active {
+  cursor: grabbing;
+}
+.s3-tag {
+  display: grid;
+  gap: 2px;
+  text-align: center;
+  white-space: nowrap;
+  color: #f4f6fb;
+  font-size: 14px;
+  pointer-events: none;
+}
+.s3-tag b {
+  font-weight: 500;
+}
+.s3-tag span {
+  font-size: 13px;
+  color: #b4bcd2;
+}
+.s3-focus {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transform: translate(14px, -50%);
+  padding: 6px 10px;
+  white-space: nowrap;
+  font-size: 14px;
+  color: #f4f6fb;
+  background: rgb(3 5 12 / 0.72);
+  border: 1px solid rgb(255 255 255 / 0.18);
+  border-radius: 8px;
+  pointer-events: none;
+}
+.s3-focus i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #fff1c2;
+}
+.s3-focus.is-watch i {
+  background: #ffb547;
+}
+.s3-focus.is-warning i {
+  background: #ff5a4f;
+}
+@media (prefers-reduced-motion: reduce) {
+  .sun3d {
+    transition: none;
+  }
+}

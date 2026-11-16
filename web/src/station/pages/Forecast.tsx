@@ -2,7 +2,7 @@
 // erupted, the magnetic path from the Sun to the crew, and what the model expects next.
 // All numbers come from storm_forecast.json through station/forecast.ts (labels kept: model score,
 // estimate from past storms, physics). The model predicts a proton-storm chance, never a dose.
-import { useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import type { AlertLevel, FlareEvent } from '../../data/types';
 import { classOf, pathOf, scan, SHIELD, utc, whatIf } from '../forecast';
@@ -13,12 +13,10 @@ import { Btn, roleOf } from '../ds';
 import { Bar, Check, Page, SideCap, Vital } from '../frame';
 import { useStation } from '../state';
 import { cue } from '../ui';
+import type { SunFlare } from '../SunScene';
 
-const W = 1000;
-const HGT = 640;
-const SUN = { x: 300, y: 320, r: 220 };
-const CREW = { x: 900, y: 320 };
-const D = Math.PI / 180;
+const SunScene = lazy(() => import('../SunScene'));
+
 
 const LEVEL_TITLE: Record<AlertLevel, string> = { none: 'Quiet', watch: 'Watch', warning: 'Shelter warning' };
 const LEVEL_DO: Record<AlertLevel, string> = {
@@ -28,11 +26,6 @@ const LEVEL_DO: Record<AlertLevel, string> = {
 };
 const STATUS: Record<AlertLevel, 'green' | 'amber' | 'red'> = { none: 'green', watch: 'amber', warning: 'red' };
 
-/** Orthographic position on the disc as seen from the crew: west to the right. */
-function onDisc(lat: number, lon: number) {
-  return { x: SUN.x + SUN.r * Math.cos(lat * D) * Math.sin(lon * D), y: SUN.y - SUN.r * Math.sin(lat * D), back: Math.abs(lon) > 90 };
-}
-const dotR = (flux: number) => Math.max(3, Math.min(14, 3 + (Math.log10(flux) + 6) * 4.2));
 
 export default function Forecast({ replay }: { replay: ReactNode }) {
   const { data, env, doses } = useStationData();
@@ -68,8 +61,6 @@ export default function Forecast({ replay }: { replay: ReactNode }) {
       : null;
   const flowLevel: AlertLevel = test ? (wi?.level ?? 'none') : s.level;
   const foot = (test ? tPath : s.path)?.foot ?? 60;
-  const footPt = onDisc(0, Math.min(89, foot));
-  const field = `M ${footPt.x} ${footPt.y} C ${footPt.x + 150} ${footPt.y - 160}, ${CREW.x - 260} ${CREW.y - 120}, ${CREW.x} ${CREW.y}`;
   const particles = flowLevel === 'warning' ? 18 : flowLevel === 'watch' ? 9 : 4;
 
   const warnCrew = () => {
@@ -135,109 +126,15 @@ export default function Forecast({ replay }: { replay: ReactNode }) {
       </>
     );
 
+  // the Sun in real space (3D, lazy): flares at their heliographic positions, the field line, the crew
+  const flares: SunFlare[] = s.month
+    .filter((e: FlareEvent) => e.latitude_deg != null && e.longitude_deg != null && Math.abs(e.longitude_deg) <= 90)
+    .map((e: FlareEvent) => ({ id: e.flare_id, lat: e.latitude_deg!, lon: e.longitude_deg!, flux: e.class_flux, level: e.alert_level, open: s.open.includes(e) }));
+  if (test) flares.push({ id: 'test', lat: 12, lon: q.lon, flux: q.flux, level: wi?.level ?? 'none', open: true });
   const sun = (
-        <svg viewBox={`0 0 ${W} ${HGT}`} className="fc-svg" role="img" aria-label="Sun scan with recent flares and the magnetic path to the crew">
-          <defs>
-            <radialGradient id="fc-sun" cx="46%" cy="44%" r="60%">
-              <stop offset="0" stopColor="#fff4d6" />
-              <stop offset="0.45" stopColor="#ffc46b" />
-              <stop offset="0.85" stopColor="#ff7a2a" />
-              <stop offset="1" stopColor="#c43d10" />
-            </radialGradient>
-            <radialGradient id="fc-corona">
-              <stop offset="0.55" stopColor="#ffb05a" stopOpacity="0.35" />
-              <stop offset="1" stopColor="#ffb05a" stopOpacity="0" />
-            </radialGradient>
-            <filter id="fc-gran" x="0" y="0" width="100%" height="100%">
-              <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="3" seed="7">
-                <animate attributeName="baseFrequency" dur="18s" values="0.035;0.041;0.035" repeatCount="indefinite" />
-              </feTurbulence>
-              <feColorMatrix values="0 0 0 0 1  0 0 0 0 0.55  0 0 0 0 0.15  0 0 0 0.55 0" />
-              <feComposite in2="SourceGraphic" operator="in" />
-              <feBlend in="SourceGraphic" mode="multiply" />
-            </filter>
-            <linearGradient id="fc-sweep" x1="0" x2="1">
-              <stop offset="0" stopColor="#7ee2ff" stopOpacity="0" />
-              <stop offset="1" stopColor="#7ee2ff" stopOpacity="0.5" />
-            </linearGradient>
-            <path id="fc-field" d={field} />
-          </defs>
-
-          {/* corona and disc */}
-          <circle cx={SUN.x} cy={SUN.y} r={SUN.r * 1.55} fill="url(#fc-corona)" className="fc-corona" />
-          <circle cx={SUN.x} cy={SUN.y} r={SUN.r} fill="url(#fc-sun)" filter="url(#fc-gran)" />
-          {/* heliographic grid */}
-          <g className="fc-grid">
-            {[-60, -30, 0, 30, 60].map((lon) => (
-              <ellipse key={lon} cx={SUN.x} cy={SUN.y} rx={Math.abs(SUN.r * Math.sin(lon * D)) || 0.5} ry={SUN.r} />
-            ))}
-            {[-60, -30, 0, 30, 60].map((lat) => (
-              <line key={lat} x1={SUN.x - SUN.r * Math.cos(lat * D)} x2={SUN.x + SUN.r * Math.cos(lat * D)} y1={SUN.y - SUN.r * Math.sin(lat * D)} y2={SUN.y - SUN.r * Math.sin(lat * D)} />
-            ))}
-          </g>
-          {/* the band of the Sun wired to the crew (Parker spiral footpoint +/- 30 deg) */}
-          {(() => {
-            // the band between the meridians foot-30 and foot+30 (capped at the limb), on the visible disc
-            const a = Math.max(-89, foot - 30);
-            const b = Math.min(90, foot + 30);
-            const rx = (l: number) => Math.max(0.5, Math.abs(SUN.r * Math.sin(l * D)));
-            const side = (l: number) => (l >= 0 ? 1 : 0);
-            return <path className="fc-band" d={`M ${SUN.x} ${SUN.y - SUN.r} A ${rx(a)} ${SUN.r} 0 0 ${side(a)} ${SUN.x} ${SUN.y + SUN.r} A ${rx(b)} ${SUN.r} 0 0 ${1 - side(b)} ${SUN.x} ${SUN.y - SUN.r} Z`} />;
-          })()}
-
-          {/* flares of the last 30 days; open ones pulse */}
-          {s.month.map((e: FlareEvent) => {
-            if (e.latitude_deg == null || e.longitude_deg == null) return null;
-            const p = onDisc(e.latitude_deg, e.longitude_deg);
-            if (p.back) return null;
-            const open = s.open.includes(e);
-            return (
-              <g key={e.flare_id} className={`fc-flare is-${STATUS[e.alert_level]}${open ? ' is-open' : ''}`}>
-                <circle cx={p.x} cy={p.y} r={dotR(e.class_flux)} />
-                {open && <circle cx={p.x} cy={p.y} r={dotR(e.class_flux)} className="fc-ping" />}
-              </g>
-            );
-          })}
-
-
-          {/* focus reticle */}
-          {focus &&
-            (() => {
-              const p = onDisc(focus.lat, focus.lon);
-              const k = 20;
-              return (
-                <g className={`fc-reticle is-${STATUS[focus.level]}`}>
-                  <path d={`M ${p.x - k} ${p.y - k + 8} v -8 h 8 M ${p.x + k - 8} ${p.y - k} h 8 v 8 M ${p.x + k} ${p.y + k - 8} v 8 h -8 M ${p.x - k + 8} ${p.y + k} h -8 v -8`} />
-                  {test && <circle cx={p.x} cy={p.y} r={dotR(q.flux)} className="fc-testdot" />}
-                  <line x1={p.x + k} y1={p.y - k} x2={p.x + 70} y2={p.y - 70} />
-                  <text x={p.x + 76} y={p.y - 74}>
-                    {focus.label}
-                  </text>
-                </g>
-              );
-            })()}
-
-          {/* magnetic path and particles to the crew */}
-          <use href="#fc-field" className={`fc-field is-${STATUS[flowLevel]}`} />
-          {Array.from({ length: particles }, (_, i) => (
-            <circle key={`${flowLevel}-${i}`} r={flowLevel === 'none' ? 1.6 : 2.6} className={`fc-particle is-${STATUS[flowLevel]}`}>
-              <animateMotion dur={`${flowLevel === 'warning' ? 2.2 : 4.5}s`} begin={`${(i * (flowLevel === 'warning' ? 2.2 : 4.5)) / particles}s`} repeatCount="indefinite">
-                <mpath href="#fc-field" />
-              </animateMotion>
-            </circle>
-          ))}
-          <g className="fc-crew">
-            <circle cx={CREW.x} cy={CREW.y} r="30" className="fc-crew-halo" />
-            <circle cx={CREW.x} cy={CREW.y} r="9" />
-            <text x={CREW.x} y={CREW.y + 54} textAnchor="middle">
-              Crew · {place}
-            </text>
-            <text x={CREW.x} y={CREW.y + 76} textAnchor="middle" className="fc-svg-cap">
-              shielding: {shield.word.toLowerCase()}
-            </text>
-          </g>
-
-        </svg>
+    <Suspense fallback={<div className="sun3d" />}>
+      <SunScene flares={flares} focus={focus} foot={foot} level={flowLevel} particles={particles} place={place} shield={shield.word.toLowerCase()} alarm={alarm.phase !== 'off'} />
+    </Suspense>
   );
 
   return (
