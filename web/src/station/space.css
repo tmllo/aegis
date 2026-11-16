@@ -100,3 +100,38 @@ html:has(.st[data-theme='dark']) body {
 :root .st.ds .fr-left::-webkit-scrollbar-track {
   background: transparent;
 }
+
+/* step list (Daily check, Mind): the current step is quiet. No row box, no blue fill: a white ring and
+   white number, bold label; done steps keep their status mark, the rest stay hairline. */
+:root .st.ds .fr-check.is-on {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+:root .st.ds .fr-check.is-on .fr-check-mark.is-plain,
+:root .st.ds .fr .fr-check.is-on .fr-check-mark {
+  background: transparent;
+  border: 1.5px solid var(--ink);
+  color: var(--ink);
+  box-shadow: none;
+}
+:root .st.ds .fr-check.is-on .fr-check-t b {
+  font-weight: 600;
+  color: var(--ink);
+}
+:root .st.ds .fr-check-mark.is-plain {
+  border-color: var(--line-2);
+  color: var(--ink-3);
+}
+/* (wins over the navy glow rules) current step: white ring, no fill, no glow */
+:root .st.ds[data-theme] .fr .fr-check.is-on .fr-check-mark.is-plain,
+:root .st.ds[data-theme] .fr .fr-check.is-on .fr-check-mark:not(.has-icon) {
+  background: transparent;
+  border: 1.5px solid var(--ink);
+  color: var(--ink);
+  box-shadow: none;
+}
+/* the pre-filled number reads in full white, like the question above it */
+:root .st.ds .ck .ck-ghost {
+  color: var(--ink);
+}
