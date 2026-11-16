@@ -1,8 +1,8 @@
 /* e^x colour code (e7, 15 Nov 23:32, Emile: "proper combinations and a great color code").
    One meaning per hue, on the Cockpit Glass navy:
-     cyan    #2bdbe3  interaction only (selected, focus, primary button frame)
+     cyan    #f4f6fb  interaction only (selected, focus, primary button frame)
      green   #4fd67a  OK            (hue moved off the cyan so "OK" never reads as "selected")
-     indigo  #9fb0ff  Watch / advisory (was blue, too close to the cyan accent)
+     indigo  #c9ccd6  Watch / advisory (was blue, too close to the cyan accent)
      amber   #f5b83d  Act today (caution)
      red     #ff6b6b  Act now (warning) - softer than #ff4d4f, still 6:1 on navy
    Tokens only; loaded after frame.css so it wins. */
@@ -10,7 +10,7 @@
   --calm: #4fd67a;
   --watch: #f5b83d;
   --act: #ff6b6b;
-  --adv: #9fb0ff;
+  --adv: #c9ccd6;
   --green: var(--calm);
   --amber: var(--watch);
   --red: var(--act);

@@ -111,8 +111,8 @@
   vertical-align: -1px;
 }
 .cb-chip:hover span { color: var(--ink-2); }
-.cb-chip.is-on { border-top-color: var(--accent, #2bdbe3); }
-.cb-chip:focus-visible { outline: 2px solid var(--accent, #2bdbe3); outline-offset: 2px; }
+.cb-chip.is-on { border-top-color: var(--accent, #f4f6fb); }
+.cb-chip:focus-visible { outline: 2px solid var(--accent, #f4f6fb); outline-offset: 2px; }
 @media (max-width: 720px) {
   .cb-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }

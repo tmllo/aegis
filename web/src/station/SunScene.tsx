@@ -190,12 +190,12 @@ function Crew({ place, shield }: { place: string; shield: string }) {
     <group position={CREW}>
       <mesh>
         <sphereGeometry args={[0.05, 24, 24]} />
-        <meshBasicMaterial color="#7fe3d0" toneMapped={false} />
+        <meshBasicMaterial color="#f4f6fb" toneMapped={false} />
       </mesh>
       <Billboard>
         <mesh>
           <ringGeometry args={[0.11, 0.12, 48]} />
-          <meshBasicMaterial color="#7fe3d0" transparent opacity={0.6} toneMapped={false} />
+          <meshBasicMaterial color="#f4f6fb" transparent opacity={0.6} toneMapped={false} />
         </mesh>
       </Billboard>
       <Html center position={[0, -0.3, 0]} zIndexRange={[20, 0]}>

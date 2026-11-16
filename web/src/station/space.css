@@ -254,3 +254,44 @@ html:has(.st[data-theme='dark']) body {
     inset: 44px 0 0;
   }
 }
+
+/* ================================================================ Navy only (Emile, 16 Nov)
+   Navy #000080 stays the one UI colour (selected items, main button, 'needs a look' marks, from the
+   earlier palette pass). Every light blue from older passes (sky #8fb0ff, indigo #9fb0ff, cyan, #2563eb)
+   now resolves to navy. Status colours are left as the navy palette defines them. */
+.st.ds[data-theme],
+.st.ds[data-theme] * {
+  --accent: #000080 !important;
+  --accent-fill: #000080 !important;
+  --cg-accent: #000080 !important;
+  --blue: #000080 !important;
+  --accent-soft: rgb(0 0 128 / 0.22) !important;
+}
+
+/* iPhone: the stage height lives on the centre column (the object is flex: 1 inside it, which ignored its
+   own height); the open Menu sits above the view switch */
+@media (max-width: 1100px) {
+  :root .st.ds .fr-centre:has(.ds-body) {
+    flex: none;
+    height: calc(100dvh - 300px - env(safe-area-inset-bottom));
+    min-height: 380px;
+  }
+  :root .st.ds .fr-object:has(.ds-body) {
+    height: auto;
+    flex: 1 1 auto;
+  }
+}
+:root .st.ds .ds-body > .ds-views {
+  z-index: 6;
+}
+:root .st.ds .ds-menu-pop {
+  z-index: 80;
+}
+/* the e^x mark: plain white, no blue signal pulse */
+:root .st.ds .ds-brand sup,
+:root .st.ds .ds-brand {
+  animation: none !important;
+  text-shadow: none !important;
+  color: var(--ink) !important;
+  filter: none !important;
+}

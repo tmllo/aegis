@@ -14,7 +14,7 @@
   cursor: grabbing;
 }
 .suit-tt:focus-visible {
-  outline: 2px solid var(--accent, #2563eb);
+  outline: 2px solid var(--accent, #000080);
   outline-offset: -6px;
   border-radius: 16px;
 }

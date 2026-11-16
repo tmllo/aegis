@@ -15,7 +15,7 @@
   --green: #34d399;
   --amber: #fbbf24;
   --red: #f87171;
-  --blue: #7dd3fc;
+  --blue: #e8ebf2;
   --r: 16px;
   --mono: 'JetBrains Mono', ui-monospace, monospace;
   --sans: 'Inter Tight', system-ui, sans-serif;
@@ -650,7 +650,7 @@
   display: block;
   height: 100%;
   border-radius: 4px;
-  background: linear-gradient(90deg, #5eead4, #7dd3fc);
+  background: linear-gradient(90deg, #5eead4, #e8ebf2);
 }
 .st-avatar {
   position: relative;
@@ -1802,7 +1802,7 @@
 .st-envs i {
   width: 100%;
   border-radius: 4px;
-  background: linear-gradient(180deg, #7dd3fc, rgba(125, 211, 252, 0.2));
+  background: linear-gradient(180deg, #e8ebf2, rgba(125, 211, 252, 0.2));
 }
 .st-envs b {
   font-size: 14px;
@@ -2275,7 +2275,7 @@
 
 /* ================================================================ health v2: caution & warning classes */
 .st {
-  --adv: #60a5fa;
+  --adv: #e8ebf2;
 }
 .st-cw {
   display: inline-flex;

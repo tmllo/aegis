@@ -11,12 +11,12 @@
   --ink: #f4f6fb;
   --ink-2: #b4bcd2;
   --ink-3: #8a93ad;
-  --accent: #8fb0ff;
-  --accent-soft: rgb(143 176 255 / 0.14);
+  --accent: #f4f6fb;
+  --accent-soft: rgb(255 255 255 / 0.1);
   --calm: #4fd67a;
   --watch: #f5b83d;
   --act: #ff6b6b;
-  --adv: #9fb0ff;
+  --adv: #c9ccd6;
   --shadow-1: none;
   --shadow-2: 0 10px 28px rgb(0 0 0 / 0.45);
   background: #03050c;

@@ -13,12 +13,12 @@
   --ink: #161a2b;
   --ink-2: #474e66;
   --ink-3: #636a82;
-  --accent: #2563eb;
+  --accent: #000080;
   --accent-soft: rgb(37 99 235 / 0.1);
   --calm: #15803d;
   --watch: #b45309;
   --act: #d92d20;
-  --adv: #4f46e5;
+  --adv: #000080;
   --shadow-1: 0 1px 2px rgb(22 26 43 / 0.06);
   --shadow-2: 0 8px 24px rgb(22 26 43 / 0.1), 0 1px 2px rgb(22 26 43 / 0.06);
 }
@@ -36,12 +36,12 @@
   --ink: #f4f6fb;
   --ink-2: #b4bcd2;
   --ink-3: #8a93ad;
-  --accent: #8fb0ff;
-  --accent-soft: rgb(143 176 255 / 0.14);
+  --accent: #f4f6fb;
+  --accent-soft: rgb(255 255 255 / 0.1);
   --calm: #4fd67a;
   --watch: #f5b83d;
   --act: #ff6b6b;
-  --adv: #9fb0ff;
+  --adv: #c9ccd6;
   --shadow-1: 0 1px 2px rgb(0 0 0 / 0.3);
   --shadow-2: 0 10px 28px rgb(0 0 0 / 0.45);
 }
@@ -50,7 +50,7 @@
 :root .st.ds .fr-object:has(canvas),
 :root .st.ds .fr-object:has(.fc-svg),
 :root .st.ds .fr-object:has(.fr-replay) {
-  --accent-fill: #2563eb;
+  --accent-fill: #000080;
   --sky-0: var(--canvas);
   --sky-1: var(--card);
   --sky-2: var(--card-2);
@@ -567,11 +567,11 @@ html:has(.st[data-theme='dark']) body {
   --ink: #161a2b;
   --ink-2: #474e66;
   --ink-3: #636a82;
-  --accent: #2563eb;
+  --accent: #000080;
   --calm: #15803d;
   --watch: #b45309;
   --act: #d92d20;
-  --adv: #4f46e5;
+  --adv: #000080;
 }
 :root .st.ds[data-theme='dark'] .fr-object:has(canvas) {
   border: 0;
@@ -897,14 +897,14 @@ html:has(.st[data-theme='dark']) body {
    Buttons carry no blue fill: the primary button is the page's highest-contrast neutral. */
 :root .st.ds[data-theme='dark'],
 :root .st.ds[data-theme='dark'] * {
-  --accent: #8fb0ff;
-  --accent-fill: #8fb0ff;
-  --accent-soft: rgb(143 176 255 / 0.14);
-  --cg-accent: #8fb0ff;
-  --blue: #8fb0ff;
-  --watch: #8fb0ff;
-  --amber: #8fb0ff;
-  --adv: #8fb0ff;
+  --accent: #f4f6fb;
+  --accent-fill: #f4f6fb;
+  --accent-soft: rgb(255 255 255 / 0.1);
+  --cg-accent: #f4f6fb;
+  --blue: #f4f6fb;
+  --watch: #f4f6fb;
+  --amber: #f4f6fb;
+  --adv: #f4f6fb;
   --calm: #a3abc2;
   --green: #a3abc2;
   --act: #ff3b4e;
@@ -1511,7 +1511,7 @@ html:has(.st[data-theme='dark']) body {
   --cg-accent: #000080;
   --adv: #000080;
   --navy-halo: 0 0 6px 1px rgb(0 0 200 / 0.9), 0 0 16px 2px rgb(0 0 160 / 0.7);
-  --glow-navy: 0 0 0 1px rgb(40 40 200 / 0.9), 0 0 14px 2px rgb(0 0 200 / 0.75), 0 0 30px 4px rgb(0 0 128 / 0.8);
+  --glow-navy: 0 0 0 1px rgb(255 255 255 / 0.5), 0 0 14px 2px rgb(0 0 200 / 0.75), 0 0 30px 4px rgb(0 0 128 / 0.8);
 }
 :root .st.ds .fr-dock a.is-on::after,
 :root .st.ds .fr-seg button.is-on::after {
@@ -1525,7 +1525,7 @@ html:has(.st[data-theme='dark']) body {
   box-shadow: var(--glow-navy);
 }
 :root .st.ds[data-theme='dark'] :is(.ds-scale button.is-on, .ds-chips button.is-on, .mi-q-opts button.is-on) {
-  border-color: rgb(40 40 200 / 0.9);
+  border-color: rgb(255 255 255 / 0.5);
   box-shadow: var(--navy-halo);
 }
 /* small navy status shapes (dock badge, row shapes) glow so they stay visible */
