@@ -101,7 +101,10 @@ export const MOOD_WORD = ['', 'Very low', 'Low', 'Okay', 'Good', 'Great'];
 /** Display name of the seat: the full role in sentence case (Emile: no CDR/FE/MS abbreviations). */
 export const seatOf = (m: CrewMember) => m.role.charAt(0).toUpperCase() + m.role.slice(1).toLowerCase();
 export const surname = (m: CrewMember) => m.name.split(' ').slice(-1)[0];
-export const firstName = (m: CrewMember) => m.name.replace(/^\S+\.\s/, '').split(' ')[0];
+/** Display first names after famous astronauts (Emile, 16 Nov). crew_data.json is Tomas's export and
+ *  stays unchanged; this only changes what the screens say. */
+const FIRST: Record<string, string> = { c1: 'Sally', c2: 'Neil', c3: 'Yuri' };
+export const firstName = (m: CrewMember) => FIRST[m.id] ?? m.name.replace(/^\S+\.\s/, '').split(' ')[0];
 export const initials = (m: CrewMember) =>
   m.name
     .replace(/^\S+\.\s/, '')
