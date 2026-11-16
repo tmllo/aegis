@@ -1581,3 +1581,309 @@ html:has(.st[data-theme='dark']) body {
 :root .st.ds[data-theme='dark'] .es .es-mark {
   color: var(--ink-2);
 }
+
+/* ================================================================ One row design everywhere (16 Nov, Emile: "like
+   screenshot 20"). Every left-column row: a 36 px rounded-square tile with a hairline ring and the icon or
+   step number inside, no fill. Status = ring colour + a soft glow of that colour (red: act now; navy: needs a
+   look). Selected / current = white ring and bold title. Hover never draws a box: only the ring and title
+   brighten. */
+:root .st.ds .fr-check,
+:root .st.ds button.fr-check:hover,
+:root .st.ds .fr-check.is-on,
+:root .st.ds[data-theme] .fr-check.is-on {
+  background: transparent;
+  box-shadow: none;
+}
+:root .st.ds .fr-check-mark,
+:root .st.ds .fr-check-mark.has-icon,
+:root .st.ds .fr-check-mark.is-plain,
+:root .st.ds .fr.is-check .fr-check-mark,
+:root .st .fr .fr-check.is-on .fr-check-mark {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--ink-2);
+  font-size: 14px;
+  box-shadow: inset 0 0 0 1px var(--line-2);
+  transition: box-shadow 180ms ease-out, color 180ms ease-out;
+}
+:root .st.ds button.fr-check:hover .fr-check-mark {
+  box-shadow: inset 0 0 0 1px var(--ink-3);
+  color: var(--ink);
+}
+:root .st.ds button.fr-check:hover .fr-check-t b {
+  color: var(--ink);
+}
+/* needs a look: navy ring with a soft navy glow (not a filled block) */
+:root .st.ds[data-theme] .fr-check-mark.has-icon.is-amber,
+:root .st.ds[data-theme] .fr-check.is-on .fr-check-mark.has-icon.is-amber {
+  background: transparent;
+  color: var(--ink);
+  box-shadow: inset 0 0 0 1.5px #2a2ad8, 0 0 12px rgb(0 0 200 / 0.45);
+}
+/* act now: red ring, soft red glow, red dot */
+:root .st.ds[data-theme] .fr-check-mark.has-icon.is-red,
+:root .st.ds[data-theme] .fr-check.is-on .fr-check-mark.has-icon.is-red {
+  background: transparent;
+  color: var(--act);
+  box-shadow: inset 0 0 0 1.5px var(--act), 0 0 12px rgb(255 46 69 / 0.35);
+}
+:root .st.ds .fr-check-mark.has-icon.is-amber::after {
+  display: none;
+}
+:root .st.ds .fr-check-mark.has-icon.is-red::after {
+  display: block;
+  background: var(--act);
+}
+/* selected / current step: white ring, bold title */
+:root .st.ds[data-theme] .fr-check.is-on .fr-check-mark.has-icon,
+:root .st.ds[data-theme] .fr-check.is-on .fr-check-mark.is-plain,
+:root .st.ds[data-theme] .fr .fr-check.is-on .fr-check-mark {
+  background: transparent;
+  color: var(--ink);
+  box-shadow: inset 0 0 0 2px var(--ink);
+}
+:root .st.ds .fr-check.is-on .fr-check-t b {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+/* cabin trend: a fat, high-contrast line; the limit a clear dashed line; no glow on the chart */
+:root .st.ds .cb-hero-chart,
+:root .st.ds[data-theme] .is-amber > svg.cb-hero-chart {
+  filter: none;
+}
+:root .st.ds .cb-line {
+  stroke: var(--ink);
+  stroke-width: 2.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+:root .st.ds .cb-lim {
+  stroke: var(--ink-3);
+  stroke-width: 1.5;
+  stroke-dasharray: 6 6;
+  opacity: 0.9;
+}
+:root .st.ds .cb-hero.is-red .cb-lim {
+  stroke: var(--act);
+}
+/* an earlier navy-fill rule is more specific: settle the "needs a look" tile here for good */
+:root .st.ds[data-theme] .fr-left .fr-check-mark.has-icon.is-amber,
+:root .st.ds[data-theme] .fr-left .fr-check.is-on .fr-check-mark.has-icon.is-amber,
+:root .st.ds[data-theme] .fr-check-mark.has-icon.is-amber {
+  background: transparent !important;
+  color: var(--ink) !important;
+  box-shadow: inset 0 0 0 1.5px #2a2ad8, 0 0 12px rgb(0 0 200 / 0.45) !important;
+}
+:root .st.ds[data-theme] .fr-check.is-on .fr-check-mark.has-icon.is-amber {
+  box-shadow: inset 0 0 0 2px var(--ink), 0 0 12px rgb(0 0 200 / 0.5) !important;
+}
+
+/* ================================================================ Rows like the Radiation list (16 Nov, Emile)
+   Titles always white, subtitles always soft grey (red only for Act now). Tiles: thin grey ring; navy ring
+   + glow for "needs a look"; red ring + glow + red dot for "act now". Selected = a slightly brighter
+   1.5 px white ring only when the row has no status colour; a status row keeps its colour. Nothing heavier. */
+:root .st.ds .fr-left .fr-check .fr-check-t b {
+  color: var(--ink) !important;
+  font-weight: 500 !important;
+}
+:root .st.ds .fr-left .fr-check.is-on .fr-check-t b {
+  font-weight: 600 !important;
+}
+:root .st.ds .fr-left .fr-check .fr-check-t > span {
+  color: var(--ink-2) !important;
+}
+:root .st.ds .fr-left .fr-check.is-red .fr-check-t > span,
+:root .st.ds .fr-left .fr-check:has(.fr-check-mark.is-red) .fr-check-t > span {
+  color: var(--act) !important;
+}
+/* daily check: steps not reached yet stay quieter */
+:root .st.ds .fr.is-check .fr-left .fr-check:not(.is-on) .fr-check-t b {
+  color: var(--ink-2) !important;
+  font-weight: 400 !important;
+}
+/* tiles */
+:root .st.ds[data-theme] .fr-left .fr-check .fr-check-mark {
+  background: transparent !important;
+  color: var(--ink-2) !important;
+  box-shadow: inset 0 0 0 1px var(--line-2) !important;
+}
+:root .st.ds[data-theme] .fr-left .fr-check.is-on .fr-check-mark {
+  color: var(--ink) !important;
+  box-shadow: inset 0 0 0 1.5px var(--ink) !important;
+}
+:root .st.ds[data-theme] .fr-left .fr-check .fr-check-mark.is-amber {
+  color: var(--ink) !important;
+  box-shadow: inset 0 0 0 1.5px #2a2ad8, 0 0 12px rgb(0 0 200 / 0.45) !important;
+}
+:root .st.ds[data-theme] .fr-left .fr-check .fr-check-mark.is-red {
+  color: var(--act) !important;
+  box-shadow: inset 0 0 0 1.5px var(--act), 0 0 12px rgb(255 46 69 / 0.35) !important;
+}
+:root .st.ds .fr-left .fr-check-mark.is-red::after {
+  background: var(--act) !important;
+  box-shadow: 0 0 0 2px var(--canvas) !important;
+}
+/* hover: ring brightens a little, nothing else */
+:root .st.ds[data-theme] .fr-left button.fr-check:hover .fr-check-mark:not(.is-amber):not(.is-red) {
+  box-shadow: inset 0 0 0 1px var(--ink-3) !important;
+}
+:root .st.ds[data-theme] .fr-left .fr-check .fr-check-mark {
+  border: 0 !important;
+  outline: 0 !important;
+}
+
+/* primary buttons look like the secondary ones (Emile, 16 Nov): clear, hairline, white label. Red stays for urgent. */
+:root .st.ds .ds-btn.is-primary,
+:root .st.ds[data-theme] .ds-btn.is-primary {
+  background: transparent !important;
+  color: var(--ink) !important;
+  border: 1px solid var(--line-2) !important;
+  box-shadow: none !important;
+}
+:root .st.ds[data-theme] .ds-btn.is-primary:hover:not(:disabled) {
+  background: rgb(255 255 255 / 0.06) !important;
+}
+:root .st.ds[data-theme='light'] .ds-btn.is-primary:hover:not(:disabled) {
+  background: rgb(22 26 43 / 0.05) !important;
+}
+
+/* dock notification: a small glowing red dot, nothing else */
+:root .st.ds .fr-dock-i {
+  position: relative;
+}
+:root .st.ds .fr-dock-dot {
+  position: absolute;
+  top: -2px;
+  right: -5px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--act);
+  box-shadow: 0 0 0 2px var(--canvas), 0 0 8px rgb(255 46 69 / 0.9), 0 0 14px rgb(255 46 69 / 0.5);
+}
+/* Care current step: same as a selected row, a white ring, no fill, no glow */
+:root .st.ds[data-theme] .cp-steps li.is-now i {
+  background: transparent !important;
+  border: 0 !important;
+  color: var(--ink) !important;
+  font-weight: 600;
+  box-shadow: inset 0 0 0 1.5px var(--ink) !important;
+}
+:root .st.ds[data-theme] .cp-steps li.is-now b {
+  color: var(--ink) !important;
+}
+/* e^x signal, take two: the letter itself lights up navy with a tight glow; big blur radii were clipped
+   by the corner button and read as a square. */
+:root .st.ds .ds-brand {
+  overflow: visible;
+}
+:root .st.ds .ds-brand sup {
+  display: inline-block;
+  padding: 0 3px;
+  margin: 0 -3px;
+  animation: ex-signal-2 5s ease-out infinite;
+}
+@keyframes ex-signal-2 {
+  0%, 76%, 100% {
+    color: inherit;
+    text-shadow: none;
+  }
+  82% {
+    color: #5a5aff;
+    text-shadow: 0 0 1.5px rgb(70 70 255 / 0.9), 0 0 4px rgb(0 0 230 / 0.55);
+  }
+  90% {
+    color: #3a3af0;
+    text-shadow: 0 0 2px rgb(0 0 200 / 0.5);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  :root .st.ds .ds-brand sup {
+    animation: none;
+    text-shadow: none;
+  }
+}
+
+/* ---- replay: the big state word stays readable; "Watch" is white with a navy glow, not navy text */
+:root .st.ds[data-theme='dark'] .st-word.is-amber {
+  color: var(--ink);
+  text-shadow: 0 0 10px rgb(0 0 200 / 0.9), 0 0 24px rgb(0 0 128 / 0.9);
+}
+:root .st.ds[data-theme='dark'] .st-gauge-track i.w {
+  background: #2a2ad8;
+  box-shadow: 0 0 6px rgb(0 0 220 / 0.9);
+}
+
+/* ---- notifications: one tidy stack under the Menu button, newest at the bottom, at most two at a time.
+   Solid card (they sit over content), a status dot instead of a coloured side stripe. */
+:root .st.ds .st-toasts {
+  top: 96px;
+  right: 24px;
+  bottom: auto;
+  width: min(360px, calc(100vw - 32px));
+  gap: 8px;
+  pointer-events: none;
+}
+:root .st.ds .st-toast:nth-last-child(n + 3) {
+  display: none;
+}
+:root .st.ds .st-toast,
+:root .st.ds[data-theme] .st-toast {
+  position: relative;
+  padding: 12px 16px 12px 34px;
+  border: 1px solid var(--line-2);
+  border-left: 1px solid var(--line-2);
+  border-radius: 14px;
+  background: var(--card);
+  box-shadow: var(--shadow-2);
+  animation: toast-in 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+:root .st.ds .st-toast::before {
+  content: '';
+  position: absolute;
+  left: 15px;
+  top: 18px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ink-3);
+}
+:root .st.ds .st-toast.is-red::before {
+  background: var(--act);
+  box-shadow: 0 0 8px rgb(255 46 69 / 0.8);
+}
+:root .st.ds .st-toast.is-green::before {
+  background: var(--ok);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--ok) 80%, transparent);
+}
+:root .st.ds .st-toast.is-amber::before,
+:root .st.ds .st-toast.is-info::before {
+  background: #2a2ad8;
+  box-shadow: 0 0 8px rgb(0 0 220 / 0.8);
+}
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+@media (max-width: 600px) {
+  :root .st.ds .st-toasts {
+    top: 80px;
+    right: 16px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  :root .st.ds .st-toast {
+    animation: none;
+  }
+}
+/* replay gauge: the fill is neutral (no yellow); the two markers carry watch (navy) and warning (red) */
+:root .st.ds .st-gauge-track b {
+  background: var(--ink-2) !important;
+}

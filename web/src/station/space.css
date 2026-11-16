@@ -194,3 +194,43 @@ html:has(.st[data-theme='dark']) body {
   border-radius: 6px;
   pointer-events: none;
 }
+
+/* ================================================================ iPhone and narrow screens */
+@media (max-width: 1100px) {
+  /* the last card always scrolls clear of the tab bar and the home indicator */
+  :root .st.ds .fr {
+    padding-bottom: calc(132px + env(safe-area-inset-bottom));
+  }
+  :root .st.ds .fr-dock {
+    padding-bottom: calc(4px + env(safe-area-inset-bottom));
+  }
+  :root .st.ds .fr-corner {
+    top: calc(12px + env(safe-area-inset-top));
+  }
+  /* the suit / body stage gets most of the screen */
+  :root .st.ds .fr-object:has(.ds-body) {
+    min-height: 62vh;
+  }
+  /* xAI: the empty state starts at the top of its card and scrolls if needed */
+  :root .st.ds .mt.is-full {
+    height: 72dvh;
+  }
+  .mt-empty {
+    margin: 8px auto auto;
+  }
+  :root .st.ds .mt-av.is-big {
+    width: 44px;
+    height: 44px;
+  }
+  .mt-empty h3 {
+    font-size: 20px;
+  }
+}
+@media (max-width: 480px) {
+  :root .st.ds .ds-body > .ds-views {
+    bottom: 4px;
+  }
+  .suit-tt {
+    inset: 0 0 52px;
+  }
+}

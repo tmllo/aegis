@@ -110,7 +110,6 @@ function Shell() {
                     {roleOf(v.m)}
                   </option>
                 ))}
-                <option value="medic">Crew medic</option>
               </select>
             </label>
             <div className="ds-menu-row">

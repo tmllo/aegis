@@ -9,7 +9,7 @@ import { spin, SPIN_SPEED } from './spin';
 import { loadSuitFrames } from '../data/suitFrames';
 import './suit.css';
 
-export const SUIT_FRAMES = 48;
+export const SUIT_FRAMES = 96;
 const N = SUIT_FRAMES;
 const REDUCE = typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 const WINDOW = 6; // decoded frames kept on each side of the current one

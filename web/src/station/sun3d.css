@@ -121,3 +121,18 @@ html:has(.sun3d) body {
     transition: none;
   }
 }
+/* phones: the Sun is its own block at the top of the page (in the scroll), not a fixed layer under the
+   cards, so its labels never land on the text */
+@media (max-width: 1100px) {
+  :root .st.ds .fr-object:has(.sun3d) {
+    position: relative;
+    min-height: 56vh;
+  }
+  .sun3d {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    -webkit-mask-image: radial-gradient(ellipse 75% 70% at 50% 50%, #000 60%, transparent 100%);
+    mask-image: radial-gradient(ellipse 75% 70% at 50% 50%, #000 60%, transparent 100%);
+  }
+}

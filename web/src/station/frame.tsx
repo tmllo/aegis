@@ -174,7 +174,8 @@ export function Dock({ items }: { items: { to: string; label: string; icon: keyo
         <NavLink key={n.to} to={n.to} end={n.end} className={({ isActive }) => (isActive ? 'is-on' : '')}>
           <span className="fr-dock-i">
             {DOCK_ICON[n.icon]}
-            {n.alert && n.alert !== 'green' && <Shape s={n.alert} size={8} />}
+            {/* one notification mark only: a glowing red dot when something needs acting on now (Emile, 16 Nov) */}
+            {n.alert === 'red' && <i className="fr-dock-dot" aria-label="Needs action" />}
           </span>
           <span>{n.label}</span>
         </NavLink>

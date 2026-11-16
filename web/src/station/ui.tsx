@@ -5,7 +5,8 @@ export function Dot({ s, size = 10, pulse = false }: { s: Status; size?: number;
   return <i className={`st-dot is-${s}${pulse && s !== 'green' ? ' is-pulse' : ''}`} style={{ width: size, height: size }} aria-hidden />;
 }
 
-export const STATUS_COLOR: Record<Status, string> = { green: '#7ee2ff', amber: '#ffbe5c', red: '#ff7062' };
+// two colours only (Emile, 16 Nov): neutral for fine, navy for needs a look, vivid red for act now
+export const STATUS_COLOR: Record<Status, string> = { green: '#b4bcd2', amber: '#2a2ad8', red: '#ff2e45' };
 
 /** Daily values with the personal baseline band (mean ± 2 sd), flags marked, today highlighted. */
 export function TrendChart({

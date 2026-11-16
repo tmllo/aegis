@@ -27,6 +27,8 @@ export interface SunFocus {
   test?: boolean;
 }
 
+/** phones (portrait): pull the camera back so the Sun and the crew both fit */
+const NARROW = typeof innerWidth !== 'undefined' && innerWidth < 760;
 const REDUCE = typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 const D = Math.PI / 180;
 const R = 1;
@@ -280,7 +282,7 @@ export default function SunScene({
   const [ready, setReady] = useState(false);
   return (
     <div className={`sun3d${ready ? ' is-ready' : ''}`} role="img" aria-label="The Sun in space with recent flares, the magnetic field line to the crew, and the crew's position">
-      <Canvas dpr={[1, 1.75]} camera={{ position: [1.0, 0.9, 8.6], fov: 34, near: 0.05, far: 400 }} gl={{ antialias: true }} onCreated={() => setReady(true)}>
+      <Canvas dpr={[1, 1.75]} camera={{ position: NARROW ? [1.2, 1.4, 13.5] : [1.0, 0.9, 8.6], fov: NARROW ? 40 : 34, near: 0.05, far: 400 }} gl={{ antialias: true }} onCreated={() => setReady(true)}>
         <color attach="background" args={['#03050c']} />
         <Suspense fallback={null}>
           <Sky />
@@ -289,7 +291,7 @@ export default function SunScene({
           {flares.map((f) => (
             <Flare key={f.id} f={f} />
           ))}
-          {focus && <FocusTag f={focus} />}
+          {focus && !NARROW && <FocusTag f={focus} />}
           <FieldLine foot={foot} level={level} particles={particles} />
           <Crew place={place} shield={shield} />
         </Suspense>
