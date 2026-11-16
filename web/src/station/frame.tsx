@@ -149,14 +149,13 @@ export const DOCK_ICON = {
       <path d="M9 20v-3.2A6.5 6.5 0 1 1 18.5 11l1.5 3h-2v2.5a1.5 1.5 0 0 1-1.5 1.5H14v2" />
     </svg>
   ),
-  // a space habitat: pressurised module with a porthole, a truss, and two solar wings
+  // a space station: pressurised module between two solar wings (Emile picked option C, 16 Nov)
   cabin: (
     <svg viewBox="0 0 24 24" {...I}>
-      {/* satellite: body on the diagonal, two solar panels, antenna and signal arc */}
-      <path d="m8.5 12 3.5 3.5 4.5-4.5L13 7.5Z" />
-      <path d="m10.25 9.75-3.5-3.5L4 9l3.5 3.5M15.5 14.5l3.5 3.5-2.75 2.75-3.5-3.5" />
-      <path d="m16.5 7.5 2.5-2.5" />
-      <path d="M4 15.5a4.5 4.5 0 0 0 4.5 4.5M4 19.5h.01" />
+      <rect x="9.5" y="4.5" width="5" height="15" rx="2.5" />
+      <path d="M9.5 12H7.5M14.5 12h2M4.75 6.5v11M19.25 6.5v11M2.5 12h4.5M17 12h4.5" />
+      <rect x="2.5" y="6.5" width="4.5" height="11" rx="0.5" />
+      <rect x="17" y="6.5" width="4.5" height="11" rx="0.5" />
     </svg>
   ),
   environment: (
