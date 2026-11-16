@@ -11,6 +11,8 @@ const SRC = (i: number) => `${import.meta.env.BASE_URL}suit/f${String(i).padStar
 const REDUCE = typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 /** frame for the shared angle: frame 0 faces the viewer; the camera circling one way = the suit turning
  *  the other way in the render */
+/** decoded frames, kept for the life of the page */
+const KEEP: HTMLImageElement[] = [];
 const frameOf = (a: number) => ((Math.round((-a / (2 * Math.PI)) * N) % N) + N) % N;
 
 export default function SuitTurntable() {
@@ -19,14 +21,20 @@ export default function SuitTurntable() {
   const idle = useRef(true);
   const drag = useRef<{ x: number; a: number } | null>(null);
   const resume = useRef(0);
+  const shown = useRef(-1);
 
   // preload every frame once, so turning never flashes
+  // decode every frame up front and keep the decoded images alive, so turning never stalls on a decode
   useEffect(() => {
     let alive = true;
     for (let k = 0; k < N; k++) {
       const im = new Image();
-      im.onload = () => alive && setLoaded((n) => n + 1);
+      im.decoding = 'async';
       im.src = SRC(k);
+      KEEP[k] = im;
+      im.decode()
+        .catch(() => undefined)
+        .then(() => alive && setLoaded((n) => n + 1));
     }
     return () => void (alive = false);
   }, []);
@@ -42,7 +50,8 @@ export default function SuitTurntable() {
       last = t;
       if (!idle.current) return;
       spin.a += dt * SPIN_SPEED;
-      setI(frameOf(spin.a));
+      const f = frameOf(spin.a);
+      if (f !== shown.current) setI((shown.current = f)); // re-render only when the frame changes
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);

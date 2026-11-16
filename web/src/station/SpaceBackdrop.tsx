@@ -3,7 +3,8 @@
 // sphere around a camera that yaws very slowly. No sun, no flares, no field line: just space.
 // Still under prefers-reduced-motion. Hidden on the Radiation page, which draws its own scene.
 import { Suspense, useRef } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { useEffect } from 'react';
 import { useTexture } from '@react-three/drei';
 import * as THREE from 'three';
 
@@ -14,9 +15,17 @@ function Sky() {
   tex.colorSpace = THREE.SRGBColorSpace;
   tex.anisotropy = 4;
   const g = useRef<THREE.Group>(null);
-  useFrame((_, dt) => {
+  // the sky moves very slowly, so ~15 frames a second is plenty and leaves the GPU to the body
+  const { invalidate } = useThree();
+  const t0 = useRef(performance.now());
+  useEffect(() => {
+    if (REDUCE) return;
+    const id = window.setInterval(() => invalidate(), 66);
+    return () => window.clearInterval(id);
+  }, [invalidate]);
+  useFrame(() => {
     if (!g.current || REDUCE) return;
-    g.current.rotation.y += Math.min(dt, 0.1) * 0.012; // one turn in about 9 minutes
+    g.current.rotation.y = -0.1 + ((performance.now() - t0.current) / 1000) * 0.012; // one turn in about 9 minutes
   });
   return (
     // aimed so the Milky Way core crosses the screen diagonally behind the content
@@ -32,7 +41,7 @@ function Sky() {
 export default function SpaceBackdrop() {
   return (
     <div className="space-bg" aria-hidden>
-      <Canvas dpr={[1, 1.5]} camera={{ position: [0, 0, 0.01], fov: 62, near: 0.01, far: 200 }} gl={{ antialias: false, powerPreference: 'low-power' }}>
+      <Canvas frameloop="demand" dpr={1} camera={{ position: [0, 0, 0.01], fov: 62, near: 0.01, far: 200 }} gl={{ antialias: false, powerPreference: 'low-power' }}>
         <color attach="background" args={['#03050c']} />
         <Suspense fallback={null}>
           <Sky />

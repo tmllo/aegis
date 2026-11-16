@@ -19,7 +19,6 @@ import SuitTurntable from '../SuitTurntable';
 // kept here (not imported from BodyCanvas) so the 3D code stays in its own lazy chunk
 const VIEWS: [BodyView, string][] = [
   ['suit', 'Suit'],
-  ['body', 'Body'],
   ['skeleton', 'Skeleton'],
   ['vessels', 'Vessels'],
   ['organs', 'Organs'],
@@ -84,7 +83,7 @@ export default function Body() {
               switching back is instant */}
           <div className={`ds-3d${view === 'suit' ? ' is-hidden' : ''}`}>
             <Suspense fallback={null}>
-              <BodyCanvas tint={v.status} focus={sel} values={Object.fromEntries(Object.entries(values).filter(([k]) => k !== 'blood' || v.sys.blood !== 'nominal')) as typeof values} onPick={(s) => pick(s)} storm={alarmOn} view={view === 'suit' ? 'body' : view} />
+              <BodyCanvas tint={v.status} focus={sel} values={Object.fromEntries(Object.entries(values).filter(([k]) => k !== 'blood' || v.sys.blood !== 'nominal')) as typeof values} onPick={(s) => pick(s)} storm={alarmOn} view={view === 'suit' ? 'body' : view} paused={view === 'suit'} />
             </Suspense>
           </div>
           {view === 'suit' && <SuitTurntable />}

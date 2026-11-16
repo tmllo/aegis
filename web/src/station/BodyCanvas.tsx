@@ -27,6 +27,9 @@ const BONE_LIGHT = new THREE.Color('#d6c29b');
 const SHELL_LIGHT = new THREE.Color('#8f99b3');
 const BLACK = new THREE.Color(0, 0, 0);
 const UP = new THREE.Vector3(0, 1, 0);
+const TMP_V = new THREE.Vector3();
+const TMP_C = new THREE.Color();
+const NO_RAY = () => {};
 const REDUCE = typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 const NO_PICK = new Set(['skin', 'muscles', 'lung_left', 'lung_right', 'airways']);
 
@@ -95,7 +98,7 @@ function Model({ tint, focus, onPick, bone, view }: { tint: Record<SystemId, Sta
     for (const n of Object.keys(geo))
       out[n] = n.startsWith('bones')
         ? // bone: warm ivory, matte with a faint waxy sheen, like a museum specimen under studio light
-          new THREE.MeshPhysicalMaterial({ color: BONE.clone(), roughness: 0.62, sheen: 0.5, sheenRoughness: 0.6, sheenColor: new THREE.Color('#fff4e0'), clearcoat: 0.08, clearcoatRoughness: 0.5, transparent: true, opacity: BASE[n] ?? 1, depthWrite: true })
+          new THREE.MeshStandardMaterial({ color: BONE.clone(), roughness: 0.6, metalness: 0, envMapIntensity: 1.1, transparent: true, opacity: BASE[n] ?? 1, depthWrite: true })
         : new THREE.MeshStandardMaterial({ color: WHITE.clone(), roughness: 0.5, transparent: true, opacity: BASE[n] ?? 0.3, depthWrite: false });
     return out;
   }, [geo]);
@@ -154,6 +157,7 @@ function Model({ tint, focus, onPick, bone, view }: { tint: Record<SystemId, Sta
   }, [geo, tint, focus, hover, bone, view]);
 
   const meshes = useRef<Record<string, THREE.Mesh | null>>({});
+  const warm = useRef(0);
   const group = useRef<THREE.Group>(null);
   useFrame((state, dt) => {
     const t = state.clock.elapsedTime;
@@ -162,7 +166,7 @@ function Model({ tint, focus, onPick, bone, view }: { tint: Record<SystemId, Sta
       const ph = ((t * 62) / 60) % 1;
       const s = 1 + 0.045 * (ph < 0.15 ? Math.sin((ph / 0.15) * Math.PI * 0.5) : Math.exp(-(ph - 0.15) * 7));
       if (!heart.geometry.boundingBox) heart.geometry.computeBoundingBox();
-      const c = heart.geometry.boundingBox!.getCenter(new THREE.Vector3());
+      const c = heart.geometry.boundingBox!.getCenter(TMP_V);
       heart.scale.setScalar(s);
       heart.position.copy(c).multiplyScalar(1 - s);
     }
@@ -173,14 +177,17 @@ function Model({ tint, focus, onPick, bone, view }: { tint: Record<SystemId, Sta
       if (!goal) continue;
       m.opacity += (goal.o - m.opacity) * k;
       m.color.lerp(goal.c, k);
-      const e = goal.e ? goal.e.clone().multiplyScalar(goal.top ? pulse : 1) : BLACK;
+      const e = goal.e ? TMP_C.copy(goal.e).multiplyScalar(goal.top ? pulse : 1) : BLACK;
       m.emissive.lerp(e, k);
       const mesh = meshes.current[n];
       if (mesh) mesh.renderOrder = goal.top ? 20 : n === 'skin' ? 10 : n.startsWith('lung') ? 5 : 0;
       m.depthWrite = m.opacity > 0.85;
       m.depthTest = !goal.top;
-      m.visible = m.opacity > 0.01;
+      // the first frames draw every layer once (invisible) so its geometry is on the GPU before anyone
+      // switches to it; afterwards hidden layers are skipped
+      m.visible = warm.current < 3 || m.opacity > 0.01;
     }
+    warm.current++;
   });
 
   const systemAt = (e: ThreeEvent<PointerEvent | MouseEvent>): SystemId | null => {
@@ -199,7 +206,11 @@ function Model({ tint, focus, onPick, bone, view }: { tint: Record<SystemId, Sta
     const sys = systemAt(e);
     if (sys) onPick(sys);
   };
+  const lastMove = useRef(0);
   const move = (e: ThreeEvent<PointerEvent>) => {
+    const now = performance.now();
+    if (now - lastMove.current < 60) return;
+    lastMove.current = now;
     const sys = systemAt(e);
     if (sys !== hover) setHover(sys);
   };
@@ -207,7 +218,7 @@ function Model({ tint, focus, onPick, bone, view }: { tint: Record<SystemId, Sta
   return (
     <group ref={group} onClick={click} onPointerMove={move} onPointerOut={() => setHover(null)}>
       {Object.entries(geo).map(([n, g]) => (
-        <mesh key={n} ref={(m) => void (meshes.current[n] = m)} geometry={g} material={mats[n]} userData={{ node: n }} frustumCulled={false} />
+        <mesh key={n} ref={(m) => void (meshes.current[n] = m)} geometry={g} material={mats[n]} userData={{ node: n }} frustumCulled={false} raycast={NO_PICK.has(n) ? NO_RAY : undefined} />
       ))}
     </group>
   );
@@ -397,6 +408,7 @@ export default function BodyCanvas({
   values,
   onPick,
   storm = false,
+  paused = false,
   view = 'body',
 }: {
   tint: Record<SystemId, Status>;
@@ -404,6 +416,8 @@ export default function BodyCanvas({
   values: Record<SystemId, { name: string; line: string }>;
   onPick: (s: SystemId) => void;
   storm?: boolean;
+  /** hidden behind the suit turntable: stop rendering until shown again */
+  paused?: boolean;
   view?: BodyView;
 }) {
   const v0 = viewFor(focus);
@@ -413,7 +427,7 @@ export default function BodyCanvas({
   const [suitWanted, setSuitWanted] = useState(view === 'suit');
   useEffect(() => void (view === 'suit' && setSuitWanted(true)), [view]);
   return (
-    <Canvas dpr={[1, 1.6]} camera={{ position: v0.pos, fov: 34, near: 0.01, far: 50 }} gl={{ antialias: true, alpha: true }}>
+    <Canvas frameloop={paused ? 'never' : 'always'} dpr={[1, 1.5]} camera={{ position: v0.pos, fov: 34, near: 0.01, far: 50 }} gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}>
       {/* the body sits on the page itself: same background colour, no panel */}
       <hemisphereLight args={['#f4efe6', light ? '#8d93a8' : '#1a1f3a', light ? 0.6 : 0.45]} />
       <directionalLight position={[-2, 4, 3]} intensity={light ? 1.7 : 2.4} color="#fff3e2" />
