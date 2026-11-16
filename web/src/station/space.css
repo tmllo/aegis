@@ -423,3 +423,13 @@ html:has(.st[data-theme='dark']) body {
     height: auto;
   }
 }
+/* the ISS footage behind every tab: dimmed so text stays readable, Earth's limb in the lower half */
+.space-bg.is-video .space-media {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 70%;
+  filter: brightness(0.6) saturate(0.95);
+}

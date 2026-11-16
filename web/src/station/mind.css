@@ -247,6 +247,31 @@
   background: var(--accent, #000080);
   color: #fff;
 }
+/* dark page (Earth backdrop): navy disappears, so the box and send button go neutral white */
+:root .st.ds[data-theme='dark'] .mt.is-full .mt-in {
+  border-color: rgb(255 255 255 / 0.28);
+}
+:root .st.ds[data-theme='dark'] .mt.is-full .mt-in:focus-within {
+  border-color: rgb(255 255 255 / 0.85);
+}
+:root .st.ds[data-theme='dark'] .mt.is-full .mt-send {
+  background: #f4f6fb;
+  color: #0b0f1e;
+  border: 1px solid transparent;
+  transition: background-color 160ms ease-out, opacity 160ms ease-out;
+}
+:root .st.ds[data-theme='dark'] .mt.is-full .mt-send:hover:not(:disabled) {
+  background: #ffffff;
+}
+:root .st.ds[data-theme='dark'] .mt.is-full .mt-send:active:not(:disabled) {
+  opacity: 0.8;
+}
+:root .st.ds[data-theme='dark'] .mt.is-full .mt-send:disabled {
+  background: transparent;
+  border-color: rgb(255 255 255 / 0.22);
+  color: rgb(255 255 255 / 0.55);
+  opacity: 1;
+}
 :root .st.ds .mt.is-full .mt-foot {
   padding: 10px 20px 14px;
   font-size: 13px;
