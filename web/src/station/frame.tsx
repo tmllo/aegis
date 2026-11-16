@@ -149,13 +149,12 @@ export const DOCK_ICON = {
       <path d="M9 20v-3.2A6.5 6.5 0 1 1 18.5 11l1.5 3h-2v2.5a1.5 1.5 0 0 1-1.5 1.5H14v2" />
     </svg>
   ),
-  // a space station: pressurised module between two solar wings (Emile picked option C, 16 Nov)
+  // a lunar habitat: dome on the ground with a hatch and two windows (Emile picked it, 16 Nov)
   cabin: (
     <svg viewBox="0 0 24 24" {...I}>
-      <rect x="9.5" y="4.5" width="5" height="15" rx="2.5" />
-      <path d="M9.5 12H7.5M14.5 12h2M4.75 6.5v11M19.25 6.5v11M2.5 12h4.5M17 12h4.5" />
-      <rect x="2.5" y="6.5" width="4.5" height="11" rx="0.5" />
-      <rect x="17" y="6.5" width="4.5" height="11" rx="0.5" />
+      <path d="M3 19h18M5 19v-5a7 7 0 0 1 14 0v5M10 19v-3.5a2 2 0 0 1 4 0V19" />
+      <circle cx="8.5" cy="11.5" r="1.2" />
+      <circle cx="15.5" cy="11.5" r="1.2" />
     </svg>
   ),
   environment: (
