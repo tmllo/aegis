@@ -1,6 +1,7 @@
 // What we built: one row per section of e^x, each tied to the problem it solves and to what backs it:
 // the server endpoint (Tomas's data core), the research claim (docs/THESIS-DETAILS.md section 11, verified
 // wording only) and the code that does the work. Static text: no data loading on this page.
+import { ANATOMY_CREDIT, DISCLAIMERS } from '../../components/Footer';
 import { Link } from 'react-router-dom';
 import { Page } from '../frame';
 import '../built.css';
@@ -290,6 +291,18 @@ export default function Built() {
                 </div>
               ))}
             </dl>
+          </section>
+          <section className="bt-credits">
+            <h2>Credits</h2>
+            <ul>
+              <li>{DISCLAIMERS[0]}</li>
+              <li>{DISCLAIMERS[1]}</li>
+              <li>Space weather data: NASA CCMC DONKI</li>
+              <li>{ANATOMY_CREDIT}</li>
+              <li>Suit: Apollo 11 A7L, Smithsonian National Air and Space Museum 3D scan, CC0 (3d.si.edu); patches and flag painted out</li>
+              <li>Night sky: NASA SVS Deep Star Maps 2020, public domain (svs.gsfc.nasa.gov/4851)</li>
+              <li>Studio light for the suit render: Poly Haven studio_small_09 HDRI, CC0</li>
+            </ul>
           </section>
         </div>
       }

@@ -5,10 +5,9 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { alarmActive } from '../core/alarm';
 import { BrowserRouter, Navigate, Outlet, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom';
-import { ANATOMY_CREDIT, DISCLAIMERS } from '../components/Footer';
 import type { Status } from '../data/types';
 import Overview from './pages/Overview';
-import { BRAND, LEVEL_STATUS, LINK_DELAY, RANK, fmtDay, useStationData } from './model';
+import { BRAND, LEVEL_STATUS, RANK, fmtDay, useStationData } from './model';
 import { useStation } from './state';
 import { cue, Dot } from './ui';
 import { Btn, roleOf } from './ds';
@@ -34,7 +33,7 @@ const Built = lazy(() => import('./pages/Built'));
 const KEYS = ['/check', '/', '/mind', '/care', '/radiation', '/cabin'];
 
 function Shell() {
-  const { data, loadState, error, env, views, sw, day, queue } = useStationData();
+  const { data, loadState, error, views, sw, day, queue } = useStationData();
   const alarm = useStation((s) => s.alarm);
   const setAlarm = useStation((s) => s.setAlarm);
   const sound = useStation((s) => s.sound);
@@ -161,13 +160,7 @@ function Shell() {
         />
       </main>
 
-      <footer className="st-foot">
-        <span>{DISCLAIMERS[0]}</span>
-        <span>{DISCLAIMERS[1]}</span>
-        <span>Space weather data: {data.storm.meta.data_credit}</span>
-        <span>Signal delay to Earth ~ {LINK_DELAY[env]}</span>
-        <span title={ANATOMY_CREDIT}>Anatomy: BodyParts3D, CC BY 4.0 · Suit: Smithsonian 3D scan, CC0</span>
-      </footer>
+      {/* credits and disclaimers live at the bottom of What we built (Emile, 16 Nov) */}
 
       {alarmOn && <Shelter onAck={() => setAlarm({ ...alarm, phase: 'sheltered' })} phase={alarm.phase} flare={alarm.flare} p={alarm.p} onOpen={() => nav('/radiation')} here={loc.pathname.startsWith('/radiation')} />}
 

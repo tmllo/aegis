@@ -56,3 +56,14 @@ html:has(.st[data-theme='dark']) body {
   left: 50%;
   transform: translateX(-50%);
 }
+/* credits at the bottom of What we built */
+.bt-credits ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 8px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ink-3);
+}
