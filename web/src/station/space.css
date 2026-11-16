@@ -67,3 +67,36 @@ html:has(.st[data-theme='dark']) body {
   line-height: 1.5;
   color: var(--ink-3);
 }
+
+/* side columns: a hairline scroll bar that only appears while the pointer is over the column */
+:root .st.ds .fr-right,
+:root .st.ds .fr-left {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  transition: scrollbar-color 200ms ease-out;
+}
+:root .st.ds .fr-right:hover,
+:root .st.ds .fr-left:hover {
+  scrollbar-color: rgb(255 255 255 / 0.28) transparent;
+}
+:root .st.ds[data-theme='light'] .fr-right:hover,
+:root .st.ds[data-theme='light'] .fr-left:hover {
+  scrollbar-color: rgb(22 26 43 / 0.25) transparent;
+}
+:root .st.ds .fr-right::-webkit-scrollbar,
+:root .st.ds .fr-left::-webkit-scrollbar {
+  width: 4px;
+}
+:root .st.ds .fr-right::-webkit-scrollbar-thumb,
+:root .st.ds .fr-left::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 2px;
+}
+:root .st.ds .fr-right:hover::-webkit-scrollbar-thumb,
+:root .st.ds .fr-left:hover::-webkit-scrollbar-thumb {
+  background: rgb(255 255 255 / 0.28);
+}
+:root .st.ds .fr-right::-webkit-scrollbar-track,
+:root .st.ds .fr-left::-webkit-scrollbar-track {
+  background: transparent;
+}
