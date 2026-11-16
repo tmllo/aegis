@@ -46,7 +46,7 @@ export default function Body() {
   const v = views.find((x) => x.m.id === wanted) ?? [...views].sort((a, b) => RANK[b.overall] - RANK[a.overall])[0];
   const isShared = shared[v?.m.id ?? ''] !== false;
   const sel = qs.get('s') as SystemId | null;
-  const [view, setView] = useState<BodyView>('body');
+  const [view, setView] = useState<BodyView>('suit'); // Emile: the page opens on the suit
   if (!data || !v) return null;
   if (medic && !isShared)
     return <Page title={roleOf(v.m)} sub="Not shared with the medic. Only check-in done or not is visible." footRight={<Btn onClick={() => nav('/')}>Back to crew</Btn>} />;
