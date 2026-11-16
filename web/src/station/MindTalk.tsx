@@ -1,10 +1,10 @@
 // xAI: the Mind page's own assistant. It has its own view on the Mind page (Check-in | xAI), a
 // conversation that stays on this device for the day, suggested openers, and replies that write
-// themselves in. Replies come from src/data/therapist (Gemini only with a key pasted on this device,
-// otherwise a scripted offline demo). Escalation never depends on the model: risk words get a fixed
-// reply, and Contact surgeon comes from the check-in scores.
+// themselves in. Replies come from src/data/therapist: a pasted Gemini key, else the site model (Workers
+// AI, no key), else a scripted offline demo; the tag in the header says which one answered. Escalation never depends on the model: risk words get a fixed
+// reply, and Contact Earth support comes from the check-in scores.
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { getKey, setKey, talk, type Turn } from '../data/therapist';
+import { getKey, setKey, talk, type Reply, type Turn } from '../data/therapist';
 
 const REDUCE = typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 const OPENERS = ['I miss home', 'I slept badly', 'Tension with the crew', 'I feel flat today'];
@@ -48,7 +48,7 @@ export default function MindTalk({ today, day, name }: { today: string; day: str
   const [turns, setTurns] = useState<Turn[]>(() => loadTurns(day));
   const [text, setText] = useState('');
   const [busy, setBusy] = useState(false);
-  const [demo, setDemo] = useState(!getKey());
+  const [via, setVia] = useState<Reply['via'] | null>(null);
   const [keyOpen, setKeyOpen] = useState(false);
   const log = useRef<HTMLDivElement>(null);
   const input = useRef<HTMLTextAreaElement>(null);
@@ -68,7 +68,7 @@ export default function MindTalk({ today, day, name }: { today: string; day: str
     setBusy(true);
     const r = await talk(next, today);
     setTurns([...next, { role: 'model', text: r.text }]);
-    setDemo(r.demo);
+    setVia(r.via);
     setBusy(false);
   };
 
@@ -80,7 +80,7 @@ export default function MindTalk({ today, day, name }: { today: string; day: str
           <b>xAI</b>
           <span>Reads today's check-in, nothing else</span>
         </div>
-        <span className={`mt-model${demo ? '' : ' is-live'}`}>{demo ? 'Offline demo' : 'Gemini'}</span>
+        <span className={`mt-model${via && via !== 'script' ? ' is-live' : ''}`}>{via === 'gemini' ? 'Gemini' : via === 'site' ? 'Live' : via === 'script' ? 'Offline demo' : getKey() ? 'Gemini' : 'Ready'}</span>
         {turns.length > 0 && (
           <button type="button" className="mt-new" onClick={() => setTurns([])}>
             New chat
@@ -93,7 +93,7 @@ export default function MindTalk({ today, day, name }: { today: string; day: str
           <div className="mt-empty">
             <Mark big />
             <h3>What's on your mind, {name}?</h3>
-            <p>Talk it through in private. If something sounds serious, xAI points you to the flight surgeon.</p>
+            <p>Talk it through in private. If something sounds serious, xAI points you to the Earth support team.</p>
             <div className="mt-sugg">
               {OPENERS.map((o) => (
                 <button key={o} type="button" onClick={() => void send(o)}>
@@ -169,7 +169,6 @@ export default function MindTalk({ today, day, name }: { today: string; day: str
             defaultValue={getKey()}
             onBlur={(e) => {
               setKey(e.target.value);
-              setDemo(!e.target.value);
               setKeyOpen(false);
             }}
             autoFocus

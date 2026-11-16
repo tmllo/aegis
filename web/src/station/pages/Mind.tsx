@@ -113,7 +113,7 @@ export default function Mind() {
               <li>The chat stays on this device</li>
             </ul>
             <SideCap>When it is serious</SideCap>
-            <p className="mi-note">Words about harm or a crisis always get the same reply: contact the flight surgeon now. The model never decides that.</p>
+            <p className="mi-note">Words about harm or a crisis always get the same reply: contact the Earth support team now. The model never decides that.</p>
             {SCALES.some((s) => report[s.key] == null) && (
               <Btn kind="secondary" onClick={() => go('check')}>
                 Finish check-in
@@ -122,7 +122,7 @@ export default function Mind() {
           </>
         }
         footLeft={seg}
-        footRight={<Btn kind="danger" onClick={() => nav(`/surgeon?c=${subject}`)}>Contact surgeon</Btn>}
+        footRight={<Btn kind="danger" onClick={() => nav(`/surgeon?c=${subject}`)}>Contact Earth support</Btn>}
       />
     );
 
@@ -144,7 +144,7 @@ export default function Mind() {
           <div className="mi-q">
             <p className="mi-q-cap">Today</p>
             <h2 className={`mi-q-word is-${overall}`}>{word}</h2>
-            <p className="mi-q-sub">{overall === 'red' ? 'Talk to the crew medic or the flight surgeon today.' : overall === 'amber' ? 'Try the suggestion on the right. It comes up at your next private conference.' : 'Nothing to do. See you tomorrow.'}</p>
+            <p className="mi-q-sub">{overall === 'red' ? 'Talk to the crew medic or the Earth support team today.' : overall === 'amber' ? 'Try the suggestion on the right. It comes up at your next private conference.' : 'Nothing to do. See you tomorrow.'}</p>
             <Btn kind="secondary" onClick={() => go('xai')}>
               Talk it through with xAI
             </Btn>
@@ -193,7 +193,7 @@ export default function Mind() {
         </>
       }
       footLeft={seg}
-      footRight={overall === 'red' ? <Btn onClick={() => nav(`/surgeon?c=${subject}`)}>Contact surgeon</Btn> : undefined}
+      footRight={overall === 'red' ? <Btn onClick={() => nav(`/surgeon?c=${subject}`)}>Contact Earth support</Btn> : undefined}
     />
   );
 }
